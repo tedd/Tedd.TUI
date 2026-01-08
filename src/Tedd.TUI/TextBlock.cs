@@ -1,0 +1,51 @@
+using System;
+
+namespace Tedd.TUI;
+
+public class TextBlock : UIElement
+{
+    public static readonly DependencyProperty TextProperty =
+        DependencyProperty.Register("Text", typeof(string), typeof(TextBlock), string.Empty);
+
+    public string Text
+    {
+        get { return (string)GetValue(TextProperty); }
+        set { SetValue(TextProperty, value); }
+    }
+
+    public static readonly DependencyProperty ForegroundProperty =
+        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(TextBlock), ConsoleColor.White);
+
+    public ConsoleColor Foreground
+    {
+        get { return (ConsoleColor)GetValue(ForegroundProperty); }
+        set { SetValue(ForegroundProperty, value); }
+    }
+
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        string text = Text;
+        if (string.IsNullOrEmpty(text))
+            return new Size(0, 0);
+
+        return new Size(text.Length, 1);
+    }
+
+    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
+    {
+        string text = Text;
+        if (string.IsNullOrEmpty(text)) return;
+
+        int x = RenderSize.X + offsetX;
+        int y = RenderSize.Y + offsetY;
+        
+        for (int i = 0; i < text.Length; i++)
+        {
+            // Clip to bounds
+            if (i < RenderSize.Width && RenderSize.Height > 0)
+            {
+                buffer.SetPixel(x + i, y, text[i], Foreground, ConsoleColor.Black);
+            }
+        }
+    }
+}

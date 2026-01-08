@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    
+    <!-- NuGet Metadata -->
+    <PackageId>Tedd.TUI</PackageId>
+    <Authors>Tedd</Authors>
+    <Description>Cross-Platform TUI Framework for .NET</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>tui;console;terminal;gui;wpf</PackageTags>
+    <RepositoryUrl>https://github.com/Tedd/Tedd.TUI</RepositoryUrl>
+  </PropertyGroup>
+
+</Project>
