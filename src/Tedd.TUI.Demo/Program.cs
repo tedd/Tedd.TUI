@@ -19,7 +19,7 @@ class Program
         mainStack.AddChild(new Border
         {
             Child = new TextBlock { Text = "Tedd.TUI Demo Application (.NET 10)", Foreground = ConsoleColor.Cyan },
-            // Padding/Border properties not fully implemented in Border yet but structure is there
+            BorderStyle = BorderStyle.Double
         });
 
         // Tab Control

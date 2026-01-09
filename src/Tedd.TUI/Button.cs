@@ -38,24 +38,31 @@ public class Button : UIElement
         int h = RenderSize.Height;
         string text = Content;
 
-        // Draw Border (Simple Box)
-        // Top/Bottom
-        for (int i = 0; i < w; i++)
+        // Draw Border (Single Box)
+        char hLine = '─';
+        char vLine = '│';
+        char tl = '┌';
+        char tr = '┐';
+        char bl = '└';
+        char br = '┘';
+
+        // Horizontal
+        for (int i = 1; i < w - 1; i++)
         {
-            buffer.SetPixel(x + i, y, '-', ConsoleColor.Gray, ConsoleColor.Black);
-            buffer.SetPixel(x + i, y + h - 1, '-', ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y, hLine, ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y + h - 1, hLine, ConsoleColor.Gray, ConsoleColor.Black);
         }
-        // Left/Right
-        for (int i = 0; i < h; i++)
+        // Vertical
+        for (int i = 1; i < h - 1; i++)
         {
-            buffer.SetPixel(x, y + i, '|', ConsoleColor.Gray, ConsoleColor.Black);
-            buffer.SetPixel(x + w - 1, y + i, '|', ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x, y + i, vLine, ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x + w - 1, y + i, vLine, ConsoleColor.Gray, ConsoleColor.Black);
         }
         // Corners
-        buffer.SetPixel(x, y, '+', ConsoleColor.Gray, ConsoleColor.Black);
-        buffer.SetPixel(x + w - 1, y, '+', ConsoleColor.Gray, ConsoleColor.Black);
-        buffer.SetPixel(x, y + h - 1, '+', ConsoleColor.Gray, ConsoleColor.Black);
-        buffer.SetPixel(x + w - 1, y + h - 1, '+', ConsoleColor.Gray, ConsoleColor.Black);
+        buffer.SetPixel(x, y, tl, ConsoleColor.Gray, ConsoleColor.Black);
+        buffer.SetPixel(x + w - 1, y, tr, ConsoleColor.Gray, ConsoleColor.Black);
+        buffer.SetPixel(x, y + h - 1, bl, ConsoleColor.Gray, ConsoleColor.Black);
+        buffer.SetPixel(x + w - 1, y + h - 1, br, ConsoleColor.Gray, ConsoleColor.Black);
 
         // Draw Text
         int textX = x + (w - text.Length) / 2;

@@ -98,7 +98,7 @@ public class TabControl : UIElement
 
         // Draw Content Border line
         for (int i = 0; i < w; i++)
-            buffer.SetPixel(x + i, y + 1, '-', ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y + 1, '─', ConsoleColor.Gray, ConsoleColor.Black);
 
         // Draw Selected Content
         if (SelectedIndex >= 0 && SelectedIndex < Items.Count)

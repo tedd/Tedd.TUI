@@ -59,7 +59,7 @@ public class ComboBox : UIElement
         }
 
         // Draw Arrow
-        buffer.SetPixel(x + w - 1, y, 'v', ConsoleColor.Black, ConsoleColor.Gray);
+        buffer.SetPixel(x + w - 1, y, '▼', ConsoleColor.Black, ConsoleColor.Gray);
     }
 
     public override void OnMouseDown(MouseEventArgs e)

@@ -21,8 +21,8 @@ public class ButtonTests
         Assert.Equal(3, btn.DesiredSize.Height);
 
         // Check Border
-        Assert.Equal('+', buffer.GetPixel(0, 0).Character);
-        Assert.Equal('-', buffer.GetPixel(1, 0).Character);
+        Assert.Equal('┌', buffer.GetPixel(0, 0).Character);
+        Assert.Equal('─', buffer.GetPixel(1, 0).Character);
         
         // Check Text Centered
         // 6 width. 012345
