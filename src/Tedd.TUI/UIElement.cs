@@ -237,4 +237,74 @@ public abstract class UIElement : DependencyObject
     {
         // Default implementation does nothing
     }
+
+    // Input & Event System
+    public virtual void OnKeyDown(KeyEventArgs e) { }
+    public virtual void OnKeyUp(KeyEventArgs e) { }
+    public virtual void OnMouseDown(MouseEventArgs e) { }
+    public virtual void OnMouseUp(MouseEventArgs e) { }
+
+    public virtual void OnGotFocus()
+    {
+        IsFocused = true;
+    }
+
+    public virtual void OnLostFocus()
+    {
+        IsFocused = false;
+    }
+
+    public bool Focus()
+    {
+        if (IsEnabled && Visibility)
+        {
+            // Traverse up to Window/Root to set focus
+            var root = GetRoot();
+            if (root is TuiWindow window)
+            {
+                return window.SetFocus(this);
+            }
+        }
+        return false;
+    }
+
+    public UIElement GetRoot()
+    {
+        var current = this;
+        while (current.Parent != null)
+        {
+            current = current.Parent;
+        }
+        return current;
+    }
+}
+
+public class KeyEventArgs
+{
+    public ConsoleKey Key { get; set; }
+    public char KeyChar { get; set; }
+    public ConsoleModifiers Modifiers { get; set; }
+    public bool Handled { get; set; }
+}
+
+public class MouseEventArgs
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    public bool Handled { get; set; }
+    // Add Buttons state etc if needed
+}
+
+public class HitTestResult
+{
+    public UIElement Element { get; set; }
+    public int LocalX { get; set; }
+    public int LocalY { get; set; }
+
+    public HitTestResult(UIElement element, int localX, int localY)
+    {
+        Element = element;
+        LocalX = localX;
+        LocalY = localY;
+    }
 }
