@@ -79,13 +79,24 @@ public class TextBox : UIElement
         }
     }
 
+    public override void OnGotFocus()
+    {
+        base.OnGotFocus();
+        _cursorPos = Text?.Length ?? 0;
+    }
+
     public override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
         Focus();
-        // Move cursor to click position?
-        // int relativeX = e.X - RenderSize.X;
-        // _cursorPos = Math.Min(Text.Length, relativeX);
+        // MouseEventArgs has local coordinates
+        int clickIndex = e.X;
+        if (clickIndex < 0) clickIndex = 0;
+
+        string text = Text ?? "";
+        if (clickIndex > text.Length) clickIndex = text.Length;
+
+        _cursorPos = clickIndex;
         e.Handled = true;
     }
 

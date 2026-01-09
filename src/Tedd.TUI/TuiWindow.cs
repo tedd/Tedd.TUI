@@ -233,7 +233,8 @@ public class TuiWindow : UIElement
                element is CheckBox ||
                element is RadioButton ||
                element is ComboBox ||
-               element is ListBox;
+               element is ListBox ||
+               element is TabControl;
     }
 
     private void FlattenTree(UIElement parent, List<UIElement> list)

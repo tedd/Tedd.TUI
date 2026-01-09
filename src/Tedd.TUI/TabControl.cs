@@ -118,6 +118,7 @@ public class TabControl : UIElement
     public override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
+        Focus(); // Ensure we get focus when clicked
 
         // e.X/Y are local coordinates
         if (e.Y == 0) // Header click
@@ -135,6 +136,21 @@ public class TabControl : UIElement
                 }
                 currentX += len + 1;
             }
+        }
+    }
+
+    public override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Key == ConsoleKey.LeftArrow)
+        {
+            if (SelectedIndex > 0) SelectedIndex--;
+            e.Handled = true;
+        }
+        else if (e.Key == ConsoleKey.RightArrow)
+        {
+            if (SelectedIndex < Items.Count - 1) SelectedIndex++;
+            e.Handled = true;
         }
     }
 }

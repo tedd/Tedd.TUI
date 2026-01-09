@@ -27,19 +27,41 @@ public class ConsoleInputManager
             var keyInfo = System.Console.ReadKey(true);
 
             // Check for Escape Sequence
-            if (keyInfo.Key == ConsoleKey.Escape && System.Console.KeyAvailable)
+            if (keyInfo.Key == ConsoleKey.Escape)
             {
-                // Likely a sequence
-                var seq = ReadSequence();
-                if (seq.StartsWith("[<"))
+                // Wait briefly for a sequence if KeyAvailable is not immediately true
+                // Network latency or OS buffering might cause a tiny gap.
+                if (!System.Console.KeyAvailable)
                 {
-                    ParseMouseSGR(seq);
+                    Thread.Sleep(5);
+                }
+
+                if (System.Console.KeyAvailable)
+                {
+                    // Likely a sequence
+                    var seq = ReadSequence();
+                    // Mouse SGR: ESC [ < ...
+                    // If we just read 'ESC', the sequence string starts with next char.
+                    // e.g. '[', '<', ...
+                    if (seq.StartsWith("[<"))
+                    {
+                        ParseMouseSGR(seq);
+                    }
+                    else
+                    {
+                        // Unknown sequence or simple key combo involving ESC.
+                        // We consumed the ESC.
+                        // We should dispatch ESC, then the sequence chars?
+                        // It's complex to replay.
+                        // For now, ignore the sequence part if it's not mouse,
+                        // or just dispatch Escape key.
+                        _window.ProcessKey(ToKeyArgs(keyInfo));
+                    }
                 }
                 else
                 {
-                    // Treat as normal Escape if not recognized or handle other VT keys
-                    // For now, ignore other sequences or re-dispatch Escape
-                     _window.ProcessKey(ToKeyArgs(keyInfo));
+                    // Just Escape key
+                    _window.ProcessKey(ToKeyArgs(keyInfo));
                 }
             }
             else
@@ -64,15 +86,24 @@ public class ConsoleInputManager
         // Simple synchronous read of available chars
         // A sequence usually comes in fast.
         var sb = new StringBuilder();
-        // We already consumed ESC
 
-        // Loop reading until end of sequence char or timeout?
+        // Loop reading until end of sequence char or timeout
         // SGR mouse ends with 'm' or 'M'.
-        // Let's just read what's there for a simplified approach.
-        // Or read char by char.
+        // Limit max length to avoid infinite loop
+        int limit = 20;
 
-        while (System.Console.KeyAvailable)
+        while (limit-- > 0)
         {
+             // We spin wait slightly? No, blocking ReadKey is safer if we know it's a sequence.
+             // But we don't know for sure.
+             // Rely on KeyAvailable.
+
+             if (!System.Console.KeyAvailable)
+             {
+                 Thread.Sleep(1);
+                 if (!System.Console.KeyAvailable) break;
+             }
+
              var k = System.Console.ReadKey(true);
              sb.Append(k.KeyChar);
              if (IsSequenceTerminator(k.KeyChar)) break;
@@ -94,7 +125,8 @@ public class ConsoleInputManager
 
         try
         {
-            var clean = seq.Substring(2); // Remove [<
+            // seq is "[<0;10;10M"
+            var clean = seq.Substring(2); // Remove "[<"
             var lastChar = clean[clean.Length - 1];
             clean = clean.Substring(0, clean.Length - 1);
 
