@@ -15,19 +15,19 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
         
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/Tedd.TUI.sln
       
     - name: Build
-      run: dotnet build --no-restore -c Release
+      run: dotnet build src/Tedd.TUI.sln --no-restore -c Release
       
     - name: Test
-      run: dotnet test --no-build -c Release --verbosity normal
+      run: dotnet test src/Tedd.TUI.sln --no-build -c Release --verbosity normal
       
     - name: Pack
-      run: dotnet pack Tedd.TUI/Tedd.TUI.csproj -c Release -o out -p:Version=1.0.${{ github.run_number }}
+      run: dotnet pack src/Tedd.TUI/Tedd.TUI.csproj -c Release -o out -p:Version=1.0.${{ github.run_number }}
       
     - name: Push to NuGet
       run: dotnet nuget push out/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json

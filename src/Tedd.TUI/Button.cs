@@ -15,6 +15,14 @@ public class Button : UIElement
 
     public event EventHandler Click;
 
+    public override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        Focus();
+        Click?.Invoke(this, EventArgs.Empty);
+        e.Handled = true;
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
         string text = Content;
