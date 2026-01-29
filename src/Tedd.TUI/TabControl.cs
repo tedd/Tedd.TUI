@@ -5,8 +5,21 @@ namespace Tedd.TUI;
 
 public class TabControl : UIElement
 {
+    public TabControl()
+    {
+        Focusable = true;
+    }
     private List<TabItem> _items = new List<TabItem>();
     public List<TabItem> Items => _items;
+
+    public static readonly DependencyProperty BoxStyleProperty =
+        DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(TabControl), BoxStyle.Single);
+
+    public BoxStyle BoxStyle
+    {
+        get { return (BoxStyle)GetValue(BoxStyleProperty); }
+        set { SetValue(BoxStyleProperty, value); }
+    }
 
     private int _selectedIndex = 0;
     public int SelectedIndex
@@ -86,8 +99,27 @@ public class TabControl : UIElement
             var item = Items[i];
             string header = $" {item.Header} ";
 
-            var bg = (i == SelectedIndex) ? ConsoleColor.Gray : ConsoleColor.Black;
-            var fg = (i == SelectedIndex) ? ConsoleColor.Black : ConsoleColor.White;
+            ConsoleColor bg, fg;
+            if (i == SelectedIndex)
+            {
+                // Selected tab: use different colors based on focus state
+                if (IsFocused)
+                {
+                    fg = ConsoleColor.Yellow;
+                    bg = ConsoleColor.DarkBlue;
+                }
+                else
+                {
+                    fg = ConsoleColor.Black;
+                    bg = ConsoleColor.Gray;
+                }
+            }
+            else
+            {
+                // Unselected tabs
+                fg = ConsoleColor.White;
+                bg = ConsoleColor.Black;
+            }
 
             for (int k = 0; k < header.Length; k++)
             {
@@ -96,9 +128,10 @@ public class TabControl : UIElement
             headerX += header.Length + 1;
         }
 
-        // Draw Content Border line
+        // Draw Content Border line (Unicode horizontal)
+        char hChar = BoxDrawingChars.Get(BoxStyle).Horizontal;
         for (int i = 0; i < w; i++)
-            buffer.SetPixel(x + i, y + 1, '-', ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y + 1, hChar, ConsoleColor.Gray, ConsoleColor.Black);
 
         // Draw Selected Content
         if (SelectedIndex >= 0 && SelectedIndex < Items.Count)
@@ -115,9 +148,40 @@ public class TabControl : UIElement
         }
     }
 
+    public override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (Items.Count == 0) return;
+
+        bool switchTab = false;
+        int dir = 0;
+
+        if (e.Key == ConsoleKey.LeftArrow)
+        {
+            switchTab = true;
+            dir = -1;
+        }
+        else if (e.Key == ConsoleKey.RightArrow)
+        {
+            switchTab = true;
+            dir = 1;
+        }
+
+        if (switchTab)
+        {
+            int next = SelectedIndex + dir;
+            if (next < 0) next = Items.Count - 1;
+            if (next >= Items.Count) next = 0;
+            SelectedIndex = next;
+            e.Handled = true;
+            // Keep focus on TabControl (WinForms behavior) so user can keep navigating with arrows
+        }
+    }
+
     public override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
+        Focus();
 
         // e.X/Y are local coordinates
         if (e.Y == 0) // Header click
@@ -131,10 +195,21 @@ public class TabControl : UIElement
                 {
                     SelectedIndex = i;
                     e.Handled = true;
+                    FocusFirstInSelectedTab();
                     return;
                 }
                 currentX += len + 1;
             }
+        }
+    }
+
+    private void FocusFirstInSelectedTab()
+    {
+        if (GetRoot() is TuiWindow window && SelectedIndex >= 0 && SelectedIndex < Items.Count)
+        {
+            var content = Items[SelectedIndex].Content as UIElement;
+            if (content != null)
+                window.FocusFirstIn(content);
         }
     }
 }

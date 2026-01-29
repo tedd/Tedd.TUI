@@ -4,6 +4,10 @@ namespace Tedd.TUI;
 
 public class Button : UIElement
 {
+    public Button()
+    {
+        Focusable = true;
+    }
     public string Content
     {
         get { return (string)GetValue(ContentProperty); }
@@ -13,6 +17,15 @@ public class Button : UIElement
     public static readonly DependencyProperty ContentProperty =
         DependencyProperty.Register("Content", typeof(string), typeof(Button), string.Empty);
 
+    public static readonly DependencyProperty BoxStyleProperty =
+        DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(Button), BoxStyle.Single);
+
+    public BoxStyle BoxStyle
+    {
+        get { return (BoxStyle)GetValue(BoxStyleProperty); }
+        set { SetValue(BoxStyleProperty, value); }
+    }
+
     public event EventHandler Click;
 
     public override void OnMouseDown(MouseEventArgs e)
@@ -21,6 +34,16 @@ public class Button : UIElement
         Focus();
         Click?.Invoke(this, EventArgs.Empty);
         e.Handled = true;
+    }
+
+    public override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter)
+        {
+            Click?.Invoke(this, EventArgs.Empty);
+            e.Handled = true;
+        }
     }
 
     protected override Size MeasureOverride(Size availableSize)
@@ -37,25 +60,26 @@ public class Button : UIElement
         int w = RenderSize.Width;
         int h = RenderSize.Height;
         string text = Content;
+        var chars = BoxDrawingChars.Get(BoxStyle);
 
-        // Draw Border (Simple Box)
+        var borderFg = IsFocused ? ConsoleColor.Yellow : ConsoleColor.Gray;
+        var textFg = IsFocused ? ConsoleColor.Yellow : ConsoleColor.White;
+        // Check first pixel for default background if transparent
+        var bg = Background ?? buffer.GetPixel(x, y).Background;
+
+        // Draw Border (Unicode box drawing)
         // Top/Bottom
         for (int i = 0; i < w; i++)
         {
-            buffer.SetPixel(x + i, y, '-', ConsoleColor.Gray, ConsoleColor.Black);
-            buffer.SetPixel(x + i, y + h - 1, '-', ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y, i == 0 ? chars.TopLeft : i == w - 1 ? chars.TopRight : chars.Horizontal, borderFg, bg);
+            buffer.SetPixel(x + i, y + h - 1, i == 0 ? chars.BottomLeft : i == w - 1 ? chars.BottomRight : chars.Horizontal, borderFg, bg);
         }
-        // Left/Right
-        for (int i = 0; i < h; i++)
+        // Left/Right (excluding corners already drawn)
+        for (int i = 1; i < h - 1; i++)
         {
-            buffer.SetPixel(x, y + i, '|', ConsoleColor.Gray, ConsoleColor.Black);
-            buffer.SetPixel(x + w - 1, y + i, '|', ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x, y + i, chars.Vertical, borderFg, bg);
+            buffer.SetPixel(x + w - 1, y + i, chars.Vertical, borderFg, bg);
         }
-        // Corners
-        buffer.SetPixel(x, y, '+', ConsoleColor.Gray, ConsoleColor.Black);
-        buffer.SetPixel(x + w - 1, y, '+', ConsoleColor.Gray, ConsoleColor.Black);
-        buffer.SetPixel(x, y + h - 1, '+', ConsoleColor.Gray, ConsoleColor.Black);
-        buffer.SetPixel(x + w - 1, y + h - 1, '+', ConsoleColor.Gray, ConsoleColor.Black);
 
         // Draw Text
         int textX = x + (w - text.Length) / 2;
@@ -63,7 +87,7 @@ public class Button : UIElement
         for (int i = 0; i < text.Length; i++)
         {
              if (textX + i > x && textX + i < x + w - 1)
-                buffer.SetPixel(textX + i, textY, text[i], ConsoleColor.White, ConsoleColor.Black);
+                buffer.SetPixel(textX + i, textY, text[i], textFg, bg);
         }
     }
 }

@@ -8,6 +8,7 @@ public class ComboBox : UIElement
     private ListBox _popupListBox;
     private bool _isDroppedDown = false;
     private object _selectedItem;
+    private bool _arrowFocused = false; // True when focus is on the dropdown arrow
 
     public List<object> Items { get; } = new List<object>();
 
@@ -29,6 +30,7 @@ public class ComboBox : UIElement
 
     public ComboBox()
     {
+        Focusable = true;
         _popupListBox = new ListBox();
         _popupListBox.Items.AddRange(Items); // Sync logic needed
     }
@@ -44,9 +46,9 @@ public class ComboBox : UIElement
         int y = RenderSize.Y + offsetY;
         int w = RenderSize.Width;
 
-        // Draw Button look
-        var bg = IsFocused ? ConsoleColor.DarkGray : ConsoleColor.Black;
-        var fg = IsFocused ? ConsoleColor.Yellow : ConsoleColor.White;
+        // Draw text area
+        var textBg = IsFocused && !_arrowFocused ? ConsoleColor.DarkGray : ConsoleColor.Black;
+        var textFg = IsFocused && !_arrowFocused ? ConsoleColor.Yellow : ConsoleColor.White;
 
         string text = SelectedItem?.ToString() ?? "";
         if (text.Length > w - 2) text = text.Substring(0, w - 2);
@@ -55,11 +57,27 @@ public class ComboBox : UIElement
         for (int i = 0; i < w - 1; i++)
         {
             char c = (i < text.Length) ? text[i] : ' ';
-            buffer.SetPixel(x + i, y, c, fg, bg);
+            buffer.SetPixel(x + i, y, c, textFg, textBg);
         }
 
-        // Draw Arrow
-        buffer.SetPixel(x + w - 1, y, 'v', ConsoleColor.Black, ConsoleColor.Gray);
+        // Draw Arrow with focus indication
+        var arrowBg = IsFocused && _arrowFocused ? ConsoleColor.DarkGray : ConsoleColor.Gray;
+        var arrowFg = IsFocused && _arrowFocused ? ConsoleColor.Yellow : ConsoleColor.Black;
+        buffer.SetPixel(x + w - 1, y, 'v', arrowFg, arrowBg);
+    }
+
+    public override void OnGotFocus()
+    {
+        base.OnGotFocus();
+        // Start with text area focused
+        _arrowFocused = false;
+    }
+
+    public override void OnLostFocus()
+    {
+        base.OnLostFocus();
+        // Reset arrow focus state when losing focus
+        _arrowFocused = false;
     }
 
     public override void OnMouseDown(MouseEventArgs e)
@@ -73,7 +91,37 @@ public class ComboBox : UIElement
     public override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter || e.Key == ConsoleKey.DownArrow)
+        
+        // Handle Tab for internal focus navigation (text area <-> arrow)
+        if (e.Key == ConsoleKey.Tab)
+        {
+            if (!e.Modifiers.HasFlag(ConsoleModifiers.Shift))
+            {
+                // Forward Tab: if not on arrow, move to arrow; if on arrow, let it pass through
+                if (!_arrowFocused)
+                {
+                    _arrowFocused = true;
+                    e.Handled = true;
+                    return;
+                }
+                // else: _arrowFocused is true, don't handle - let focus move to next control
+            }
+            else
+            {
+                // Shift+Tab: if on arrow, move to text area; if on text area, let it pass through
+                if (_arrowFocused)
+                {
+                    _arrowFocused = false;
+                    e.Handled = true;
+                    return;
+                }
+                // else: on text area, don't handle - let focus move to previous control
+            }
+        }
+        
+        // Space, Enter, or Arrow keys open dropdown
+        if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter
+            || e.Key == ConsoleKey.DownArrow || e.Key == ConsoleKey.UpArrow)
         {
             ToggleDropdown();
             e.Handled = true;
@@ -117,6 +165,8 @@ public class ComboBox : UIElement
             current = current.Parent;
         }
 
+        // Measure and arrange the popup
+        _popupListBox.Measure(new Size(_popupListBox.Width, _popupListBox.Height));
         _popupListBox.Arrange(new Rect(absX, absY, _popupListBox.Width, _popupListBox.Height));
 
         // Unsubscribe to avoid duplicates if any

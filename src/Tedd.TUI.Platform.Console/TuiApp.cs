@@ -25,6 +25,9 @@ public class TuiApp
         // Main Loop
         while (_running)
         {
+            // Ensure focus is set (e.g. first focusable in selected tab) so Tab and keys work
+            _window.EnsureInitialFocus();
+
             // Input
             _inputManager.ProcessInput();
 

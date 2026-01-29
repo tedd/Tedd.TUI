@@ -22,6 +22,15 @@ public abstract class UIElement : DependencyObject
 {
     public UIElement Parent { get; internal set; }
 
+    public static readonly DependencyProperty BackgroundProperty =
+        DependencyProperty.Register("Background", typeof(ConsoleColor?), typeof(UIElement), null);
+
+    public ConsoleColor? Background
+    {
+        get { return (ConsoleColor?)GetValue(BackgroundProperty); }
+        set { SetValue(BackgroundProperty, value); }
+    }
+
     public static readonly DependencyProperty IsFocusedProperty =
         DependencyProperty.Register("IsFocused", typeof(bool), typeof(UIElement), false);
 
@@ -47,6 +56,15 @@ public abstract class UIElement : DependencyObject
     {
         get { return (bool)GetValue(VisibilityProperty); }
         set { SetValue(VisibilityProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusableProperty =
+        DependencyProperty.Register("Focusable", typeof(bool), typeof(UIElement), false);
+
+    public bool Focusable
+    {
+        get { return (bool)GetValue(FocusableProperty); }
+        set { SetValue(FocusableProperty, value); }
     }
 
     public static readonly DependencyProperty WidthProperty =

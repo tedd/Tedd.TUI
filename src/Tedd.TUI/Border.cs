@@ -31,6 +31,15 @@ public class Border : UIElement
         set { SetValue(BorderColorProperty, value); }
     }
 
+    public static readonly DependencyProperty BoxStyleProperty =
+        DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(Border), BoxStyle.Single);
+
+    public BoxStyle BoxStyle
+    {
+        get { return (BoxStyle)GetValue(BoxStyleProperty); }
+        set { SetValue(BoxStyleProperty, value); }
+    }
+
     protected override void OnDataContextChanged(object newValue)
     {
         base.OnDataContextChanged(newValue);
@@ -76,25 +85,25 @@ public class Border : UIElement
 
         if (w < 2 || h < 2) return;
 
-        // Draw Box
+        var chars = BoxDrawingChars.Get(BoxStyle);
         // Corners
-        buffer.SetPixel(x, y, '+', c, ConsoleColor.Black);
-        buffer.SetPixel(x + w - 1, y, '+', c, ConsoleColor.Black);
-        buffer.SetPixel(x, y + h - 1, '+', c, ConsoleColor.Black);
-        buffer.SetPixel(x + w - 1, y + h - 1, '+', c, ConsoleColor.Black);
+        buffer.SetPixel(x, y, chars.TopLeft, c, ConsoleColor.Black);
+        buffer.SetPixel(x + w - 1, y, chars.TopRight, c, ConsoleColor.Black);
+        buffer.SetPixel(x, y + h - 1, chars.BottomLeft, c, ConsoleColor.Black);
+        buffer.SetPixel(x + w - 1, y + h - 1, chars.BottomRight, c, ConsoleColor.Black);
 
         // Horizontal
         for (int i = 1; i < w - 1; i++)
         {
-            buffer.SetPixel(x + i, y, '-', c, ConsoleColor.Black);
-            buffer.SetPixel(x + i, y + h - 1, '-', c, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y, chars.Horizontal, c, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y + h - 1, chars.Horizontal, c, ConsoleColor.Black);
         }
 
         // Vertical
         for (int i = 1; i < h - 1; i++)
         {
-            buffer.SetPixel(x, y + i, '|', c, ConsoleColor.Black);
-            buffer.SetPixel(x + w - 1, y + i, '|', c, ConsoleColor.Black);
+            buffer.SetPixel(x, y + i, chars.Vertical, c, ConsoleColor.Black);
+            buffer.SetPixel(x + w - 1, y + i, chars.Vertical, c, ConsoleColor.Black);
         }
 
         if (Child != null)

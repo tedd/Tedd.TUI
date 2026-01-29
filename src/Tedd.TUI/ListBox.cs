@@ -5,10 +5,20 @@ namespace Tedd.TUI;
 
 public class ListBox : UIElement
 {
+    public ListBox()
+    {
+        Focusable = true;
+    }
     private List<object> _items = new List<object>();
     public List<object> Items => _items;
 
     public int SelectedIndex { get; set; } = -1;
+
+    /// <summary>
+    /// When true (default), selection is visible even when unfocused.
+    /// When false, selection highlighting is only shown while focused.
+    /// </summary>
+    public bool ShowSelection { get; set; } = true;
 
     private int _scrollOffset = 0;
 
@@ -34,17 +44,31 @@ public class ListBox : UIElement
 
             // Clear line
             for (int dx = 0; dx < w; dx++)
-                buffer.SetPixel(x + dx, y + i, ' ', ConsoleColor.White, ConsoleColor.Black);
+            {
+                var pixelBg = Background ?? buffer.GetPixel(x + dx, y + i).Background;
+                buffer.SetPixel(x + dx, y + i, ' ', ConsoleColor.White, pixelBg);
+            }
 
             if (itemIndex < Items.Count)
             {
                 bool isSelected = (itemIndex == SelectedIndex);
-                var bg = isSelected ? ConsoleColor.Blue : ConsoleColor.Black;
-                var fg = isSelected ? ConsoleColor.White : ConsoleColor.Gray;
-                if (IsFocused && isSelected)
+                var bg = Background ?? buffer.GetPixel(x, y + i).Background;
+                var fg = ConsoleColor.Gray;
+                if (isSelected)
                 {
-                    bg = ConsoleColor.Cyan;
-                    fg = ConsoleColor.Black;
+                    if (IsFocused)
+                    {
+                        // Focused: selected item is blue
+                        bg = ConsoleColor.Blue;
+                        fg = ConsoleColor.White;
+                    }
+                    else if (ShowSelection)
+                    {
+                        // Not focused but ShowSelection enabled: inverted black/white
+                        bg = ConsoleColor.White;
+                        fg = ConsoleColor.Black;
+                    }
+                    // else: ShowSelection is false and not focused, use default colors
                 }
 
                 string content = Items[itemIndex]?.ToString() ?? "";
@@ -101,7 +125,7 @@ public class ListBox : UIElement
             }
             e.Handled = true;
         }
-        else if (e.Key == ConsoleKey.Enter)
+        else if (e.Key == ConsoleKey.Enter || e.Key == ConsoleKey.Spacebar)
         {
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             e.Handled = true;

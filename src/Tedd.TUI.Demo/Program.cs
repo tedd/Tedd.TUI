@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Tedd.TUI;
 using Tedd.TUI.Platform.Console;
 
 namespace Tedd.TUI.Demo;
@@ -15,11 +12,11 @@ class Program
         var mainStack = new StackPanel { Orientation = Orientation.Vertical };
         window.Content = mainStack;
 
-        // Header
+        // Header (double-line box)
         mainStack.AddChild(new Border
         {
             Child = new TextBlock { Text = "Tedd.TUI Demo Application (.NET 10)", Foreground = ConsoleColor.Cyan },
-            // Padding/Border properties not fully implemented in Border yet but structure is there
+            BoxStyle = BoxStyle.Double
         });
 
         // Tab Control
@@ -67,14 +64,69 @@ class Program
         var logBox = new ListBox { Width = 80, Height = 5 };
         mainStack.AddChild(logBox);
 
-        // Submit Button (Moved down so it can access logBox)
+        // Submit Button (double-line style to showcase both)
         var btnPanel = new StackPanel { Orientation = Orientation.Horizontal };
-        var btnSubmit = new Button { Content = "Submit" };
-        btnSubmit.Click += (s, e) => {
+        var btnSubmit = new Button { Content = "Submit", BoxStyle = BoxStyle.Double };
+        btnSubmit.Click += (s, e) =>
+        {
             logBox.Items.Add($"Form Submitted: {nameBox.Text} / {countryCombo.SelectedItem}");
             logBox.SelectedIndex = logBox.Items.Count - 1;
         };
         btnPanel.AddChild(btnSubmit);
+
+        // Dialog Box Demo
+        var btnDialog = new Button { Content = "Show Dialog", BoxStyle = BoxStyle.Single };
+        btnDialog.Click += (s, e) =>
+        {
+            var dialog = new DialogBox
+            {
+                Title = "Welcome",
+                Width = 40,
+                Height = 10,
+                BoxStyle = BoxStyle.Double,
+                BackgroundColor = ConsoleColor.DarkBlue,
+                TitleColor = ConsoleColor.Yellow,
+                BorderColor = ConsoleColor.White
+            };
+
+            var dialogStack = new StackPanel { Orientation = Orientation.Vertical };
+            dialogStack.AddChild(new TextBlock { Text = "This is a modal dialog box.", Foreground = ConsoleColor.White });
+            dialogStack.AddChild(new TextBlock { Text = "You can put any controls here.", Foreground = ConsoleColor.Gray });
+
+            var btnClose1 = new Button { Content = "Close", BoxStyle = BoxStyle.Single };
+            btnClose1.Click += (sender, args) => dialog.Hide();
+            var btnClose2 = new Button { Content = "Close", BoxStyle = BoxStyle.Single };
+            btnClose2.Click += (sender, args) => dialog.Hide();
+
+            // Center the button a bit (simple filler for now)
+            var btnContainer = new StackPanel { Orientation = Orientation.Horizontal };
+            btnContainer.AddChild(new TextBlock { Text = "   " });
+            btnContainer.AddChild(btnClose1);
+            btnContainer.AddChild(btnClose2);
+
+            dialogStack.AddChild(new TextBlock { Text = " " }); // Spacer
+            dialogStack.AddChild(btnContainer);
+
+            dialog.Content = dialogStack;
+
+            // We need to add it to the window overlay. 
+            // In a real app we might have a better way, but for now we manually use SetOverlay via a helper or direct access?
+            // TuiWindow has SetOverlay but it's public. We need access to 'window' variable.
+            // Since we are inside main, we have 'window'.
+
+            // BUT wait, DialogBox.Show/Hide methods rely on Visibility property. 
+            // TuiWindow's overlay mechanism is: SetOverlay(UIElement).
+            // DialogBox.Show() just sets Visibility=true. It doesn't attach itself to the window if not already there.
+            // The current DialogBox implementation expects to be placed somewhere. 
+            // If we want it to be a true modal overlay handled by TuiWindow, we need to pass it to window.SetOverlay.
+
+            // Let's adjust how we use it here.
+            window.SetOverlay(dialog);
+            dialog.Show();
+        };
+        btnPanel.AddChild(new TextBlock { Text = "  " }); // Spacer
+        btnPanel.AddChild(btnDialog);
+
         formStack.AddChild(btnPanel);
 
         tabs.AddItem(new TabItem { Header = "Form", Content = formStack });
@@ -88,7 +140,7 @@ class Program
 
         listStack.AddChild(new TextBlock { Text = "Items:" });
         var listBox = new ListBox { Width = 40, Height = 10 };
-        for(int i=1; i<=20; i++) listBox.Items.Add($"Item {i}");
+        for (int i = 1; i <= 20; i++) listBox.Items.Add($"Item {i}");
         listStack.AddChild(listBox);
 
         tabs.AddItem(new TabItem { Header = "Lists", Content = listStack });
@@ -99,7 +151,8 @@ class Program
         // Manual hook for logging for now since we don't have a global message bus
         // In a real app we'd bind or use events.
 
-        System.Console.CancelKeyPress += (s, e) => {
+        System.Console.CancelKeyPress += (s, e) =>
+        {
             app.Stop();
             e.Cancel = true;
         };

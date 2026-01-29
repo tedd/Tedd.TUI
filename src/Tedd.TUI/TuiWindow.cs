@@ -65,7 +65,36 @@ public class TuiWindow : UIElement
 
     public void ClearOverlay()
     {
-        _overlay = null;
+        if (_overlay != null)
+        {
+            // If focus is currently within the overlay, we should clear it
+            // so hidden controls don't keep receiving input.
+            if (_focusedElement != null)
+            {
+                // Check if _focusedElement is child of _overlay
+                var current = _focusedElement;
+                bool isInsideOverlay = false;
+                while (current != null)
+                {
+                    if (current == _overlay)
+                    {
+                        isInsideOverlay = true;
+                        break;
+                    }
+                    current = current.Parent;
+                }
+
+                if (isInsideOverlay)
+                {
+                    _focusedElement = null; // Clear focus
+                    // Attempt to restore focus to something valid in the main content
+                    // Since we don't have a history, we'll use EnsureInitialFocus or similar logic
+                    // EnsureInitialFocus() checks _focusedElement null, so it will try to find something.
+                    EnsureInitialFocus();
+                }
+            }
+            _overlay = null;
+        }
     }
 
     protected override void OnDataContextChanged(object newValue)
@@ -140,6 +169,11 @@ public class TuiWindow : UIElement
                 hitChild = InputHitTestRecursive(border.Child, localX, localY);
                 if (hitChild != null) return hitChild;
             }
+            else if (element is DialogBox dialog && dialog.Content != null)
+            {
+                hitChild = InputHitTestRecursive(dialog.Content, localX, localY);
+                if (hitChild != null) return hitChild;
+            }
             else if (element is TabControl tab)
             {
                 if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
@@ -163,6 +197,26 @@ public class TuiWindow : UIElement
         return null;
     }
 
+    /// <summary>
+    /// Sets focus to the first focusable element when none is set (e.g. on startup).
+    /// If content is a TabControl, focuses the first control inside the selected tab so Tab order works.
+    /// </summary>
+    public void EnsureInitialFocus()
+    {
+        if (_focusedElement != null) return;
+        if (Content == null) return;
+
+        if (Content is TabControl tc && tc.SelectedIndex >= 0 && tc.SelectedIndex < tc.Items.Count
+            && tc.Items[tc.SelectedIndex].Content is UIElement tabContent)
+        {
+            FocusFirstIn(tabContent);
+        }
+        else
+        {
+            FocusFirstIn(Content);
+        }
+    }
+
     public void ProcessKey(KeyEventArgs e)
     {
         // Bubble? Tunnel?
@@ -181,11 +235,18 @@ public class TuiWindow : UIElement
 
     private void MoveFocus(int direction)
     {
-        if (Content == null) return;
+        // If there is an active overlay (modal), restrict focus navigation to it.
+        UIElement rootForFocus = Content;
+        if (_overlay != null && _overlay.Visibility)
+        {
+            rootForFocus = _overlay;
+        }
+
+        if (rootForFocus == null) return;
 
         // Flatten visual tree
         var list = new List<UIElement>();
-        FlattenTree(Content, list);
+        FlattenTree(rootForFocus, list);
 
         // Filter focusable?
         // For simplicity, anything handling input or marked IsEnabled.
@@ -223,17 +284,26 @@ public class TuiWindow : UIElement
     private bool CanFocus(UIElement element)
     {
         if (!element.IsEnabled || !element.Visibility) return false;
-        // Check if it is a control that accepts focus.
-        // For this demo: TextBox, Button, CheckBox, RadioButton, ComboBox, ListBox.
-        // StackPanel, Border etc usually not focusable.
-        // We can check if it overrides OnMouseDown/KeyDown or has specific types.
+        return element.Focusable;
+    }
 
-        return element is TextBox ||
-               element is Button ||
-               element is CheckBox ||
-               element is RadioButton ||
-               element is ComboBox ||
-               element is ListBox;
+    /// <summary>
+    /// Sets focus to the first focusable element inside the given container (e.g. tab content).
+    /// Called by TabControl when the selected tab changes so keys go to the visible tab.
+    /// </summary>
+    public void FocusFirstIn(UIElement container)
+    {
+        if (container == null) return;
+        var list = new List<UIElement>();
+        FlattenTree(container, list);
+        foreach (var el in list)
+        {
+            if (CanFocus(el))
+            {
+                SetFocus(el);
+                return;
+            }
+        }
     }
 
     private void FlattenTree(UIElement parent, List<UIElement> list)
@@ -248,13 +318,19 @@ public class TuiWindow : UIElement
         {
             FlattenTree(border.Child, list);
         }
+        else if (parent is DialogBox dialog && dialog.Content != null)
+        {
+            FlattenTree(dialog.Content, list);
+        }
         else if (parent is TabControl tab)
         {
+            // Add selected tab content first so first focusable is inside the tab (e.g. nameBox)
             if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
             {
                 var content = tab.Items[tab.SelectedIndex].Content as UIElement;
                 if (content != null) FlattenTree(content, list);
             }
+            list.Add(tab); // TabControl (tab strip) after content so Tab from last control goes to strip, then to next section
         }
     }
 }

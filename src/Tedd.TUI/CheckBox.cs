@@ -4,6 +4,10 @@ namespace Tedd.TUI;
 
 public class CheckBox : UIElement
 {
+    public CheckBox()
+    {
+        Focusable = true;
+    }
     public static readonly DependencyProperty IsCheckedProperty =
         DependencyProperty.Register("IsChecked", typeof(bool), typeof(CheckBox), false);
 
