@@ -39,6 +39,12 @@ public class TabControl : UIElement
     {
         _items.Add(item);
         item.Parent = this;
+        if (item.Content is UIElement uie)
+        {
+            uie.Parent = this;
+            uie.DataContext = this.DataContext; 
+        }
+
         // If it's the first item, select it
         if (_items.Count == 1)
         {

@@ -150,8 +150,23 @@ public class ComboBox : UIElement
         // Setup ListBox
         _popupListBox.Items.Clear();
         _popupListBox.Items.AddRange(Items);
-        _popupListBox.Width = RenderSize.Width;
+        // Popup width matches ComboBox width, adjusted for border
+        int contentWidth = Math.Max(0, RenderSize.Width - 2); 
+        _popupListBox.Width = contentWidth;
         _popupListBox.Height = 5; // Fixed height for now
+        
+        // Ensure ListBox is opaque
+        _popupListBox.Background = ConsoleColor.Black;
+
+        // Create a Border for the popup
+        var border = new Border
+        {
+            Width = RenderSize.Width,
+            Height = _popupListBox.Height + 2,
+            Child = _popupListBox,
+            BorderColor = ConsoleColor.White,
+            BoxStyle = BoxStyle.Single
+        };
 
         // Calculate position relative to Window
         int absX = RenderSize.X;
@@ -165,15 +180,15 @@ public class ComboBox : UIElement
             current = current.Parent;
         }
 
-        // Measure and arrange the popup
-        _popupListBox.Measure(new Size(_popupListBox.Width, _popupListBox.Height));
-        _popupListBox.Arrange(new Rect(absX, absY, _popupListBox.Width, _popupListBox.Height));
+        // Measure and arrange the popup (border)
+        border.Measure(new Size(border.Width, border.Height));
+        border.Arrange(new Rect(absX, absY, border.Width, border.Height));
 
         // Unsubscribe to avoid duplicates if any
         _popupListBox.SelectionChanged -= Popup_SelectionChanged;
         _popupListBox.SelectionChanged += Popup_SelectionChanged;
 
-        root.SetOverlay(_popupListBox);
+        root.SetOverlay(border);
         root.SetFocus(_popupListBox);
     }
 

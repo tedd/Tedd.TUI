@@ -98,6 +98,7 @@ public class ListBox : UIElement
         if (itemIndex >= 0 && itemIndex < Items.Count)
         {
             SelectedIndex = itemIndex;
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
         e.Handled = true;
     }
