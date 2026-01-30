@@ -159,7 +159,7 @@ public abstract class UIElement : DependencyObject
 
     protected virtual void OnDataContextChanged(object newValue)
     {
-        // To be overridden by containers to propagate
+        // Called automatically when DataContext changes; override in derived classes to respond to DataContext changes.
     }
 
     protected virtual int VisualChildrenCount => 0;
