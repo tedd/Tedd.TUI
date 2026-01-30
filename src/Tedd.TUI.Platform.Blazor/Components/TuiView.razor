@@ -1,0 +1,60 @@
+@using Microsoft.JSInterop
+@using Tedd.TUI
+@using Tedd.TUI.Platform.Blazor
+@using Tedd.TUI.Platform.Blazor.Components
+@implements ITuiContainer
+@implements IDisposable
+@inject IJSRuntime JS
+
+<div tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='e => OnMouse(e, "mousedown")' @onmouseup='e => OnMouse(e, "mouseup")' @onmousemove='e => OnMouse(e, "mousemove")' style="outline:none; display: inline-block;">
+    <canvas id="@CanvasId"></canvas>
+</div>
+
+<CascadingValue Value="this" IsFixed="true">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public int Width { get; set; } = 80;
+    [Parameter] public int Height { get; set; } = 25;
+
+    public string CanvasId { get; } = "tui_" + Guid.NewGuid().ToString("N");
+
+    private BlazorTuiApp? _app;
+    private TuiWindow? _window;
+
+    public TuiWindow? Window => _window;
+
+    protected override void OnInitialized()
+    {
+        _window = new TuiWindow();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _window != null)
+        {
+            var renderer = new BlazorRenderer(JS, CanvasId);
+            _app = new BlazorTuiApp(_window, renderer);
+            await _app.StartAsync(Width, Height);
+        }
+    }
+
+    public void AddChild(UIElement child)
+    {
+        if (_window != null)
+        {
+            _window.Content = child;
+        }
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, true);
+    private void OnKeyUp(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, false);
+    private void OnMouse(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, string type) => _app?.InputManager.QueueMouse(e, type);
+
+    public void Dispose()
+    {
+        _app?.Dispose();
+    }
+}
