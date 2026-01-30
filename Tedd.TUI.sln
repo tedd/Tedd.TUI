@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI", "Tedd.TUI\Tedd.TUI.csproj", "{30BC7C5D-C611-4095-B3C6-AA89B606C1E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI", "src\Tedd.TUI\Tedd.TUI.csproj", "{30BC7C5D-C611-4095-B3C6-AA89B606C1E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Tests", "Tedd.TUI.Tests\Tedd.TUI.Tests.csproj", "{8D166B41-C410-449D-9335-DF797C2FECC6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Tests", "src\Tedd.TUI.Tests\Tedd.TUI.Tests.csproj", "{8D166B41-C410-449D-9335-DF797C2FECC6}"
 EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
