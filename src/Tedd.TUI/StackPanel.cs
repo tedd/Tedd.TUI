@@ -19,7 +19,14 @@ public class StackPanel : UIElement
     {
         _children.Add(child);
         child.Parent = this;
-        child.DataContext = this.DataContext; // Inherit current context
+    }
+
+    protected override int VisualChildrenCount => _children.Count;
+
+    protected override UIElement GetVisualChild(int index)
+    {
+        if (index < 0 || index >= _children.Count) throw new ArgumentOutOfRangeException(nameof(index));
+        return _children[index];
     }
 
     public static readonly DependencyProperty OrientationProperty =
@@ -29,15 +36,6 @@ public class StackPanel : UIElement
     {
         get { return (Orientation)GetValue(OrientationProperty); }
         set { SetValue(OrientationProperty, value); }
-    }
-
-    protected override void OnDataContextChanged(object newValue)
-    {
-        base.OnDataContextChanged(newValue);
-        foreach (var child in Children)
-        {
-            child.DataContext = newValue;
-        }
     }
 
     protected override Size MeasureOverride(Size availableSize)

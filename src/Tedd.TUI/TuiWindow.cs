@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 
 namespace Tedd.TUI;
 
@@ -14,9 +15,16 @@ public class TuiWindow : UIElement
             if (_content != null)
             {
                 _content.Parent = this;
-                _content.DataContext = this.DataContext;
             }
         }
+    }
+
+    protected override int VisualChildrenCount => _content != null ? 1 : 0;
+
+    protected override UIElement GetVisualChild(int index)
+    {
+        if (_content != null && index == 0) return _content;
+        throw new ArgumentOutOfRangeException(nameof(index));
     }
 
     protected override Size MeasureOverride(Size availableSize)

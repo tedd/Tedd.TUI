@@ -14,9 +14,16 @@ public class Border : UIElement
             if (_child != null)
             {
                 _child.Parent = this;
-                _child.DataContext = this.DataContext;
             }
         }
+    }
+
+    protected override int VisualChildrenCount => _child != null ? 1 : 0;
+
+    protected override UIElement GetVisualChild(int index)
+    {
+        if (_child != null && index == 0) return _child;
+        throw new ArgumentOutOfRangeException(nameof(index));
     }
 
     // Spec says BorderThickness/Color. We'll assume thickness 1 for now or implement property.
