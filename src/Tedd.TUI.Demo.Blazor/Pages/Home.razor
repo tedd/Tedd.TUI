@@ -1,0 +1,41 @@
+@page "/"
+@using Tedd.TUI
+@using Tedd.TUI.Platform.Blazor.Components
+
+<PageTitle>Tedd.TUI Blazor Demo</PageTitle>
+
+<h1>Tedd.TUI Blazor Demo</h1>
+
+<p>Use keyboard (Arrows, Enter) or Mouse.</p>
+
+<TuiView Width="60" Height="20">
+    <TuiBorder BorderColor="ConsoleColor.Cyan" BoxStyle="BoxStyle.Double" Width="58" Height="18" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+        <TuiStackPanel Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+            <TuiLabel Text="Hello from Blazor TUI!" Foreground="ConsoleColor.Green" HorizontalAlignment="HorizontalAlignment.Center" />
+
+            <TuiLabel Text="@($"Counter: {counter}")" Foreground="ConsoleColor.White" HorizontalAlignment="HorizontalAlignment.Center" />
+
+            <TuiButton Text="Click Me" OnClick="IncrementCount" HorizontalAlignment="HorizontalAlignment.Center" />
+
+            <TuiButton Text="Reset" OnClick="ResetCount" BoxStyle="BoxStyle.Double" HorizontalAlignment="HorizontalAlignment.Center" />
+        </TuiStackPanel>
+    </TuiBorder>
+</TuiView>
+
+<div style="margin-top: 20px;">
+    <p>External Counter: @counter</p>
+</div>
+
+@code {
+    private int counter = 0;
+
+    private void IncrementCount()
+    {
+        counter++;
+    }
+
+    private void ResetCount()
+    {
+        counter = 0;
+    }
+}
