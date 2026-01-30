@@ -43,8 +43,10 @@ public class TextBlock : UIElement
         {
             // Clip to bounds
             if (i < RenderSize.Width && RenderSize.Height > 0)
+            if (i < RenderSize.Width && RenderSize.Height > 0)
             {
-                buffer.SetPixel(x + i, y, text[i], Foreground, ConsoleColor.Black);
+                var bg = Background ?? buffer.GetPixel(x + i, y).Background;
+                buffer.SetPixel(x + i, y, text[i], Foreground, bg);
             }
         }
     }
