@@ -21,6 +21,7 @@ public enum VerticalAlignment
 public abstract class UIElement : DependencyObject
 {
     public UIElement Parent { get; internal set; }
+    protected override DependencyObject InheritanceParent => Parent;
 
     public static readonly DependencyProperty IsFocusedProperty =
         DependencyProperty.Register("IsFocused", typeof(bool), typeof(UIElement), false);
@@ -86,7 +87,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty DataContextProperty =
-        DependencyProperty.Register("DataContext", typeof(object), typeof(UIElement), null);
+        DependencyProperty.Register("DataContext", typeof(object), typeof(UIElement), null, isInherited: true);
 
     public object DataContext
     {
@@ -123,11 +124,31 @@ public abstract class UIElement : DependencyObject
             
             OnDataContextChanged(this.DataContext);
         }
+
+        if (dp.IsInherited)
+        {
+            int count = VisualChildrenCount;
+            for (int i = 0; i < count; i++)
+            {
+                var child = GetVisualChild(i);
+                if (!child.HasLocalValue(dp))
+                {
+                    child.OnPropertyChanged(dp);
+                }
+            }
+        }
     }
 
     protected virtual void OnDataContextChanged(object newValue)
     {
         // To be overridden by containers to propagate
+    }
+
+    protected virtual int VisualChildrenCount => 0;
+
+    protected virtual UIElement GetVisualChild(int index)
+    {
+        throw new System.ArgumentOutOfRangeException(nameof(index));
     }
 
     // Layout System

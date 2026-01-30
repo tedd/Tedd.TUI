@@ -9,18 +9,20 @@ public class DependencyProperty
     public Type PropertyType { get; }
     public Type OwnerType { get; }
     public object DefaultValue { get; }
+    public bool IsInherited { get; }
 
-    private DependencyProperty(string name, Type propertyType, Type ownerType, object defaultValue)
+    private DependencyProperty(string name, Type propertyType, Type ownerType, object defaultValue, bool isInherited)
     {
         Name = name;
         PropertyType = propertyType;
         OwnerType = ownerType;
         DefaultValue = defaultValue;
+        IsInherited = isInherited;
     }
 
-    public static DependencyProperty Register(string name, Type propertyType, Type ownerType, object defaultValue = null)
+    public static DependencyProperty Register(string name, Type propertyType, Type ownerType, object defaultValue = null, bool isInherited = false)
     {
-        return new DependencyProperty(name, propertyType, ownerType, defaultValue);
+        return new DependencyProperty(name, propertyType, ownerType, defaultValue, isInherited);
     }
 }
 
@@ -28,11 +30,17 @@ public class DependencyObject
 {
     private readonly Dictionary<DependencyProperty, object> _values = new Dictionary<DependencyProperty, object>();
 
+    protected virtual DependencyObject InheritanceParent => null;
+
     public object GetValue(DependencyProperty dp)
     {
         if (_values.TryGetValue(dp, out var value))
         {
             return value;
+        }
+        if (dp.IsInherited && InheritanceParent != null)
+        {
+            return InheritanceParent.GetValue(dp);
         }
         return dp.DefaultValue;
     }
@@ -47,6 +55,11 @@ public class DependencyObject
         
         _values[dp] = value;
         OnPropertyChanged(dp);
+    }
+
+    protected bool HasLocalValue(DependencyProperty dp)
+    {
+        return _values.ContainsKey(dp);
     }
 
     protected virtual void OnPropertyChanged(DependencyProperty dp)
