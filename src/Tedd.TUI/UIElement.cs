@@ -155,6 +155,7 @@ public abstract class UIElement : DependencyObject
                 }
             }
         }
+        Invalidate();
     }
 
     protected virtual void OnDataContextChanged(object newValue)
@@ -286,11 +287,13 @@ public abstract class UIElement : DependencyObject
     public virtual void OnGotFocus()
     {
         IsFocused = true;
+        Invalidate();
     }
 
     public virtual void OnLostFocus()
     {
         IsFocused = false;
+        Invalidate();
     }
 
     public bool Focus()
@@ -315,6 +318,11 @@ public abstract class UIElement : DependencyObject
             current = current.Parent;
         }
         return current;
+    }
+
+    public virtual void Invalidate()
+    {
+        if (Parent != null) Parent.Invalidate();
     }
 }
 

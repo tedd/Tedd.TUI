@@ -90,4 +90,11 @@ internal static class NativeMethods
     public const ushort MOUSE_EVENT = 0x0002;
     public const ushort WINDOW_BUFFER_SIZE_EVENT = 0x0004;
     public const ushort FOCUS_EVENT = 0x0010;
+
+    public const uint WAIT_OBJECT_0 = 0x00000000;
+    public const uint WAIT_FAILED = 0xFFFFFFFF;
+    public const uint INFINITE = 0xFFFFFFFF;
+
+    [DllImport(Kernel32, SetLastError = true)]
+    public static extern uint WaitForMultipleObjects(uint nCount, IntPtr[] lpHandles, bool bWaitAll, uint dwMilliseconds);
 }

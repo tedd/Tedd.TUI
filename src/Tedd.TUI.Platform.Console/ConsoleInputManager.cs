@@ -25,6 +25,8 @@ public class ConsoleInputManager
         System.Console.Write("\x1b[?1000h\x1b[?1006h");
     }
 
+    public IntPtr InputHandle { get; private set; }
+
     public void ProcessInput()
     {
         if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
@@ -146,6 +148,7 @@ public class ConsoleInputManager
         try
         {
             var iStdIn = NativeMethods.GetStdHandle(NativeMethods.STD_INPUT_HANDLE);
+            InputHandle = iStdIn;
             if (NativeMethods.GetConsoleMode(iStdIn, out uint inMode))
             {
                 // Disable Blocking / QuickEdit

@@ -341,4 +341,10 @@ public class TuiWindow : UIElement
             list.Add(tab); // TabControl (tab strip) after content so Tab from last control goes to strip, then to next section
         }
     }
+
+    public event EventHandler VisualChanged;
+    public override void Invalidate()
+    {
+        VisualChanged?.Invoke(this, EventArgs.Empty);
+    }
 }
