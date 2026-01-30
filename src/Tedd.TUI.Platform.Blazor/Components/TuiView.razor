@@ -18,34 +18,43 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public int Width { get; set; } = 80;
     [Parameter] public int Height { get; set; } = 25;
+    [Parameter] public TuiWindow? Window { get; set; }
 
     public string CanvasId { get; } = "tui_" + Guid.NewGuid().ToString("N");
 
     private BlazorTuiApp? _app;
-    private TuiWindow? _window;
+    private TuiWindow? _internalWindow;
 
-    public TuiWindow? Window => _window;
+    public TuiWindow? CurrentWindow => Window ?? _internalWindow;
 
     protected override void OnInitialized()
     {
-        _window = new TuiWindow();
+        if (Window == null)
+        {
+            _internalWindow = new TuiWindow();
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _window != null)
+        if (firstRender)
         {
-            var renderer = new BlazorRenderer(JS, CanvasId);
-            _app = new BlazorTuiApp(_window, renderer);
-            await _app.StartAsync(Width, Height);
+            var win = CurrentWindow;
+            if (win != null)
+            {
+                var renderer = new BlazorRenderer(JS, CanvasId);
+                _app = new BlazorTuiApp(win, renderer);
+                await _app.StartAsync(Width, Height);
+            }
         }
     }
 
     public void AddChild(UIElement child)
     {
-        if (_window != null)
+        var win = CurrentWindow;
+        if (win != null)
         {
-            _window.Content = child;
+            win.Content = child;
         }
     }
 
