@@ -1,0 +1,71 @@
+@using Tedd.TUI
+@using Tedd.TUI.Platform.Blazor
+@implements IDisposable
+
+<div class="tui-dom-grid" style="font-family: 'Consolas', monospace; line-height: 18px; font-size: 16px; white-space: pre; background-color: black; color: white;">
+    @if (_buffer != null)
+    {
+        @for (int y = 0; y < _buffer.Height; y++)
+        {
+            <div class="tui-row" style="height: 18px;">
+                @for (int x = 0; x < _buffer.Width; x++)
+                {
+                    var cell = _buffer.GetPixel(x, y);
+                    <span style="display:inline-block; width: 10px; height: 18px; color: @ToHtmlColor(cell.Foreground); background-color: @ToHtmlColor(cell.Background);">@cell.Character</span>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public DomRenderer? Renderer { get; set; }
+
+    private VirtualBuffer? _buffer;
+
+    protected override void OnInitialized()
+    {
+        if (Renderer != null)
+        {
+            Renderer.OnRender += OnRender;
+        }
+    }
+
+    private void OnRender()
+    {
+        _buffer = Renderer?.CurrentBuffer;
+        StateHasChanged();
+    }
+
+    private string ToHtmlColor(ConsoleColor color)
+    {
+        return color switch
+        {
+            ConsoleColor.Black => "#000000",
+            ConsoleColor.DarkBlue => "#00008B",
+            ConsoleColor.DarkGreen => "#006400",
+            ConsoleColor.DarkCyan => "#008B8B",
+            ConsoleColor.DarkRed => "#8B0000",
+            ConsoleColor.DarkMagenta => "#8B008B",
+            ConsoleColor.DarkYellow => "#808000",
+            ConsoleColor.Gray => "#C0C0C0",
+            ConsoleColor.DarkGray => "#808080",
+            ConsoleColor.Blue => "#0000FF",
+            ConsoleColor.Green => "#00FF00",
+            ConsoleColor.Cyan => "#00FFFF",
+            ConsoleColor.Red => "#FF0000",
+            ConsoleColor.Magenta => "#FF00FF",
+            ConsoleColor.Yellow => "#FFFF00",
+            ConsoleColor.White => "#FFFFFF",
+            _ => "#000000"
+        };
+    }
+
+    public void Dispose()
+    {
+        if (Renderer != null)
+        {
+            Renderer.OnRender -= OnRender;
+        }
+    }
+}

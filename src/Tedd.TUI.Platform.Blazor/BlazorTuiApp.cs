@@ -7,7 +7,7 @@ namespace Tedd.TUI.Platform.Blazor;
 public class BlazorTuiApp : IDisposable
 {
     private readonly TuiWindow _window;
-    private readonly BlazorRenderer _renderer;
+    private readonly IRendererAsync _renderer;
     private readonly BlazorInputManager _inputManager;
     private bool _running;
     private int _width;
@@ -16,7 +16,7 @@ public class BlazorTuiApp : IDisposable
     public BlazorInputManager InputManager => _inputManager;
     public TuiWindow Window => _window;
 
-    public BlazorTuiApp(TuiWindow window, BlazorRenderer renderer)
+    public BlazorTuiApp(TuiWindow window, IRendererAsync renderer)
     {
         _window = window;
         _renderer = renderer;

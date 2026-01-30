@@ -7,7 +7,14 @@
 @inject IJSRuntime JS
 
 <div tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='e => OnMouse(e, "mousedown")' @onmouseup='e => OnMouse(e, "mouseup")' @onmousemove='e => OnMouse(e, "mousemove")' style="outline:none; display: inline-block;">
-    <canvas id="@CanvasId"></canvas>
+    @if (Mode == TuiRenderMode.Canvas)
+    {
+        <canvas id="@CanvasId"></canvas>
+    }
+    else
+    {
+        <TuiDomGrid Renderer="@(_renderer as DomRenderer)" />
+    }
 </div>
 
 <CascadingValue Value="this" IsFixed="true">
@@ -19,11 +26,13 @@
     [Parameter] public int Width { get; set; } = 80;
     [Parameter] public int Height { get; set; } = 25;
     [Parameter] public TuiWindow? Window { get; set; }
+    [Parameter] public TuiRenderMode Mode { get; set; } = TuiRenderMode.Canvas;
 
     public string CanvasId { get; } = "tui_" + Guid.NewGuid().ToString("N");
 
     private BlazorTuiApp? _app;
     private TuiWindow? _internalWindow;
+    private IRendererAsync? _renderer;
 
     public TuiWindow? CurrentWindow => Window ?? _internalWindow;
 
@@ -42,9 +51,23 @@
             var win = CurrentWindow;
             if (win != null)
             {
-                var renderer = new BlazorRenderer(JS, CanvasId);
-                _app = new BlazorTuiApp(win, renderer);
+                if (Mode == TuiRenderMode.Canvas)
+                {
+                    _renderer = new BlazorRenderer(JS, CanvasId);
+                }
+                else
+                {
+                    _renderer = new DomRenderer();
+                }
+
+                _app = new BlazorTuiApp(win, _renderer);
                 await _app.StartAsync(Width, Height);
+                
+                // If DOM mode, we need to trigger a re-render to pass the renderer reference to TuiDomGrid
+                if (Mode == TuiRenderMode.Dom)
+                {
+                    StateHasChanged();
+                }
             }
         }
     }

@@ -5,7 +5,7 @@ using Tedd.TUI;
 
 namespace Tedd.TUI.Platform.Blazor;
 
-public class BlazorRenderer : IRenderer
+public class BlazorRenderer : IRenderer, IRendererAsync
 {
     private readonly IJSRuntime _js;
     private readonly string _canvasId;

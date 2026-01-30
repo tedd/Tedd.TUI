@@ -1,15 +1,25 @@
 @page "/"
 @using Tedd.TUI
+@using Tedd.TUI.Platform.Blazor
 @using Tedd.TUI.Platform.Blazor.Components
 
 <PageTitle>Tedd.TUI Blazor Demo</PageTitle>
 
 <h1>Tedd.TUI Blazor Demo</h1>
 
-<p>Use keyboard (Arrows, Enter) or Mouse.</p>
+<p>
+    Use keyboard (Arrows, Enter) or Mouse.
+    <label>
+        Render Mode:
+        <select @bind="currentMode">
+            <option value="@TuiRenderMode.Canvas">Canvas</option>
+            <option value="@TuiRenderMode.Dom">DOM (Accessible)</option>
+        </select>
+    </label>
+</p>
 
-<TuiView Width="60" Height="20">
-    <TuiBorder BorderColor="ConsoleColor.Cyan" BoxStyle="BoxStyle.Double" Width="58" Height="18" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+<TuiView Width="80" Height="25" Mode="@currentMode" @key="currentMode">
+    <TuiBorder BorderColor="ConsoleColor.Cyan" BoxStyle="BoxStyle.Double" HorizontalAlignment="HorizontalAlignment.Stretch" VerticalAlignment="VerticalAlignment.Stretch">
         <TuiStackPanel Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
             <TuiLabel Text="Hello from Blazor TUI!" Foreground="ConsoleColor.Green" HorizontalAlignment="HorizontalAlignment.Center" />
 
@@ -28,6 +38,7 @@
 
 @code {
     private int counter = 0;
+    private TuiRenderMode currentMode = TuiRenderMode.Canvas;
 
     private void IncrementCount()
     {
@@ -37,5 +48,10 @@
     private void ResetCount()
     {
         counter = 0;
+    }
+
+    protected override void OnInitialized()
+    {
+       
     }
 }
