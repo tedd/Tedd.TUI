@@ -31,6 +31,87 @@ public class ProgressBar : UIElement
         set { SetValue(ValueProperty, value); }
     }
 
+    public static readonly DependencyProperty LabelModeProperty =
+        DependencyProperty.Register("LabelMode", typeof(ProgressBarLabelMode), typeof(ProgressBar), ProgressBarLabelMode.None);
+
+    public ProgressBarLabelMode LabelMode
+    {
+        get { return (ProgressBarLabelMode)GetValue(LabelModeProperty); }
+        set { SetValue(LabelModeProperty, value); }
+    }
+
+    public static readonly DependencyProperty LabelTextProperty =
+        DependencyProperty.Register("LabelText", typeof(string), typeof(ProgressBar), null);
+
+    public string LabelText
+    {
+        get { return (string)GetValue(LabelTextProperty); }
+        set { SetValue(LabelTextProperty, value); }
+    }
+
+    public static readonly DependencyProperty LabelPercentDecimalsProperty =
+        DependencyProperty.Register("LabelPercentDecimals", typeof(int), typeof(ProgressBar), 0);
+
+    public int LabelPercentDecimals
+    {
+        get { return (int)GetValue(LabelPercentDecimalsProperty); }
+        set { SetValue(LabelPercentDecimalsProperty, value); }
+    }
+
+    public static readonly DependencyProperty ProgressColorProperty =
+        DependencyProperty.Register("ProgressColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.Green);
+
+    public ConsoleColor ProgressColor
+    {
+        get { return (ConsoleColor)GetValue(ProgressColorProperty); }
+        set { SetValue(ProgressColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty EmptyColorProperty =
+        DependencyProperty.Register("EmptyColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.DarkGray);
+
+    public ConsoleColor EmptyColor
+    {
+        get { return (ConsoleColor)GetValue(EmptyColorProperty); }
+        set { SetValue(EmptyColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty LabelFilledColorProperty =
+        DependencyProperty.Register("LabelFilledColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.Black);
+
+    public ConsoleColor LabelFilledColor
+    {
+        get { return (ConsoleColor)GetValue(LabelFilledColorProperty); }
+        set { SetValue(LabelFilledColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty LabelFilledBackgroundProperty =
+        DependencyProperty.Register("LabelFilledBackground", typeof(ConsoleColor?), typeof(ProgressBar), null);
+
+    public ConsoleColor? LabelFilledBackground
+    {
+        get { return (ConsoleColor?)GetValue(LabelFilledBackgroundProperty); }
+        set { SetValue(LabelFilledBackgroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty LabelEmptyColorProperty =
+        DependencyProperty.Register("LabelEmptyColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.White);
+
+    public ConsoleColor LabelEmptyColor
+    {
+        get { return (ConsoleColor)GetValue(LabelEmptyColorProperty); }
+        set { SetValue(LabelEmptyColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty LabelEmptyBackgroundProperty =
+        DependencyProperty.Register("LabelEmptyBackground", typeof(ConsoleColor?), typeof(ProgressBar), null);
+
+    public ConsoleColor? LabelEmptyBackground
+    {
+        get { return (ConsoleColor?)GetValue(LabelEmptyBackgroundProperty); }
+        set { SetValue(LabelEmptyBackgroundProperty, value); }
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
         // Default width if not specified
@@ -51,15 +132,59 @@ public class ProgressBar : UIElement
 
         int filled = (val * w) / range;
 
+        // Calculate Label
+        string text = "";
+        if (LabelMode == ProgressBarLabelMode.Percent)
+        {
+            double percent = range == 0 ? 0 : ((double)val / range) * 100.0;
+            text = percent.ToString("F" + LabelPercentDecimals) + "%";
+        }
+        else if (LabelMode == ProgressBarLabelMode.Text)
+        {
+            text = LabelText ?? "";
+        }
+
+        bool showText = !string.IsNullOrEmpty(text) && text.Length <= w;
+        int textStart = 0;
+        if (showText)
+        {
+            textStart = (w - text.Length) / 2;
+        }
+
         for (int i = 0; i < w; i++)
         {
+            // Determine if we are rendering text at this position
+            bool isTextChar = false;
+            char charToRender = ' ';
+            if (showText && i >= textStart && i < textStart + text.Length)
+            {
+                isTextChar = true;
+                charToRender = text[i - textStart];
+            }
+
             if (i < filled)
             {
-                buffer.SetPixel(x + i, y, '█', ConsoleColor.Green, ConsoleColor.Black);
+                // Filled section
+                if (isTextChar)
+                {
+                    buffer.SetPixel(x + i, y, charToRender, LabelFilledColor, LabelFilledBackground ?? ProgressColor);
+                }
+                else
+                {
+                    buffer.SetPixel(x + i, y, '█', ProgressColor, ConsoleColor.Black);
+                }
             }
             else
             {
-                buffer.SetPixel(x + i, y, '░', ConsoleColor.DarkGray, ConsoleColor.Black);
+                // Empty section
+                if (isTextChar)
+                {
+                    buffer.SetPixel(x + i, y, charToRender, LabelEmptyColor, LabelEmptyBackground ?? ConsoleColor.Black);
+                }
+                else
+                {
+                    buffer.SetPixel(x + i, y, '░', EmptyColor, ConsoleColor.Black);
+                }
             }
         }
     }
