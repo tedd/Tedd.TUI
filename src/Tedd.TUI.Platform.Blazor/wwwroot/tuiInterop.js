@@ -54,9 +54,43 @@ window.tuiInterop = {
         return { charWidth: this.charWidth, charHeight: this.charHeight };
     },
 
+    measureDom: function () {
+        // Measure pixel size of a character in the DOM environment to ensure alignment
+        const div = document.createElement('div');
+        div.style.fontFamily = "'Consolas', monospace";
+        div.style.fontSize = '16px';
+        div.style.lineHeight = '18px';
+        div.style.position = 'absolute';
+        div.style.whiteSpace = 'pre';
+        div.style.visibility = 'hidden';
+        div.innerText = 'M';
+        document.body.appendChild(div);
+
+        const rect = div.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+
+        document.body.removeChild(div);
+
+        return { charWidth: w, charHeight: h };
+    },
+
     render: function (canvasId, width, height, data) {
         const ctx = this.canvasContexts[canvasId];
         if (!ctx) return;
+
+        // Check size and resize if needed
+        const canvas = ctx.canvas;
+        const requiredWidth = width * this.charWidth;
+        const requiredHeight = height * this.charHeight;
+
+        if (canvas.width !== requiredWidth || canvas.height !== requiredHeight) {
+            canvas.width = requiredWidth;
+            canvas.height = requiredHeight;
+            // Restore context state after resize
+            ctx.font = this.font;
+            ctx.textBaseline = 'top';
+        }
 
         // Clear? Or overwrite. Overwrite is faster usually but TUI clears often.
         // We will overwrite everything because we draw background rectangles.
@@ -85,6 +119,45 @@ window.tuiInterop = {
                     ctx.fillText(String.fromCharCode(charCode), x * cw, y * ch);
                 }
             }
+        }
+    },
+
+    listenForResize: function (dotnetHelper, canvasId) {
+        const resizeHandler = () => {
+            // We default to full window for now, as TUI is usually full screen.
+            // Ideally we'd use the container size, but that requires the container to have explicit size.
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            const cols = Math.floor(w / this.charWidth);
+            const rows = Math.floor(h / this.charHeight);
+
+            // Only notify if valid
+            if (cols > 0 && rows > 0) {
+                dotnetHelper.invokeMethodAsync('OnBrowserResize', cols, rows);
+            }
+        };
+
+        // Debounce?
+        let timeout;
+        const debouncedHandler = () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(resizeHandler, 100);
+        };
+
+        window.addEventListener('resize', debouncedHandler);
+
+        // Initial check
+        resizeHandler();
+
+        this.resizeHandlers = this.resizeHandlers || {};
+        this.resizeHandlers[canvasId] = debouncedHandler;
+    },
+
+    disposeResizeListener: function (canvasId) {
+        if (this.resizeHandlers && this.resizeHandlers[canvasId]) {
+            window.removeEventListener('resize', this.resizeHandlers[canvasId]);
+            delete this.resizeHandlers[canvasId];
         }
     }
 };

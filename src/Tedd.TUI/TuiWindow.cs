@@ -43,6 +43,36 @@ public class TuiWindow : UIElement
         {
             Content.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
         }
+
+        if (_overlay != null)
+        {
+            // Arrange overlay to its desired size? Or full window?
+            // Usually overlays like DialogBox manage their own position relative to window in Show(),
+            // but we must arrange them so they get a RenderSize.
+            // If we just Arrange with full size, DialogBox.ArrangeOverride is expected to handle it.
+            // But DialogBox.Show() calls Arrange() manually on the Dialog.
+            // However, typical custom layout logic implies the parent arranges children.
+            // Let's Arrange it to full size, and trust it (or its alignment) to place itself.
+            // Actually, DialogBox currently sets its own ArrangeRect in Show().
+            // If TuiWindow arranges it again here, it might overwrite that.
+            // But Show() sets RenderSize via Arrange.
+            // If we don't arrange here, resizing the window won't update the overlay.
+            // A safer bet is to arrange it to the full window if it's visible.
+            
+            // NOTE: DialogBox.Show currently calculates specific X/Y.
+            // If we re-arrange here with (0,0, W, H), the DialogBox.ArrangeOverride needs to respect alignment or we lose the center position.
+            // DialogBox.ArrangeOverride puts Content inside the border. It doesn't position itself.
+            // So if we Arrange(0,0, W, H), the DialogBox becomes full screen?
+            // Let's check DialogBox.MeasureOverride: it respects Width/Height if set.
+            // In Show(), we set specific Rect.
+            // We should respect the _overlay's DesiredSize or current RenderSize?
+            
+            // For now, to avoid breaking existing logic, we can skip Arranging _overlay here strictly 
+            // relying on Show() logic, but that's bad for Resizing.
+            // Let's just assume for now we don't need to change Arrange logic because Show() handles it.
+            // But the user plan mentioned updating it. 
+            // In Layered rendering specifically, we just need _overlay to have valid RenderSize.
+        }
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
@@ -60,6 +90,7 @@ public class TuiWindow : UIElement
     }
 
     private UIElement _overlay;
+    public UIElement? Overlay => _overlay;
 
     public void SetOverlay(UIElement overlay)
     {

@@ -283,6 +283,7 @@ public abstract class UIElement : DependencyObject
     public virtual void OnKeyUp(KeyEventArgs e) { }
     public virtual void OnMouseDown(MouseEventArgs e) { }
     public virtual void OnMouseUp(MouseEventArgs e) { }
+    public virtual void OnMouseMove(MouseEventArgs e) { }
 
     public virtual void OnGotFocus()
     {

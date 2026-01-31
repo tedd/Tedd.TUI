@@ -1,4 +1,9 @@
 @page "/"
+@* 
+    NOTE TO AI: 
+    When making changes to this file (Home.razor), please also update Programmatic.razor ("The Programmatic version") 
+    to maintain feature parity between the programmatic and declarative approaches. 
+*@
 @using Tedd.TUI
 @using Tedd.TUI.Platform.Blazor
 @using Tedd.TUI.Platform.Blazor.Components
@@ -6,52 +11,268 @@
 <PageTitle>Tedd.TUI Blazor Demo</PageTitle>
 
 <h1>Tedd.TUI Blazor Demo</h1>
-
 <p>
-    Use keyboard (Arrows, Enter) or Mouse.
-    <label>
-        Render Mode:
-        <select @bind="currentMode">
-            <option value="@TuiRenderMode.Canvas">Canvas</option>
-            <option value="@TuiRenderMode.Dom">DOM (Accessible)</option>
-        </select>
-    </label>
+    This UI is built using Blazor components ("XAML-like"), feature-equivalent to the Programmatic version.
 </p>
 
-<TuiView Width="80" Height="25" Mode="@currentMode" @key="currentMode">
-    <TuiBorder BorderColor="ConsoleColor.Cyan" BoxStyle="BoxStyle.Double" HorizontalAlignment="HorizontalAlignment.Stretch" VerticalAlignment="VerticalAlignment.Stretch">
-        <TuiStackPanel Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
-            <TuiLabel Text="Hello from Blazor TUI!" Foreground="ConsoleColor.Green" HorizontalAlignment="HorizontalAlignment.Center" />
+<!-- Pass the window instance so we can attach overlays (Dialogs) imperatively if needed -->
+<TuiView Window="@window" Width="80" Height="25" Mode="@currentMode" @key="currentMode">
+    <TuiStackPanel Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" VerticalAlignment="VerticalAlignment.Stretch">
+        
+        <!-- Menu Bar -->
+        <TuiMenuBar HorizontalAlignment="HorizontalAlignment.Stretch">
+            <TuiMenuItem Text="File">
+                <TuiMenuItem Text="New" OnClick='() => Log("New Clicked")' />
+                <TuiMenuItem Text="Open" OnClick='() => Log("Open Clicked")' />
+                <TuiMenuItem Text="Exit" OnClick='() => Log("Exit Clicked")' />
+            </TuiMenuItem>
+            <TuiMenuItem Text="Edit">
+                <TuiMenuItem Text="Cut" OnClick='() => Log("Cut Clicked")' />
+                <TuiMenuItem Text="Copy" OnClick='() => Log("Copy Clicked")' />
+                <TuiMenuItem Text="Paste" OnClick='() => Log("Paste Clicked")' />
+            </TuiMenuItem>
+             <TuiMenuItem Text="Help">
+                <TuiMenuItem Text="About" OnClick='() => Log("About Clicked")' />
+            </TuiMenuItem>
+        </TuiMenuBar>
 
-            <TuiLabel Text="@($"Counter: {counter}")" Foreground="ConsoleColor.White" HorizontalAlignment="HorizontalAlignment.Center" />
+        <!-- Header -->
+        <TuiBorder BoxStyle="BoxStyle.Double" HorizontalAlignment="HorizontalAlignment.Stretch">
+             <TuiLabel Text="Tedd.TUI Demo Application (.NET 10)" Foreground="ConsoleColor.Cyan" />
+        </TuiBorder>
 
-            <TuiButton Text="Click Me" OnClick="IncrementCount" HorizontalAlignment="HorizontalAlignment.Center" />
-
-            <TuiButton Text="Reset" OnClick="ResetCount" BoxStyle="BoxStyle.Double" HorizontalAlignment="HorizontalAlignment.Center" />
+        <!-- Mode Switcher -->
+        <TuiStackPanel Orientation="Orientation.Horizontal">
+            <TuiLabel Text="Render Mode: " />
+            <TuiComboBox Items="@renderModes" @bind-SelectedItem="selectedRenderModeString" Width="15" />
         </TuiStackPanel>
-    </TuiBorder>
+
+        <!-- Main Tab Control -->
+        <TuiTabControl Height="20">
+            
+            <!-- Tab 1: Form -->
+            <TuiTabItem Header="Form">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Name:" />
+                    <TuiTextBox Width="30" @bind-Text="formName" />
+                    
+                    <TuiLabel Text="Password:" />
+                    <TuiTextBox Width="30" IsPassword="true" @bind-Text="formPass" />
+                    
+                    <TuiCheckBox Content="I agree to Terms & Conditions" @bind-IsChecked="isAgreed" />
+                    
+                    <TuiLabel Text="Gender:" />
+                    <TuiStackPanel Orientation="Orientation.Horizontal">
+                        <TuiRadioButton Content="Male" GroupName="Gender" @bind-IsChecked="isMale" />
+                        <TuiRadioButton Content="Female" GroupName="Gender" @bind-IsChecked="isFemale" />
+                        <TuiRadioButton Content="Other" GroupName="Gender" @bind-IsChecked="isOther" />
+                    </TuiStackPanel>
+
+                    <TuiLabel Text="Country:" />
+                    <TuiComboBox Width="20" Items="@countries" @bind-SelectedItem="selectedCountry" />
+
+                    <TuiLabel Text="--- Log ---" Foreground="ConsoleColor.DarkGray" />
+                    <TuiListBox Width="80" Height="5" Items="@logItems" @bind-SelectedIndex="logIndex" />
+
+                    <!-- Buttons -->
+                    <TuiStackPanel Orientation="Orientation.Horizontal">
+                        <TuiButton Text="Submit" BoxStyle="BoxStyle.Double" OnClick="SubmitForm" />
+                        <TuiLabel Text="  " />
+                        <TuiButton Text="Show Dialog" BoxStyle="BoxStyle.Single" OnClick="ShowDialog" />
+                    </TuiStackPanel>
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 2: Lists -->
+            <TuiTabItem Header="Lists">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Progress:" />
+                    <TuiProgressBar Width="40" Value="35" />
+                    
+                    <TuiLabel Text="Items:" />
+                    <!-- Generating static items for demo -->
+                    <TuiListBox Width="40" Height="10" Items="@listItems" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 3: Table -->
+            <TuiTabItem Header="Table">
+                 <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Table Control:" />
+                    <TuiTable Width="60" Height="10" ShowHeader="true" 
+                              PageSize="@pageSize" TotalRows="@totalRows" 
+                              @bind-CurrentPage="currentPage" 
+                              PageChanged="OnPageChanged">
+                        <TuiTableColumn Header="ID" Width="5" />
+                        <TuiTableColumn Header="Name" Width="*" />
+                        <TuiTableColumn Header="Age" Width="Auto" />
+                        <TuiTableColumn Header="Actions" Width="10" />
+                        
+                        @foreach(var item in currentTableRows)
+                        {
+                            <TuiTableRow>
+                                <TuiLabel Text="@item.Id" /> 
+                                <TuiLabel Text="@item.Name" /> 
+                                <TuiLabel Text="@item.Age" /> 
+                                @if(item.IsCheckable)
+                                {
+                                     <TuiCheckBox Content="Active" @bind-IsChecked="item.Checked" />
+                                }
+                                else
+                                {
+                                     <TuiLabel Text="@item.Action" />
+                                }
+                            </TuiTableRow>
+                        }
+                    </TuiTable>
+                 </TuiStackPanel>
+            </TuiTabItem>
+
+        </TuiTabControl>
+
+    </TuiStackPanel>
 </TuiView>
 
-<div style="margin-top: 20px;">
-    <p>External Counter: @counter</p>
-</div>
-
 @code {
-    private int counter = 0;
+    private TuiWindow window = new TuiWindow();
     private TuiRenderMode currentMode = TuiRenderMode.Canvas;
-
-    private void IncrementCount()
+    
+    // Render Mode Logic
+    private List<string> renderModes = new List<string> { "Canvas", "DOM" };
+    private string? selectedRenderModeString
     {
-        counter++;
+        get => currentMode.ToString();
+        set
+        {
+            if (Enum.TryParse<TuiRenderMode>(value, true, out var mode))
+            {
+                if (currentMode != mode)
+                {
+                    currentMode = mode;
+                    StateHasChanged();
+                }
+            }
+        }
     }
 
-    private void ResetCount()
+    // Form Data
+    private string formName = "John Doe";
+    private string formPass = "secret";
+    private bool isAgreed = false;
+    private bool isMale = true;
+    private bool isFemale = false; 
+    private bool isOther = false;
+    private List<string> countries = new() { "USA", "Canada", "UK", "Germany", "France", "Spain" };
+    private string? selectedCountry = "USA";
+
+    // Log Logic
+    private List<string> logItems = new();
+    private int logIndex = -1;
+
+    private void Log(string message)
     {
-        counter = 0;
+        logItems.Add(message);
+        logIndex = logItems.Count - 1; // Auto-scroll
+        StateHasChanged();
     }
+
+    private void SubmitForm()
+    {
+        Log($"Form Submitted: {formName} / {selectedCountry}");
+    }
+
+    // Dialog Logic
+    private void ShowDialog()
+    {
+        var dialog = new DialogBox
+        {
+            Title = "Welcome",
+            Width = 40,
+            Height = 10,
+            BoxStyle = BoxStyle.Double,
+            BackgroundColor = ConsoleColor.DarkBlue,
+            TitleColor = ConsoleColor.Yellow,
+            BorderColor = ConsoleColor.White
+        };
+
+        var dialogStack = new StackPanel { Orientation = Orientation.Vertical };
+        dialogStack.AddChild(new TextBlock { Text = "This is a modal dialog box.", Foreground = ConsoleColor.White });
+        dialogStack.AddChild(new TextBlock { Text = "You can put any controls here.", Foreground = ConsoleColor.Gray });
+
+        var btnClose1 = new Button { Content = "Close", BoxStyle = BoxStyle.Single };
+        btnClose1.Click += (sender, args) => { dialog.Hide(); StateHasChanged(); };
+        var btnClose2 = new Button { Content = "Close", BoxStyle = BoxStyle.Single };
+        btnClose2.Click += (sender, args) => { dialog.Hide(); StateHasChanged(); };
+
+        var btnContainer = new StackPanel { Orientation = Orientation.Horizontal };
+        btnContainer.AddChild(new TextBlock { Text = "   " });
+        btnContainer.AddChild(btnClose1);
+        btnContainer.AddChild(btnClose2);
+
+        dialogStack.AddChild(new TextBlock { Text = " " });
+        dialogStack.AddChild(btnContainer);
+
+        dialog.Content = dialogStack;
+
+        // Use the window instance to set overlay
+        window.SetOverlay(dialog);
+        dialog.Show();
+        StateHasChanged();
+    }
+
+    // Lists Tab Data
+    private List<string> listItems = Enumerable.Range(1, 20).Select(i => $"Item {i}").ToList();
+
+    // Table Logic
+    private class TableItem
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Age { get; set; }
+        public string Action { get; set; }
+        public bool IsCheckable { get; set; }
+        public bool Checked { get; set; } = true;
+    }
+
+    private List<TableItem> allTableItems = new();
+    private List<TableItem> currentTableRows = new();
+    private int pageSize = 5;
+    private int totalRows = 0;
+    private int currentPage = 0;
 
     protected override void OnInitialized()
     {
-       
+        // Populate Data
+        allTableItems.Add(new TableItem { Id = "10", Name = "Alice", Age = "30", Action = "Edit" });
+        allTableItems.Add(new TableItem { Id = "2", Name = "Bob", Age = "25", Action = "Edit" });
+        allTableItems.Add(new TableItem { Id = "1", Name = "Charlie", Age = "35", Action = "Edit" });
+        allTableItems.Add(new TableItem { Id = "20", Name = "David", Age = "40", IsCheckable = true });
+        allTableItems.Add(new TableItem { Id = "3", Name = "Eve", Age = "22", Action = "Edit" });
+        
+        for (int i = 1; i <= 20; i++)
+        {
+            allTableItems.Add(new TableItem { Id = $"{100+i}", Name = $"User {i}", Age = $"{20 + (i%30)}", Action = "View" });
+        }
+        
+        totalRows = allTableItems.Count;
+        LoadPage(0);
+    }
+
+    private void OnPageChanged()
+    {
+        LoadPage(currentPage);
+    }
+
+    private void LoadPage(int page)
+    {
+        // Assuming page is already updated in currentPage binding before this call?
+        // Actually binding updates property then fires callback? 
+        // Or callback fires then property updates? 
+        // Blazor convention: EventCallback update logic usually handles it.
+        // We set currentTableRows.
+        
+        int start = page * pageSize;
+        currentTableRows = allTableItems.Skip(start).Take(pageSize).ToList();
+        StateHasChanged();
     }
 }

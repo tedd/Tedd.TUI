@@ -12,7 +12,19 @@ public class ListBox : UIElement
     private List<object> _items = new List<object>();
     public List<object> Items => _items;
 
-    public int SelectedIndex { get; set; } = -1;
+    private int _selectedIndex = -1;
+    public int SelectedIndex
+    {
+        get => _selectedIndex;
+        set
+        {
+            if (_selectedIndex != value)
+            {
+                _selectedIndex = value;
+                Invalidate();
+            }
+        }
+    }
 
     /// <summary>
     /// When true (default), selection is visible even when unfocused.

@@ -12,12 +12,16 @@ public class TuiApp
 
     private readonly AutoResetEvent _renderWaitHandle = new AutoResetEvent(false);
 
+    private int _lastWidth;
+    private int _lastHeight;
+
     public TuiApp(TuiWindow window)
     {
         _window = window;
         _renderer = new ConsoleRenderer();
         _inputManager = new ConsoleInputManager(window);
         _window.VisualChanged += (s, e) => _renderWaitHandle.Set();
+        _inputManager.WindowResized += (s, e) => _renderWaitHandle.Set();
     }
 
     public void Run()
@@ -70,9 +74,14 @@ public class TuiApp
                 }
                 else
                 {
+                     // Check for resize
+                     if (System.Console.WindowWidth != _lastWidth || System.Console.WindowHeight != _lastHeight)
+                     {
+                         UpdateAndRender();
+                     }
                      // If we are not on windows, we can't easily wait on handles.
                      // We can check if _renderWaitHandle is set?
-                     if (_renderWaitHandle.WaitOne(0))
+                     else if (_renderWaitHandle.WaitOne(0))
                      {
                          UpdateAndRender();
                      }
@@ -92,6 +101,8 @@ public class TuiApp
 
         var w = System.Console.WindowWidth;
         var h = System.Console.WindowHeight;
+        _lastWidth = w;
+        _lastHeight = h;
         
         // Measure & Arrange (Layout)
         _window.Measure(new Size(w, h));

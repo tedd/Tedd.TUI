@@ -89,28 +89,29 @@ public class Border : UIElement
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
         ConsoleColor c = BorderColor;
+        ConsoleColor bg = Background ?? ConsoleColor.Black;
 
         if (w < 2 || h < 2) return;
 
         var chars = BoxDrawingChars.Get(BoxStyle);
         // Corners
-        buffer.SetPixel(x, y, chars.TopLeft, c, ConsoleColor.Black);
-        buffer.SetPixel(x + w - 1, y, chars.TopRight, c, ConsoleColor.Black);
-        buffer.SetPixel(x, y + h - 1, chars.BottomLeft, c, ConsoleColor.Black);
-        buffer.SetPixel(x + w - 1, y + h - 1, chars.BottomRight, c, ConsoleColor.Black);
+        buffer.SetPixel(x, y, chars.TopLeft, c, bg);
+        buffer.SetPixel(x + w - 1, y, chars.TopRight, c, bg);
+        buffer.SetPixel(x, y + h - 1, chars.BottomLeft, c, bg);
+        buffer.SetPixel(x + w - 1, y + h - 1, chars.BottomRight, c, bg);
 
         // Horizontal
         for (int i = 1; i < w - 1; i++)
         {
-            buffer.SetPixel(x + i, y, chars.Horizontal, c, ConsoleColor.Black);
-            buffer.SetPixel(x + i, y + h - 1, chars.Horizontal, c, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y, chars.Horizontal, c, bg);
+            buffer.SetPixel(x + i, y + h - 1, chars.Horizontal, c, bg);
         }
 
         // Vertical
         for (int i = 1; i < h - 1; i++)
         {
-            buffer.SetPixel(x, y + i, chars.Vertical, c, ConsoleColor.Black);
-            buffer.SetPixel(x + w - 1, y + i, chars.Vertical, c, ConsoleColor.Black);
+            buffer.SetPixel(x, y + i, chars.Vertical, c, bg);
+            buffer.SetPixel(x + w - 1, y + i, chars.Vertical, c, bg);
         }
 
         if (Child != null)

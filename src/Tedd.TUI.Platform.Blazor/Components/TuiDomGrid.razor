@@ -2,16 +2,47 @@
 @using Tedd.TUI.Platform.Blazor
 @implements IDisposable
 
-<div class="tui-dom-grid" style="font-family: 'Consolas', monospace; line-height: 18px; font-size: 16px; white-space: pre; background-color: black; color: white;">
-    @if (_buffer != null)
+@using System.Text
+@using System.Text
+@{
+    var cw = Renderer?.CharWidth ?? 10;
+    var ch = Renderer?.CharHeight ?? 18;
+}
+<div class="tui-root-container" style="position: relative; width: @(Width * cw)px; height: @(Height * ch)px; background-color: black; user-select: none;">
+    @if (Renderer?.Layers != null)
     {
-        @for (int y = 0; y < _buffer.Height; y++)
+        @foreach (var layer in Renderer.Layers)
         {
-            <div class="tui-row" style="height: 18px;">
-                @for (int x = 0; x < _buffer.Width; x++)
-                {
-                    var cell = _buffer.GetPixel(x, y);
-                    <span style="display:inline-block; width: 10px; height: 18px; color: @ToHtmlColor(cell.Foreground); background-color: @ToHtmlColor(cell.Background);">@cell.Character</span>
+            <div class="tui-layer" style="position: absolute; left: @(layer.X * cw)px; top: @(layer.Y * ch)px; z-index: @layer.ZIndex; font-family: 'Consolas', monospace; line-height: @(ch)px; font-size: 16px; white-space: pre; color: white; pointer-events: none;">
+                @{
+                    var buffer = layer.Buffer;
+                    for (int y = 0; y < buffer.Height; y++)
+                    {
+                        <div class="tui-row" style="height: @(ch)px;">
+                            @{
+                                int x = 0;
+                                while (x < buffer.Width)
+                                {
+                                    var startCell = buffer.GetPixel(x, y);
+                                    var fg = startCell.Foreground;
+                                    var bg = startCell.Background;
+                                    _sb.Clear();
+
+                                    while (x < buffer.Width)
+                                    {
+                                        var current = buffer.GetPixel(x, y);
+                                        if (current.Foreground != fg || current.Background != bg)
+                                            break;
+                                        
+                                        _sb.Append(current.Character);
+                                        x++;
+                                    }
+                                    
+                                    <span style="display:inline-block; height: @(ch)px; color: @ToHtmlColor(fg); background-color: @ToHtmlColor(bg);">@_sb.ToString()</span>
+                                }
+                            }
+                        </div>
+                    }
                 }
             </div>
         }
@@ -20,14 +51,38 @@
 
 @code {
     [Parameter] public DomRenderer? Renderer { get; set; }
+    [Parameter] public int Width { get; set; }
+    [Parameter] public int Height { get; set; }
 
     private VirtualBuffer? _buffer;
+    private DomRenderer? _previousRenderer;
+    private StringBuilder _sb = new StringBuilder();
 
     protected override void OnInitialized()
     {
-        if (Renderer != null)
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Renderer != _previousRenderer)
         {
-            Renderer.OnRender += OnRender;
+            if (_previousRenderer != null)
+            {
+                _previousRenderer.OnRender -= OnRender;
+            }
+
+            _previousRenderer = Renderer;
+
+            if (Renderer != null)
+            {
+                Renderer.OnRender += OnRender;
+                
+                // Initial update if buffer exists
+                if (Renderer.CurrentBuffer != null)
+                {
+                    OnRender();
+                }
+            }
         }
     }
 

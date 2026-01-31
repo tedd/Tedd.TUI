@@ -4,6 +4,7 @@
 @using Tedd.TUI.Platform.Blazor.Components
 @implements ITuiContainer
 @implements IDisposable
+@implements IAsyncDisposable
 @inject IJSRuntime JS
 
 <div tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='e => OnMouse(e, "mousedown")' @onmouseup='e => OnMouse(e, "mouseup")' @onmousemove='e => OnMouse(e, "mousemove")' style="outline:none; display: inline-block;">
@@ -13,7 +14,7 @@
     }
     else
     {
-        <TuiDomGrid Renderer="@(_renderer as DomRenderer)" />
+        <TuiDomGrid Renderer="@(_renderer as DomRenderer)" Width="@Width" Height="@Height" />
     }
 </div>
 
@@ -34,6 +35,9 @@
     private TuiWindow? _internalWindow;
     private IRendererAsync? _renderer;
 
+    private TuiRenderMode _currentMode;
+    private bool _modeChanged;
+
     public TuiWindow? CurrentWindow => Window ?? _internalWindow;
 
     protected override void OnInitialized()
@@ -42,32 +46,58 @@
         {
             _internalWindow = new TuiWindow();
         }
+        _currentMode = Mode;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Mode != _currentMode)
+        {
+            _currentMode = Mode;
+            _modeChanged = true;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender || _modeChanged)
         {
-            var win = CurrentWindow;
-            if (win != null)
-            {
-                if (Mode == TuiRenderMode.Canvas)
-                {
-                    _renderer = new BlazorRenderer(JS, CanvasId);
-                }
-                else
-                {
-                    _renderer = new DomRenderer();
-                }
+            _modeChanged = false;
+            await StartAppAsync();
+            
+            if (_objRef == null) _objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("tuiInterop.listenForResize", _objRef, CanvasId);
+        }
+    }
 
-                _app = new BlazorTuiApp(win, _renderer);
-                await _app.StartAsync(Width, Height);
-                
-                // If DOM mode, we need to trigger a re-render to pass the renderer reference to TuiDomGrid
-                if (Mode == TuiRenderMode.Dom)
-                {
-                    StateHasChanged();
-                }
+    private async Task StartAppAsync()
+    {
+        // Stop existing
+        if (_app != null) 
+        {
+            _app.Dispose();
+            _app = null;
+        }
+
+        var win = CurrentWindow;
+        if (win != null)
+        {
+            if (Mode == TuiRenderMode.Canvas)
+            {
+                _renderer = new BlazorRenderer(JS, CanvasId);
+            }
+            else
+            {
+                _renderer = new DomRenderer(JS);
+            }
+
+            _app = new BlazorTuiApp(win, _renderer);
+            await _app.StartAsync(Width, Height);
+            
+            // If DOM mode, we need to trigger a re-render to pass the renderer reference to TuiDomGrid
+            if (Mode == TuiRenderMode.Dom)
+            {
+                StateHasChanged();
             }
         }
     }
@@ -80,6 +110,20 @@
             win.Content = child;
         }
     }
+    
+    [JSInvokable]
+    public void OnBrowserResize(int cols, int rows)
+    {
+        if (Width != cols || Height != rows)
+        {
+            Width = cols;
+            Height = rows;
+            _app?.OnResize(cols, rows);
+            StateHasChanged();
+        }
+    }
+
+    private DotNetObjectReference<TuiView>? _objRef;
 
     private void OnKeyDown(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, true);
     private void OnKeyUp(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, false);
@@ -88,5 +132,21 @@
     public void Dispose()
     {
         _app?.Dispose();
+        _objRef?.Dispose();
+        // Invoke JS dispose? Dispose is sync, cannot await.
+        // We really should use IAsyncDisposable.
+        // But for sync Dispose we can try to fire and forget if possible, but unsafe.
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        try 
+        {
+            await JS.InvokeVoidAsync("tuiInterop.disposeResizeListener", CanvasId);
+        }
+        catch {}
+        
+        _app?.Dispose();
+        _objRef?.Dispose();
     }
 }

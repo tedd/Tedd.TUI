@@ -39,6 +39,8 @@ public class ConsoleInputManager
         }
     }
 
+    public event EventHandler WindowResized;
+
     private void ProcessWindowsInput()
     {
         var handle = NativeMethods.GetStdHandle(NativeMethods.STD_INPUT_HANDLE);
@@ -89,12 +91,21 @@ public class ConsoleInputManager
                 {
                      // Ideally we track _lastMouseState to detect edges
                      var args = new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY };
+                     
+                     // Dispatch Move
+                     // (We could check if position changed, but dispatching always is safe for now)
+                     hit.Element.OnMouseMove(args);
+
                      // For now, if button is down, treat as MouseDown. 
                      // This repeats while dragging.
                      if (leftDown) hit.Element.OnMouseDown(args);
                      // If we want MouseUp, we need to know previous state.
                      // But let's start with basic Click support via MouseDown.
                 }
+            }
+            else if (record.EventType == NativeMethods.WINDOW_BUFFER_SIZE_EVENT)
+            {
+                WindowResized?.Invoke(this, EventArgs.Empty);
             }
         }
     }

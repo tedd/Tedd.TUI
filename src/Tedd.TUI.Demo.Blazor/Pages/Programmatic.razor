@@ -1,5 +1,11 @@
 @page "/programmatic"
+@* 
+    NOTE TO AI: 
+    When making changes to this file (Programmatic.razor), please also update Home.razor ("The XAML version") 
+    to maintain feature parity between the programmatic and declarative approaches. 
+*@
 @using Tedd.TUI
+@using Tedd.TUI.Platform.Blazor
 @using Tedd.TUI.Platform.Blazor.Components
 
 <PageTitle>Programmatic TUI Demo</PageTitle>
@@ -7,10 +13,11 @@
 <h1>Programmatic TUI Demo</h1>
 <p>This UI is built entirely in C# code, identical to the Console version.</p>
 
-<TuiView Window="@window" Width="80" Height="25" />
+<TuiView Window="@window" Width="80" Height="25" Mode="@currentMode" @key="currentMode" />
 
 @code {
     private TuiWindow window = new TuiWindow();
+    private TuiRenderMode currentMode = TuiRenderMode.Canvas;
 
     protected override void OnInitialized()
     {
@@ -18,12 +25,59 @@
         var mainStack = new StackPanel { Orientation = Orientation.Vertical };
         window.Content = mainStack;
 
+        // --- Log Output (Created early for menu actions) ---
+        var logBox = new ListBox { Width = 80, Height = 5 };
+
+        // Menu Bar
+        var menuBar = new MenuBar();
+        mainStack.AddChild(menuBar);
+
+        // File Menu
+        var fileMenu = new MenuItem { Header = new TextBlock { Text = "File ", Foreground = ConsoleColor.Black } };
+        fileMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "New ", Foreground = ConsoleColor.Black }, Command = () => { logBox.Items.Add("New Clicked"); StateHasChanged(); } });
+        fileMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "Open ", Foreground = ConsoleColor.Black }, Command = () => { logBox.Items.Add("Open Clicked"); StateHasChanged(); } });
+        fileMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "Exit ", Foreground = ConsoleColor.Black }, Command = () => { logBox.Items.Add("Exit Clicked"); StateHasChanged(); } });
+        menuBar.AddChild(fileMenu);
+
+        // Edit Menu
+        var editMenu = new MenuItem { Header = new TextBlock { Text = "Edit ", Foreground = ConsoleColor.Black } };
+        editMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "Cut ", Foreground = ConsoleColor.Black }, Command = () => { logBox.Items.Add("Cut Clicked"); StateHasChanged(); } });
+        editMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "Copy ", Foreground = ConsoleColor.Black }, Command = () => { logBox.Items.Add("Copy Clicked"); StateHasChanged(); } });
+        editMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "Paste ", Foreground = ConsoleColor.Black }, Command = () => { logBox.Items.Add("Paste Clicked"); StateHasChanged(); } });
+        menuBar.AddChild(editMenu);
+
+        // Help Menu
+        var helpMenu = new MenuItem { Header = new TextBlock { Text = "Help ", Foreground = ConsoleColor.Black } };
+        helpMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "About ", Foreground = ConsoleColor.Black }, Command = () => { logBox.Items.Add("About Clicked"); StateHasChanged(); } });
+        menuBar.AddChild(helpMenu);
+
         // Header (double-line box)
         mainStack.AddChild(new Border
         {
             Child = new TextBlock { Text = "Tedd.TUI Demo Application (.NET 10)", Foreground = ConsoleColor.Cyan },
             BoxStyle = BoxStyle.Double
         });
+
+        // Mode Switcher
+        var modePanel = new StackPanel { Orientation = Orientation.Horizontal };
+        modePanel.AddChild(new TextBlock { Text = "Render Mode: " });
+        var modeCombo = new ComboBox { Width = 15 };
+        modeCombo.Items.Add("Canvas");
+        modeCombo.Items.Add("Dom");
+        modeCombo.SelectedItem = "Canvas";
+        modeCombo.SelectionChanged += (s, e) =>
+        {
+            if (Enum.TryParse<TuiRenderMode>(modeCombo.SelectedItem?.ToString(), true, out var newMode))
+            {
+                if (currentMode != newMode)
+                {
+                    currentMode = newMode;
+                    StateHasChanged();
+                }
+            }
+        };
+        modePanel.AddChild(modeCombo);
+        mainStack.AddChild(modePanel);
 
         // Tab Control
         var tabs = new TabControl { Height = 20 };
@@ -68,7 +122,7 @@
 
         // --- Log Output ---
         mainStack.AddChild(new TextBlock { Text = "--- Log ---", Foreground = ConsoleColor.DarkGray });
-        var logBox = new ListBox { Width = 80, Height = 5 };
+        // logBox already created above
         mainStack.AddChild(logBox);
 
         // Submit Button (double-line style to showcase both)
@@ -140,5 +194,80 @@
         listStack.AddChild(listBox);
 
         tabs.AddItem(new TabItem { Header = "Lists", Content = listStack });
+
+        // --- Tab 3: Table ---
+        var tableStack = new StackPanel { Orientation = Orientation.Vertical };
+        tableStack.AddChild(new TextBlock { Text = "Table Control:" });
+        
+        var table = new Table { Width = 60, Height = 10, ShowHeader = true };
+        // 1. Numeric Sort for ID
+        var colId = new TableColumn { Header = "ID", Width = GridLength.Pixel(5) };
+        colId.SortComparer = (a, b) =>
+        {
+            if (int.TryParse(a.ToString(), out int i1) && int.TryParse(b.ToString(), out int i2))
+                return i1.CompareTo(i2);
+            return 0;
+        };
+        table.Columns.Add(colId);
+
+        // 2. Default String Sort for Name (no custom comparer needed)
+        table.Columns.Add(new TableColumn { Header = "Name", Width = GridLength.Star }); 
+
+        // 3. Numeric Sort for Age
+        var colAge = new TableColumn { Header = "Age", Width = GridLength.Auto };
+        colAge.SortComparer = (a, b) =>
+        {
+            if (int.TryParse(a.ToString(), out int i1) && int.TryParse(b.ToString(), out int i2))
+                return i1.CompareTo(i2);
+            return 0;
+        };
+        table.Columns.Add(colAge);
+
+        // 4. Custom key selector example for Actions (sort by length of content?)
+        // Or just leave unsortable or default string.
+        table.Columns.Add(new TableColumn { Header = "Actions", Width = GridLength.Pixel(10) });
+
+        // Data Source (Simulating Database)
+        var allData = new List<object[]>();
+        allData.Add(new object[] { "10", "Alice", "30", "Edit" });
+        allData.Add(new object[] { "2", "Bob", "25", "Edit" });
+        allData.Add(new object[] { "1", "Charlie", "35", "Edit" });
+        allData.Add(new object[] { "20", "David", "40", new CheckBox { Content = "Active", IsChecked = true } }); // UI Element in cell
+        allData.Add(new object[] { "3", "Eve", "22", "Edit" });
+
+        // Add 20 more items as requested
+        for (int i = 1; i <= 20; i++)
+        {
+            allData.Add(new object[] { $"{100 + i}", $"User {i}", $"{20 + (i % 30)}", "View" });
+        }
+
+        // Configure Pagination
+        table.PageSize = 5;
+        table.TotalRows = allData.Count; // Tell table we have 25 items
+
+        // Handler to fetch data (Server-Side Paging Simulation)
+        void LoadPage()
+        {
+            table.Rows.Clear();
+            var page = table.CurrentPage;
+            int start = page * table.PageSize;
+            int count = Math.Min(table.PageSize, allData.Count - start);
+            
+            for (int i = 0; i < count; i++)
+            {
+                var rowData = allData[start + i];
+                // AddRow handles params object[]
+                table.AddRow(rowData);
+            }
+            StateHasChanged();
+        }
+
+        table.PageChanged += (s, e) => LoadPage();
+        
+        // Initial Load
+        LoadPage();
+
+        tableStack.AddChild(table);
+        tabs.AddItem(new TabItem { Header = "Table", Content = tableStack });
     }
 }

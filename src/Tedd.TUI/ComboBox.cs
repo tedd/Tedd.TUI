@@ -12,6 +12,8 @@ public class ComboBox : UIElement
 
     public List<object> Items { get; } = new List<object>();
 
+    public event EventHandler? SelectionChanged;
+
     public object SelectedItem
     {
         get { return _selectedItem; }
@@ -24,6 +26,7 @@ public class ComboBox : UIElement
                 {
                     _popupListBox.SelectedIndex = Items.IndexOf(value);
                 }
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
     }
