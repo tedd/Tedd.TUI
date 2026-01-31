@@ -12,6 +12,17 @@ public class TabControl : UIElement
     private List<TabItem> _items = new List<TabItem>();
     public List<TabItem> Items => _items;
 
+    public override int VisualChildrenCount => (SelectedIndex >= 0 && SelectedIndex < Items.Count && Items[SelectedIndex].Content is UIElement) ? 1 : 0;
+
+    public override UIElement GetVisualChild(int index)
+    {
+        if (VisualChildrenCount > 0 && index == 0)
+        {
+             return (UIElement)Items[SelectedIndex].Content;
+        }
+        throw new ArgumentOutOfRangeException(nameof(index));
+    }
+
     public static readonly DependencyProperty BoxStyleProperty =
         DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(TabControl), BoxStyle.Single);
 

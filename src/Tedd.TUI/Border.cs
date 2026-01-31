@@ -18,9 +18,9 @@ public class Border : UIElement
         }
     }
 
-    protected override int VisualChildrenCount => _child != null ? 1 : 0;
+    public override int VisualChildrenCount => _child != null ? 1 : 0;
 
-    protected override UIElement GetVisualChild(int index)
+    public override UIElement GetVisualChild(int index)
     {
         if (_child != null && index == 0) return _child;
         throw new ArgumentOutOfRangeException(nameof(index));

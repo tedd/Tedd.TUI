@@ -21,9 +21,9 @@ public class StackPanel : UIElement
         child.Parent = this;
     }
 
-    protected override int VisualChildrenCount => _children.Count;
+    public override int VisualChildrenCount => _children.Count;
 
-    protected override UIElement GetVisualChild(int index)
+    public override UIElement GetVisualChild(int index)
     {
         if (index < 0 || index >= _children.Count) throw new ArgumentOutOfRangeException(nameof(index));
         return _children[index];

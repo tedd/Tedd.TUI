@@ -163,9 +163,9 @@ public abstract class UIElement : DependencyObject
         // To be overridden by containers to propagate
     }
 
-    protected virtual int VisualChildrenCount => 0;
+    public virtual int VisualChildrenCount => 0;
 
-    protected virtual UIElement GetVisualChild(int index)
+    public virtual UIElement GetVisualChild(int index)
     {
         throw new System.ArgumentOutOfRangeException(nameof(index));
     }
@@ -324,6 +324,17 @@ public abstract class UIElement : DependencyObject
     public virtual void Invalidate()
     {
         if (Parent != null) Parent.Invalidate();
+    }
+
+    public T? FindAncestor<T>() where T : UIElement
+    {
+        var current = Parent;
+        while (current != null)
+        {
+            if (current is T match) return match;
+            current = current.Parent;
+        }
+        return null;
     }
 }
 

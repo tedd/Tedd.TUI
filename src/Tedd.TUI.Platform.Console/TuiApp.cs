@@ -49,7 +49,7 @@ public class TuiApp
             if (handles != null)
             {
                 // Wait for Input or Render Request
-                uint result = NativeMethods.WaitForMultipleObjects((uint)handles.Length, handles, false, NativeMethods.INFINITE);
+                uint result = NativeMethods.WaitForMultipleObjects((uint)handles.Length, handles, false, 100);
                 
                 if (result == NativeMethods.WAIT_OBJECT_0) // Input
                 {
@@ -59,9 +59,17 @@ public class TuiApp
                 {
                     UpdateAndRender();
                 }
+                else if (result == NativeMethods.WAIT_TIMEOUT)
+                {
+                    // Poll for resize as backup
+                    if (System.Console.WindowWidth != _lastWidth || System.Console.WindowHeight != _lastHeight)
+                    {
+                        UpdateAndRender();
+                    }
+                }
                 else 
                 {
-                    // Timeout or Failed
+                    // Failed
                     Thread.Sleep(16);
                 }
             }
@@ -101,6 +109,24 @@ public class TuiApp
 
         var w = System.Console.WindowWidth;
         var h = System.Console.WindowHeight;
+
+        if (w != _lastWidth || h != _lastHeight)
+        {
+            try
+            {
+                // Sync buffer size to window size to prevent scrolling/skewing artifacts
+                // and ensure (0,0) remains the top-left of the viewport.
+                if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+                {
+                    if (System.Console.BufferWidth != w || System.Console.BufferHeight != h)
+                    {
+                        System.Console.SetBufferSize(w, h);
+                    }
+                }
+            }
+            catch { }
+        }
+
         _lastWidth = w;
         _lastHeight = h;
         

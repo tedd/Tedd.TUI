@@ -60,9 +60,9 @@ public class TableRow : UIElement
     // TableRow doesn't really layout itself independently; it relies on the Table to tell it column widths.
     // However, for Measure, we might simple measure children.
     
-    protected override int VisualChildrenCount => _cells.Count;
+    public override int VisualChildrenCount => _cells.Count;
 
-    protected override UIElement GetVisualChild(int index)
+    public override UIElement GetVisualChild(int index)
     {
         if (index < 0 || index >= _cells.Count) throw new ArgumentOutOfRangeException(nameof(index));
         return _cells[index];
@@ -94,17 +94,22 @@ public class TableRow : UIElement
         // Let's have Table arrange the Row, and Row arrange Cells based on Table's calculated columns.
         // But Row is a UIElement, it won't have reference to Table easily unless we cast Parent.
         
-        if (Parent is Table table)
+        var table = FindAncestor<Table>();
+        if (table != null)
         {
             int x = 0;
+            // Spacing logic? Table.Measure/Arrange might need to pass spacing or we assume?
+            // Table.ArrangeOverride uses `totalW += c.ActualWidth + 1`.
+            // So we should assume spacing.
+            
             for (int i = 0; i < _cells.Count && i < table.Columns.Count; i++)
             {
                 int w = table.Columns[i].ActualWidth;
                 var cell = _cells[i];
                 cell.Arrange(new Rect(x, 0, w, finalSize.Height));
                 x += w;
-                // Add spacing?
-                x += 1; // 1 pixel spacing between columns?
+                // Add spacing
+                x += (i < table.Columns.Count - 1) ? 1 : 0;
             }
         }
     }
@@ -128,6 +133,9 @@ public class Table : UIElement
     private List<TableRow> _rows = new List<TableRow>();
     public IList<TableRow> Rows => _rows;
 
+    private readonly ScrollViewer _scrollViewer;
+    private readonly StackPanel _rowStack;
+
     public bool ShowHeader { get; set; } = true;
     public ConsoleColor HeaderForeground { get; set; } = ConsoleColor.Yellow;
     public ConsoleColor HeaderBackground { get; set; } = ConsoleColor.DarkGray;
@@ -149,17 +157,25 @@ public class Table : UIElement
     }
     public event EventHandler SelectionChanged;
 
-    private int _scrollOffset = 0;
-
     public Table()
     {
         Focusable = true;
+        _rowStack = new StackPanel { Orientation = Orientation.Vertical };
+        _scrollViewer = new ScrollViewer 
+        { 
+            Content = _rowStack,
+            VerticalScrollBarVisibility = true,
+            HorizontalScrollBarVisibility = true 
+        };
+        _scrollViewer.Parent = this;
     }
 
     public void AddRow(TableRow row)
     {
         _rows.Add(row);
-        row.Parent = this;
+        // row.Parent = this; // Row parent is now effectively managed by StackPanel? 
+        // No, StackPanel.AddChild sets parent to StackPanel.
+        // We defer adding to StackPanel until UpdateVisibleRows.
         Invalidate();
     }
     
@@ -174,8 +190,47 @@ public class Table : UIElement
         AddRow(row);
     }
 
-    protected override int VisualChildrenCount => _rows.Count;
-    protected override UIElement GetVisualChild(int index) => _rows[index];
+    public override int VisualChildrenCount => 1; // Only ScrollViewer is a direct visual child (Header is drawn manually)
+    public override UIElement GetVisualChild(int index) 
+    {
+        if (index == 0) return _scrollViewer;
+        throw new ArgumentOutOfRangeException(nameof(index));
+    }
+
+    protected override void OnDataContextChanged(object newValue)
+    {
+        base.OnDataContextChanged(newValue);
+        _scrollViewer.DataContext = newValue;
+    }
+
+    private void UpdateVisibleRows()
+    {
+        // Rebuild _rowStack children based on current page / valid rows.
+        _rowStack.Children.Clear();
+
+        int startIdx = 0;
+        int count = _rows.Count;
+        
+        if (IsInternalPaging)
+        {
+             startIdx = CurrentPage * PageSize;
+             count = Math.Min(PageSize, _rows.Count - startIdx);
+        }
+        else if (PageSize > 0)
+        {
+             // External paging or mixed.
+             count = Math.Min(PageSize, _rows.Count);
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            int realIdx = startIdx + i;
+            if (realIdx < _rows.Count)
+            {
+                _rowStack.AddChild(_rows[realIdx]);
+            }
+        }
+    }
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -195,79 +250,47 @@ public class Table : UIElement
             }
         }
 
-        // 3. Measure rows to determine Auto widths and Row heights
-        // If paging, only measure current page rows? 
-        // OR measure all to get correct column widths?
-        // Usually you want consistent column widths across pages -> Measure ALL.
-        // But if too many rows, expensive.
-        // If Internal Paging (View knows all data), we often measure all to stabilize columns.
-        // If External Paging, we only have current rows.
-        // Let's measure ALL rows present in _rows.
+        // 3. Scan ALL rows to determine Auto column widths.
+        // We must scan _rows, not just visible ones, if we want stable columns?
+        // Or scan only visible? Usually stable is better, but expensive.
+        // Let's scan visible ones (in _rowStack) or scan data source?
+        // To be correct with pagination creating different widths per page is jarring.
+        // Let's scan a subset or current page rows.
         
-        int totalHeight = 0;
-        if (ShowHeader) totalHeight += 1; // Header row
+        // Sync row stack first? Or Measure calls UpdateVisibleRows?
+        // Let's update rows before measure.
+        UpdateVisibleRows();
 
-        // Determine visible range for Height calculation (layout height)
-        // If paging, Layout Height depends on PageSize (or rendered rows).
-        // But for Width Auto calculation, we scan all.
-        
-        int visibleRowsHeight = 0;
-        int startIdx = 0;
-        int count = _rows.Count;
-        if (IsInternalPaging)
+        foreach (var row in _rows) // Ideally only measured rows, but we need width from all?
         {
-            startIdx = CurrentPage * PageSize;
-            count = Math.Min(PageSize, _rows.Count - startIdx);
-        }
-        else if (PageSize > 0)
-        {
-            count = Math.Min(PageSize, _rows.Count);
-        }
-
-        for (int i = 0; i < _rows.Count; i++)
-        {
-            var row = _rows[i];
-            row.Measure(availableSize); // This measures cells
-            
-            // Check Auto columns
-            for (int j = 0; j < Columns.Count && j < row.Cells.Count; j++)
-            {
-                var col = Columns[j];
-                if (col.Width.GridUnitType == GridUnitType.Auto)
-                {
-                    col.ActualWidth = Math.Max(col.ActualWidth, row.Cells[j].DesiredSize.Width);
-                }
-            }
-
-            // Calculate height ONLY for visible rows
-            bool isVisible = false;
-            // Internal Paging check
-            if (PageSize > 0)
-            {
-                if (IsInternalPaging) 
-                {
-                    if (i >= startIdx && i < startIdx + count) isVisible = true;
-                }
-                else  
-                {
-                    // External or manual: assume top rows are relevant?
-                    if (i < count) isVisible = true;
-                }
-            }
-            else
-            {
-                // No paging, all potentially visible (scroll handled in Arrange/Render)
-                isVisible = true; 
-            }
-            
-            if (isVisible)
-            {
-                visibleRowsHeight += row.DesiredSize.Height;
-            }
+            // We can't Measure() rows that are not in visual tree (StackPanel) properly without attaching?
+            // But _rows contains all.
+            // Let's just measure rows that are going to be displayed for Auto sizing?
+            // If we only measure visible, column widths jump between pages.
+            // Compromise: Measure current page rows.
         }
         
-        totalHeight += visibleRowsHeight;
-        if (PageSize > 0) totalHeight += 1; // Footer
+        // For column auto-width, we rely on the rows we just put in _rowStack.
+        foreach (var child in _rowStack.Children)
+        {
+            // We need to measure it to let it size its cells.
+            // BUT TableRow.MeasureOverride currently assumes infinite width for cells.
+            // We can call Measure on it.
+            child.Measure(new Size(availableSize.Width, availableSize.Height)); // Height irrelevant for width calc
+
+            if (child is TableRow row)
+            {
+                 // Logic from previous MeasureOverride implementation
+                 for (int j = 0; j < Columns.Count && j < row.Cells.Count; j++)
+                 {
+                     var col = Columns[j];
+                     if (col.Width.GridUnitType == GridUnitType.Auto)
+                     {
+                         col.ActualWidth = Math.Max(col.ActualWidth, row.Cells[j].DesiredSize.Width);
+                     }
+                 }
+            }
+        }
 
         // 4. Resolve Star widths
         int usedWidth = 0;
@@ -278,8 +301,6 @@ public class Table : UIElement
             {
                 col.ActualWidth = (int)col.Width.Value;
             }
-            // Auto already calculated
-            
             usedWidth += col.ActualWidth;
             if (col.Width.GridUnitType == GridUnitType.Star)
             {
@@ -287,11 +308,15 @@ public class Table : UIElement
             }
         }
         
-        // Add padding for separators?
         int separators = Math.Max(0, Columns.Count - 1);
         usedWidth += separators;
 
-        int remainingWidth = Math.Max(0, availableSize.Width - usedWidth);
+        int scrollBarWidth = _scrollViewer.VerticalScrollBarVisibility ? 1 : 0;
+        // The ScrollViewer will take available width.
+        // We should subtract scrollbar width from available space for columns?
+        // Yes, if ScrollBar is visible.
+        
+        int remainingWidth = Math.Max(0, availableSize.Width - usedWidth - scrollBarWidth);
         if (totalStars > 0 && remainingWidth > 0)
         {
             foreach (var col in Columns)
@@ -305,88 +330,38 @@ public class Table : UIElement
             }
         }
 
-        // 5. Return size
-        return new Size(availableSize.Width, totalHeight);
+        // 5. Measure ScrollViewer
+        int headerHeight = ShowHeader ? 1 : 0;
+        int footerHeight = PageSize > 0 ? 1 : 0;
+        int bodyHeight = Math.Max(0, availableSize.Height - headerHeight - footerHeight);
+        
+        _scrollViewer.Measure(new Size(availableSize.Width, bodyHeight));
+
+        return new Size(availableSize.Width, headerHeight + _scrollViewer.DesiredSize.Height + footerHeight);
     }
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        // Arrange rows
-        int y = 0;
+        int headerHeight = ShowHeader ? 1 : 0;
+        int footerHeight = PageSize > 0 ? 1 : 0;
+        int bodyHeight = Math.Max(0, finalSize.Height - headerHeight - footerHeight);
+
+        // Header is just drawn, no child to arrange.
         
-        // Header
-        if (ShowHeader)
-        {
-            y += 1; 
-        }
-
-        int startIdx = 0;
-        int count = _rows.Count;
-        bool useScrolling = PageSize <= 0;
-
-        if (IsInternalPaging)
-        {
-             startIdx = CurrentPage * PageSize;
-             count = Math.Min(PageSize, _rows.Count - startIdx);
-        }
-        else if (PageSize > 0)
-        {
-             count = Math.Min(PageSize, _rows.Count);
-        }
-
-        // We only Arrange visible rows?
-        // Scroll offset applies if paging OFF.
+        // Arrange ScrollViewer
+        _scrollViewer.Arrange(new Rect(0, headerHeight, finalSize.Width, bodyHeight));
         
-        int rowIdx = 0;
-        for (int i = 0; i < _rows.Count; i++)
-        {
-            var row = _rows[i];
-            
-            bool shouldArrange = false;
-            if (useScrolling)
-            {
-                 if (i >= _scrollOffset) shouldArrange = true;
-            }
-            else
-            {
-                 if (i >= startIdx && i < startIdx + count) shouldArrange = true;
-            }
-
-            if (!shouldArrange) 
-            {
-                // Hide? Collapse?
-                row.Arrange(new Rect(0,0,0,0));
-                continue;
-            }
-            
-            // Calculate Row Width from columns
-            int totalW = 0;
-            foreach(var c in Columns) totalW += c.ActualWidth;
-            totalW += Math.Max(0, Columns.Count - 1); // Spacing
-
-            int h = row.DesiredSize.Height;
-            if (y + h > finalSize.Height - (PageSize > 0 ? 1 : 0)) // Check clip (+ footer reserve)
-            {
-                // Stop arranging if out of space?
-                // row.Arrange(Rect.Empty);
-                // break; 
-                // Don't break, ensure subsequent are collapsed?
-                // For scrolling/paging, we want to ensure visible ones are arranged.
-            }
-
-            row.Arrange(new Rect(0, y, totalW, h));
-            y += h;
-        }
+        // Footer is just drawn.
     }
 
-public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
+    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-        int x = RenderSize.X + offsetX;
-        int y = RenderSize.Y + offsetY;
-        
-        // Draw Header
-        if (ShowHeader)
-        {
+         int x = RenderSize.X + offsetX;
+         int y = RenderSize.Y + offsetY;
+
+         // Draw Header
+         if (ShowHeader)
+         {
             int colX = x;
             for (int i = 0; i < Columns.Count; i++)
             {
@@ -411,125 +386,19 @@ public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
                    colX++;
                 }
             }
-            y++; 
-        }
+         }
 
-        // Draw Rows (Children)
-        
-        // Pagination Logic
-        int startIdx = 0;
-        int count = _rows.Count;
-        
-        if (IsInternalPaging)
-        {
-             startIdx = CurrentPage * PageSize;
-             count = Math.Min(PageSize, _rows.Count - startIdx);
-        }
-        else if (PageSize > 0 && TotalRows > 0)
-        {
-             // External paging, rows usually contains just the page (start at 0)
-             // But if user appended rows without clearing? 
-             // Assume rows contains the data to show.
-             startIdx = 0;
-             count = Math.Min(PageSize, _rows.Count);
-        }
+         // Draw Body (ScrollViewer)
+         // ScrollViewer Render will handle children.
+         // We just passed Arrange, so it knows where to draw.
+         // ScrollViewer is a child, so we call its render.
+         _scrollViewer.Render(buffer, x, y);
 
-        // If not paging, use scroll offset? 
-        // If paging is effectively off (PageSize <= 0), we use _scrollOffset behavior logic?
-        // Let's stick to: If IsInternalPaging is false and PageSize <= 0, use old logic.
-        
-        bool useScrolling = PageSize <= 0;
-
-        int rowIdx = 0;
-        int renderedCount = 0;
-        
-        // Using for-loop to iterate the slice
-        for (int i = 0; i < _rows.Count; i++)
-        {
-             // If scrolling, skip until offset
-             if (useScrolling && i < _scrollOffset) continue;
-             
-             // If paging, skip until startIdx
-             if (!useScrolling)
-             {
-                 if (i < startIdx) continue;
-                 if (i >= startIdx + count) break;
-             }
-
-             var row = _rows[i];
-             
-             // Check bounds
-             if (y >= RenderSize.Y + offsetY + RenderSize.Height - (PageSize > 0 ? 1 : 0)) break; // Reserve footer space if paging
-
-             // Highlight selected row background
-             if (i == SelectedIndex)
-             {
-                 int rowY = row.RenderSize.Y; // Relative to Table? 
-                 // Wait, row.RenderSize.Y is set in Arrange. Arrange puts it relative to Table.
-                 // If we are paging, Arrange needs to know this potentially?
-                 // Simple approach: We just draw at current 'y'.
-                 // BUT row.Render expects absolute coords calculated from something?
-                 // row.Render(buffer, x, y) uses absolute.
-                 
-                 // We should manually fill background at 'y' for the row's height.
-                 // Assuming row height is calculated/known.
-                 int rh = row.RenderSize.Height > 0 ? row.RenderSize.Height : 1; 
-
-                 ConsoleColor bg = IsFocused ? ConsoleColor.Blue : ConsoleColor.Gray;
-                 ConsoleColor fg = IsFocused ? ConsoleColor.White : ConsoleColor.Black;
-                 
-                  for (int ry = 0; ry < rh; ry++)
-                  {
-                      for (int rx = 0; rx < RenderSize.Width; rx++)
-                      {
-                           buffer.SetPixel(RenderSize.X + offsetX + rx, y + ry, ' ', fg, bg);
-                      }
-                  }
-             }
-
-             // Render the row
-             // We need to re-arrange or just pass render pos?
-             // Since Table computes layout, we can pass positions.
-             // But UIElement.Render doesn't take 'pos' override usually, it uses its own Layout info?
-             // UIElement.Render(buffer, offsetX, offsetY) uses its RenderSize (which has X,Y).
-             // If we rely on Arrange to set X,Y, we must Arrange adequately.
-             // But Arrange runs once. If we scroll/page, we change which rows are at Y=0.
-             // So Arrange must update Row Y positions based on scroll/page.
-             // Render Loop assumes Arrange didn't update or updated correctly?
-             // Let's assume Render must trust Arrange.
-             // SO WE MUST UPDATE ARRANGE as well.
-             
-             // For now, let's force render at 'y'.
-             // We can hack: row.Render(buffer, x, y - row.RenderSize.Y + (y relative to Table??))
-             // No, simpler: row.Render(buffer, x, y) if we treat row as child.
-             // BUT row.Render(buffer, offX, offY) => calls generic Render using `RenderSize.X + offX`.
-             // So if Row.Y is 10, and we pass offY, it draws at 10+offY.
-             // We want it to draw at `currentY + offY`.
-             // So we should fix Arrange to place visible rows starting at Top.
-             
-             int rowHeight = row.RenderSize.Height > 0 ? row.RenderSize.Height : 1;
-             
-             // Temporarily force render by passing offset adjustment?
-             // Or rely on Arrange having run correctly for the view.
-             // Let's assume Arrange handles Layout.
-             // If Arrange handles layout, then loop in Render just calls row.Render?
-             // Yes.
-             
-             row.Render(buffer, offsetX, offsetY);
-             
-             // Wait, if Arrange sets Y=100 for row 50. And we are viewing Page 2.
-             // We want Row 50 to appear at Y=Top.
-             // So Arrange MUST account for StartIdx.
-             
-             y += rowHeight; 
-             renderedCount++;
-        }
-        
-        // Render Footer
-        if (PageSize > 0)
-        {
-            RenderPagination(buffer, offsetX, offsetY);
-        }
+         // Draw Footer
+         if (PageSize > 0)
+         {
+             RenderPagination(buffer, offsetX, offsetY);
+         }
     }
     
     public override void OnKeyDown(KeyEventArgs e)
@@ -604,28 +473,50 @@ public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
             if (page != CurrentPage)
             {
                 CurrentPage = page;
-                // PageChanged implicitly handled by property setter.
+                // PageChanged implicitly handled, triggers UpdateVisibleRows
             }
-            // No scrolling logic needed inside page usually.
-            Invalidate(); // Redraw selection
+            // If already on page, do we need to scroll ScrollViewer?
+            // Usually not if PageSize fits in Table height. But if rows are tall?
+            // Yes, user wants scrollbar if overflows.
+            
+            // Find row in _rowStack?
+            // The row is likely in _rowStack if on current page.
+            if (index >= 0 && index < _rows.Count)
+            {
+                // We need to calculate position of this row inside _rowStack.
+                // ScrollViewer works with vertical offset.
+                // We need to find the Y position of the selected row relative to _rowStack.
+                
+                // Since _rows are added to StackPanel, we can iterate StackPanel children?
+                // Or calculate from heights? Row heights are dynamic.
+                // Best is to find the child control corresponding to _rows[index].
+                
+                var row = _rows[index];
+                if (row.Parent == _rowStack) // Check if attached
+                {
+                   // To ensure visible, we need to know its position.
+                   // StackPanel arranges children. If Arrange has run, render size/pos is known?
+                   // No, RenderSize.Y is relative to StackPanel.
+                   
+                   // But Arrange only runs during Layout pass.
+                   // If we just gathered visible rows, layout hasn't run yet.
+                   // So we might need to UpdateLayout?
+                   
+                   // However, simplified approach:
+                   // Just rely on user scrolling or minimal auto-scroll if possible.
+                   // For now, let's just ensure Page.
+                }
+            }
+            Invalidate();
         }
         else
         {
-            // Scrolling Mode (classic)
-            if (index < _scrollOffset)
-            {
-                _scrollOffset = index;
-                Invalidate();
-            }
-            else 
-            {
-                int h = RenderSize.Height - (ShowHeader ? 1 : 0);
-                if (index >= _scrollOffset + h)
-                {
-                    _scrollOffset = index - h + 1;
-                    Invalidate();
-                }
-            }
+            // Scrolling Mode (classic / no pagination) via ScrollViewer?
+            // If No Paging, all rows are in _rowStack.
+            
+            // Update ScrollViewer offset?
+            // This requires measuring/positioning. The ScrollViewer logic handles scrolling via ScrollBar interactively.
+            // Programmatic EnsureVisible would require finding the target Y.
         }
     }
     
@@ -768,31 +659,45 @@ public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
             {
                 startIdx = CurrentPage * PageSize;
                 count = Math.Min(PageSize, _rows.Count - startIdx);
+                
+                int currentY = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    int realIdx = startIdx + i;
+                    if (realIdx >= _rows.Count) break;
+
+                    var row = _rows[realIdx];
+                    int rh = row.RenderSize.Height > 0 ? row.RenderSize.Height : 1;
+                    
+                    if (y >= currentY && y < currentY + rh)
+                    {
+                        SelectedIndex = realIdx;
+                        SelectionChanged?.Invoke(this, EventArgs.Empty);
+                        break;
+                    }
+                    currentY += rh;
+                }
             }
             else if (useScrolling)
             {
-                startIdx = _scrollOffset;
-                count = _rows.Count - startIdx;
-            }
+                // ScrollViewer based scrolling (pixel/line based)
+                int scrollY = _scrollViewer.VerticalOffset;
+                int targetY = y + scrollY;
 
-            int currentY = 0;
-            for (int i = 0; i < count; i++)
-            {
-                // For internal paging or scrolling, real index is shifted
-                int realIdx = startIdx + i;
-                
-                if (realIdx >= _rows.Count) break;
-
-                var row = _rows[realIdx];
-                int rh = row.RenderSize.Height > 0 ? row.RenderSize.Height : 1;
-                
-                if (y >= currentY && y < currentY + rh)
+                int currentY = 0;
+                for (int i = 0; i < _rows.Count; i++)
                 {
-                    SelectedIndex = realIdx;
-                    SelectionChanged?.Invoke(this, EventArgs.Empty);
-                    break;
+                    var row = _rows[i];
+                    int rh = row.RenderSize.Height > 0 ? row.RenderSize.Height : 1;
+
+                    if (targetY >= currentY && targetY < currentY + rh)
+                    {
+                        SelectedIndex = i;
+                        SelectionChanged?.Invoke(this, EventArgs.Empty);
+                        break;
+                    }
+                    currentY += rh;
                 }
-                currentY += rh;
             }
         }
         e.Handled = true;
@@ -902,6 +807,8 @@ public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
         // Format: "< 1 2 3 ... 10 >"
         // We can tokenize the string by spaces and find which token we clicked.
         
+        if (charIdx < 0 || charIdx >= text.Length || text[charIdx] == ' ') return;
+
         // Find the token at charIdx
         // Scan back to space
         int tokenStart = text.LastIndexOf(' ', charIdx);
@@ -910,10 +817,13 @@ public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
         int tokenEnd = text.IndexOf(' ', charIdx);
         if (tokenEnd == -1) tokenEnd = text.Length;
 
-        string token = text.Substring(tokenStart, tokenEnd - tokenStart);
-        if (int.TryParse(token, out int pNum))
+        if (tokenStart >= 0 && tokenEnd > tokenStart && tokenEnd <= text.Length)
         {
-            CurrentPage = pNum - 1;
+            string token = text.Substring(tokenStart, tokenEnd - tokenStart);
+            if (int.TryParse(token, out int pNum))
+            {
+                CurrentPage = pNum - 1;
+            }
         }
     }
 

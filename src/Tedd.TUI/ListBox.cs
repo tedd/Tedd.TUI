@@ -50,8 +50,8 @@ public class ListBox : UIElement
 
     private int _scrollOffset = 0;
 
-    protected override int VisualChildrenCount => 1;
-    protected override UIElement GetVisualChild(int index)
+    public override int VisualChildrenCount => 1;
+    public override UIElement GetVisualChild(int index)
     {
         if (index == 0) return _scrollBar;
         throw new ArgumentOutOfRangeException(nameof(index));

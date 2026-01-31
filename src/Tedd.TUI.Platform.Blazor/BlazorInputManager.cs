@@ -52,42 +52,63 @@ public class BlazorInputManager
         int x = (int)(e.OffsetX / CharWidth);
         int y = (int)(e.OffsetY / CharHeight);
 
-        // e.Button: 0 = Left, 1 = Middle, 2 = Right
-        if (type == "mousedown")
+        _eventQueue.Enqueue(() =>
         {
-             if (e.Button == 0)
-             {
-                 _eventQueue.Enqueue(() => {
-                     var hit = _window.InputHitTest(x, y);
-                     if (hit != null)
-                     {
-                         hit.Element.OnMouseDown(new Tedd.TUI.MouseEventArgs { X = hit.LocalX, Y = hit.LocalY });
-                         // Also trigger focus?
-                         // Windows/Console doesn't auto-focus on click in generic InputManager,
-                         // usually elements handle it (e.g. Button OnMouseDown calls Focus()).
-                         // But TuiWindow.ProcessWindowsInput logic didn't show auto focus.
-                         // However, for typical UI, clicking should focus.
-                         // Let's assume controls handle it or we add it here.
-                         // TuiWindow has SetFocus.
-                         // Let's try to focus the element clicked.
-                         if (hit.Element.Focusable) _window.SetFocus(hit.Element);
-                     }
-                 });
-             }
-        }
-        else if (type == "mouseup")
-        {
-             if (e.Button == 0)
-             {
-                 _eventQueue.Enqueue(() => {
-                     var hit = _window.InputHitTest(x, y);
-                     if (hit != null)
-                     {
-                         hit.Element.OnMouseUp(new Tedd.TUI.MouseEventArgs { X = hit.LocalX, Y = hit.LocalY });
-                     }
-                 });
-             }
-        }
+            var hit = _window.InputHitTest(x, y);
+            if (hit != null)
+            {
+                var args = new Tedd.TUI.MouseEventArgs { X = hit.LocalX, Y = hit.LocalY };
+                var current = hit.Element;
+                
+                // Bubble up
+                while (current != null)
+                {
+                    if (type == "mousedown")
+                    {
+                         if (e.Button == 0) // Left button
+                         {
+                             // Special focus handling at the leaf or bubble? 
+                             // Usually focus happens on the element that was actually clicked (leaf).
+                             // But if leaf isn't focusable, maybe bubble?
+                             // Existing code: if (hit.Element.Focusable) _window.SetFocus(hit.Element);
+                             // Let's stick to original intent: Try to focus the HIT element (leaf).
+                             // If that fails, maybe we should try focus parents? 
+                             // For now, let's keep original focus logic ONCE at the start.
+                             if (current == hit.Element && current.Focusable) 
+                             {
+                                 _window.SetFocus(current);
+                             }
+
+                             current.OnMouseDown(args);
+                         }
+                    }
+                    else if (type == "mouseup")
+                    {
+                        if (e.Button == 0)
+                        {
+                            current.OnMouseUp(args);
+                        }
+                    }
+                    else if (type == "mousemove")
+                    {
+                        current.OnMouseMove(args);
+                    }
+
+                    if (args.Handled) break;
+
+                    // Move up
+                    // Transform coords to parent space
+                    // Parent Local X = Child Local X + Child X
+                    args.X += current.RenderSize.X;
+                    args.Y += current.RenderSize.Y;
+                    
+                    current = current.Parent;
+                    
+                    // Stop at Window? Window is UIElement, so it handles it too.
+                    // But Window.Parent is null. Loop terminates.
+                }
+            }
+        });
     }
 
     private ConsoleModifiers GetModifiers(KeyboardEventArgs e)

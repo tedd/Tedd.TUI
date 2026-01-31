@@ -176,7 +176,7 @@ class Program
         var tableStack = new StackPanel { Orientation = Orientation.Vertical };
         tableStack.AddChild(new TextBlock { Text = "Table Control:" });
         
-        var table = new Table { Width = 60, Height = 10, ShowHeader = true };
+        var table = new Table { Width = 60, Height = 10, ShowHeader = true, PageSize = 5 }; // Enable Pagination
         
         // 1. Numeric Sort for ID
         var colId = new TableColumn { Header = "ID", Width = GridLength.Pixel(5) };
@@ -203,16 +203,30 @@ class Program
 
         // 4. Custom key selector example for Actions (sort by length of content?)
         // Or just leave unsortable or default string.
-        table.Columns.Add(new TableColumn { Header = "Actions", Width = GridLength.Pixel(10) });
+        table.Columns.Add(new TableColumn { Header = "Actions", Width = GridLength.Pixel(15) });
 
-        var btnRemove = new Button { Content = "Del" };
-        
+        // Helper to create Edit Button
+        UIElement CreateEditBtn(string name)
+        {
+            var btn = new Button { Content = "Edit" };
+            btn.Click += (s, e) => logBox.Items.Add($"Edit Clicked: {name}");
+            return btn;
+        }
+
         // Add Rows with unsorted IDs to demonstrate sorting
-        table.AddRow("10", "Alice", "30", "Edit");
-        table.AddRow("2", "Bob", "25", "Edit");
-        table.AddRow("1", "Charlie", "35", "Edit");
+        table.AddRow("10", "Alice", "30", CreateEditBtn("Alice"));
+        table.AddRow("2", "Bob", "25", CreateEditBtn("Bob"));
+        table.AddRow("1", "Charlie", "35", CreateEditBtn("Charlie"));
         table.AddRow("20", "David", "40", new CheckBox { Content = "Active", IsChecked = true });
-        table.AddRow("3", "Eve", "22", "Edit");
+        table.AddRow("3", "Eve", "22", CreateEditBtn("Eve"));
+        
+        // Add more rows for pagination testing
+        table.AddRow("4", "Frank", "28", CreateEditBtn("Frank"));
+        table.AddRow("5", "Grace", "31", CreateEditBtn("Grace"));
+        table.AddRow("6", "Heidi", "24", CreateEditBtn("Heidi"));
+        table.AddRow("7", "Ivan", "45", CreateEditBtn("Ivan"));
+        table.AddRow("8", "Judy", "33", CreateEditBtn("Judy"));
+        table.AddRow("9", "Mallory", "29", CreateEditBtn("Mallory"));
 
         tableStack.AddChild(table);
         tabs.AddItem(new TabItem { Header = "Table", Content = tableStack });

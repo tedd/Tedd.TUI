@@ -40,12 +40,15 @@ public class ScrollViewer : UIElement
         _horizontalScrollBar.ValueChanged += OnScroll;
     }
 
+    public int VerticalOffset => _verticalScrollBar.Value;
+    public int HorizontalOffset => _horizontalScrollBar.Value;
+
     private void OnScroll(object? sender, EventArgs e)
     {
         Invalidate();
     }
 
-    protected override int VisualChildrenCount
+    public override int VisualChildrenCount
     {
         get
         {
@@ -57,7 +60,7 @@ public class ScrollViewer : UIElement
         }
     }
 
-    protected override UIElement GetVisualChild(int index)
+    public override UIElement GetVisualChild(int index)
     {
         // Simple mapping, order: Content, VScroll, HScroll
         if (_content != null)

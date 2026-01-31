@@ -19,9 +19,9 @@ public class TuiWindow : UIElement
         }
     }
 
-    protected override int VisualChildrenCount => _content != null ? 1 : 0;
+    public override int VisualChildrenCount => _content != null ? 1 : 0;
 
-    protected override UIElement GetVisualChild(int index)
+    public override UIElement GetVisualChild(int index)
     {
         if (_content != null && index == 0) return _content;
         throw new ArgumentOutOfRangeException(nameof(index));
@@ -239,38 +239,13 @@ public class TuiWindow : UIElement
 
             HitTestResult hitChild = null;
 
-            if (element is StackPanel stack)
+            // Iterate children in reverse order (top-most first)
+            int count = element.VisualChildrenCount;
+            for (int i = count - 1; i >= 0; i--)
             {
-                for (int i = stack.Children.Count - 1; i >= 0; i--)
-                {
-                    hitChild = InputHitTestRecursive(stack.Children[i], localX, localY);
-                    if (hitChild != null) return hitChild;
-                }
-            }
-            else if (element is Border border && border.Child != null)
-            {
-                hitChild = InputHitTestRecursive(border.Child, localX, localY);
+                var child = element.GetVisualChild(i);
+                hitChild = InputHitTestRecursive(child, localX, localY);
                 if (hitChild != null) return hitChild;
-            }
-            else if (element is DialogBox dialog && dialog.Content != null)
-            {
-                hitChild = InputHitTestRecursive(dialog.Content, localX, localY);
-                if (hitChild != null) return hitChild;
-            }
-            else if (element is TabControl tab)
-            {
-                if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
-                {
-                    var content = tab.Items[tab.SelectedIndex].Content as UIElement;
-                    if (content != null)
-                    {
-                        hitChild = InputHitTestRecursive(content, localX, localY);
-                        if (hitChild != null) return hitChild;
-                    }
-                }
-
-                // If not hit content, it is the tab header area (the control itself)
-                return new HitTestResult(element, localX, localY);
             }
 
             // If no child hit, but we are inside, return self with local coordinates

@@ -7,7 +7,7 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-<div tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='e => OnMouse(e, "mousedown")' @onmouseup='e => OnMouse(e, "mouseup")' @onmousemove='e => OnMouse(e, "mousemove")' style="outline:none; display: inline-block;">
+<div id="@ContainerId" tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='OnMouseDownInternal' style="outline:none; display: inline-block;">
     @if (Mode == TuiRenderMode.Canvas)
     {
         <canvas id="@CanvasId"></canvas>
@@ -29,7 +29,8 @@
     [Parameter] public TuiWindow? Window { get; set; }
     [Parameter] public TuiRenderMode Mode { get; set; } = TuiRenderMode.Canvas;
 
-    public string CanvasId { get; } = "tui_" + Guid.NewGuid().ToString("N");
+    public string CanvasId { get; } = "tui_c_" + Guid.NewGuid().ToString("N");
+    public string ContainerId { get; } = "tui_v_" + Guid.NewGuid().ToString("N");
 
     private BlazorTuiApp? _app;
     private TuiWindow? _internalWindow;
@@ -127,7 +128,47 @@
 
     private void OnKeyDown(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, true);
     private void OnKeyUp(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, false);
-    private void OnMouse(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, string type) => _app?.InputManager.QueueMouse(e, type);
+    
+    private void OnMouseDownInternal(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
+    {
+        // Start global tracking for drag
+        if (_objRef != null)
+        {
+            // Fire and forget or sync?
+            // JS interop is async usually.
+            // But we process this event now.
+            JS.InvokeVoidAsync("tuiInterop.startGlobalDrag", _objRef, ContainerId);
+        }
+        _app?.InputManager.QueueMouse(e, "mousedown");
+    }
+
+    [JSInvokable]
+    public void OnGlobalMouse(string type, double x, double y)
+    {
+        // Construct a MouseEventArgs manually
+        // Note: Blazor's MouseEventArgs has many fields. We populate essential ones.
+        // x and y are relative to container (thanks to JS logic).
+        var args = new Microsoft.AspNetCore.Components.Web.MouseEventArgs
+        {
+            Type = type, // Note: standard MouseEventArgs doesn't have Type field usually used this way, but our QueueMouse takes type string separately.
+            ClientX = x, // QueueMouse likely uses OffsetX/Y logic or ClientX/Y mapping.
+                         // TuiApp.InputManager probably expects ClientX/Y?
+                         // Actually Blazor's MouseEventArgs OffsetX/Y are relative to target.
+                         // ClientX/Y are relative to viewport.
+                         // Our JS calculated x/y relative to container.
+                         // If InputManager uses OffsetX, we should map x/y to it.
+                         // Let's assume InputManager logic.
+            // Wait, if InputManager uses ClientX/Y and subtracts Element rect?
+            // If we pass x/y as ClientX/Y, InputManager might subtract AGAIN if it thinks it's global?
+            // BUT: We passed relative X/Y from JS.
+            // If InputManager expects relative X/Y in OffsetX/Y:
+            OffsetX = x,
+            OffsetY = y,
+            Button = 0 // Assume Left
+        };
+
+        _app?.InputManager.QueueMouse(args, type);
+    }
 
     public void Dispose()
     {

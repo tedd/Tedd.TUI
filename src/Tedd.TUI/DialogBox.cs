@@ -26,6 +26,13 @@ public class DialogBox : UIElement
             }
         }
     }
+    public override int VisualChildrenCount => _content != null ? 1 : 0;
+
+    public override UIElement GetVisualChild(int index)
+    {
+        if (_content != null && index == 0) return _content;
+        throw new ArgumentOutOfRangeException(nameof(index));
+    }
 
     /// <summary>
     /// Title displayed in the dialog's title bar.
@@ -255,6 +262,13 @@ public class DialogBox : UIElement
             root.FocusFirstIn(this);
         }
     }
+
+    /// <summary>
+    /// Gets or sets whether the dialog is modal.
+    /// If true, input events outside the dialog are blocked.
+    /// Default is true.
+    /// </summary>
+    public bool IsModal { get; set; } = true;
 
     /// <summary>
     /// Hides the dialog box and clears it from the window overlay.

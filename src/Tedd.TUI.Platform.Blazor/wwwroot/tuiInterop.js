@@ -159,5 +159,45 @@ window.tuiInterop = {
             window.removeEventListener('resize', this.resizeHandlers[canvasId]);
             delete this.resizeHandlers[canvasId];
         }
+    },
+
+    // Global Mouse Handling for Dragging
+    globalMouseState: null,
+
+    startGlobalDrag: function (dotnetHelper, containerId) {
+        if (this.globalMouseState) return; // Already tracking
+
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const onMove = (e) => {
+            // We need coordinates relative to container
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mousemove', x, y);
+        };
+
+        const onUp = (e) => {
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mouseup', x, y);
+            this.stopGlobalDrag();
+        };
+
+        this.globalMouseState = { move: onMove, up: onUp };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    },
+
+    stopGlobalDrag: function () {
+        if (this.globalMouseState) {
+            document.removeEventListener('mousemove', this.globalMouseState.move);
+            document.removeEventListener('mouseup', this.globalMouseState.up);
+            this.globalMouseState = null;
+        }
     }
 };

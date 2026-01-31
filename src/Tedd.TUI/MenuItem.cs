@@ -32,9 +32,9 @@ public class MenuItem : UIElement
         Focusable = true;
     }
 
-    protected override int VisualChildrenCount => _header != null ? 1 : 0;
+    public override int VisualChildrenCount => _header != null ? 1 : 0;
 
-    protected override UIElement GetVisualChild(int index)
+    public override UIElement GetVisualChild(int index)
     {
         if (index == 0 && _header != null) return _header;
         throw new ArgumentOutOfRangeException(nameof(index));
@@ -257,6 +257,17 @@ public class MenuItem : UIElement
 
         var root = GetRoot() as TuiWindow;
         if (root == null) return;
+
+        if (Parent is MenuBar menuBar)
+        {
+            foreach (var child in menuBar.Children)
+            {
+                if (child is MenuItem mi && mi != this && mi.IsExpanded)
+                {
+                    mi.CloseSubMenu();
+                }
+            }
+        }
 
         IsExpanded = true;
 

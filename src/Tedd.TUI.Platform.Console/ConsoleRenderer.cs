@@ -27,8 +27,8 @@ public class ConsoleRenderer : IRenderer
         int lastFg = -1;
         int lastBg = -1;
 
-        int bufH = Math.Min(buffer.Height, System.Console.WindowHeight);
-        int bufW = Math.Min(buffer.Width, System.Console.WindowWidth);
+        int bufH = Math.Min(buffer.Height, Math.Min(System.Console.WindowHeight, System.Console.BufferHeight));
+        int bufW = Math.Min(buffer.Width, Math.Min(System.Console.WindowWidth, System.Console.BufferWidth));
 
         System.Console.SetCursorPosition(0, 0);
 
@@ -36,26 +36,53 @@ public class ConsoleRenderer : IRenderer
 
         for (int y = 0; y < bufH; y++)
         {
-            // Move cursor to start of line if we are not wrapping perfectly (which we usually aren't guaranteed)
-            // Actually, writing a full line moves cursor to next line usually, but lets be safe.
-            System.Console.SetCursorPosition(0, y);
+            // Runtime check: BufferHeight might have changed since loop started (e.g. async resize)
+            if (y >= System.Console.BufferHeight) break;
+
+            try
+            {
+                System.Console.SetCursorPosition(0, y);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // If cursor position is out of bounds, we can't draw this line.
+                // Stop rendering this frame to avoid further errors.
+                break;
+            }
 
             for (int x = 0; x < bufW; x++)
             {
                 var cell = buffer.GetPixel(x, y);
 
-                if ((int)cell.Foreground != lastFg)
+                // Flush buffer if color changes
+                if ((int)cell.Foreground != lastFg || (int)cell.Background != lastBg)
                 {
-                    System.Console.ForegroundColor = cell.Foreground;
-                    lastFg = (int)cell.Foreground;
-                }
-                if ((int)cell.Background != lastBg)
-                {
-                    System.Console.BackgroundColor = cell.Background;
-                    lastBg = (int)cell.Background;
+                    if (sb.Length > 0)
+                    {
+                        System.Console.Write(sb.ToString());
+                        sb.Clear();
+                    }
+
+                    if ((int)cell.Foreground != lastFg)
+                    {
+                        System.Console.ForegroundColor = cell.Foreground;
+                        lastFg = (int)cell.Foreground;
+                    }
+                    if ((int)cell.Background != lastBg)
+                    {
+                        System.Console.BackgroundColor = cell.Background;
+                        lastBg = (int)cell.Background;
+                    }
                 }
 
-                System.Console.Write(cell.Character);
+                sb.Append(cell.Character);
+            }
+
+            // Flush end of line
+            if (sb.Length > 0)
+            {
+                System.Console.Write(sb.ToString());
+                sb.Clear();
             }
         }
 

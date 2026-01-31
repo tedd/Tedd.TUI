@@ -8,6 +8,7 @@ namespace Tedd.TUI.Platform.Console;
 public class ConsoleInputManager
 {
     private readonly TuiWindow _window;
+    private uint _lastButtonState;
 
     public ConsoleInputManager(TuiWindow window)
     {
@@ -71,17 +72,13 @@ public class ConsoleInputManager
             }
             else if (record.EventType == NativeMethods.MOUSE_EVENT)
             {
-                // Simple click handling
-                // Check for Left Button Press
+                // Track Mouse State
                 // dwButtonState: lowest bit is Left Button
                 bool leftDown = (record.MouseEvent.dwButtonState & 0x01) != 0;
+                bool wasLeftDown = (_lastButtonState & 0x01) != 0;
                 
-                // We need to track state to know if it's Up or Down.
-                // The record tells us the CURRENT state of buttons.
-                // If we want MOUSE_DOWN / MOUSE_UP, we might need a state machine or just fire MOUSE_DOWN on every event where it is down?
-                // Standard TUI usually wants clicks. 
-                // Let's implement simple "Hit Test" interaction
-                
+                _lastButtonState = record.MouseEvent.dwButtonState;
+
                 // Note: Mouse coordinates are 0-based in current console window
                 int x = record.MouseEvent.dwMousePosition.X;
                 int y = record.MouseEvent.dwMousePosition.Y;
@@ -89,18 +86,51 @@ public class ConsoleInputManager
                 var hit = _window.InputHitTest(x, y);
                 if (hit != null)
                 {
-                     // Ideally we track _lastMouseState to detect edges
-                     var args = new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY };
+                     var argsMove = new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY };
+                     var argsDown = (leftDown && !wasLeftDown) ? new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY } : null;
+                     var argsUp = (!leftDown && wasLeftDown) ? new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY } : null;
                      
-                     // Dispatch Move
-                     // (We could check if position changed, but dispatching always is safe for now)
-                     hit.Element.OnMouseMove(args);
+                     var current = hit.Element;
+                     while (current != null)
+                     {
+                         // Dispatch Move
+                         if (!argsMove.Handled) current.OnMouseMove(argsMove);
 
-                     // For now, if button is down, treat as MouseDown. 
-                     // This repeats while dragging.
-                     if (leftDown) hit.Element.OnMouseDown(args);
-                     // If we want MouseUp, we need to know previous state.
-                     // But let's start with basic Click support via MouseDown.
+                         // Dispatch Down
+                         if (argsDown != null && !argsDown.Handled)
+                         {
+                             // Focus logic (Leaf only)
+                             if (current == hit.Element && current.Focusable) 
+                             {
+                                 _window.SetFocus(current);
+                             }
+                             current.OnMouseDown(argsDown);
+                         }
+
+                         // Dispatch Up
+                         if (argsUp != null && !argsUp.Handled)
+                         {
+                             current.OnMouseUp(argsUp);
+                         }
+                         
+                         // Optimization: Stop if all active events are handled
+                         if (argsMove.Handled && 
+                             (argsDown == null || argsDown.Handled) && 
+                             (argsUp == null || argsUp.Handled))
+                         {
+                             break;
+                         }
+
+                         // Transform coordinates to parent space
+                         int ox = current.RenderSize.X;
+                         int oy = current.RenderSize.Y;
+                         
+                         argsMove.X += ox; argsMove.Y += oy;
+                         if (argsDown != null) { argsDown.X += ox; argsDown.Y += oy; }
+                         if (argsUp != null) { argsUp.X += ox; argsUp.Y += oy; }
+                         
+                         current = current.Parent;
+                     }
                 }
             }
             else if (record.EventType == NativeMethods.WINDOW_BUFFER_SIZE_EVENT)
@@ -249,12 +279,31 @@ public class ConsoleInputManager
                 if (btn == 0)
                 {
                     // HitTest returns result with local coordinates now
+                    // HitTest returns result with local coordinates now
                     var result = _window.InputHitTest(x, y);
                     if (result != null)
                     {
                         var args = new MouseEventArgs { X = result.LocalX, Y = result.LocalY };
-                        if (isDown) result.Element.OnMouseDown(args);
-                        else result.Element.OnMouseUp(args);
+                        var current = result.Element;
+
+                        while (current != null)
+                        {
+                            if (isDown) 
+                            {
+                                if (current == result.Element && current.Focusable) _window.SetFocus(current);
+                                current.OnMouseDown(args);
+                            }
+                            else 
+                            {
+                                current.OnMouseUp(args);
+                            }
+
+                            if (args.Handled) break;
+
+                            args.X += current.RenderSize.X;
+                            args.Y += current.RenderSize.Y;
+                            current = current.Parent;
+                        }
                     }
                 }
             }
