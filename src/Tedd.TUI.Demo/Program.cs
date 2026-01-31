@@ -217,7 +217,7 @@ class Program
         tableStack.AddChild(table);
         tabs.AddItem(new TabItem { Header = "Table", Content = tableStack });
 
-        // --- Tab 4: ScrollBar ---
+        // --- Tab 4: ScrollBar & ScrollViewer ---
         var scrollStack = new StackPanel { Orientation = Orientation.Vertical };
         scrollStack.AddChild(new TextBlock { Text = "ScrollBars Demo" });
 
@@ -248,6 +248,16 @@ class Program
             ViewportSize = 10 
         };
         scrollStack.AddChild(vScroll);
+
+        scrollStack.AddChild(new TextBlock { Text = "ScrollViewer:" });
+        var sv = new ScrollViewer { Width = 40, Height = 10, HorizontalScrollBarVisibility = true, VerticalScrollBarVisibility = true };
+        var largeStack = new StackPanel { Orientation = Orientation.Vertical };
+        for (int i = 0; i < 20; i++)
+        {
+            largeStack.AddChild(new Button { Content = $"Button {i} (Wide Content for Scroll)" });
+        }
+        sv.Content = largeStack;
+        scrollStack.AddChild(sv);
 
         // Event Handlers
         void UpdateLabel(object s, EventArgs e) 
