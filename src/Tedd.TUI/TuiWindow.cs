@@ -165,18 +165,62 @@ public class TuiWindow : UIElement
         return true;
     }
 
+    private UIElement _capturedElement;
+    public UIElement? CapturedElement => _capturedElement;
+
+    public void CaptureMouse(UIElement element)
+    {
+        _capturedElement = element;
+    }
+
+    public void ReleaseMouseCapture()
+    {
+        _capturedElement = null;
+    }
+
     public HitTestResult InputHitTest(int x, int y)
     {
-        // Check Overlay first
+        // 1. Mouse Capture Priority
+        if (_capturedElement != null)
+        {
+            // If an element has captured the mouse, it receives all input regardless of position.
+            // We need to calculate local coordinates relative to the captured element.
+            var absPos = GetAbsolutePosition(_capturedElement);
+            int localX = x - absPos.X;
+            int localY = y - absPos.Y;
+            return new HitTestResult(_capturedElement, localX, localY);
+        }
+
+        // 2. Check Overlay
         if (_overlay != null && _overlay.Visibility)
         {
             var hit = InputHitTestRecursive(_overlay, x, y);
             if (hit != null) return hit;
+
+            // If overlay is a modal dialog, block input to background
+            if (_overlay is DialogBox dialog && dialog.IsModal)
+            {
+                return null;
+            }
         }
 
         if (Content == null) return null;
         // Recursive search
         return InputHitTestRecursive(Content, x, y);
+    }
+
+    private Point GetAbsolutePosition(UIElement element)
+    {
+         int x = 0;
+         int y = 0;
+         var current = element;
+         while (current != null)
+         {
+             x += current.RenderSize.X;
+             y += current.RenderSize.Y;
+             current = current.Parent;
+         }
+         return new Point(x, y);
     }
 
     private HitTestResult InputHitTestRecursive(UIElement element, int x, int y)

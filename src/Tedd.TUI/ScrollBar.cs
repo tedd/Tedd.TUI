@@ -147,6 +147,10 @@ public class ScrollBar : UIElement
         }
     }
 
+    private bool _isDragging;
+    private int _dragAnchor; // Mouse position when drag started
+    private int _dragStartValue; // Value when drag started
+
     public override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
@@ -179,17 +183,84 @@ public class ScrollBar : UIElement
 
             int availableSlide = innerLen - thumbSize;
             int thumbPos = 0;
-            if (range > 0)
+            if (range > 0 && availableSlide > 0)
             {
                 thumbPos = (int)((long)availableSlide * (Value - Minimum) / range);
             }
 
             int clickTrackPos = clickPos - 1; 
 
-            if (clickTrackPos < thumbPos)
+            // Check if clicked ON Thumb
+            if (clickTrackPos >= thumbPos && clickTrackPos < thumbPos + thumbSize)
+            {
+                // Start Drag
+                _isDragging = true;
+                _dragAnchor = clickPos;
+                _dragStartValue = Value;
+                
+                var root = GetRoot() as TuiWindow;
+                root?.CaptureMouse(this);
+            }
+            else if (clickTrackPos < thumbPos)
                 Value -= LargeChange;
             else if (clickTrackPos >= thumbPos + thumbSize)
                 Value += LargeChange;
+        }
+        e.Handled = true;
+    }
+
+    public override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        if (_isDragging)
+        {
+            int w = RenderSize.Width;
+            int h = RenderSize.Height;
+            int currentPos = (Orientation == Orientation.Vertical) ? e.Y : e.X;
+            int maxPos = (Orientation == Orientation.Vertical) ? h : w;
+            int innerLen = maxPos - 2;
+
+            if (innerLen <= 0) return;
+
+            // Calculate Thumb Size again
+            long range = (long)Maximum - Minimum;
+            long contentSize = range + ViewportSize;
+            int thumbSize = 1;
+            if (contentSize > 0)
+                thumbSize = (int)Math.Max(1, (long)innerLen * ViewportSize / contentSize);
+            if (thumbSize > innerLen) thumbSize = innerLen;
+            int availableSlide = innerLen - thumbSize;
+
+            if (availableSlide > 0 && range > 0)
+            {
+                // Calculate delta in pixels
+                int deltaPixels = currentPos - _dragAnchor;
+                
+                // Convert pixels to value
+                // thumbPos = availableSlide * (Value - Min) / Range
+                // Value - Min = thumbPos * Range / availableSlide
+                // DeltaValue = DeltaPixels * Range / availableSlide
+                
+                // We use float/double for better precision during drag? 
+                // Int is fine if we accumulate, but straightforward mapping:
+                // NewValue = StartValue + (Delta * Range / Slide)
+                
+                long deltaValue = (long)deltaPixels * range / availableSlide;
+                
+                Value = _dragStartValue + (int)deltaValue;
+            }
+        }
+        e.Handled = true;
+    }
+
+    public override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        if (_isDragging)
+        {
+            _isDragging = false;
+            var root = GetRoot() as TuiWindow;
+            root?.ReleaseMouseCapture();
         }
         e.Handled = true;
     }
