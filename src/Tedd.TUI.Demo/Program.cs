@@ -1,4 +1,5 @@
 using Tedd.TUI.Platform.Console;
+using Tedd.TUI.CodeColoring;
 
 namespace Tedd.TUI.Demo;
 
@@ -286,6 +287,34 @@ class Program
         UpdateLabel(null, EventArgs.Empty);
 
         tabs.AddItem(new TabItem { Header = "Scroll", Content = scrollStack });
+
+        // --- Tab 5: Code Coloring ---
+        var codeStack = new StackPanel { Orientation = Orientation.Vertical };
+        codeStack.AddChild(new TextBlock { Text = "Code Coloring Demo (C#)" });
+
+        var codeDoc = new CodeDocument();
+        string sampleCode = @"using System;
+
+public class Test
+{
+    public void Method()
+    {
+        Console.WriteLine(""Hello World"");
+        int x = 10;
+        if (x > 5)
+        {
+            return;
+        }
+    }
+}";
+        codeDoc.SetCode(sampleCode, "csharp");
+
+        var scrollCode = new ScrollViewer { Width = 70, Height = 15, VerticalScrollBarVisibility = true, HorizontalScrollBarVisibility = true };
+        scrollCode.Content = codeDoc;
+
+        codeStack.AddChild(scrollCode);
+
+        tabs.AddItem(new TabItem { Header = "Code", Content = codeStack });
 
         // Run App
         
