@@ -2,9 +2,12 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.CodeColoring.Languages;
 
-public static class Bash
+public class BashLanguage : ILanguage
 {
-    public static Grammar GetGrammar()
+    public string Id => "bash";
+    public string[] Aliases => new[] { "sh", "shell" };
+
+    public Grammar GetGrammar()
     {
         var grammar = new Grammar();
 
@@ -25,8 +28,8 @@ public static class Bash
         insideString.Add("variable", new List<Pattern>
         {
             new Pattern(@"\$?\(\([\s\S]+?\)\)", greedy: true, inside: variableInside), // Arithmetic
-            new Pattern(@"\$\((?:\([^)]+\)|[^()])+\)|`[^`]+`", greedy: true, inside: new Grammar { { "variable", new Pattern(@"^\$\(|^`|\)$|`$") } }), // Command sub
-            new Pattern(@"\$\{[^}]+\}", greedy: true, inside: new Grammar { { "operator", new Pattern(@":[-=?+]?|[!\/]|##?|%%?|\^\^?|,,?") }, { "punctuation", new Pattern(@"[\[\]]") }, { "environment", new Pattern(@"(\{)" + envVars, lookbehind: true, alias: "constant") } }), // Brace expansion
+            new Pattern(@"\$\((?:\([^)]+\)|[^()])+\)|`[^`]+`", greedy: true, inside: new Grammar { { "variable", new List<Pattern> { new Pattern(@"^\$\(|^`|\)$|`$") } } }), // Command sub
+            new Pattern(@"\$\{[^}]+\}", greedy: true, inside: new Grammar { { "operator", new List<Pattern> { new Pattern(@":[-=?+]?|[!\/]|##?|%%?|\^\^?|,,?") } }, { "punctuation", new List<Pattern> { new Pattern(@"[\[\]]") } }, { "environment", new List<Pattern> { new Pattern(@"(\{)" + envVars, lookbehind: true, alias: "constant") } } }), // Brace expansion
             new Pattern(@"\$(?:\w+|[#?*!@$])")
         });
 
@@ -43,14 +46,14 @@ public static class Bash
 
         grammar.Add("for-or-select", new Pattern(@"(\b(?:for|select)\s+)\w+(?=\s+in\s)", alias: "variable", lookbehind: true));
 
-        grammar.Add("assign-left", new Pattern(@"(^|[\s;|&]|[<>]\()\w+(?:\.\w+)*(?=\+?=)", inside: new Grammar { { "environment", new Pattern(@"(^|[\s;|&]|[<>]\\())" + envVars, lookbehind: true, alias: "constant") } }, alias: "variable", lookbehind: true));
+        grammar.Add("assign-left", new Pattern(@"(^|[\s;|&]|[<>]\()\w+(?:\.\w+)*(?=\+?=)", inside: new Grammar { { "environment", new List<Pattern> { new Pattern(@"(^|[\s;|&]|[<>]\\())" + envVars, lookbehind: true, alias: "constant") } } }, alias: "variable", lookbehind: true));
 
         grammar.Add("parameter", new Pattern(@"(^|\s)-{1,2}(?:\w+:[+-]?)?\w+(?:\.\w+)*(?=[=\s]|$)", alias: "variable", lookbehind: true));
 
         grammar.Add("string", new List<Pattern>
         {
             new Pattern(@"((?:^|[^<])<<-?\s*)(\w+)\s[\s\S]*?(?:\r?\n|\r)\2", lookbehind: true, greedy: true, inside: insideString),
-            new Pattern(@"((?:^|[^<])<<-?\s*)([""'])(\w+)\2\s[\s\S]*?(?:\r?\n|\r)\3", lookbehind: true, greedy: true, inside: new Grammar { { "bash", commandAfterHeredoc } }),
+            new Pattern(@"((?:^|[^<])<<-?\s*)([""'])(\w+)\2\s[\s\S]*?(?:\r?\n|\r)\3", lookbehind: true, greedy: true, inside: new Grammar { { "bash", new List<Pattern> { commandAfterHeredoc } } }),
             new Pattern(@"(^|[^\\](?:\\\\)*)""(?:\\[\s\S]|\$\([^)]+\)|\$(?!\()|`[^`]+`|[^""\\`$])*""", lookbehind: true, greedy: true, inside: insideString),
             new Pattern(@"(^|[^$\\])'[^']*'", lookbehind: true, greedy: true),
             new Pattern(@"\$'(?:[^'\\]|\\[\s\S])*'", greedy: true, inside: new Grammar { { "entity", insideString["entity"] } })

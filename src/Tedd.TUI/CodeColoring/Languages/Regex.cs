@@ -2,9 +2,12 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.CodeColoring.Languages;
 
-public static class RegexLang
+public class RegexLanguage : ILanguage
 {
-    public static Grammar GetGrammar()
+    public string Id => "regex";
+    public string[] Aliases => new string[0];
+
+    public Grammar GetGrammar()
     {
         var grammar = new Grammar();
 

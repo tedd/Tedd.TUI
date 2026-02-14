@@ -2,9 +2,12 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.CodeColoring.Languages;
 
-public static class Json
+public class JsonLanguage : ILanguage
 {
-    public static Grammar GetGrammar()
+    public string Id => "json";
+    public string[] Aliases => new string[0];
+
+    public Grammar GetGrammar()
     {
         var grammar = new Grammar();
 

@@ -2,9 +2,12 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.CodeColoring.Languages;
 
-public static class Markup
+public class MarkupLanguage : ILanguage
 {
-    public static Grammar GetGrammar()
+    public string Id => "markup";
+    public string[] Aliases => new[] { "xml", "html", "mathml", "svg" };
+
+    public Grammar GetGrammar()
     {
         var grammar = new Grammar();
 
@@ -16,12 +19,7 @@ public static class Markup
 
         // Doctype
         var doctypeInside = new Grammar();
-        doctypeInside.Add("internal-subset", new Pattern(@"(^[^\[]*\[)[\s\S]+(?=\]>$)", lookbehind: true, greedy: true, inside: grammar)); // Circular reference via 'grammar' variable (captured closure)
-        // Wait, 'grammar' is not fully populated yet. But reference is to the object, so it's fine if we use the object.
-        // However, 'grammar' is a Dictionary. 'inside' property holds a reference to a Grammar.
-        // So passing 'grammar' here works, provided we don't copy it later incorrectly.
-        // But wait, `Prism.languages.markup['doctype'].inside['internal-subset'].inside = Prism.languages.markup;`
-        // Yes, it refers to the root markup grammar.
+        doctypeInside.Add("internal-subset", new Pattern(@"(^[^\[]*\[)[\s\S]+(?=\]>$)", lookbehind: true, greedy: true, inside: grammar)); // Circular reference
 
         doctypeInside.Add("string", new Pattern(@"""[^""]*""|'[^']*'", greedy: true));
         doctypeInside.Add("punctuation", new Pattern(@"^<!|>$|[[\]]"));
@@ -41,8 +39,7 @@ public static class Markup
         tagTagInside.Add("punctuation", new Pattern(@"^<\/?"));
         tagTagInside.Add("namespace", new Pattern(@"^[^\s>\/:]+:"));
 
-        tagInside.Add("tag", new Pattern(@"^<\/?(?!\d)[^\s>\/=$<%]+", inside: tagTagInside)); // Simplified from JS slightly?
-        // JS: /^<\/?[^\s>\/]+/
+        tagInside.Add("tag", new Pattern(@"^<\/?(?!\d)[^\s>\/=$<%]+", inside: tagTagInside));
 
         tagInside.Add("special-attr", new List<Pattern>()); // Empty initially
 
@@ -52,12 +49,6 @@ public static class Markup
             new Pattern(@"^=", alias: "attr-equals"),
             new Pattern(@"^(\s*)[""']|[""']$", lookbehind: true)
         });
-
-        // Entity reference in attr-value
-        // We need to define Entity first to refer to it.
-        // Or define it later and inject?
-        // Prism does: `Prism.languages.markup['tag'].inside['attr-value'].inside['entity'] = Prism.languages.markup['entity'];`
-        // We can create the pattern object for Entity and reuse it.
 
         var entityPatterns = new List<Pattern>
         {

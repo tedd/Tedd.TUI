@@ -2,9 +2,12 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.CodeColoring.Languages;
 
-public static class CLike
+public class CLikeLanguage : ILanguage
 {
-    public static Grammar GetGrammar()
+    public string Id => "clike";
+    public string[] Aliases => new string[0];
+
+    public Grammar GetGrammar()
     {
         var grammar = new Grammar();
 

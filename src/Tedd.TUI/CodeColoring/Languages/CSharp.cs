@@ -5,11 +5,15 @@ using static Tedd.TUI.CodeColoring.RegexUtils;
 
 namespace Tedd.TUI.CodeColoring.Languages;
 
-public static class CSharp
+public class CSharpLanguage : ILanguage
 {
-    public static Grammar GetGrammar()
+    public string Id => "csharp";
+    public string[] Aliases => new[] { "cs" };
+
+    public Grammar GetGrammar()
     {
-        var clike = CLike.GetGrammar();
+        // We need Clike
+        var clike = new CLikeLanguage().GetGrammar();
 
         // Helper regex patterns from Prism
         string keywordsToPattern(string words) => @"\b(?:" + words.Trim().Replace(" ", "|") + @")\b";
@@ -92,10 +96,8 @@ public static class CSharp
         genericMethodInside.Add("generic", new Pattern(generic, alias: "class-name", inside: typeInside));
 
         var typeListInside = new Grammar();
-        typeListInside.Add("record-arguments", new Pattern(Replace(@"(^(?!new\s*\()<<0>>\s*)<<1>>", genericName, nestedRound), lookbehind: true, greedy: true, inside: grammar)); // Recursive reference?
-        // Wait, 'inside: grammar' means the whole grammar again? Yes Prism does `Prism.languages.csharp`.
-        // But `grammar` isn't fully built.
-        // I can assign it later if needed, but the object reference is passed so it's fine.
+        typeListInside.Add("record-arguments", new Pattern(Replace(@"(^(?!new\s*\()<<0>>\s*)<<1>>", genericName, nestedRound), lookbehind: true, greedy: true, inside: grammar)); // Recursive reference
+
         typeListInside.Add("keyword", new Pattern(keywordsPattern));
         typeListInside.Add("class-name", new Pattern(typeExpression, greedy: true, inside: typeInside));
         typeListInside.Add("punctuation", new Pattern(@"[,()]"));

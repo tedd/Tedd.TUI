@@ -2,9 +2,12 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.CodeColoring.Languages;
 
-public static class Batch
+public class BatchLanguage : ILanguage
 {
-    public static Grammar GetGrammar()
+    public string Id => "batch";
+    public string[] Aliases => new string[0];
+
+    public Grammar GetGrammar()
     {
         var grammar = new Grammar();
 
@@ -46,7 +49,6 @@ public static class Batch
         ifInside.Add("operator", new Pattern(@"\^|==|\b(?:equ|geq|gtr|leq|lss|neq)\b", regexOptions: "i"));
 
         commandPatterns.Add(new Pattern(@"((?:^|[&(])[ \t]*)if(?: \/[a-z?](?:[ :](?:""[^""]*""|[^\s""/]\S*))?)* (?:not )?(?:cmdextversion \d+|defined \w+|errorlevel \d+|exist \S+|(?:"".*?""|(?!"""")(?:(?!==)\S)+)?(?:==| (?:equ|geq|gtr|leq|lss|neq) )(?:"".*?""|[^\s""]\S*))", regexOptions: "im", lookbehind: true, inside: ifInside));
-        // Fixed regex string escape slightly
 
         // ELSE command
         var elseInside = new Grammar();

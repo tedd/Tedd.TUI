@@ -2,9 +2,12 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.CodeColoring.Languages;
 
-public static class Yaml
+public class YamlLanguage : ILanguage
 {
-    public static Grammar GetGrammar()
+    public string Id => "yaml";
+    public string[] Aliases => new[] { "yml" };
+
+    public Grammar GetGrammar()
     {
         var grammar = new Grammar();
 
