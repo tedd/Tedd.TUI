@@ -7,7 +7,7 @@ public static class LanguageRegistry
 {
     private static Dictionary<string, Grammar> _grammars = new Dictionary<string, Grammar>();
 
-    public static Grammar GetGrammar(string language)
+    public static Grammar? GetGrammar(string language)
     {
         if (_grammars.ContainsKey(language))
         {
@@ -23,7 +23,7 @@ public static class LanguageRegistry
         return grammar;
     }
 
-    private static Grammar LoadGrammar(string language)
+    private static Grammar? LoadGrammar(string language)
     {
         switch (language.ToLower())
         {

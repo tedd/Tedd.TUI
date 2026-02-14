@@ -6,6 +6,15 @@ public class Grammar : Dictionary<string, List<Pattern>>
 {
     public Grammar() { }
 
+    public new void Add(string name, List<Pattern> patterns)
+    {
+        if (!ContainsKey(name))
+        {
+            this[name] = new List<Pattern>();
+        }
+        this[name].AddRange(patterns);
+    }
+
     public void Add(string name, Pattern pattern)
     {
         if (!ContainsKey(name))
@@ -13,15 +22,6 @@ public class Grammar : Dictionary<string, List<Pattern>>
             this[name] = new List<Pattern>();
         }
         this[name].Add(pattern);
-    }
-
-    public void Add(string name, List<Pattern> patterns)
-    {
-        if (!ContainsKey(name))
-        {
-            this[name] = new List<Pattern>();
-        }
-        this[name].AddRange(patterns);
     }
 
     // Prism.languages.extend

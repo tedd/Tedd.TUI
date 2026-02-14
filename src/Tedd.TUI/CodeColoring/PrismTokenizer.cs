@@ -49,7 +49,7 @@ public class PrismTokenizer
         return result;
     }
 
-    private static void MatchGrammar(string text, LinkedList<object> tokenList, Grammar grammar, LinkedListNode<object> startNode, int startPos)
+    private static void MatchGrammar(string text, LinkedList<object> tokenList, Grammar grammar, LinkedListNode<object>? startNode, int startPos)
     {
         // Iterate over tokens in grammar
         // We need to iterate in order.
@@ -79,7 +79,7 @@ public class PrismTokenizer
 
                 // Normal matching
                 int pos = startPos;
-                var currentNode = startNode.Next;
+                var currentNode = startNode!.Next;
 
                 while (currentNode != null)
                 {

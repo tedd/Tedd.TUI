@@ -8,10 +8,10 @@ public class Pattern
     public Regex Regex { get; set; }
     public bool Lookbehind { get; set; }
     public bool Greedy { get; set; }
-    public string Alias { get; set; }
-    public Grammar Inside { get; set; }
+    public string? Alias { get; set; }
+    public Grammar? Inside { get; set; }
 
-    public Pattern(string regexPattern, string regexOptions = "", bool lookbehind = false, bool greedy = false, string alias = null, Grammar inside = null)
+    public Pattern(string regexPattern, string regexOptions = "", bool lookbehind = false, bool greedy = false, string? alias = null, Grammar? inside = null)
     {
         RegexOptions options = RegexOptions.Compiled;
         if (regexOptions.Contains("i")) options |= RegexOptions.IgnoreCase;
@@ -30,7 +30,7 @@ public class Pattern
         Inside = inside;
     }
 
-    public Pattern(Regex regex, bool lookbehind = false, bool greedy = false, string alias = null, Grammar inside = null)
+    public Pattern(Regex regex, bool lookbehind = false, bool greedy = false, string? alias = null, Grammar? inside = null)
     {
         Regex = regex;
         Lookbehind = lookbehind;
