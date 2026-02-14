@@ -9,7 +9,7 @@ public class CodeDocument : StackPanel
     private Theme? _theme;
     public Theme Theme
     {
-        get => _theme ?? (_theme = new Theme());
+        get => _theme ?? Theme.Default;
         set => _theme = value;
     }
 
