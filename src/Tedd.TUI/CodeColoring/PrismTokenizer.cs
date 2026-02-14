@@ -220,116 +220,31 @@ public class PrismTokenizer
             // 'from' >= pos.
 
             // Check if match spans multiple nodes
-            // Find end node
-            int p = pos;
-            var endNode = currentNode;
-            while (endNode != null && p < to)
-            {
-                if (endNode.Value is Token)
-                {
-                    // Match intersects a token? Invalid for greedy?
-                    // Prism: "find the last node which is affected by this match... removeCount++"
-                    // If it encounters a Token in the range, it seems to just overwrite it?
-                    // Re-reading Prism:
-                    // "if (currentNode.value instanceof Token) { continue; }" (checks start node)
-                    // "for (k = currentNode; k !== tokenList.tail && (p < to || typeof k.value === 'string'); k = k.next)"
-                    // It seems it stops if it hits a token?
-                    // Actually "(p < to || typeof k.value === 'string')" means "keep going while we haven't reached end of match OR current is string".
-                    // If we reach a token before end of match, loop terminates?
-                }
-
-                p += GetNodeLength(endNode);
-                endNode = endNode.Next;
-            }
-
-            // Replace range
-            // Calculate 'before' string
-            // We need to cut 'currentNode' at 'from - pos'
-
-            // This logic is complex. I'll implement a simpler greedy strategy for now:
-            // Just assume greedy matches win over everything else? No, patterns are ordered.
-            // If we are processing a greedy pattern, it means it has priority over subsequent patterns, but not previous ones?
-            // Actually greedy means it matches against the *original text* and can overwrite previous tokens?
-            // "Pattern: /.../g"
-            // Prism: "greedy = !!patternObj.greedy"
-            // If greedy, it matches against `text` (full text).
-
-            // Let's implement the core logic:
-            // 1. Find match in `text`.
-            // 2. Find corresponding nodes in `tokenList`.
-            // 3. If start node is Token, skip.
-            // 4. If end node overlaps Token, maybe skip?
-            // 5. Replace nodes in between.
-
-            // Simplified: We just split the string nodes. If we hit a Token node in the middle, we skip the match?
-            // Prism code:
-            // "if (currentNode.value instanceof Token) { continue; }"
-            // Then it iterates `k` to find end.
-            // It replaces the range of nodes.
-
-            // I'll stick to non-greedy for MVP if possible, but many languages use greedy (e.g. comments).
-            // So I must implement it.
-
-            // Implementation detail:
-            // We need to remove nodes from `currentNode` to `endNode` (exclusive).
-            // And insert 'before', 'match', 'after'.
-
-            var strNode = currentNode;
-            int nodeStart = pos;
-            var strVal = strNode.Value as string; // We know it is string from check above
-
-            // Offset in this node
-            int offset = from - nodeStart;
-
-            string before = strVal.Substring(0, offset);
-            string after = ""; // Will be calculated from the last node in range
-
-            // Find how many nodes we cover
             var nodesToRemove = new List<LinkedListNode<object>>();
-            var tempNode = strNode;
-            int tempPos = nodeStart;
+            var tempNode = currentNode;
+            int p = pos;
 
             // Consume nodes until we cover 'to'
-            while (tempNode != null && tempPos < to)
+            while (tempNode != null && p < to)
             {
                 nodesToRemove.Add(tempNode);
-                tempPos += GetNodeLength(tempNode);
+                p += GetNodeLength(tempNode);
                 tempNode = tempNode.Next;
             }
 
-            // The last node might extend beyond 'to'
-            // We need to preserve the tail of the last node
-            // But wait, if we consumed a Token node in the middle?
-            // Prism allows overwriting Tokens in greedy mode?
-            // "removeRange(tokenList, removeFrom, removeCount)"
-            // Yes, it seems so.
+            int rangeStart = pos; // Absolute start of the first node to remove
+            int rangeEnd = p;     // Absolute end of the last node removed
 
-            // Let's implement extraction of 'after'
-            var lastNode = nodesToRemove.Last();
-            int lastNodeEnd = tempPos; // End of last node
-            int charsToKeep = lastNodeEnd - to;
-
-            if (lastNode.Value is string lastStr)
-            {
-                if (charsToKeep > 0)
-                {
-                    after = lastStr.Substring(lastStr.Length - charsToKeep);
-                }
-            }
-            else
-            {
-                // If last node is Token and we only partially cover it?
-                // Prism: "p < to || typeof k.value === 'string'"
-                // If we hit a token and haven't covered 'to', we stop?
-                // This implies we don't overwrite partial tokens easily?
-                // Let's just assume we overwrite.
-            }
+            // Calculate before and after based on original text
+            // rangeStart <= from <= to <= rangeEnd
+            string before = text.Substring(rangeStart, from - rangeStart);
+            string after = text.Substring(to, rangeEnd - to);
 
             // Perform replacement
             // 1. Add 'before'
             if (!string.IsNullOrEmpty(before))
             {
-                tokenList.AddBefore(strNode, before);
+                tokenList.AddBefore(currentNode, before);
             }
 
             // 2. Add Match Token
@@ -339,12 +254,12 @@ public class PrismTokenizer
                 content = Tokenize(matchStr, inside);
             }
             var newToken = new Token(tokenKey, content, alias);
-            var newNode = tokenList.AddBefore(strNode, newToken);
+            var newNode = tokenList.AddBefore(currentNode, newToken);
 
             // 3. Add 'after'
             if (!string.IsNullOrEmpty(after))
             {
-                tokenList.AddBefore(strNode, after);
+                tokenList.AddBefore(currentNode, after);
             }
 
             // 4. Remove old nodes
@@ -355,13 +270,8 @@ public class PrismTokenizer
 
             // 5. Update loop state
             matchIndex++;
-            currentNode = newNode.Next; // Continue after new token
-            // Update pos?
-            // We need to re-sync pos.
-            // Current pos was 'nodeStart'.
-            // New pos should be... well, we can just re-calculate or carefully track.
-            // Easier to update pos to end of match?
-            pos = to;
+            currentNode = newNode.Next; // Continue after new token (or 'after' string if present)
+            pos = to; // 'currentNode' starts at 'to'
 
             // But we need to sync 'currentNode' and 'pos' correctly.
             // 'currentNode' is now the node AFTER our inserted stuff.
