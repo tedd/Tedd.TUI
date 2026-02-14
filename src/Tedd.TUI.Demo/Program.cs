@@ -1,5 +1,6 @@
 using Tedd.TUI.Platform.Console;
 using Tedd.TUI.CodeColoring;
+using Tedd.TUI.Markdown;
 
 namespace Tedd.TUI.Demo;
 
@@ -315,6 +316,44 @@ public class Test
         codeStack.AddChild(scrollCode);
 
         tabs.AddItem(new TabItem { Header = "Code", Content = codeStack });
+
+        // --- Tab 6: Markdown ---
+        var mdStack = new StackPanel { Orientation = Orientation.Vertical };
+        mdStack.AddChild(new TextBlock { Text = "Markdown View:" });
+
+        var mdView = new MarkdownView { Width = 70, Height = 15, VerticalScrollBarVisibility = true };
+        string mdText = @"# Markdown Demo
+
+This is a **bold** text and *italic* text.
+Here is a [Link](http://example.com) and an ![Image](img.png).
+
+## Lists
+
+- Item 1
+- Item 2 with **bold**
+- Item 3
+
+## Code
+
+```csharp
+public void Hello() {
+    Console.WriteLine(""World"");
+}
+```
+
+## Table
+
+| ID | Name |
+|---|---|
+| 1 | Alice |
+| 2 | Bob |
+
+> This is a quote.
+";
+        mdView.Text = mdText;
+        mdStack.AddChild(mdView);
+
+        tabs.AddItem(new TabItem { Header = "Markdown", Content = mdStack });
 
         // Run App
         
