@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 using Tedd.TUI.CodeColoring;
+using Tedd.TUI; // For BoxStyle
 
 namespace Tedd.TUI.Markdown;
 
@@ -22,6 +23,14 @@ public class MarkdownStyle
     }
 }
 
+public class MarkdownTableStyle
+{
+    public bool ShowBorder { get; set; } = true;
+    public bool ShowVerticalLines { get; set; } = true;
+    public bool ShowHorizontalLines { get; set; } = true;
+    public BoxStyle BorderStyle { get; set; } = BoxStyle.Heavy;
+}
+
 public class MarkdownTheme
 {
     // Block Styles
@@ -39,6 +48,9 @@ public class MarkdownTheme
     // List Styles
     public MarkdownStyle List { get; set; } = new MarkdownStyle(ConsoleColor.White);
     public string BulletCharacter { get; set; } = "•"; // Unicode bullet
+
+    // Table Style
+    public MarkdownTableStyle Table { get; set; } = new MarkdownTableStyle();
 
     // Inline Styles
     public MarkdownStyle Link { get; set; } = new MarkdownStyle(ConsoleColor.Blue, null, false, true);
