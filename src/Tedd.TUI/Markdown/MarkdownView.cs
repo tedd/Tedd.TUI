@@ -3,7 +3,7 @@ using Tedd.TUI;
 
 namespace Tedd.TUI.Markdown;
 
-public class MarkdownView : ScrollViewer
+public class MarkdownView : UIElement
 {
     private FlowDocument _document;
     private MarkdownParser _parser;
@@ -31,9 +31,7 @@ public class MarkdownView : ScrollViewer
     public MarkdownView()
     {
         _document = new FlowDocument();
-        Content = _document;
-        HorizontalScrollBarVisibility = false; // Usually wrapping text doesn't need horizontal scroll
-        VerticalScrollBarVisibility = true;
+        _document.Parent = this;
     }
 
     protected override void OnPropertyChanged(DependencyProperty dp)
@@ -47,13 +45,14 @@ public class MarkdownView : ScrollViewer
 
     public void Refresh()
     {
-        if (_document == null) return;
-
-        // Clear existing children
-        // FlowDocument inherits StackPanel -> Children.Clear()
-        _document.Children.Clear();
-
-        if (string.IsNullOrEmpty(Text)) return;
+        if (string.IsNullOrEmpty(Text))
+        {
+            // Reset to empty document
+            _document = new FlowDocument();
+            _document.Parent = this;
+            Invalidate();
+            return;
+        }
 
         // Create parser with current theme
         _parser = new MarkdownParser(Theme);
@@ -61,10 +60,43 @@ public class MarkdownView : ScrollViewer
         // Parse and populate
         var doc = _parser.Parse(Text);
 
-        // Move children from parsed doc to our _document
-        // or just replace Content?
-        // Replacing Content is cleaner.
+        // Replace document
         _document = doc;
-        Content = _document;
+        _document.Parent = this;
+
+        Invalidate();
+    }
+
+    public override int VisualChildrenCount => _document != null ? 1 : 0;
+
+    public override UIElement GetVisualChild(int index)
+    {
+        if (_document != null && index == 0) return _document;
+        throw new ArgumentOutOfRangeException(nameof(index));
+    }
+
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        if (_document == null) return new Size(0, 0);
+        _document.Measure(availableSize);
+        return _document.DesiredSize;
+    }
+
+    protected override void ArrangeOverride(Size finalSize)
+    {
+        if (_document != null)
+        {
+            _document.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
+        }
+    }
+
+    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
+    {
+        if (_document != null)
+        {
+            int x = RenderSize.X + offsetX;
+            int y = RenderSize.Y + offsetY;
+            _document.Render(buffer, x, y);
+        }
     }
 }
