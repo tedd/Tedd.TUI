@@ -57,9 +57,6 @@ public class TableRow : UIElement
         AddCell(new TextBlock { Text = text, Foreground = ConsoleColor.White });
     }
 
-    // TableRow doesn't really layout itself independently; it relies on the Table to tell it column widths.
-    // However, for Measure, we might simple measure children.
-    
     public override int VisualChildrenCount => _cells.Count;
 
     public override UIElement GetVisualChild(int index)
@@ -70,15 +67,10 @@ public class TableRow : UIElement
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        // TableRow height is max of children heights? 
-        // Width will be dictated by Table.
-        // We measure children with infinite width to see what they want, or wait for Table?
-        // The Table needs to measure children to resolve Auto columns.
-        
         int maxHeight = 0;
         foreach (var cell in _cells)
         {
-             cell.Measure(new Size(int.MaxValue, availableSize.Height)); // Allow cells to desire whatever width
+             cell.Measure(new Size(int.MaxValue, availableSize.Height));
              maxHeight = Math.Max(maxHeight, cell.DesiredSize.Height);
         }
         return new Size(0, maxHeight > 0 ? maxHeight : 1); 
@@ -86,22 +78,10 @@ public class TableRow : UIElement
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        // Handled by Render or by Table arranging us? 
-        // Table will Arrange the Row.
-        // Row must Arrange its Cells.
-        // But Row doesn't know Column widths unless we pass them or store them.
-        // We'll let Table handle the precise Arrange of cells OR Table passes info to Row.
-        // Let's have Table arrange the Row, and Row arrange Cells based on Table's calculated columns.
-        // But Row is a UIElement, it won't have reference to Table easily unless we cast Parent.
-        
         var table = FindAncestor<Table>();
         if (table != null)
         {
             int x = 0;
-            // Spacing logic? Table.Measure/Arrange might need to pass spacing or we assume?
-            // Table.ArrangeOverride uses `totalW += c.ActualWidth + 1`.
-            // So we should assume spacing.
-            
             for (int i = 0; i < _cells.Count && i < table.Columns.Count; i++)
             {
                 int w = table.Columns[i].ActualWidth;
@@ -119,9 +99,29 @@ public class TableRow : UIElement
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
+        // Render cells
         foreach (var cell in _cells)
         {
             cell.Render(buffer, x, y);
+        }
+
+        // Render vertical lines between cells
+        var table = FindAncestor<Table>();
+        if (table != null && table.ShowVerticalLines)
+        {
+            int cx = 0;
+            // Use Light Vertical Line usually
+            char vChar = '\u2502';
+
+            for (int i = 0; i < table.Columns.Count - 1; i++)
+            {
+                cx += table.Columns[i].ActualWidth;
+                for(int dy=0; dy < RenderSize.Height; dy++)
+                {
+                    buffer.SetPixel(x + cx, y + dy, vChar, ConsoleColor.Gray, ConsoleColor.Black);
+                }
+                cx++;
+            }
         }
     }
 }
@@ -140,6 +140,12 @@ public class Table : UIElement
     public ConsoleColor HeaderForeground { get; set; } = ConsoleColor.Yellow;
     public ConsoleColor HeaderBackground { get; set; } = ConsoleColor.DarkGray;
     
+    // Style Properties
+    public bool ShowBorder { get; set; } = false;
+    public bool ShowVerticalLines { get; set; } = true;
+    public bool ShowHorizontalLines { get; set; } = false;
+    public BoxStyle BorderStyle { get; set; } = BoxStyle.Heavy; // Default to Heavy per user request
+
     // Selection
     private int _selectedIndex = -1;
     public int SelectedIndex
@@ -173,9 +179,6 @@ public class Table : UIElement
     public void AddRow(TableRow row)
     {
         _rows.Add(row);
-        // row.Parent = this; // Row parent is now effectively managed by StackPanel? 
-        // No, StackPanel.AddChild sets parent to StackPanel.
-        // We defer adding to StackPanel until UpdateVisibleRows.
         Invalidate();
     }
     
@@ -190,7 +193,7 @@ public class Table : UIElement
         AddRow(row);
     }
 
-    public override int VisualChildrenCount => 1; // Only ScrollViewer is a direct visual child (Header is drawn manually)
+    public override int VisualChildrenCount => 1;
     public override UIElement GetVisualChild(int index) 
     {
         if (index == 0) return _scrollViewer;
@@ -205,7 +208,6 @@ public class Table : UIElement
 
     private void UpdateVisibleRows()
     {
-        // Rebuild _rowStack children based on current page / valid rows.
         _rowStack.Children.Clear();
 
         int startIdx = 0;
@@ -218,7 +220,6 @@ public class Table : UIElement
         }
         else if (PageSize > 0)
         {
-             // External paging or mixed.
              count = Math.Min(PageSize, _rows.Count);
         }
 
@@ -228,16 +229,20 @@ public class Table : UIElement
             if (realIdx < _rows.Count)
             {
                 _rowStack.AddChild(_rows[realIdx]);
+
+                if (ShowHorizontalLines && i < count - 1)
+                {
+                    var sep = new TableSeparator();
+                    _rowStack.AddChild(sep);
+                }
             }
         }
     }
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        // 1. Reset ActualWidths
         foreach (var col in Columns) col.ActualWidth = 0;
 
-        // 2. Measure headers if Auto
         if (ShowHeader)
         {
             for (int i = 0; i < Columns.Count; i++)
@@ -250,37 +255,18 @@ public class Table : UIElement
             }
         }
 
-        // 3. Scan ALL rows to determine Auto column widths.
-        // We must scan _rows, not just visible ones, if we want stable columns?
-        // Or scan only visible? Usually stable is better, but expensive.
-        // Let's scan visible ones (in _rowStack) or scan data source?
-        // To be correct with pagination creating different widths per page is jarring.
-        // Let's scan a subset or current page rows.
-        
-        // Sync row stack first? Or Measure calls UpdateVisibleRows?
-        // Let's update rows before measure.
         UpdateVisibleRows();
 
-        foreach (var row in _rows) // Ideally only measured rows, but we need width from all?
-        {
-            // We can't Measure() rows that are not in visual tree (StackPanel) properly without attaching?
-            // But _rows contains all.
-            // Let's just measure rows that are going to be displayed for Auto sizing?
-            // If we only measure visible, column widths jump between pages.
-            // Compromise: Measure current page rows.
-        }
-        
-        // For column auto-width, we rely on the rows we just put in _rowStack.
+        int padding = ShowBorder ? 1 : 0;
+        int availableWidthForCols = Math.Max(0, availableSize.Width - 2 * padding);
+        if (_scrollViewer.VerticalScrollBarVisibility) availableWidthForCols--;
+
         foreach (var child in _rowStack.Children)
         {
-            // We need to measure it to let it size its cells.
-            // BUT TableRow.MeasureOverride currently assumes infinite width for cells.
-            // We can call Measure on it.
-            child.Measure(new Size(availableSize.Width, availableSize.Height)); // Height irrelevant for width calc
-
             if (child is TableRow row)
             {
-                 // Logic from previous MeasureOverride implementation
+                 child.Measure(new Size(availableWidthForCols, availableSize.Height));
+
                  for (int j = 0; j < Columns.Count && j < row.Cells.Count; j++)
                  {
                      var col = Columns[j];
@@ -292,7 +278,6 @@ public class Table : UIElement
             }
         }
 
-        // 4. Resolve Star widths
         int usedWidth = 0;
         double totalStars = 0;
         foreach (var col in Columns)
@@ -310,13 +295,9 @@ public class Table : UIElement
         
         int separators = Math.Max(0, Columns.Count - 1);
         usedWidth += separators;
-
-        int scrollBarWidth = _scrollViewer.VerticalScrollBarVisibility ? 1 : 0;
-        // The ScrollViewer will take available width.
-        // We should subtract scrollbar width from available space for columns?
-        // Yes, if ScrollBar is visible.
         
-        int remainingWidth = Math.Max(0, availableSize.Width - usedWidth - scrollBarWidth);
+        int remainingWidth = Math.Max(0, availableWidthForCols - usedWidth);
+
         if (totalStars > 0 && remainingWidth > 0)
         {
             foreach (var col in Columns)
@@ -330,71 +311,233 @@ public class Table : UIElement
             }
         }
 
-        // 5. Measure ScrollViewer
-        int headerHeight = ShowHeader ? 1 : 0;
+        int headerBlockHeight = ShowHeader ? 2 : 0;
         int footerHeight = PageSize > 0 ? 1 : 0;
-        int bodyHeight = Math.Max(0, availableSize.Height - headerHeight - footerHeight);
+        int verticalPadding = ShowBorder ? 2 : 0;
         
-        _scrollViewer.Measure(new Size(availableSize.Width, bodyHeight));
+        int bodyHeight = Math.Max(0, availableSize.Height - headerBlockHeight - footerHeight - verticalPadding);
+        int svWidth = Math.Max(0, availableSize.Width - 2 * padding);
 
-        return new Size(availableSize.Width, headerHeight + _scrollViewer.DesiredSize.Height + footerHeight);
+        _scrollViewer.Measure(new Size(svWidth, bodyHeight));
+
+        return new Size(availableSize.Width, verticalPadding + headerBlockHeight + _scrollViewer.DesiredSize.Height + footerHeight);
     }
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        int headerHeight = ShowHeader ? 1 : 0;
+        int padding = ShowBorder ? 1 : 0;
+        int headerBlockHeight = ShowHeader ? 2 : 0;
+        int verticalPadding = ShowBorder ? 2 : 0;
         int footerHeight = PageSize > 0 ? 1 : 0;
-        int bodyHeight = Math.Max(0, finalSize.Height - headerHeight - footerHeight);
+        int bodyHeight = Math.Max(0, finalSize.Height - headerBlockHeight - footerHeight - verticalPadding);
+        int svWidth = Math.Max(0, finalSize.Width - 2 * padding);
 
-        // Header is just drawn, no child to arrange.
+        _scrollViewer.Arrange(new Rect(padding, padding + headerBlockHeight, svWidth, bodyHeight));
+    }
+
+    private struct TableBoxChars
+    {
+        public char TL, TR, BL, BR, H, V;
+        public char TDown, TUp;
+        public char TLeft, TRight;
+        public char HeaderCross;
+        public char BodySepTLeft, BodySepTRight;
+        public char HeaderSepH;
+        public char HeaderInnerV;
         
-        // Arrange ScrollViewer
-        _scrollViewer.Arrange(new Rect(0, headerHeight, finalSize.Width, bodyHeight));
-        
-        // Footer is just drawn.
+        public static TableBoxChars Get(BoxStyle style)
+        {
+             TableBoxChars c = new TableBoxChars();
+             var b = BoxDrawingChars.Get(style);
+             c.TL = b.TopLeft; c.TR = b.TopRight; c.BL = b.BottomLeft; c.BR = b.BottomRight;
+             c.H = b.Horizontal; c.V = b.Vertical;
+             c.HeaderInnerV = b.Vertical;
+             c.HeaderSepH = b.Horizontal;
+
+             switch(style)
+             {
+                 case BoxStyle.Heavy:
+                     c.TDown = '\u2533';
+                     c.TUp = '\u2537';   // ┷ (Heavy Horz, Light Up)
+                     c.TLeft = '\u2523';
+                     c.TRight = '\u252B';
+                     c.HeaderCross = '\u254B';
+                     c.BodySepTLeft = '\u2520';
+                     c.BodySepTRight = '\u2528';
+                     break;
+                 case BoxStyle.Double:
+                     c.TDown = '\u2566';
+                     c.TUp = '\u2569';   // ╧ (Double Horz, Single Up)
+                     c.TLeft = '\u2560';
+                     c.TRight = '\u2563';
+                     c.HeaderCross = '\u256C';
+                     c.BodySepTLeft = '\u255F'; // ╟ (Double Vert, Single Right)
+                     c.BodySepTRight = '\u2562'; // ╢ (Double Vert, Single Left)
+                     break;
+                 default:
+                     c.TDown = '\u252C';
+                     c.TUp = '\u2534';
+                     c.TLeft = '\u251C';
+                     c.TRight = '\u2524';
+                     c.HeaderCross = '\u253C';
+                     c.BodySepTLeft = '\u251C';
+                     c.BodySepTRight = '\u2524';
+                     break;
+             }
+             return c;
+        }
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
          int x = RenderSize.X + offsetX;
          int y = RenderSize.Y + offsetY;
+         int w = RenderSize.Width;
+         int h = RenderSize.Height;
 
-         // Draw Header
+         TableBoxChars chars = TableBoxChars.Get(BorderStyle);
+
+         // 1. Draw Outer Border
+         if (ShowBorder)
+         {
+             buffer.SetPixel(x, y, chars.TL, HeaderForeground, HeaderBackground);
+             buffer.SetPixel(x + w - 1, y, chars.TR, HeaderForeground, HeaderBackground);
+             buffer.SetPixel(x, y + h - 1, chars.BL, HeaderForeground, HeaderBackground);
+             buffer.SetPixel(x + w - 1, y + h - 1, chars.BR, HeaderForeground, HeaderBackground);
+
+             for(int i=1; i<w-1; i++)
+             {
+                 buffer.SetPixel(x + i, y, chars.H, HeaderForeground, HeaderBackground);
+                 buffer.SetPixel(x + i, y + h - 1, chars.H, HeaderForeground, HeaderBackground);
+             }
+
+             for(int i=1; i<h-1; i++)
+             {
+                 buffer.SetPixel(x, y + i, chars.V, HeaderForeground, HeaderBackground);
+                 buffer.SetPixel(x + w - 1, y + i, chars.V, HeaderForeground, HeaderBackground);
+             }
+
+             if (ShowVerticalLines)
+             {
+                 int cx = 1;
+                 for(int i=0; i<Columns.Count - 1; i++)
+                 {
+                     cx += Columns[i].ActualWidth;
+                     buffer.SetPixel(x + cx, y, chars.TDown, HeaderForeground, HeaderBackground);
+                     cx++;
+                 }
+             }
+         }
+
+         // 2. Draw Header
          if (ShowHeader)
          {
-            int colX = x;
+            int headerY = y + (ShowBorder ? 1 : 0);
+            int startX = x + (ShowBorder ? 1 : 0);
+
+            int colX = startX;
             for (int i = 0; i < Columns.Count; i++)
             {
                 var col = Columns[i];
-                string h = col.Header ?? "";
-                if (h.Length > col.ActualWidth) h = h.Substring(0, col.ActualWidth);
+                string hdr = col.Header ?? "";
+                if (hdr.Length > col.ActualWidth) hdr = hdr.Substring(0, col.ActualWidth);
                 
-                // Draw background
                 for(int dx=0; dx<col.ActualWidth; dx++)
-                    buffer.SetPixel(colX + dx, y, ' ', HeaderForeground, HeaderBackground);
+                    buffer.SetPixel(colX + dx, headerY, ' ', HeaderForeground, HeaderBackground);
                 
-                // Draw text
-                for(int dx=0; dx<h.Length; dx++)
-                    buffer.SetPixel(colX + dx, y, h[dx], HeaderForeground, HeaderBackground);
+                for(int dx=0; dx<hdr.Length; dx++)
+                    buffer.SetPixel(colX + dx, headerY, hdr[dx], HeaderForeground, HeaderBackground);
                 
                 colX += col.ActualWidth;
                 
-                // Separator
                 if (i < Columns.Count - 1)
                 {
-                   buffer.SetPixel(colX, y, '│', ConsoleColor.Gray, ConsoleColor.Black);
+                   if (ShowVerticalLines)
+                        buffer.SetPixel(colX, headerY, chars.HeaderInnerV, HeaderForeground, HeaderBackground);
                    colX++;
                 }
             }
+
+            // Fill remaining header background
+            if (colX < x + w - (ShowBorder ? 1 : 0))
+            {
+                int endX = x + w - (ShowBorder ? 1 : 0);
+                for (int k = colX; k < endX; k++)
+                    buffer.SetPixel(k, headerY, ' ', HeaderForeground, HeaderBackground);
+            }
+
+            int sepY = headerY + 1;
+
+            if (ShowBorder)
+            {
+                buffer.SetPixel(x, sepY, chars.TLeft, HeaderForeground, HeaderBackground);
+                buffer.SetPixel(x + w - 1, sepY, chars.TRight, HeaderForeground, HeaderBackground);
+            }
+
+            int lineX = startX;
+            for(int i=0; i<Columns.Count; i++)
+            {
+                 int cw = Columns[i].ActualWidth;
+                 for(int k=0; k<cw; k++)
+                    buffer.SetPixel(lineX + k, sepY, chars.HeaderSepH, HeaderForeground, HeaderBackground);
+                 lineX += cw;
+
+                 if (i < Columns.Count - 1)
+                 {
+                     if (ShowVerticalLines)
+                        buffer.SetPixel(lineX, sepY, chars.HeaderCross, HeaderForeground, HeaderBackground);
+                     lineX++;
+                 }
+            }
+
+            // Fill remaining separator line
+            if (lineX < x + w - (ShowBorder ? 1 : 0))
+            {
+                int endX = x + w - (ShowBorder ? 1 : 0);
+                for (int k = lineX; k < endX; k++)
+                    buffer.SetPixel(k, sepY, chars.HeaderSepH, HeaderForeground, HeaderBackground);
+            }
          }
 
-         // Draw Body (ScrollViewer)
-         // ScrollViewer Render will handle children.
-         // We just passed Arrange, so it knows where to draw.
-         // ScrollViewer is a child, so we call its render.
+         // 3. Render Body
          _scrollViewer.Render(buffer, x, y);
 
-         // Draw Footer
+         // 4. Render Border Junctions
+         int vOffset = _scrollViewer.VerticalOffset;
+         int bodyScreenY = y + (ShowBorder ? 1 : 0) + (ShowHeader ? 2 : 0);
+
+         int currentY = 0;
+         foreach(var child in _rowStack.Children)
+         {
+             int hChild = child.RenderSize.Height;
+             int screenY = bodyScreenY + currentY - vOffset;
+
+             if (child is TableSeparator && ShowHorizontalLines && ShowBorder)
+             {
+                 if (screenY >= bodyScreenY && screenY < bodyScreenY + _scrollViewer.RenderSize.Height)
+                 {
+                      buffer.SetPixel(x, screenY, chars.BodySepTLeft, HeaderForeground, HeaderBackground);
+                      buffer.SetPixel(x + w - 1, screenY, chars.BodySepTRight, HeaderForeground, HeaderBackground);
+                 }
+             }
+
+             currentY += hChild;
+             if (currentY - vOffset > h) break;
+         }
+
+         // 5. Draw Bottom Border Junctions
+         if (ShowBorder && ShowVerticalLines)
+         {
+             int cx = 1;
+             int by = y + h - 1;
+             for(int i=0; i<Columns.Count - 1; i++)
+             {
+                 cx += Columns[i].ActualWidth;
+                 buffer.SetPixel(x + cx, by, chars.TUp, HeaderForeground, HeaderBackground);
+                 cx++;
+             }
+         }
+
          if (PageSize > 0)
          {
              RenderPagination(buffer, offsetX, offsetY);
@@ -406,6 +549,7 @@ public class Table : UIElement
         base.OnKeyDown(e);
         if (e.Key == ConsoleKey.UpArrow)
         {
+            int limit = EffectiveTotalRows - 1;
             if (SelectedIndex > 0)
             {
                 SelectedIndex--;
@@ -415,46 +559,7 @@ public class Table : UIElement
         }
         else if (e.Key == ConsoleKey.DownArrow)
         {
-            // Max index? 
-            int max = IsInternalPaging ? _rows.Count : (TotalRows > 0 ? TotalRows : _rows.Count); 
-            // If external paging, we might select index > _rows.Count?
-            // No, SelectedIndex usually refers to the loaded rows? 
-            // OR global index? 
-            // If we support lazy loading, SelectedIndex should probably be global.
-            // But _rows only has local. 
-            // Let's assume SelectedIndex is GLOBAL.
-            // If External Paging, and we have 5 rows, but TotalRows=100.
-            // Rows has 5 items.
-            // Index 0..4 map to Page 0.
-            // Index 5..9 map to Page 1? But Rows only has 5 items.
-            // This implies Rows must be swapped.
-            // So indices are always 0..PageSize-1 relative to view, or absolute?
-            // "Add 20 items... fetch new page" implies global abstraction.
-            // But implementation-wise, Table usually binds to what it has.
-            // Let's stick to: SelectedIndex is GLOBAL.
-            // If internal paging: easy.
-            // If external paging: we need to map global index to local row?
-            // Too complex for typical TUI table. 
-            // Let's match typical patterns: SelectedIndex is index into the DATA SOURCE (global).
-            // If we are on Page 1 (items 10-19), SelectedIndex 11 corresponds to Row 1 (locally).
-            
-            // If External, and we only have 10 rows loaded.
-            // User presses Down on item 9. SelectedIndex becomes 10.
-            // EnsureVisible(10) -> Checks current page. 10 is on Page 1 (0-9 is Page 0).
-            // So CurrentPage becomes 1.
-            // PageChanged fires.
-            // User Handler loads Page 1 rows (indices 10-19? or 0-9?).
-            // Usually valid implementations: 
-            // A) Rows are replaced. Index 10 doesn't exist in Rows.
-            //    So we must map SelectedIndex 10 to Row 0?
-            //    That's confusing.
-            //    Better: SelectedIndex is always GLOBAL.
-            //    When rendering/mapping, we subtract Page * PageSize?
-            
-            // Let's assume GLOBAL SelectedIndex.
-            
             int limit = EffectiveTotalRows - 1;
-
             if (SelectedIndex < limit)
             {
                 SelectedIndex++;
@@ -468,55 +573,12 @@ public class Table : UIElement
     {
         if (PageSize > 0)
         {
-            // Paging Mode
             int page = index / PageSize;
             if (page != CurrentPage)
             {
                 CurrentPage = page;
-                // PageChanged implicitly handled, triggers UpdateVisibleRows
-            }
-            // If already on page, do we need to scroll ScrollViewer?
-            // Usually not if PageSize fits in Table height. But if rows are tall?
-            // Yes, user wants scrollbar if overflows.
-            
-            // Find row in _rowStack?
-            // The row is likely in _rowStack if on current page.
-            if (index >= 0 && index < _rows.Count)
-            {
-                // We need to calculate position of this row inside _rowStack.
-                // ScrollViewer works with vertical offset.
-                // We need to find the Y position of the selected row relative to _rowStack.
-                
-                // Since _rows are added to StackPanel, we can iterate StackPanel children?
-                // Or calculate from heights? Row heights are dynamic.
-                // Best is to find the child control corresponding to _rows[index].
-                
-                var row = _rows[index];
-                if (row.Parent == _rowStack) // Check if attached
-                {
-                   // To ensure visible, we need to know its position.
-                   // StackPanel arranges children. If Arrange has run, render size/pos is known?
-                   // No, RenderSize.Y is relative to StackPanel.
-                   
-                   // But Arrange only runs during Layout pass.
-                   // If we just gathered visible rows, layout hasn't run yet.
-                   // So we might need to UpdateLayout?
-                   
-                   // However, simplified approach:
-                   // Just rely on user scrolling or minimal auto-scroll if possible.
-                   // For now, let's just ensure Page.
-                }
             }
             Invalidate();
-        }
-        else
-        {
-            // Scrolling Mode (classic / no pagination) via ScrollViewer?
-            // If No Paging, all rows are in _rowStack.
-            
-            // Update ScrollViewer offset?
-            // This requires measuring/positioning. The ScrollViewer logic handles scrolling via ScrollBar interactively.
-            // Programmatic EnsureVisible would require finding the target Y.
         }
     }
     
@@ -535,10 +597,6 @@ public class Table : UIElement
             IsSortDescending = false;
         }
 
-        // Perform Sort
-        // We need to know which generic type to compare if no Comparer is given.
-        // We can use a default strategy: Try key selector, or try parsing text from cell.
-        
         int colIndex = Columns.IndexOf(column);
         if (colIndex < 0) return;
 
@@ -547,17 +605,12 @@ public class Table : UIElement
             if (a == b) return 0;
             
             int result = 0;
-            
-            // 1. Explicit Comparer
             if (column.SortComparer != null)
             {
-                // We need values.
-                // If SortKeySelector is present, use it.
                 object? valA = column.SortKeySelector != null ? column.SortKeySelector(a) : GetCellValue(a, colIndex);
                 object? valB = column.SortKeySelector != null ? column.SortKeySelector(b) : GetCellValue(b, colIndex);
                 result = column.SortComparer(valA!, valB!);
             }
-            // 2. Explicit Key Selector (comparable)
             else if (column.SortKeySelector != null)
             {
                 var keyA = column.SortKeySelector(a);
@@ -565,19 +618,10 @@ public class Table : UIElement
                 if (keyA is IComparable cA) result = cA.CompareTo(keyB);
                 else result = (keyA?.ToString() ?? "").CompareTo(keyB?.ToString() ?? "");
             }
-            // 3. Default: Text of cell
             else
             {
                 var textA = GetCellText(a, colIndex);
                 var textB = GetCellText(b, colIndex);
-                
-                // Try numeric? User request says "Get some good samples that are not alphabetic".
-                // We could try parsing as double if both look like numbers?
-                // Or just string compare for default. 
-                // Let's stick to string compare for default to be safe, unless user sets a custom sorter.
-                // But user asked for numeric. 
-                // Let's rely on user setting SortKeySelector or Comparer for numeric, or we can add a smart default.
-                // Let's do simple string compare here.
                 result = string.Compare(textA, textB, StringComparison.CurrentCultureIgnoreCase);
             }
 
@@ -591,8 +635,6 @@ public class Table : UIElement
     {
         if (colIndex >= row.Cells.Count) return null;
         var cell = row.Cells[colIndex];
-        // If cell has a Tag, maybe use that?
-        // Or TextBlock text.
         if (cell is TextBlock tb) return tb.Text;
         return cell;
     }
@@ -606,11 +648,13 @@ public class Table : UIElement
     public override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
-        // Header Hit Test
-        if (ShowHeader && e.Y == 0)
+
+        int borderOffset = ShowBorder ? 1 : 0;
+        int headerHeight = ShowHeader ? 2 : 0;
+
+        if (ShowHeader && e.Y >= borderOffset && e.Y < borderOffset + 1)
         {
-            // Find column
-            int x = 0;
+            int x = borderOffset;
             for(int i=0; i<Columns.Count; i++)
             {
                 var col = Columns[i];
@@ -619,91 +663,47 @@ public class Table : UIElement
                     Sort(col);
                     break;
                 }
-                x += col.ActualWidth;
-                x += (i < Columns.Count - 1) ? 1 : 0; // Separator
+                x += col.ActualWidth + 1;
             }
             e.Handled = true;
             return;
         }
 
-        // Pagination Hit Test
         if (PageSize > 0 && e.Y == RenderSize.Height - 1)
         {
-            // Handle pagination clicks
             HandlePaginationClick(e.X);
             e.Handled = true;
             return;
         }
 
-        // Hit test for row
-        int y = e.Y;
-        if (ShowHeader) y--;
+        int bodyStartY = borderOffset + headerHeight;
+        int y = e.Y - bodyStartY + _scrollViewer.VerticalOffset;
         
         if (y >= 0)
         {
-            // If paging is enabled, we need to consider that the rendered rows
-            // might be offset if we are doing internal paging?
-            // Actually, Render just renders what's in _rows (sliced or not).
-            // But we need to know which row was clicked.
-            
-            // If internal paging: rendered rows are _rows[CurrentPage*PageSize ...].
-            // If external paging: rendered rows are _rows[0 ...].
-            
-            // If Scrolling (PageSize=0): rendered rows are _rows[_scrollOffset ...].
-
-            int startIdx = 0;
-            int count = _rows.Count;
-            bool useScrolling = PageSize <= 0;
-
-            if (IsInternalPaging)
-            {
-                startIdx = CurrentPage * PageSize;
-                count = Math.Min(PageSize, _rows.Count - startIdx);
-                
-                int currentY = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    int realIdx = startIdx + i;
-                    if (realIdx >= _rows.Count) break;
-
-                    var row = _rows[realIdx];
-                    int rh = row.RenderSize.Height > 0 ? row.RenderSize.Height : 1;
-                    
-                    if (y >= currentY && y < currentY + rh)
-                    {
-                        SelectedIndex = realIdx;
-                        SelectionChanged?.Invoke(this, EventArgs.Empty);
-                        break;
-                    }
-                    currentY += rh;
-                }
-            }
-            else if (useScrolling)
-            {
-                // ScrollViewer based scrolling (pixel/line based)
-                int scrollY = _scrollViewer.VerticalOffset;
-                int targetY = y + scrollY;
-
-                int currentY = 0;
-                for (int i = 0; i < _rows.Count; i++)
-                {
-                    var row = _rows[i];
-                    int rh = row.RenderSize.Height > 0 ? row.RenderSize.Height : 1;
-
-                    if (targetY >= currentY && targetY < currentY + rh)
-                    {
-                        SelectedIndex = i;
-                        SelectionChanged?.Invoke(this, EventArgs.Empty);
-                        break;
-                    }
-                    currentY += rh;
-                }
-            }
+             int currentY = 0;
+             foreach(var child in _rowStack.Children)
+             {
+                 int h = child.RenderSize.Height > 0 ? child.RenderSize.Height : 1;
+                 if (y >= currentY && y < currentY + h)
+                 {
+                     if (child is TableRow row)
+                     {
+                         int rowIdx = _rows.IndexOf(row);
+                         if (rowIdx >= 0)
+                         {
+                             SelectedIndex = rowIdx;
+                             SelectionChanged?.Invoke(this, EventArgs.Empty);
+                         }
+                     }
+                     break;
+                 }
+                 currentY += h;
+             }
         }
         e.Handled = true;
     }
 
-    // Pagination
     private int _pageSize = 0;
     public int PageSize
     {
@@ -725,7 +725,6 @@ public class Table : UIElement
         set
         {
             if (value < 0) value = 0;
-            // Cap at MaxPages? Need TotalRows for that.
             int max = TotalPages > 0 ? TotalPages - 1 : 0;
             if (value > max) value = max;
 
@@ -769,28 +768,16 @@ public class Table : UIElement
 
     private void HandlePaginationClick(int localX)
     {
-        // Must match RenderPagination logic to find targets
-        // Simple logic: we just need to know where the buttons are.
-        // This is tricky because RenderPagination is dynamic.
-        // We can either recalculate or store regions. 
-        // Let's recalculate simply.
-        
         int w = RenderSize.Width;
         int totalPages = TotalPages;
         if (totalPages <= 1) return;
 
-        // Same logic as Render
         string text = GetPaginationString(w, totalPages);
-        // " < 1 2 3 > "
-        // We center this string.
         int startX = (w - text.Length) / 2;
         if (localX < startX || localX >= startX + text.Length) return;
 
         int charIdx = localX - startX;
-        // Parse what we clicked.
-        // This is heuristic parsing. 
         
-        // Check for Prev/Next arrows
         if (text.Contains("<") && text.IndexOf('<') == charIdx)
         {
             if (CurrentPage > 0) CurrentPage--;
@@ -802,15 +789,8 @@ public class Table : UIElement
             return;
         }
 
-        // Check for numbers
-        // We need to map the string back to page numbers.
-        // Format: "< 1 2 3 ... 10 >"
-        // We can tokenize the string by spaces and find which token we clicked.
-        
         if (charIdx < 0 || charIdx >= text.Length || text[charIdx] == ' ') return;
 
-        // Find the token at charIdx
-        // Scan back to space
         int tokenStart = text.LastIndexOf(' ', charIdx);
         if (tokenStart == -1) tokenStart = 0; else tokenStart++;
         
@@ -820,6 +800,7 @@ public class Table : UIElement
         if (tokenStart >= 0 && tokenEnd > tokenStart && tokenEnd <= text.Length)
         {
             string token = text.Substring(tokenStart, tokenEnd - tokenStart);
+            if (token.StartsWith("[") && token.EndsWith("]")) token = token.Substring(1, token.Length - 2);
             if (int.TryParse(token, out int pNum))
             {
                 CurrentPage = pNum - 1;
@@ -829,86 +810,21 @@ public class Table : UIElement
 
     private string GetPaginationString(int availableWidth, int totalPages)
     {
-        // Strategies:
-        // 1. Minimal: "< >" (Length 3)
-        // 2. Current: "< 1 >" 
-        // 3. Status: "< 1 of 10 >"
-        // 4. Expanded: "< 1 2 3 4 5 >"
-        
         int cp = CurrentPage + 1;
-        
-        // Try Full/Expanded first
-        // "< 1 ... 4 5 [6] 7 8 ... 10 >"
-        // Let's build a smart list.
-        // Always include 1, Total.
-        // Include Current, +/- surroundings.
-        
-        // If we have plenty of space, show all?
-        // Let's try to generate the "Standard" string: "< 1 2 3 ... N >"
-        
-        var parts = new List<string>();
-        parts.Add("<");
-        
-        // Determine range to show
-        // We want to fit in availableWidth.
-        // Let's assume we want as many as possible centered on Current.
-        
-        // Ideal: 1, 2, ..., CP-1, CP, CP+1, ..., Total
-        // If too many, collapse with ...
-        
-        // Simple logic for "More space":
-        // 1 .. Total
-        // If Total < 10, show all?
-        
-        // Let's build a candidate list of page numbers to show.
-        // Always show 1, Total.
-        // Always show Current.
-        // Fill gaps if small, else ...
-        
-        // Let's try building " < CP of Total > "
         string statusStr = $"< {cp} of {totalPages} >";
         if (statusStr.Length <= availableWidth)
         {
-            // Can we do better? 
-            // "< 1 2 3 4 5 >"
-            // Let's try to fit numbers.
-            // Estimate 4 chars per number " N ".
-            int maxNums = (availableWidth - 4) / 4; // -4 for "< >" and padding
-            
-            if (maxNums >= totalPages)
+            if (availableWidth > 30)
             {
-                // Show all
-                string s = "<";
-                for(int i=1; i<=totalPages; i++)
-                {
-                    if (i == cp) s += $" [{i}]"; 
-                    else s += $" {i}";
-                }
-                s += " >";
-                if (s.Length <= availableWidth) return s;
-            }
-            
-            // Show partial
-            // Center around CP.
-            // always 1 ... [CP] ... Total
-            // Let's just return the status string if implementation of complex ellipsizing is too risky/long for now.
-            // User asked: "Moe space, add n for page number, then "< n of n >", then "< 1 2 3 ... 12 >""
-            
-            // If we have lots of space:
-            if (availableWidth > 30) // Arbitrary threshold for "lots"
-            {
-                 // Try complex string
-                 // Logic: 1 .. range .. Total
-                 // range = CP-2 to CP+2
                  List<int> pages = new List<int>();
                  pages.Add(1);
                  
                  int start = Math.Max(2, cp - 2);
                  int end = Math.Min(totalPages - 1, cp + 2);
                  
-                 if (start > 2) pages.Add(-1); // ...
+                 if (start > 2) pages.Add(-1);
                  for(int i=start; i<=end; i++) pages.Add(i);
-                 if (end < totalPages - 1) pages.Add(-1); // ...
+                 if (end < totalPages - 1) pages.Add(-1);
                  
                  if (totalPages > 1) pages.Add(totalPages);
                  
@@ -923,11 +839,8 @@ public class Table : UIElement
                  
                  if (s.Length <= availableWidth) return s;
             }
-            
             return statusStr;
         }
-        
-        // Smallest
         return "< >";
     }
 
@@ -935,12 +848,11 @@ public class Table : UIElement
     {
        if (PageSize <= 0) return;
        int totalPages = TotalPages;
-       if (totalPages <= 1) return; // Hide if single page? Or always show if PageSize set? Usually hide if 1 page.
+       if (totalPages <= 1) return;
        
        int w = RenderSize.Width;
-       int y = RenderSize.Height - 1; // Last line
+       int y = RenderSize.Height - 1;
        
-       // Clear line?
        for(int i=0; i<w; i++) buffer.SetPixel(RenderSize.X + offsetX + i, RenderSize.Y + offsetY + y, ' ', ConsoleColor.Gray, ConsoleColor.Black);
        
        string text = GetPaginationString(w, totalPages);
@@ -952,31 +864,42 @@ public class Table : UIElement
        for(int i=0; i<text.Length; i++)
        {
            char c = text[i];
-           // Highlight current page number?
-           // The GetPaginationString puts brackets [N] for current.
-           // We can just render string.
            buffer.SetPixel(absX + i, absY, c, ConsoleColor.Gray, ConsoleColor.Black);
        }
     }
+}
+
+internal class TableSeparator : UIElement
+{
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        return new Size(availableSize.Width, 1);
+    }
     
-    // Override Render to call RenderPagination
-    // We need to modify Render method in previous block?
-    // The replace tool works on chunks. I need to replace Render as well or append to it.
-    // Wait, the previous block I am replacing is OnMouseDown. 
-    // I need to patch Render as well.
-    // The replace tool accepts [StartLine, EndLine].
-    // I can rewrite Render method too if I include it in the range?
-    // Render is lines 303-405.
-    // OnMouseDown is 539-593.
-    // EnsureVisible is 430-454.
-    // I need to change OnKeyDown too (for pagination aware navigation).
-    // And Measure/Arrange (to reserve space).
-    
-    // This looks like I should Replace almost the whole file or large chunks.
-    // Let's do it in chunks.
-    
-    // First chunk: Measure/Arrange/Render.
-    
-    // Wait, I am currently replacing OnMouseDown (end of file).
-    // I should cancel this and do it properly from top down or big chunks.
+    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
+    {
+        var table = FindAncestor<Table>();
+        if (table == null) return;
+
+        int x = RenderSize.X + offsetX;
+        int y = RenderSize.Y + offsetY;
+        int width = RenderSize.Width;
+
+        char hChar = '\u2500';
+        char crossChar = '\u253C';
+
+        for(int i=0; i<width; i++)
+            buffer.SetPixel(x + i, y, hChar, ConsoleColor.Gray, ConsoleColor.Black);
+
+        if (table.ShowVerticalLines)
+        {
+            int cx = 0;
+            for(int i=0; i<table.Columns.Count - 1; i++)
+            {
+                cx += table.Columns[i].ActualWidth;
+                buffer.SetPixel(x + cx, y, crossChar, ConsoleColor.Gray, ConsoleColor.Black);
+                cx++;
+            }
+        }
+    }
 }

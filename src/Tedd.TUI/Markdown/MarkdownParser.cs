@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
+using Tedd.TUI;
 using Tedd.TUI.CodeColoring;
 
 namespace Tedd.TUI.Markdown;
@@ -101,6 +102,11 @@ public class MarkdownParser
             var table = new Table();
             table.ShowHeader = true;
             table.HeaderForeground = _theme.Header4.Foreground ?? ConsoleColor.White;
+
+            table.ShowBorder = _theme.Table.ShowBorder;
+            table.ShowVerticalLines = _theme.Table.ShowVerticalLines;
+            table.ShowHorizontalLines = _theme.Table.ShowHorizontalLines;
+            table.BorderStyle = _theme.Table.BorderStyle;
 
             // Define Columns
             if (tableBlock.Headers != null)

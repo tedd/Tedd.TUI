@@ -1,7 +1,7 @@
 namespace Tedd.TUI;
 
 /// <summary>
-/// Box drawing style: single (light) or double lines (Unicode U+2500–U+25FF).
+/// Box drawing style: single (light), double lines, or heavy lines (Unicode U+2500–U+25FF).
 /// </summary>
 public enum BoxStyle
 {
@@ -9,7 +9,10 @@ public enum BoxStyle
     Single,
 
     /// <summary>Double-line box drawing (═ ║ ╔ ╗ ╚ ╝).</summary>
-    Double
+    Double,
+
+    /// <summary>Heavy single-line box drawing (━ ┃ ┏ ┓ ┗ ┛).</summary>
+    Heavy
 }
 
 /// <summary>
@@ -38,6 +41,7 @@ public readonly struct BoxDrawingChars
     /// Returns the six box-drawing characters for the given style.
     /// Single: ┌ ┐ └ ┘ ─ │ (U+250C, U+2510, U+2514, U+2518, U+2500, U+2502).
     /// Double: ╔ ╗ ╚ ╝ ═ ║ (U+2554, U+2557, U+255A, U+255D, U+2550, U+2551).
+    /// Heavy:  ┏ ┓ ┗ ┛ ━ ┃ (U+250F, U+2513, U+2517, U+251B, U+2501, U+2503).
     /// </summary>
     public static BoxDrawingChars Get(BoxStyle style)
     {
@@ -47,6 +51,8 @@ public readonly struct BoxDrawingChars
                 '\u250C', '\u2510', '\u2514', '\u2518', '\u2500', '\u2502'),
             BoxStyle.Double => new BoxDrawingChars(
                 '\u2554', '\u2557', '\u255A', '\u255D', '\u2550', '\u2551'),
+            BoxStyle.Heavy => new BoxDrawingChars(
+                '\u250F', '\u2513', '\u2517', '\u251B', '\u2501', '\u2503'),
             _ => Get(BoxStyle.Single)
         };
     }
