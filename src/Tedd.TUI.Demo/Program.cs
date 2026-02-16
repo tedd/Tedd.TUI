@@ -321,7 +321,8 @@ public class Test
         var mdStack = new StackPanel { Orientation = Orientation.Vertical };
         mdStack.AddChild(new TextBlock { Text = "Markdown View:" });
 
-        var mdView = new MarkdownView { Width = 70, Height = 15, VerticalScrollBarVisibility = true };
+        var mdScrollViewer = new ScrollViewer { Width = 70, Height = 15, VerticalScrollBarVisibility = true };
+        var mdView = new MarkdownView();
         string mdText = @"# Markdown Demo
 
 This is a **bold** text and *italic* text.
@@ -351,7 +352,8 @@ public void Hello() {
 > This is a quote.
 ";
         mdView.Text = mdText;
-        mdStack.AddChild(mdView);
+        mdScrollViewer.Content = mdView;
+        mdStack.AddChild(mdScrollViewer);
 
         tabs.AddItem(new TabItem { Header = "Markdown", Content = mdStack });
 
