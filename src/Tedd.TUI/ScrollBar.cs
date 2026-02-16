@@ -71,6 +71,13 @@ public class ScrollBar : UIElement
 
     public Orientation Orientation { get; set; } = Orientation.Vertical;
 
+    public char TrackChar { get; set; } = '░';
+    public char ThumbChar { get; set; } = '█';
+    public char UpArrowChar { get; set; } = '▲';
+    public char DownArrowChar { get; set; } = '▼';
+    public char LeftArrowChar { get; set; } = '◄';
+    public char RightArrowChar { get; set; } = '►';
+
     public event EventHandler ValueChanged;
 
     protected override Size MeasureOverride(Size availableSize)
@@ -92,10 +99,10 @@ public class ScrollBar : UIElement
         int w = RenderSize.Width;
         int h = RenderSize.Height;
 
-        char arrow1 = (Orientation == Orientation.Vertical) ? '▲' : '◄';
-        char arrow2 = (Orientation == Orientation.Vertical) ? '▼' : '►';
-        char trackChar = '░';
-        char thumbChar = '█';
+        char arrow1 = (Orientation == Orientation.Vertical) ? UpArrowChar : LeftArrowChar;
+        char arrow2 = (Orientation == Orientation.Vertical) ? DownArrowChar : RightArrowChar;
+        char trackChar = TrackChar;
+        char thumbChar = ThumbChar;
 
         ConsoleColor fg = Foreground;
         ConsoleColor bg = Background ?? buffer.GetPixel(x, y).Background;
