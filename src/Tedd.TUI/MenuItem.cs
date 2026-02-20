@@ -258,9 +258,9 @@ public class MenuItem : UIElement
         var root = GetRoot() as TuiWindow;
         if (root == null) return;
 
-        if (Parent is MenuBar menuBar)
+        if (Parent is StackPanel parentStack)
         {
-            foreach (var child in menuBar.Children)
+            foreach (var child in parentStack.Children)
             {
                 if (child is MenuItem mi && mi != this && mi.IsExpanded)
                 {
@@ -278,12 +278,13 @@ public class MenuItem : UIElement
             stackPanel.AddChild(item);
         }
 
-        _popupBorder = new Border
+        _popupBorder = new MenuPopupBorder
         {
             Child = stackPanel,
             BorderColor = ConsoleColor.Black,
             Background = ConsoleColor.Gray,
-            BoxStyle = BoxStyle.Single
+            BoxStyle = BoxStyle.Single,
+            Owner = this
         };
 
         // Needs measurement to know size
@@ -323,7 +324,7 @@ public class MenuItem : UIElement
         
         _popupBorder.Arrange(new Rect(popupX, popupY, _popupBorder.Width, _popupBorder.Height));
 
-        root.SetOverlay(_popupBorder);
+        root.PushOverlay(_popupBorder);
         // Focus first item?
         if (Items.Count > 0)
         {
@@ -343,62 +344,54 @@ public class MenuItem : UIElement
     public void CloseSubMenu()
     {
         if (!IsExpanded) return;
+
+        // Recursively close child submenus
+        foreach (var item in Items)
+        {
+            if (item is MenuItem mi)
+            {
+                mi.CloseSubMenu();
+            }
+        }
+
         IsExpanded = false;
 
         var root = GetRoot() as TuiWindow;
         if (root != null && _popupBorder != null)
         {
-             // This logic assumes single overlay. 
-             // TuiWindow might need support for multiple overlays or we check if this is the current one.
-             // If we have nested menus, we need a way to manage stack of overlays or one big overlay layer.
-             // For simplify, TuiWindow.SetOverlay likely replaces. This is a limitation for nested menus.
-             // We'll need to check TuiWindow capabilities or enhance it.
-             // For now, let's assume one level deep or that we can clear it.
-             // If we clear, we might clear parent's menu too?
-             // Actually, the simple TuiWindow.SetOverlay likely only supports one.
-             // We might need to handle "closing" by just removing this specific visual.
-             
-             // Wait, if we use SetOverlay, we replace the previous one? 
-             // If Parent is MenuBar, we are opening the first level.
-             // If we are a submenu, we are opening a second level.
-             // If TuiWindow only supports one overlay, we can't do nested submenus properly visually 
-             // unless we manage them ourselves or change TuiWindow to support a stack.
+             root.RemoveOverlay(_popupBorder);
         }
         
-        // This is a known limitation now. We probably need to fix TuiWindow or use a local method.
-        // Let's rely on TuiWindow.ClearOverlay() which clears everything.
-        // This implies only one menu open at a time globally for now? 
-        // Or valid if we only have one level deep for now.
-        
-        root?.ClearOverlay(); // This is destructive for nested menus.
         _popupBorder = null;
         Invalidate();
     }
 
     private void CloseParentMenu()
     {
-        // Walk up to find the top menu item that started the chain and close it.
-        // Or if using overlays, maybe just ClearOverlay on root is enough to close all open menus?
-        var root = GetRoot() as TuiWindow;
-        root?.ClearOverlay();
-        
-        // Also enter non-expanded state for all parents?
-        // We'd need to walk up parents and set IsExpanded = false for MenuItems.
+        // Walk up to find the root of the menu chain and close submenus
         var current = Parent;
         while (current != null)
         {
-            if (current is MenuItem mi)
+            if (current is MenuPopupBorder mpb)
             {
-                mi.CloseSubMenu(); // This might call ClearOverlay again, redundant but safe-ish.
+                var owner = mpb.Owner;
+                owner.CloseSubMenu();
+                current = owner.Parent;
             }
-            else if (current is Border b && b.Parent is MenuItem mi2)
+            else if (current is MenuBar)
             {
-                 // The StackPanel is inside a Border possibly? 
-                 // Our OpenSubMenu creates Border -> StackPanel -> Items.
-                 // So item.Parent is StackPanel. StackPanel.Parent is Border. Border doesn't know its creator MenuItem easily 
-                 // unless we track it.
+                 // Top level reached.
+                 break;
             }
-            current = current.Parent;
+            else
+            {
+                current = current.Parent;
+            }
         }
+    }
+
+    private class MenuPopupBorder : Border
+    {
+        public MenuItem Owner { get; set; }
     }
 }
