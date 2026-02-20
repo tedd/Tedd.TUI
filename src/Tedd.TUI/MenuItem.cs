@@ -277,9 +277,9 @@ public class MenuItem : UIElement
         var root = GetRoot() as TuiWindow;
         if (root == null) return;
 
-        if (Parent is MenuBar menuBar)
+        if (Parent is StackPanel parentStack)
         {
-            foreach (var child in menuBar.Children)
+            foreach (var child in parentStack.Children)
             {
                 if (child is MenuItem mi && mi != this && mi.IsExpanded)
                 {
@@ -301,12 +301,13 @@ public class MenuItem : UIElement
             stackPanel.AddChild(item);
         }
 
-        _popupBorder = new Border
+        _popupBorder = new MenuPopupBorder
         {
             Child = stackPanel,
             BorderColor = ConsoleColor.Black,
             Background = ConsoleColor.Gray,
-            BoxStyle = BoxStyle.Single
+            BoxStyle = BoxStyle.Single,
+            Owner = this
         };
 
         // Needs measurement to know size
@@ -366,6 +367,16 @@ public class MenuItem : UIElement
     public void CloseSubMenu()
     {
         if (!IsExpanded) return;
+
+        // Recursively close child submenus
+        foreach (var item in Items)
+        {
+            if (item is MenuItem mi)
+            {
+                mi.CloseSubMenu();
+            }
+        }
+
         IsExpanded = false;
 
         var root = GetRoot() as TuiWindow;
@@ -391,8 +402,22 @@ public class MenuItem : UIElement
         var current = ParentMenuItem;
         while (current != null)
         {
-            current.CloseSubMenu();
-            current = current.ParentMenuItem;
+            if (current is MenuPopupBorder mpb)
+            {
+                var owner = mpb.Owner;
+                owner.CloseSubMenu();
+                current = owner.Parent;
+            }
+            else if (current is MenuBar)
+            {
+                 // Top level reached.
+                 break;
+            }
+            else
+            {
+                 current = current.ParentMenuItem;
+            }
+
         }
 
         // If we are at top level (ParentMenuItem is null), check if we have submenu open?
@@ -407,5 +432,10 @@ public class MenuItem : UIElement
         // However, if we are a top level item with submenu open, clicking it toggles (handled in OnMouseDown).
         // If we are a leaf item in submenu, ParentMenuItem is not null.
         // So the loop handles closing the parent.
+    }
+
+    private class MenuPopupBorder : Border
+    {
+        public MenuItem Owner { get; set; }
     }
 }

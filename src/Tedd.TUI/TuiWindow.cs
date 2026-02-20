@@ -55,6 +55,8 @@ public class TuiWindow : UIElement
             Content.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
         }
 
+        // Overlays are managed/arranged manually by their creators (e.g. DialogBox.Show calls Arrange)
+        // or we assume they have valid RenderSize.
         // Overlays are typically absolutely positioned by their creator (e.g. DialogBox.Show),
         // but we should ensure they are measured/arranged if the window resizes?
         // For now, we rely on the fact that Show() calls Arrange().
@@ -90,6 +92,13 @@ public class TuiWindow : UIElement
     public void PushOverlay(UIElement overlay)
     {
         if (overlay == null) return;
+
+        // Avoid duplicates by removing if existing, moving to top
+        if (_overlays.Contains(overlay))
+        {
+            _overlays.Remove(overlay);
+        }
+
         _overlays.Add(overlay);
         overlay.Parent = this;
         overlay.DataContext = this.DataContext;
@@ -98,28 +107,32 @@ public class TuiWindow : UIElement
     public void RemoveOverlay(UIElement overlay)
     {
         if (overlay == null) return;
+
         if (_overlays.Contains(overlay))
         {
-            CheckFocusOnRemove(overlay);
+            CheckFocusInOverlay(overlay);
             _overlays.Remove(overlay);
-            overlay.Parent = null; // Detach
         }
     }
 
     public void ClearOverlay()
     {
-        while (_overlays.Count > 0)
+        // Clear all overlays
+        // Iterate backwards to clean up focus cleanly
+        for (int i = _overlays.Count - 1; i >= 0; i--)
         {
-            var overlay = _overlays[_overlays.Count - 1];
-            RemoveOverlay(overlay);
+            var overlay = _overlays[i];
+            CheckFocusInOverlay(overlay);
         }
+        _overlays.Clear();
     }
 
-    private void CheckFocusOnRemove(UIElement overlay)
+    private void CheckFocusInOverlay(UIElement overlay)
     {
-        // If focus is currently within the overlay being removed, we should clear it
+        // If focus is currently within the overlay, we should clear it
         if (_focusedElement != null)
         {
+            // Check if _focusedElement is child of overlay
             var current = _focusedElement;
             bool isInsideOverlay = false;
             while (current != null)
@@ -135,6 +148,7 @@ public class TuiWindow : UIElement
             if (isInsideOverlay)
             {
                 _focusedElement = null; // Clear focus
+                // Attempt to restore focus?
                 // Attempt to restore focus to something valid
                 EnsureInitialFocus();
             }
@@ -300,15 +314,16 @@ public class TuiWindow : UIElement
 
     private void MoveFocus(int direction)
     {
-        // If there is an active overlay (modal or top-most), restrict focus navigation to it.
+        // If there is an active overlay (modal), restrict focus navigation to it.
+        // Use the top-most visible overlay.
         UIElement rootForFocus = Content;
 
-        // Use the top-most visible overlay
         for (int i = _overlays.Count - 1; i >= 0; i--)
         {
-            if (_overlays[i].Visibility)
+            var overlay = _overlays[i];
+            if (overlay.Visibility)
             {
-                rootForFocus = _overlays[i];
+                rootForFocus = overlay;
                 break;
             }
         }
