@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Tedd.TUI;
 
 public class MenuItem : UIElement
@@ -70,7 +67,7 @@ public class MenuItem : UIElement
         // Inactive: 
         //   - MenuBar: Gray Background, Black Text (inherited/default)
         //   - Popup: Gray Background, Black Text (inherited from Border)
-        
+
         var bg = isActive ? ConsoleColor.Green : (Parent is MenuBar ? (ConsoleColor?)null : ConsoleColor.Gray);
         var fg = ConsoleColor.Black; // Always black text
 
@@ -88,7 +85,7 @@ public class MenuItem : UIElement
                 }
             }
         }
-        
+
         // Update Header color if it's a TextBlock
         if (_header is TextBlock tb)
         {
@@ -100,11 +97,11 @@ public class MenuItem : UIElement
         {
             _header.Render(buffer, x, y);
         }
-        
+
         // Draw sub-menu arrow indicator if needed
-        if (Items.Count > 0 && !(Parent is MenuBar)) 
+        if (Items.Count > 0 && !(Parent is MenuBar))
         {
-             buffer.SetPixel(x + RenderSize.Width - 1, y, '\u25BA', fg, bg ?? ConsoleColor.Gray); // Arrow
+            buffer.SetPixel(x + RenderSize.Width - 1, y, '\u25BA', fg, bg ?? ConsoleColor.Gray); // Arrow
         }
     }
 
@@ -144,13 +141,13 @@ public class MenuItem : UIElement
     public override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        
+
         if (e.Key == ConsoleKey.Enter || e.Key == ConsoleKey.Spacebar)
         {
             if (Items.Count > 0)
             {
-                 if (IsExpanded) CloseSubMenu();
-                 else OpenSubMenu();
+                if (IsExpanded) CloseSubMenu();
+                else OpenSubMenu();
             }
             else
             {
@@ -183,8 +180,8 @@ public class MenuItem : UIElement
             }
             else
             {
-                 // Prev Sibling
-                 NavigateSibling(-1);
+                // Prev Sibling
+                NavigateSibling(-1);
             }
             e.Handled = true;
         }
@@ -210,45 +207,45 @@ public class MenuItem : UIElement
         }
         else if (e.Key == ConsoleKey.LeftArrow)
         {
-             if (Parent is MenuBar)
-             {
-                 NavigateSibling(-1);
-             }
-             else if (ParentMenuItem != null)
-             {
-                 // Close submenu (back to parent)
-                 // We are in a submenu, so ParentMenuItem is the item that opened this submenu.
-                 // Calling CloseSubMenu on ParentMenuItem closes the current level.
-                 ParentMenuItem.CloseSubMenu();
+            if (Parent is MenuBar)
+            {
+                NavigateSibling(-1);
+            }
+            else if (ParentMenuItem != null)
+            {
+                // Close submenu (back to parent)
+                // We are in a submenu, so ParentMenuItem is the item that opened this submenu.
+                // Calling CloseSubMenu on ParentMenuItem closes the current level.
+                ParentMenuItem.CloseSubMenu();
 
-                 // Navigate focus back to parent
-                 if (ParentMenuItem.Parent is MenuBar)
-                 {
-                     ParentMenuItem.Focus();
-                 }
-                 else
-                 {
-                     // If we are deeper in nested menus, the parent menu itself was an overlay that got replaced.
-                     // We need to restore it.
-                     // The ParentMenuItem belongs to a GrandParentMenuItem's submenu.
-                     var grandParent = ParentMenuItem.ParentMenuItem;
-                     if (grandParent != null)
-                     {
-                         // Re-open the grandparent's submenu to visualize the previous level
-                         grandParent.CloseSubMenu(); // Ensure clean state
-                         grandParent.OpenSubMenu();
+                // Navigate focus back to parent
+                if (ParentMenuItem.Parent is MenuBar)
+                {
+                    ParentMenuItem.Focus();
+                }
+                else
+                {
+                    // If we are deeper in nested menus, the parent menu itself was an overlay that got replaced.
+                    // We need to restore it.
+                    // The ParentMenuItem belongs to a GrandParentMenuItem's submenu.
+                    var grandParent = ParentMenuItem.ParentMenuItem;
+                    if (grandParent != null)
+                    {
+                        // Re-open the grandparent's submenu to visualize the previous level
+                        grandParent.CloseSubMenu(); // Ensure clean state
+                        grandParent.OpenSubMenu();
 
-                         // Focus the parent item in that menu
-                         ParentMenuItem.Focus();
-                     }
-                     else
-                     {
-                         // Should not happen if structure is valid (nested menu must have grandparent unless root context menu)
-                         ParentMenuItem.Focus();
-                     }
-                 }
-             }
-             e.Handled = true;
+                        // Focus the parent item in that menu
+                        ParentMenuItem.Focus();
+                    }
+                    else
+                    {
+                        // Should not happen if structure is valid (nested menu must have grandparent unless root context menu)
+                        ParentMenuItem.Focus();
+                    }
+                }
+            }
+            e.Handled = true;
         }
     }
 
@@ -314,7 +311,7 @@ public class MenuItem : UIElement
         // We probably need to measure it first. 
         // In simple case, let's guess or measure with large constraints.
         _popupBorder.Measure(new Size(1000, 1000));
-        
+
         int absX = RenderSize.X;
         int absY = RenderSize.Y;
 
@@ -344,22 +341,22 @@ public class MenuItem : UIElement
 
         _popupBorder.Width = (int)_popupBorder.DesiredSize.Width;
         _popupBorder.Height = (int)_popupBorder.DesiredSize.Height;
-        
+
         _popupBorder.Arrange(new Rect(popupX, popupY, _popupBorder.Width, _popupBorder.Height));
 
         root.PushOverlay(_popupBorder);
         // Focus first item?
         if (Items.Count > 0)
         {
-             // We want to focus the first FOCUSABLE item.
-             foreach(var item in Items)
-             {
-                 if (item.Focusable)
-                 {
-                     root.SetFocus(item);
-                     break;
-                 }
-             }
+            // We want to focus the first FOCUSABLE item.
+            foreach (var item in Items)
+            {
+                if (item.Focusable)
+                {
+                    root.SetFocus(item);
+                    break;
+                }
+            }
         }
         Invalidate();
     }
@@ -382,9 +379,9 @@ public class MenuItem : UIElement
         var root = GetRoot() as TuiWindow;
         if (root != null && _popupBorder != null)
         {
-             root.RemoveOverlay(_popupBorder);
+            root.RemoveOverlay(_popupBorder);
         }
-        
+
         _popupBorder = null;
         Invalidate();
     }
@@ -403,12 +400,12 @@ public class MenuItem : UIElement
             }
             else if (current is MenuBar)
             {
-                 // Top level reached.
-                 break;
+                // Top level reached.
+                break;
             }
             else
             {
-                 current = current.ParentMenuItem;
+                current = current.Parent;
             }
 
         }
