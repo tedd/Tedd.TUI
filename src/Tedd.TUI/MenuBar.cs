@@ -8,6 +8,7 @@ public class MenuBar : StackPanel
     {
         Orientation = Orientation.Horizontal;
         Background = ConsoleColor.Gray;
+        VerticalAlignment = VerticalAlignment.Top;
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)

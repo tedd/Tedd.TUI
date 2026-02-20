@@ -92,8 +92,15 @@ public class MenuBarTests
         // Width of Open is 4.
         // Nested popup should be at X = absX + Width = 1 + 4 = 5.
         // Y = absY = 2.
-        
+
+        // Check that "File" is rendered
+        Assert.Equal('F', buffer.GetPixel(0, 0).Character);
+
+        // Check that nested popup border '┌' is at (5, 2)
         Assert.Equal('┌', buffer.GetPixel(5, 2).Character);
+
+        // Check that nested popup content "Project" is at (6, 3)
+        Assert.Equal('P', buffer.GetPixel(6, 3).Character);
     }
 
     [Fact]
