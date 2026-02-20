@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace Tedd.TUI;
 
@@ -130,8 +132,12 @@ public class Table : UIElement
 {
     public List<TableColumn> Columns { get; } = new List<TableColumn>();
     
-    private List<TableRow> _rows = new List<TableRow>();
+    private ObservableCollection<TableRow> _rows;
     public IList<TableRow> Rows => _rows;
+
+    // Track if visible rows need to be rebuilt.
+    // We assume rows are dirty initially.
+    private bool _rowsDirty = true;
 
     private readonly ScrollViewer _scrollViewer;
     private readonly StackPanel _rowStack;
@@ -143,7 +149,22 @@ public class Table : UIElement
     // Style Properties
     public bool ShowBorder { get; set; } = false;
     public bool ShowVerticalLines { get; set; } = true;
-    public bool ShowHorizontalLines { get; set; } = false;
+
+    private bool _showHorizontalLines = false;
+    public bool ShowHorizontalLines
+    {
+        get => _showHorizontalLines;
+        set
+        {
+            if (_showHorizontalLines != value)
+            {
+                _showHorizontalLines = value;
+                _rowsDirty = true;
+                Invalidate();
+            }
+        }
+    }
+
     public BoxStyle BorderStyle { get; set; } = BoxStyle.Heavy; // Default to Heavy per user request
 
     // Selection
@@ -165,6 +186,9 @@ public class Table : UIElement
 
     public Table()
     {
+        _rows = new ObservableCollection<TableRow>();
+        _rows.CollectionChanged += OnRowsCollectionChanged;
+
         Focusable = true;
         _rowStack = new StackPanel { Orientation = Orientation.Vertical };
         _scrollViewer = new ScrollViewer 
@@ -176,10 +200,15 @@ public class Table : UIElement
         _scrollViewer.Parent = this;
     }
 
+    private void OnRowsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        _rowsDirty = true;
+        Invalidate();
+    }
+
     public void AddRow(TableRow row)
     {
         _rows.Add(row);
-        Invalidate();
     }
     
     public void AddRow(params object[] values)
@@ -208,6 +237,8 @@ public class Table : UIElement
 
     private void UpdateVisibleRows()
     {
+        if (!_rowsDirty) return;
+
         _rowStack.Children.Clear();
 
         int startIdx = 0;
@@ -237,6 +268,8 @@ public class Table : UIElement
                 }
             }
         }
+
+        _rowsDirty = false;
     }
 
     protected override Size MeasureOverride(Size availableSize)
@@ -600,7 +633,12 @@ public class Table : UIElement
         int colIndex = Columns.IndexOf(column);
         if (colIndex < 0) return;
 
-        _rows.Sort((a, b) =>
+        // Sort is not available on ObservableCollection, so we sort a list and refill
+        // We unsubscribe to avoid triggering updates for every item add
+        _rows.CollectionChanged -= OnRowsCollectionChanged;
+
+        var list = new List<TableRow>(_rows);
+        list.Sort((a, b) =>
         {
             if (a == b) return 0;
             
@@ -628,6 +666,12 @@ public class Table : UIElement
             return IsSortDescending ? -result : result;
         });
 
+        _rows.Clear();
+        foreach (var item in list) _rows.Add(item);
+
+        _rows.CollectionChanged += OnRowsCollectionChanged;
+
+        _rowsDirty = true;
         Invalidate();
     }
 
@@ -713,6 +757,7 @@ public class Table : UIElement
             if (_pageSize != value)
             {
                 _pageSize = value;
+                _rowsDirty = true;
                 Invalidate();
             }
         }
@@ -732,6 +777,7 @@ public class Table : UIElement
             {
                 _currentPage = value;
                 PageChanged?.Invoke(this, EventArgs.Empty);
+                _rowsDirty = true;
                 Invalidate();
             }
         }
@@ -746,6 +792,7 @@ public class Table : UIElement
             if (_totalRows != value)
             {
                 _totalRows = value;
+                _rowsDirty = true;
                 Invalidate();
             }
         }
@@ -765,6 +812,11 @@ public class Table : UIElement
              return (int)Math.Ceiling((double)total / PageSize);
         }
     }
+
+    private string? _cachedPaginationString;
+    private int _cachedPaginationAvailableWidth = -1;
+    private int _cachedPaginationCurrentPage = -1;
+    private int _cachedPaginationTotalPages = -1;
 
     private void HandlePaginationClick(int localX)
     {
@@ -808,40 +860,137 @@ public class Table : UIElement
         }
     }
 
-    private string GetPaginationString(int availableWidth, int totalPages)
+    internal string GetPaginationString(int availableWidth, int totalPages)
     {
-        int cp = CurrentPage + 1;
-        string statusStr = $"< {cp} of {totalPages} >";
-        if (statusStr.Length <= availableWidth)
+        // Cache Check
+        if (_cachedPaginationString != null &&
+            _cachedPaginationAvailableWidth == availableWidth &&
+            _cachedPaginationCurrentPage == CurrentPage &&
+            _cachedPaginationTotalPages == totalPages)
         {
+            return _cachedPaginationString;
+        }
+
+        int cp = CurrentPage + 1;
+
+        // Calculate status string length: "< {cp} of {totalPages} >"
+        // "< " (2) + digits(cp) + " of " (4) + digits(totalPages) + " >" (2)
+        int statusLen = 8 + GetDigitCount(cp) + GetDigitCount(totalPages);
+
+        string result;
+        if (statusLen > availableWidth)
+        {
+             result = "< >";
+        }
+        else
+        {
+            // detailed check
             if (availableWidth > 30)
             {
-                 List<int> pages = new List<int>();
-                 pages.Add(1);
+                 // Try generate detailed string
+                 Span<char> buffer = stackalloc char[256];
+                 int pos = 0;
+
+                 buffer[pos++] = '<';
+
+                 // Page 1
+                 AppendPage(buffer, ref pos, 1, cp);
                  
                  int start = Math.Max(2, cp - 2);
                  int end = Math.Min(totalPages - 1, cp + 2);
                  
-                 if (start > 2) pages.Add(-1);
-                 for(int i=start; i<=end; i++) pages.Add(i);
-                 if (end < totalPages - 1) pages.Add(-1);
+                 if (start > 2) AppendDots(buffer, ref pos);
                  
-                 if (totalPages > 1) pages.Add(totalPages);
-                 
-                 string s = "<";
-                 foreach(var p in pages)
+                 for(int i = start; i <= end; i++)
                  {
-                     if (p == -1) s += " ...";
-                     else if (p == cp) s += $" [{p}]";
-                     else s += $" {p}";
+                     AppendPage(buffer, ref pos, i, cp);
                  }
-                 s += " >";
                  
-                 if (s.Length <= availableWidth) return s;
+                 if (end < totalPages - 1) AppendDots(buffer, ref pos);
+
+                 if (totalPages > 1) AppendPage(buffer, ref pos, totalPages, cp);
+
+                 buffer[pos++] = ' ';
+                 buffer[pos++] = '>';
+
+                 if (pos <= availableWidth)
+                 {
+                     result = new string(buffer.Slice(0, pos));
+                 }
+                 else
+                 {
+                     // Fallback to status string
+                     result = CreateStatusString(cp, totalPages, statusLen);
+                 }
             }
-            return statusStr;
+            else
+            {
+                result = CreateStatusString(cp, totalPages, statusLen);
+            }
         }
-        return "< >";
+
+        // Cache update
+        _cachedPaginationString = result;
+        _cachedPaginationAvailableWidth = availableWidth;
+        _cachedPaginationCurrentPage = CurrentPage;
+        _cachedPaginationTotalPages = totalPages;
+
+        return result;
+    }
+
+    private static void AppendPage(Span<char> span, ref int pos, int p, int cp)
+    {
+        if (p == cp)
+        {
+             // " [{p}]"
+             span[pos++] = ' '; span[pos++] = '[';
+             p.TryFormat(span.Slice(pos), out int chars);
+             pos += chars;
+             span[pos++] = ']';
+        }
+        else
+        {
+             // " {p}"
+             span[pos++] = ' ';
+             p.TryFormat(span.Slice(pos), out int chars);
+             pos += chars;
+        }
+    }
+
+    private static void AppendDots(Span<char> span, ref int pos)
+    {
+        " ...".CopyTo(span.Slice(pos));
+        pos += 4;
+    }
+
+    private string CreateStatusString(int cp, int totalPages, int len)
+    {
+        return string.Create(len, (cp, totalPages), (span, state) =>
+        {
+            var (c, t) = state;
+            span[0] = '<'; span[1] = ' ';
+            int written;
+            c.TryFormat(span.Slice(2), out written);
+            var slice2 = span.Slice(2 + written);
+            " of ".CopyTo(slice2);
+            t.TryFormat(slice2.Slice(4), out written);
+            var slice3 = slice2.Slice(4 + written);
+            slice3[0] = ' '; slice3[1] = '>';
+        });
+    }
+
+    private static int GetDigitCount(int n)
+    {
+        if (n < 10) return 1;
+        if (n < 100) return 2;
+        if (n < 1000) return 3;
+        if (n < 10000) return 4;
+        if (n < 100000) return 5;
+        if (n < 1000000) return 6;
+        if (n < 10000000) return 7;
+        if (n < 100000000) return 8;
+        if (n < 1000000000) return 9;
+        return 10;
     }
 
     private void RenderPagination(VirtualBuffer buffer, int offsetX, int offsetY)

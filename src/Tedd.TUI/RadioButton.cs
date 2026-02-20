@@ -100,55 +100,66 @@ public class RadioButton : UIElement
 
     private void NavigateToSibling(int direction)
     {
-        var siblings = GetGroupSiblings();
-        if (siblings.Count <= 1)
+        if (Parent is not StackPanel panel)
             return;
 
-        // Find the currently selected radio button in the group
-        int currentIndex = -1;
-        for (int i = 0; i < siblings.Count; i++)
+        var children = panel.Children;
+        var count = children.Count;
+        if (count == 0)
+            return;
+
+        int checkedIndex = -1;
+        int thisIndex = -1;
+
+        // Find the index of the checked radio button or this radio button
+        for (int i = 0; i < count; i++)
         {
-            if (siblings[i].IsChecked)
+            var child = children[i];
+            if (child is RadioButton rb && rb.GroupName == this.GroupName)
             {
-                currentIndex = i;
-                break;
-            }
-        }
-
-        // If nothing is selected, start from the focused one (this)
-        if (currentIndex < 0)
-            currentIndex = siblings.IndexOf(this);
-
-        int newIndex = currentIndex + direction;
-
-        // Wrap around
-        if (newIndex < 0)
-            newIndex = siblings.Count - 1;
-        else if (newIndex >= siblings.Count)
-            newIndex = 0;
-
-        var target = siblings[newIndex];
-        target.Focus();
-        if (!target.IsChecked)
-        {
-            target.SetChecked();
-        }
-    }
-
-    private List<RadioButton> GetGroupSiblings()
-    {
-        var result = new List<RadioButton>();
-        if (Parent is StackPanel panel)
-        {
-            foreach (var child in panel.Children)
-            {
-                if (child is RadioButton rb && rb.GroupName == this.GroupName)
+                if (rb.IsChecked)
                 {
-                    result.Add(rb);
+                    checkedIndex = i;
+                    break;
+                }
+                if (child == this)
+                {
+                    thisIndex = i;
                 }
             }
         }
-        return result;
+
+        // If no radio button is checked, start from this radio button
+        int startIndex = checkedIndex >= 0 ? checkedIndex : thisIndex;
+
+        if (startIndex < 0)
+            return;
+
+        // Find the next sibling in the given direction
+        int currentIndex = startIndex;
+        for (int i = 0; i < count; i++)
+        {
+            currentIndex += direction;
+
+            if (currentIndex < 0)
+                currentIndex = count - 1;
+            else if (currentIndex >= count)
+                currentIndex = 0;
+
+            if (currentIndex == startIndex)
+                break; // Looped around and found nothing else
+
+            var child = children[currentIndex];
+            if (child is RadioButton rb && rb.GroupName == this.GroupName)
+            {
+                rb.Focus();
+                if (!rb.IsChecked)
+                {
+                    rb.SetChecked();
+                }
+                return;
+            }
+        }
     }
 
     private void SetChecked()
