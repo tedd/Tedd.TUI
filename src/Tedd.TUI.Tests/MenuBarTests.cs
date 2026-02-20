@@ -1,6 +1,7 @@
 using Xunit;
 using Tedd.TUI;
 using System.Collections.Generic;
+using System;
 
 namespace Tedd.TUI.Tests;
 
@@ -113,7 +114,7 @@ public class MenuBarTests
         fileMenu.Focus();
 
         // Act
-        window.ProcessKey(new KeyEventArgs(System.ConsoleKey.DownArrow, System.ConsoleModifiers.None));
+        window.ProcessKey(new KeyEventArgs { Key = System.ConsoleKey.DownArrow, Modifiers = System.ConsoleModifiers.None });
 
         // Assert
         Assert.True(fileMenu.IsExpanded, "Down arrow on MenuBar item should open submenu");
