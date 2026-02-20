@@ -1,5 +1,5 @@
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
-using Tedd.TUI.Benchmarks;
 
 namespace Tedd.TUI.Benchmarks;
 
@@ -42,14 +42,14 @@ public class PaginationBenchmark
     [Benchmark]
     public string FullList()
     {
-         // width 100, total pages 10. Should show all.
-         return _table.GetPaginationString(100, 10);
+        // width 100, total pages 10. Should show all.
+        return _table.GetPaginationString(100, 10);
     }
 
     [Benchmark]
     public string Ellipses()
     {
-         // width 100, total pages 100. Should show ellipses.
-         return _table.GetPaginationString(100, 100);
+        // width 100, total pages 100. Should show ellipses.
+        return _table.GetPaginationString(100, 100);
     }
 }
