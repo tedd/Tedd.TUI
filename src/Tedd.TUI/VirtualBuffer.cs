@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Tedd.TUI;
 
@@ -17,9 +18,20 @@ public struct Cell
     }
 }
 
+// Intent: Optimize VirtualBuffer using linear arrays and Span for better runtime performance
+// Why: 
+// - Removing multidimensional arrays eliminates consecutive bounds checking overhead.
+// - Flattening array layout maps efficiently to memory for predictable access.
+// - Inlining hot paths like SetPixel/GetPixel removes call frame overhead during rendering.
+// Constraints/Invariants:
+// - Buffer bounds logic `y * Width + x` must strictly constrain array indices correctly.
+// Failure modes:
+// - UI tearing or IndexOutOfRangeException if x/y bound validations fail.
+// Verification:
+// - Verify screen draw remains fully correct visibly while performance profiler shows less overhead in TUI layout phase.
 public class VirtualBuffer
 {
-    private readonly Cell[,] _buffer;
+    private readonly Cell[] _buffer;
     public int Width { get; }
     public int Height { get; }
 
@@ -29,15 +41,15 @@ public class VirtualBuffer
     {
         Width = width;
         Height = height;
-        _buffer = new Cell[height, width];
+        _buffer = new Cell[width * height];
         Clear();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushClip(Rect clip)
     {
-        if (_clipStack.Count > 0)
+        if (_clipStack.TryPeek(out var current))
         {
-            var current = _clipStack.Peek();
             // Intersect new clip with current clip
             int x = Math.Max(current.X, clip.X);
             int y = Math.Max(current.Y, clip.Y);
@@ -52,6 +64,7 @@ public class VirtualBuffer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PopClip()
     {
         if (_clipStack.Count > 0)
@@ -60,40 +73,38 @@ public class VirtualBuffer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
     {
         _clipStack.Clear();
-        for (int y = 0; y < Height; y++)
-        {
-            for (int x = 0; x < Width; x++)
-            {
-                _buffer[y, x] = new Cell(' ', ConsoleColor.White, ConsoleColor.Black);
-            }
-        }
+        _buffer.AsSpan().Fill(new Cell(' ', ConsoleColor.White, ConsoleColor.Black));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetPixel(int x, int y, char c, ConsoleColor fg, ConsoleColor bg)
     {
-        if (_clipStack.Count > 0)
+        if ((uint)x >= (uint)Width || (uint)y >= (uint)Height)
         {
-            var clip = _clipStack.Peek();
+            return;
+        }
+
+        if (_clipStack.TryPeek(out var clip))
+        {
             if (x < clip.X || x >= clip.X + clip.Width || y < clip.Y || y >= clip.Y + clip.Height)
             {
                 return;
             }
         }
 
-        if (x >= 0 && x < Width && y >= 0 && y < Height)
-        {
-            _buffer[y, x] = new Cell(c, fg, bg);
-        }
+        _buffer[y * Width + x] = new Cell(c, fg, bg);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Cell GetPixel(int x, int y)
     {
-        if (x >= 0 && x < Width && y >= 0 && y < Height)
+        if ((uint)x < (uint)Width && (uint)y < (uint)Height)
         {
-            return _buffer[y, x];
+            return _buffer[y * Width + x];
         }
         return new Cell(' ', ConsoleColor.White, ConsoleColor.Black);
     }
