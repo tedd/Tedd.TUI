@@ -391,15 +391,8 @@ public class MenuItem : UIElement
 
     private void CloseParentMenu()
     {
-        // Walk up to find the top menu item that started the chain and close it.
-        // Also enter non-expanded state for all parents
-        // We walk up the ParentMenuItem chain.
-        // Start with this item if it has a parent menu item (meaning it's a submenu item)
-        // or just start with this item's parent menu item?
-        // If 'this' is the item clicked, we want to close the menu it is IN.
-        // The menu it is in is controlled by ParentMenuItem.
-        
-        var current = ParentMenuItem;
+        // Walk up to find the root of the menu chain and close submenus
+        UIElement? current = Parent;
         while (current != null)
         {
             if (current is MenuPopupBorder mpb)
@@ -436,6 +429,6 @@ public class MenuItem : UIElement
 
     private class MenuPopupBorder : Border
     {
-        public MenuItem Owner { get; set; }
+        public required MenuItem Owner { get; set; }
     }
 }
