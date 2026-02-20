@@ -150,13 +150,35 @@ public class ComboBox : UIElement
     {
         _isDroppedDown = true;
 
+        // Calculate position relative to Window
+        int absX = RenderSize.X;
+        int absY = RenderSize.Y + RenderSize.Height;
+
+        var current = Parent;
+        while (current != null && current != root)
+        {
+            absX += current.RenderSize.X;
+            absY += current.RenderSize.Y;
+            current = current.Parent;
+        }
+
+        // Calculate available height below
+        int spaceBelow = Math.Max(0, root.RenderSize.Height - absY);
+        // We need 2 for border
+        int maxContentHeight = Math.Max(0, spaceBelow - 2);
+
         // Setup ListBox
         _popupListBox.Items.Clear();
         _popupListBox.Items.AddRange(Items);
+
         // Popup width matches ComboBox width, adjusted for border
         int contentWidth = Math.Max(0, RenderSize.Width - 2); 
         _popupListBox.Width = contentWidth;
-        _popupListBox.Height = 5; // Fixed height for now
+
+        // Dynamic height based on items, clamped to available space
+        int desiredHeight = Items.Count;
+        if (desiredHeight == 0) desiredHeight = 1;
+        _popupListBox.Height = Math.Min(desiredHeight, maxContentHeight);
         
         // Ensure ListBox is opaque
         _popupListBox.Background = ConsoleColor.Black;
@@ -170,18 +192,6 @@ public class ComboBox : UIElement
             BorderColor = ConsoleColor.White,
             BoxStyle = BoxStyle.Single
         };
-
-        // Calculate position relative to Window
-        int absX = RenderSize.X;
-        int absY = RenderSize.Y + RenderSize.Height;
-
-        var current = Parent;
-        while (current != null && current != root)
-        {
-            absX += current.RenderSize.X;
-            absY += current.RenderSize.Y;
-            current = current.Parent;
-        }
 
         // Measure and arrange the popup (border)
         border.Measure(new Size(border.Width, border.Height));
