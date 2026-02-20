@@ -15,7 +15,7 @@ namespace Tedd.TUI.Benchmarks
     [MemoryDiagnoser]
     public class PaginationBenchmark
     {
-        private Table _table;
+        private Table _table = null!;
 
         [GlobalSetup]
         public void Setup()
