@@ -19,11 +19,22 @@ public class TuiWindow : UIElement
         }
     }
 
-    public override int VisualChildrenCount => _content != null ? 1 : 0;
+    public override int VisualChildrenCount => (_content != null ? 1 : 0) + _overlays.Count;
 
     public override UIElement GetVisualChild(int index)
     {
-        if (_content != null && index == 0) return _content;
+        int contentCount = _content != null ? 1 : 0;
+        if (index < contentCount)
+        {
+             return _content!;
+        }
+
+        index -= contentCount;
+        if (index < _overlays.Count)
+        {
+            return _overlays[index];
+        }
+
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
@@ -46,6 +57,10 @@ public class TuiWindow : UIElement
 
         // Overlays are managed/arranged manually by their creators (e.g. DialogBox.Show calls Arrange)
         // or we assume they have valid RenderSize.
+        // Overlays are typically absolutely positioned by their creator (e.g. DialogBox.Show),
+        // but we should ensure they are measured/arranged if the window resizes?
+        // For now, we rely on the fact that Show() calls Arrange().
+        // If we need to support resizing updates for overlays, we'd iterate _overlays here.
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
@@ -63,8 +78,11 @@ public class TuiWindow : UIElement
     }
 
     private readonly List<UIElement> _overlays = new List<UIElement>();
+
+    // Returns the top-most overlay if any
     public UIElement? Overlay => _overlays.Count > 0 ? _overlays[_overlays.Count - 1] : null;
 
+    [Obsolete("Use PushOverlay instead. This method clears all existing overlays.")]
     public void SetOverlay(UIElement overlay)
     {
         ClearOverlay();
@@ -131,6 +149,7 @@ public class TuiWindow : UIElement
             {
                 _focusedElement = null; // Clear focus
                 // Attempt to restore focus?
+                // Attempt to restore focus to something valid
                 EnsureInitialFocus();
             }
         }
@@ -183,18 +202,16 @@ public class TuiWindow : UIElement
         // 1. Mouse Capture Priority
         if (_capturedElement != null)
         {
-            // If an element has captured the mouse, it receives all input regardless of position.
-            // We need to calculate local coordinates relative to the captured element.
             var absPos = GetAbsolutePosition(_capturedElement);
             int localX = x - absPos.X;
             int localY = y - absPos.Y;
             return new HitTestResult(_capturedElement, localX, localY);
         }
 
-        // 2. Check Overlays (top-most first)
-        for (int idx = _overlays.Count - 1; idx >= 0; idx--)
+        // 2. Check Overlays (Top to Bottom)
+        for (int i = _overlays.Count - 1; i >= 0; i--)
         {
-            var overlay = _overlays[idx];
+            var overlay = _overlays[i];
             if (overlay.Visibility)
             {
                 var hit = InputHitTestRecursive(overlay, x, y);
@@ -301,9 +318,9 @@ public class TuiWindow : UIElement
         // Use the top-most visible overlay.
         UIElement rootForFocus = Content;
 
-        for (int idx = _overlays.Count - 1; idx >= 0; idx--)
+        for (int i = _overlays.Count - 1; i >= 0; i--)
         {
-            var overlay = _overlays[idx];
+            var overlay = _overlays[i];
             if (overlay.Visibility)
             {
                 rootForFocus = overlay;
@@ -313,40 +330,52 @@ public class TuiWindow : UIElement
 
         if (rootForFocus == null) return;
 
-        // Flatten visual tree
-        var list = new List<UIElement>();
-        FlattenTree(rootForFocus, list);
+        UIElement firstFocusable = null;
+        UIElement lastFocusable = null;
+        UIElement target = null;
+        UIElement previousFocusable = null;
+        bool foundCurrent = false;
 
-        // Filter focusable?
-        // For simplicity, anything handling input or marked IsEnabled.
-        // We really need Focusable property, but let's assume all inputs we made are focusable.
-        // Or check type.
-        // Ideally we check IsEnabled && Visibility
-
-        // Find current
-        int index = list.IndexOf(_focusedElement);
-        int start = index;
-        if (start < 0) start = -1;
-
-        // Loop to find next focusable
-        int count = list.Count;
-        if (count == 0) return;
-
-        int i = start;
-        while(true)
+        foreach (var el in GetVisualTree(rootForFocus))
         {
-            i += direction;
-            if (i >= count) i = 0;
-            if (i < 0) i = count - 1;
-
-            if (i == start) break; // looped around
-
-            var candidate = list[i];
-            if (CanFocus(candidate))
+            if (CanFocus(el))
             {
-                SetFocus(candidate);
-                return;
+                if (firstFocusable == null) firstFocusable = el;
+                lastFocusable = el;
+
+                if (direction > 0)
+                {
+                    if (foundCurrent)
+                    {
+                        target = el;
+                        break;
+                    }
+                    if (el == _focusedElement) foundCurrent = true;
+                }
+                else
+                {
+                    if (el == _focusedElement && !foundCurrent)
+                    {
+                        target = previousFocusable;
+                        foundCurrent = true;
+                        // We continue iteration to ensure lastFocusable is correctly identified for wraparound
+                    }
+                    previousFocusable = el;
+                }
             }
+        }
+
+        if (target == null)
+        {
+            // If we didn't find a target, it's either because we reached the end (wrap around)
+            // or the current focused element wasn't in this tree.
+            if (direction > 0) target = firstFocusable;
+            else target = lastFocusable;
+        }
+
+        if (target != null)
+        {
+            SetFocus(target);
         }
     }
 
@@ -363,9 +392,7 @@ public class TuiWindow : UIElement
     public void FocusFirstIn(UIElement container)
     {
         if (container == null) return;
-        var list = new List<UIElement>();
-        FlattenTree(container, list);
-        foreach (var el in list)
+        foreach (var el in GetVisualTree(container))
         {
             if (CanFocus(el))
             {
@@ -375,31 +402,38 @@ public class TuiWindow : UIElement
         }
     }
 
-    private void FlattenTree(UIElement parent, List<UIElement> list)
+    private IEnumerable<UIElement> GetVisualTree(UIElement root)
     {
-        list.Add(parent);
+        var stack = new Stack<(UIElement element, bool secondPass)>();
+        stack.Push((root, false));
 
-        if (parent is StackPanel stack)
+        while (stack.Count > 0)
         {
-            foreach(var child in stack.Children) FlattenTree(child, list);
-        }
-        else if (parent is Border border && border.Child != null)
-        {
-            FlattenTree(border.Child, list);
-        }
-        else if (parent is DialogBox dialog && dialog.Content != null)
-        {
-            FlattenTree(dialog.Content, list);
-        }
-        else if (parent is TabControl tab)
-        {
-            // Add selected tab content first so first focusable is inside the tab (e.g. nameBox)
-            if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
+            var (current, secondPass) = stack.Pop();
+            yield return current;
+
+            if (!secondPass)
             {
-                var content = tab.Items[tab.SelectedIndex].Content as UIElement;
-                if (content != null) FlattenTree(content, list);
+                if (current is TabControl tab)
+                {
+                    // Second yield for tab strip
+                    stack.Push((current, true));
+                    // Content
+                    if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
+                    {
+                        var content = tab.Items[tab.SelectedIndex].Content as UIElement;
+                        if (content != null) stack.Push((content, false));
+                    }
+                }
+                else
+                {
+                    // Normal children in reverse order
+                    for (int i = current.VisualChildrenCount - 1; i >= 0; i--)
+                    {
+                        stack.Push((current.GetVisualChild(i), false));
+                    }
+                }
             }
-            list.Add(tab); // TabControl (tab strip) after content so Tab from last control goes to strip, then to next section
         }
     }
 

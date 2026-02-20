@@ -122,6 +122,36 @@ window.tuiInterop = {
         }
     },
 
+    renderDiff: function (canvasId, data) {
+        const ctx = this.canvasContexts[canvasId];
+        if (!ctx) return;
+
+        const cw = this.charWidth;
+        const ch = this.charHeight;
+        const colors = this.colors;
+
+        let ptr = 0;
+        const len = data.length;
+
+        while (ptr < len) {
+            const x = data[ptr++];
+            const y = data[ptr++];
+            const charCode = data[ptr++];
+            const fg = data[ptr++];
+            const bg = data[ptr++];
+
+            // Draw background
+            ctx.fillStyle = colors[bg];
+            ctx.fillRect(x * cw, y * ch, cw, ch);
+
+            // Draw foreground char
+            if (charCode !== 32) { // Skip space
+                ctx.fillStyle = colors[fg];
+                ctx.fillText(String.fromCharCode(charCode), x * cw, y * ch);
+            }
+        }
+    },
+
     listenForResize: function (dotnetHelper, canvasId) {
         const resizeHandler = () => {
             // We default to full window for now, as TUI is usually full screen.

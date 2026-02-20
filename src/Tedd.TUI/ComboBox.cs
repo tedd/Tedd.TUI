@@ -6,6 +6,7 @@ namespace Tedd.TUI;
 public class ComboBox : UIElement
 {
     private ListBox _popupListBox;
+    private Border? _popupBorder;
     private bool _isDroppedDown = false;
     private object _selectedItem;
     private bool _arrowFocused = false; // True when focus is on the dropdown arrow
@@ -150,27 +151,6 @@ public class ComboBox : UIElement
     {
         _isDroppedDown = true;
 
-        // Setup ListBox
-        _popupListBox.Items.Clear();
-        _popupListBox.Items.AddRange(Items);
-        // Popup width matches ComboBox width, adjusted for border
-        int contentWidth = Math.Max(0, RenderSize.Width - 2); 
-        _popupListBox.Width = contentWidth;
-        _popupListBox.Height = 5; // Fixed height for now
-        
-        // Ensure ListBox is opaque
-        _popupListBox.Background = ConsoleColor.Black;
-
-        // Create a Border for the popup
-        var border = new Border
-        {
-            Width = RenderSize.Width,
-            Height = _popupListBox.Height + 2,
-            Child = _popupListBox,
-            BorderColor = ConsoleColor.White,
-            BoxStyle = BoxStyle.Single
-        };
-
         // Calculate position relative to Window
         int absX = RenderSize.X;
         int absY = RenderSize.Y + RenderSize.Height;
@@ -183,15 +163,46 @@ public class ComboBox : UIElement
             current = current.Parent;
         }
 
+        // Calculate available height below
+        int spaceBelow = Math.Max(0, root.RenderSize.Height - absY);
+        // We need 2 for border
+        int maxContentHeight = Math.Max(0, spaceBelow - 2);
+
+        // Setup ListBox
+        _popupListBox.Items.Clear();
+        _popupListBox.Items.AddRange(Items);
+
+        // Popup width matches ComboBox width, adjusted for border
+        int contentWidth = Math.Max(0, RenderSize.Width - 2); 
+        _popupListBox.Width = contentWidth;
+
+        // Dynamic height based on items, clamped to available space
+        int desiredHeight = Items.Count;
+        if (desiredHeight == 0) desiredHeight = 1;
+        _popupListBox.Height = Math.Min(desiredHeight, maxContentHeight);
+        
+        // Ensure ListBox is opaque
+        _popupListBox.Background = ConsoleColor.Black;
+
+        // Create a Border for the popup
+        _popupBorder = new Border
+        {
+            Width = RenderSize.Width,
+            Height = _popupListBox.Height + 2,
+            Child = _popupListBox,
+            BorderColor = ConsoleColor.White,
+            BoxStyle = BoxStyle.Single
+        };
+
         // Measure and arrange the popup (border)
-        border.Measure(new Size(border.Width, border.Height));
-        border.Arrange(new Rect(absX, absY, border.Width, border.Height));
+        _popupBorder.Measure(new Size(_popupBorder.Width, _popupBorder.Height));
+        _popupBorder.Arrange(new Rect(absX, absY, _popupBorder.Width, _popupBorder.Height));
 
         // Unsubscribe to avoid duplicates if any
         _popupListBox.SelectionChanged -= Popup_SelectionChanged;
         _popupListBox.SelectionChanged += Popup_SelectionChanged;
 
-        root.SetOverlay(border);
+        root.PushOverlay(_popupBorder);
         root.SetFocus(_popupListBox);
     }
 
@@ -205,7 +216,11 @@ public class ComboBox : UIElement
         var root = GetRoot() as TuiWindow;
         if (root != null)
         {
-            root.ClearOverlay();
+            if (_popupBorder != null)
+            {
+                root.RemoveOverlay(_popupBorder);
+                _popupBorder = null;
+            }
             root.SetFocus(this);
 
             // Sync selection back
