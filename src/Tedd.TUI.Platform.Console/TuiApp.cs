@@ -14,6 +14,7 @@ public class TuiApp
 
     private int _lastWidth;
     private int _lastHeight;
+    private VirtualBuffer? _buffer;
 
     public TuiApp(TuiWindow window)
     {
@@ -135,9 +136,17 @@ public class TuiApp
         _window.Arrange(new Rect(0, 0, w, h));
 
         // Render
-        var buffer = new VirtualBuffer(w, h);
-        _window.Render(buffer);
-        _renderer.Render(buffer);
+        if (_buffer == null || _buffer.Width != w || _buffer.Height != h)
+        {
+            _buffer = new VirtualBuffer(w, h);
+        }
+        else
+        {
+            _buffer.Clear();
+        }
+
+        _window.Render(_buffer);
+        _renderer.Render(_buffer);
     }
 
     public void Stop()
