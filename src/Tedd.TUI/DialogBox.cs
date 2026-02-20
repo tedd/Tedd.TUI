@@ -279,7 +279,7 @@ public class DialogBox : UIElement
         var root = GetRoot() as TuiWindow;
         if (root != null)
         {
-            root.ClearOverlay();
+            root.RemoveOverlay(this);
         }
     }
 }

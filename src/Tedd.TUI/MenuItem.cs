@@ -346,7 +346,7 @@ public class MenuItem : UIElement
         
         _popupBorder.Arrange(new Rect(popupX, popupY, _popupBorder.Width, _popupBorder.Height));
 
-        root.SetOverlay(_popupBorder);
+        root.PushOverlay(_popupBorder);
         // Focus first item?
         if (Items.Count > 0)
         {
@@ -371,29 +371,9 @@ public class MenuItem : UIElement
         var root = GetRoot() as TuiWindow;
         if (root != null && _popupBorder != null)
         {
-             // This logic assumes single overlay. 
-             // TuiWindow might need support for multiple overlays or we check if this is the current one.
-             // If we have nested menus, we need a way to manage stack of overlays or one big overlay layer.
-             // For simplify, TuiWindow.SetOverlay likely replaces. This is a limitation for nested menus.
-             // We'll need to check TuiWindow capabilities or enhance it.
-             // For now, let's assume one level deep or that we can clear it.
-             // If we clear, we might clear parent's menu too?
-             // Actually, the simple TuiWindow.SetOverlay likely only supports one.
-             // We might need to handle "closing" by just removing this specific visual.
-             
-             // Wait, if we use SetOverlay, we replace the previous one? 
-             // If Parent is MenuBar, we are opening the first level.
-             // If we are a submenu, we are opening a second level.
-             // If TuiWindow only supports one overlay, we can't do nested submenus properly visually 
-             // unless we manage them ourselves or change TuiWindow to support a stack.
+             root.RemoveOverlay(_popupBorder);
         }
         
-        // This is a known limitation now. We probably need to fix TuiWindow or use a local method.
-        // Let's rely on TuiWindow.ClearOverlay() which clears everything.
-        // This implies only one menu open at a time globally for now? 
-        // Or valid if we only have one level deep for now.
-        
-        root?.ClearOverlay(); // This is destructive for nested menus.
         _popupBorder = null;
         Invalidate();
     }
@@ -401,9 +381,6 @@ public class MenuItem : UIElement
     private void CloseParentMenu()
     {
         // Walk up to find the top menu item that started the chain and close it.
-        var root = GetRoot() as TuiWindow;
-        root?.ClearOverlay();
-
         // Also enter non-expanded state for all parents
         // We walk up the ParentMenuItem chain.
         // Start with this item if it has a parent menu item (meaning it's a submenu item)

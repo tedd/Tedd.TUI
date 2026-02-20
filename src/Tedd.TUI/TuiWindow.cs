@@ -19,11 +19,22 @@ public class TuiWindow : UIElement
         }
     }
 
-    public override int VisualChildrenCount => _content != null ? 1 : 0;
+    public override int VisualChildrenCount => (_content != null ? 1 : 0) + _overlays.Count;
 
     public override UIElement GetVisualChild(int index)
     {
-        if (_content != null && index == 0) return _content;
+        int contentCount = _content != null ? 1 : 0;
+        if (index < contentCount)
+        {
+             return _content!;
+        }
+
+        index -= contentCount;
+        if (index < _overlays.Count)
+        {
+            return _overlays[index];
+        }
+
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
@@ -44,35 +55,10 @@ public class TuiWindow : UIElement
             Content.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
         }
 
-        if (_overlay != null)
-        {
-            // Arrange overlay to its desired size? Or full window?
-            // Usually overlays like DialogBox manage their own position relative to window in Show(),
-            // but we must arrange them so they get a RenderSize.
-            // If we just Arrange with full size, DialogBox.ArrangeOverride is expected to handle it.
-            // But DialogBox.Show() calls Arrange() manually on the Dialog.
-            // However, typical custom layout logic implies the parent arranges children.
-            // Let's Arrange it to full size, and trust it (or its alignment) to place itself.
-            // Actually, DialogBox currently sets its own ArrangeRect in Show().
-            // If TuiWindow arranges it again here, it might overwrite that.
-            // But Show() sets RenderSize via Arrange.
-            // If we don't arrange here, resizing the window won't update the overlay.
-            // A safer bet is to arrange it to the full window if it's visible.
-            
-            // NOTE: DialogBox.Show currently calculates specific X/Y.
-            // If we re-arrange here with (0,0, W, H), the DialogBox.ArrangeOverride needs to respect alignment or we lose the center position.
-            // DialogBox.ArrangeOverride puts Content inside the border. It doesn't position itself.
-            // So if we Arrange(0,0, W, H), the DialogBox becomes full screen?
-            // Let's check DialogBox.MeasureOverride: it respects Width/Height if set.
-            // In Show(), we set specific Rect.
-            // We should respect the _overlay's DesiredSize or current RenderSize?
-            
-            // For now, to avoid breaking existing logic, we can skip Arranging _overlay here strictly 
-            // relying on Show() logic, but that's bad for Resizing.
-            // Let's just assume for now we don't need to change Arrange logic because Show() handles it.
-            // But the user plan mentioned updating it. 
-            // In Layered rendering specifically, we just need _overlay to have valid RenderSize.
-        }
+        // Overlays are typically absolutely positioned by their creator (e.g. DialogBox.Show),
+        // but we should ensure they are measured/arranged if the window resizes?
+        // For now, we rely on the fact that Show() calls Arrange().
+        // If we need to support resizing updates for overlays, we'd iterate _overlays here.
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
@@ -82,57 +68,76 @@ public class TuiWindow : UIElement
             Content.Render(buffer, offsetX, offsetY);
         }
 
-        // Render Overlay
-        if (_overlay != null)
+        // Render Overlays
+        foreach (var overlay in _overlays)
         {
-            _overlay.Render(buffer, offsetX, offsetY);
+            overlay.Render(buffer, offsetX, offsetY);
         }
     }
 
-    private UIElement _overlay;
-    public UIElement? Overlay => _overlay;
+    private readonly List<UIElement> _overlays = new List<UIElement>();
 
+    // Returns the top-most overlay if any
+    public UIElement? Overlay => _overlays.Count > 0 ? _overlays[_overlays.Count - 1] : null;
+
+    [Obsolete("Use PushOverlay instead. This method clears all existing overlays.")]
     public void SetOverlay(UIElement overlay)
     {
-        _overlay = overlay;
-        if (_overlay != null)
+        ClearOverlay();
+        PushOverlay(overlay);
+    }
+
+    public void PushOverlay(UIElement overlay)
+    {
+        if (overlay == null) return;
+        _overlays.Add(overlay);
+        overlay.Parent = this;
+        overlay.DataContext = this.DataContext;
+    }
+
+    public void RemoveOverlay(UIElement overlay)
+    {
+        if (overlay == null) return;
+        if (_overlays.Contains(overlay))
         {
-            _overlay.Parent = this; // Technically parented to window
-            _overlay.DataContext = this.DataContext;
+            CheckFocusOnRemove(overlay);
+            _overlays.Remove(overlay);
+            overlay.Parent = null; // Detach
         }
     }
 
     public void ClearOverlay()
     {
-        if (_overlay != null)
+        while (_overlays.Count > 0)
         {
-            // If focus is currently within the overlay, we should clear it
-            // so hidden controls don't keep receiving input.
-            if (_focusedElement != null)
-            {
-                // Check if _focusedElement is child of _overlay
-                var current = _focusedElement;
-                bool isInsideOverlay = false;
-                while (current != null)
-                {
-                    if (current == _overlay)
-                    {
-                        isInsideOverlay = true;
-                        break;
-                    }
-                    current = current.Parent;
-                }
+            var overlay = _overlays[_overlays.Count - 1];
+            RemoveOverlay(overlay);
+        }
+    }
 
-                if (isInsideOverlay)
+    private void CheckFocusOnRemove(UIElement overlay)
+    {
+        // If focus is currently within the overlay being removed, we should clear it
+        if (_focusedElement != null)
+        {
+            var current = _focusedElement;
+            bool isInsideOverlay = false;
+            while (current != null)
+            {
+                if (current == overlay)
                 {
-                    _focusedElement = null; // Clear focus
-                    // Attempt to restore focus to something valid in the main content
-                    // Since we don't have a history, we'll use EnsureInitialFocus or similar logic
-                    // EnsureInitialFocus() checks _focusedElement null, so it will try to find something.
-                    EnsureInitialFocus();
+                    isInsideOverlay = true;
+                    break;
                 }
+                current = current.Parent;
             }
-            _overlay = null;
+
+            if (isInsideOverlay)
+            {
+                _focusedElement = null; // Clear focus
+                // Attempt to restore focus to something valid
+                EnsureInitialFocus();
+            }
         }
     }
 
@@ -183,24 +188,26 @@ public class TuiWindow : UIElement
         // 1. Mouse Capture Priority
         if (_capturedElement != null)
         {
-            // If an element has captured the mouse, it receives all input regardless of position.
-            // We need to calculate local coordinates relative to the captured element.
             var absPos = GetAbsolutePosition(_capturedElement);
             int localX = x - absPos.X;
             int localY = y - absPos.Y;
             return new HitTestResult(_capturedElement, localX, localY);
         }
 
-        // 2. Check Overlay
-        if (_overlay != null && _overlay.Visibility)
+        // 2. Check Overlays (Top to Bottom)
+        for (int i = _overlays.Count - 1; i >= 0; i--)
         {
-            var hit = InputHitTestRecursive(_overlay, x, y);
-            if (hit != null) return hit;
-
-            // If overlay is a modal dialog, block input to background
-            if (_overlay is DialogBox dialog && dialog.IsModal)
+            var overlay = _overlays[i];
+            if (overlay.Visibility)
             {
-                return null;
+                var hit = InputHitTestRecursive(overlay, x, y);
+                if (hit != null) return hit;
+
+                // If overlay is a modal dialog, block input to background/lower overlays
+                if (overlay is DialogBox dialog && dialog.IsModal)
+                {
+                    return null;
+                }
             }
         }
 
@@ -293,11 +300,17 @@ public class TuiWindow : UIElement
 
     private void MoveFocus(int direction)
     {
-        // If there is an active overlay (modal), restrict focus navigation to it.
+        // If there is an active overlay (modal or top-most), restrict focus navigation to it.
         UIElement rootForFocus = Content;
-        if (_overlay != null && _overlay.Visibility)
+
+        // Use the top-most visible overlay
+        for (int i = _overlays.Count - 1; i >= 0; i--)
         {
-            rootForFocus = _overlay;
+            if (_overlays[i].Visibility)
+            {
+                rootForFocus = _overlays[i];
+                break;
+            }
         }
 
         if (rootForFocus == null) return;

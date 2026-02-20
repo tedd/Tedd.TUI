@@ -6,6 +6,7 @@ namespace Tedd.TUI;
 public class ComboBox : UIElement
 {
     private ListBox _popupListBox;
+    private Border? _popupBorder;
     private bool _isDroppedDown = false;
     private object _selectedItem;
     private bool _arrowFocused = false; // True when focus is on the dropdown arrow
@@ -184,7 +185,7 @@ public class ComboBox : UIElement
         _popupListBox.Background = ConsoleColor.Black;
 
         // Create a Border for the popup
-        var border = new Border
+        _popupBorder = new Border
         {
             Width = RenderSize.Width,
             Height = _popupListBox.Height + 2,
@@ -194,14 +195,14 @@ public class ComboBox : UIElement
         };
 
         // Measure and arrange the popup (border)
-        border.Measure(new Size(border.Width, border.Height));
-        border.Arrange(new Rect(absX, absY, border.Width, border.Height));
+        _popupBorder.Measure(new Size(_popupBorder.Width, _popupBorder.Height));
+        _popupBorder.Arrange(new Rect(absX, absY, _popupBorder.Width, _popupBorder.Height));
 
         // Unsubscribe to avoid duplicates if any
         _popupListBox.SelectionChanged -= Popup_SelectionChanged;
         _popupListBox.SelectionChanged += Popup_SelectionChanged;
 
-        root.SetOverlay(border);
+        root.PushOverlay(_popupBorder);
         root.SetFocus(_popupListBox);
     }
 
@@ -215,7 +216,11 @@ public class ComboBox : UIElement
         var root = GetRoot() as TuiWindow;
         if (root != null)
         {
-            root.ClearOverlay();
+            if (_popupBorder != null)
+            {
+                root.RemoveOverlay(_popupBorder);
+                _popupBorder = null;
+            }
             root.SetFocus(this);
 
             // Sync selection back
