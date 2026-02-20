@@ -74,6 +74,12 @@ public class VirtualBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Rect GetClip()
+    {
+        return _clipStack.TryPeek(out var rect) ? rect : new Rect(0, 0, Width, Height);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
     {
         _clipStack.Clear();

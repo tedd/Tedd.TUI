@@ -1018,6 +1018,15 @@ public class Table : UIElement
     }
 }
 
+// Intent: Prevent CPU spin when rendering separators in unbounded layout containers (like ScrollViewer)
+// Why:
+// - ScrollViewer gives infinite Horizontal DesiredSize, causing the separator to iterate to int.MaxValue if unchecked.
+// Constraints/Invariants:
+// - Separator width must be bounded by the actual Table width or current viewport width.
+// Failure modes:
+// - App freezes/spins at 100% CPU when rendering long tables if width isn't clamped.
+// Verification:
+// - Verify no CPU spikes when scrolling and resizing app windows containing tables.
 internal class TableSeparator : UIElement
 {
     protected override Size MeasureOverride(Size availableSize)
@@ -1032,7 +1041,10 @@ internal class TableSeparator : UIElement
 
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
-        int width = RenderSize.Width;
+        
+        // Ensure that width is capped by what the Table actually measures,
+        // rather than the infinite horizontal scroll space given by ScrollViewer.
+        int width = Math.Min(RenderSize.Width, table.RenderSize.Width);
 
         char hChar = '\u2500';
         char crossChar = '\u253C';
