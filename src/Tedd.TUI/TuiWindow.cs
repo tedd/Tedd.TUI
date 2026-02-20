@@ -12,10 +12,7 @@ public class TuiWindow : UIElement
         set
         {
             _content = value;
-            if (_content != null)
-            {
-                _content.Parent = this;
-            }
+            _content?.Parent = this;
         }
     }
 
@@ -25,15 +22,11 @@ public class TuiWindow : UIElement
     {
         int contentCount = _content != null ? 1 : 0;
         if (index < contentCount)
-        {
              return _content!;
-        }
 
         index -= contentCount;
         if (index < _overlays.Count)
-        {
             return _overlays[index];
-        }
 
         throw new ArgumentOutOfRangeException(nameof(index));
     }
@@ -50,10 +43,7 @@ public class TuiWindow : UIElement
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        if (Content != null)
-        {
-            Content.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
-        }
+        Content?.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
 
         // Overlays are managed/arranged manually by their creators (e.g. DialogBox.Show calls Arrange)
         // or we assume they have valid RenderSize.
@@ -65,19 +55,13 @@ public class TuiWindow : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-        if (Content != null)
-        {
-            Content.Render(buffer, offsetX, offsetY);
-        }
-
+        Content?.Render(buffer, offsetX, offsetY);
         // Render Overlays
         foreach (var overlay in _overlays)
-        {
             overlay.Render(buffer, offsetX, offsetY);
-        }
     }
 
-    private readonly List<UIElement> _overlays = new List<UIElement>();
+    private readonly List<UIElement> _overlays = new();
 
     // Returns the top-most overlay if any
     public UIElement? Overlay => _overlays.Count > 0 ? _overlays[_overlays.Count - 1] : null;
@@ -95,9 +79,7 @@ public class TuiWindow : UIElement
 
         // Avoid duplicates by removing if existing, moving to top
         if (_overlays.Contains(overlay))
-        {
             _overlays.Remove(overlay);
-        }
 
         _overlays.Add(overlay);
         overlay.Parent = this;
@@ -158,10 +140,7 @@ public class TuiWindow : UIElement
     protected override void OnDataContextChanged(object newValue)
     {
         base.OnDataContextChanged(newValue);
-        if (Content != null)
-        {
-            Content.DataContext = newValue;
-        }
+        Content?.DataContext = newValue;
     }
 
     private UIElement _focusedElement;
@@ -170,17 +149,9 @@ public class TuiWindow : UIElement
     {
         if (element == _focusedElement) return true;
 
-        if (_focusedElement != null)
-        {
-            _focusedElement.OnLostFocus();
-        }
-
+        _focusedElement?.OnLostFocus();
         _focusedElement = element;
-
-        if (_focusedElement != null)
-        {
-            _focusedElement.OnGotFocus();
-        }
+        _focusedElement?.OnGotFocus();
         return true;
     }
 
@@ -215,13 +186,12 @@ public class TuiWindow : UIElement
             if (overlay.Visibility)
             {
                 var hit = InputHitTestRecursive(overlay, x, y);
-                if (hit != null) return hit;
+                if (hit != null) 
+                return hit;
 
                 // If overlay is a modal dialog, block input to background/lower overlays
                 if (overlay is DialogBox dialog && dialog.IsModal)
-                {
                     return null;
-                }
             }
         }
 
@@ -287,29 +257,20 @@ public class TuiWindow : UIElement
 
         if (Content is TabControl tc && tc.SelectedIndex >= 0 && tc.SelectedIndex < tc.Items.Count
             && tc.Items[tc.SelectedIndex].Content is UIElement tabContent)
-        {
             FocusFirstIn(tabContent);
-        }
         else
-        {
             FocusFirstIn(Content);
-        }
     }
 
     public void ProcessKey(KeyEventArgs e)
     {
         // Bubble? Tunnel?
         // WPF uses Bubble for KeyDown.
-        if (_focusedElement != null)
-        {
-            _focusedElement.OnKeyDown(e);
-        }
+        _focusedElement?.OnKeyDown(e);
 
         // Tab Navigation
         if (!e.Handled && e.Key == System.ConsoleKey.Tab)
-        {
-             MoveFocus(e.Modifiers.HasFlag(System.ConsoleModifiers.Shift) ? -1 : 1);
-        }
+            MoveFocus(e.Modifiers.HasFlag(System.ConsoleModifiers.Shift) ? -1 : 1);
     }
 
     private void MoveFocus(int direction)
@@ -374,9 +335,7 @@ public class TuiWindow : UIElement
         }
 
         if (target != null)
-        {
             SetFocus(target);
-        }
     }
 
     private bool CanFocus(UIElement element)
