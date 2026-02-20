@@ -369,7 +369,7 @@ public class MenuItem : UIElement
     private void CloseParentMenu()
     {
         // Walk up to find the root of the menu chain and close submenus
-        var current = Parent;
+        UIElement? current = Parent;
         while (current != null)
         {
             if (current is MenuPopupBorder mpb)
@@ -392,6 +392,6 @@ public class MenuItem : UIElement
 
     private class MenuPopupBorder : Border
     {
-        public MenuItem Owner { get; set; }
+        public required MenuItem Owner { get; set; }
     }
 }
