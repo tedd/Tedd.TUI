@@ -4,8 +4,8 @@ namespace Tedd.TUI;
 
 public class ScrollViewer : UIElement
 {
-    private readonly ScrollBar _verticalScrollBar;
-    private readonly ScrollBar _horizontalScrollBar;
+    protected readonly ScrollBar _verticalScrollBar;
+    protected readonly ScrollBar _horizontalScrollBar;
     private UIElement? _content;
 
     public UIElement? Content
