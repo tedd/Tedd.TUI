@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace Tedd.TUI;
 
@@ -130,8 +132,12 @@ public class Table : UIElement
 {
     public List<TableColumn> Columns { get; } = new List<TableColumn>();
     
-    private List<TableRow> _rows = new List<TableRow>();
+    private ObservableCollection<TableRow> _rows;
     public IList<TableRow> Rows => _rows;
+
+    // Track if visible rows need to be rebuilt.
+    // We assume rows are dirty initially.
+    private bool _rowsDirty = true;
 
     private readonly ScrollViewer _scrollViewer;
     private readonly StackPanel _rowStack;
@@ -143,7 +149,22 @@ public class Table : UIElement
     // Style Properties
     public bool ShowBorder { get; set; } = false;
     public bool ShowVerticalLines { get; set; } = true;
-    public bool ShowHorizontalLines { get; set; } = false;
+
+    private bool _showHorizontalLines = false;
+    public bool ShowHorizontalLines
+    {
+        get => _showHorizontalLines;
+        set
+        {
+            if (_showHorizontalLines != value)
+            {
+                _showHorizontalLines = value;
+                _rowsDirty = true;
+                Invalidate();
+            }
+        }
+    }
+
     public BoxStyle BorderStyle { get; set; } = BoxStyle.Heavy; // Default to Heavy per user request
 
     // Selection
@@ -165,6 +186,9 @@ public class Table : UIElement
 
     public Table()
     {
+        _rows = new ObservableCollection<TableRow>();
+        _rows.CollectionChanged += OnRowsCollectionChanged;
+
         Focusable = true;
         _rowStack = new StackPanel { Orientation = Orientation.Vertical };
         _scrollViewer = new ScrollViewer 
@@ -176,10 +200,15 @@ public class Table : UIElement
         _scrollViewer.Parent = this;
     }
 
+    private void OnRowsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        _rowsDirty = true;
+        Invalidate();
+    }
+
     public void AddRow(TableRow row)
     {
         _rows.Add(row);
-        Invalidate();
     }
     
     public void AddRow(params object[] values)
@@ -208,6 +237,8 @@ public class Table : UIElement
 
     private void UpdateVisibleRows()
     {
+        if (!_rowsDirty) return;
+
         _rowStack.Children.Clear();
 
         int startIdx = 0;
@@ -237,6 +268,8 @@ public class Table : UIElement
                 }
             }
         }
+
+        _rowsDirty = false;
     }
 
     protected override Size MeasureOverride(Size availableSize)
@@ -600,7 +633,12 @@ public class Table : UIElement
         int colIndex = Columns.IndexOf(column);
         if (colIndex < 0) return;
 
-        _rows.Sort((a, b) =>
+        // Sort is not available on ObservableCollection, so we sort a list and refill
+        // We unsubscribe to avoid triggering updates for every item add
+        _rows.CollectionChanged -= OnRowsCollectionChanged;
+
+        var list = new List<TableRow>(_rows);
+        list.Sort((a, b) =>
         {
             if (a == b) return 0;
             
@@ -628,6 +666,12 @@ public class Table : UIElement
             return IsSortDescending ? -result : result;
         });
 
+        _rows.Clear();
+        foreach (var item in list) _rows.Add(item);
+
+        _rows.CollectionChanged += OnRowsCollectionChanged;
+
+        _rowsDirty = true;
         Invalidate();
     }
 
@@ -713,6 +757,7 @@ public class Table : UIElement
             if (_pageSize != value)
             {
                 _pageSize = value;
+                _rowsDirty = true;
                 Invalidate();
             }
         }
@@ -732,6 +777,7 @@ public class Table : UIElement
             {
                 _currentPage = value;
                 PageChanged?.Invoke(this, EventArgs.Empty);
+                _rowsDirty = true;
                 Invalidate();
             }
         }
@@ -746,6 +792,7 @@ public class Table : UIElement
             if (_totalRows != value)
             {
                 _totalRows = value;
+                _rowsDirty = true;
                 Invalidate();
             }
         }
