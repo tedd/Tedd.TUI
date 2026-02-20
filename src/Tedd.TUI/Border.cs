@@ -271,8 +271,8 @@ public class Border : ScrollViewer
         {
             int viewportW = Math.Max(0, w - 2);
             int viewportH = Math.Max(0, h - 2);
-            // Arrange at (0,0) relative to viewport. Offset handled in Render.
-            Content.Arrange(new Rect(0, 0, Math.Max(viewportW, Content.DesiredSize.Width), Math.Max(viewportH, Content.DesiredSize.Height)));
+            // Arrange at (1,1) to account for border thickness.
+            Content.Arrange(new Rect(1, 1, Math.Max(viewportW, Content.DesiredSize.Width), Math.Max(viewportH, Content.DesiredSize.Height)));
         }
 
         // Arrange Title
@@ -381,8 +381,9 @@ public class Border : ScrollViewer
             // Clip to inside border area
             buffer.PushClip(new Rect(x + 1, y + 1, w - 2, h - 2));
 
-            // Render content at absolute position + 1 (border offset) - scrollOffset
-            Content.Render(buffer, x + 1 - _horizontalScrollBar.Value, y + 1 - _verticalScrollBar.Value);
+            // Render content at absolute position - scrollOffset
+            // (Content.RenderSize already includes the (1,1) offset from Arrange)
+            Content.Render(buffer, x - _horizontalScrollBar.Value, y - _verticalScrollBar.Value);
 
             buffer.PopClip();
         }
