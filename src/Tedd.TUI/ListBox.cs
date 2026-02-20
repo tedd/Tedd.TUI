@@ -59,23 +59,30 @@ public class ListBox : UIElement
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        // Default size
-        // We'll reserve 1 column for ScrollBar always? Or only if needed?
-        // Let's autoshow scrollbar if items > height.
-        // But Measure happens before we know items vs height fully if auto height?
-        // Assume fixed height or use available height.
+        // 1. Calculate Height
+        int h;
+        if (Height >= 0)
+        {
+            h = Height;
+        }
+        else
+        {
+            // Auto Height
+            h = Items.Count;
+            // Constrain to available space
+            if (h > availableSize.Height) h = availableSize.Height;
+        }
 
-        int h = Height > 0 ? Height : availableSize.Height;
+        // 2. Determine if ScrollBar is needed
         bool showScroll = Items.Count > h;
 
+        // 3. Configure ScrollBar
         if (showScroll)
         {
             _scrollBar.Measure(new Size(1, h));
             _scrollBar.Maximum = Math.Max(0, Items.Count - h);
             _scrollBar.ViewportSize = h;
-            _scrollBar.Value = _scrollOffset; // update in case it changed
-            _scrollBar.Value = _scrollOffset; // update in case it changed
-            // _scrollBar.Opacity = 1f; // removed, property does not exist
+            _scrollBar.Value = _scrollOffset;
             _scrollBar.Visibility = true;
         }
         else
@@ -83,7 +90,32 @@ public class ListBox : UIElement
             _scrollBar.Visibility = false;
         }
 
-        return new Size(Width > 0 ? Width : 20, h > 0 ? h : 10);
+        // 4. Calculate Width
+        int w;
+        if (Width >= 0)
+        {
+            w = Width;
+        }
+        else
+        {
+            // Auto Width
+            int maxLen = 0;
+            foreach (var item in Items)
+            {
+                var s = item?.ToString();
+                if (!string.IsNullOrEmpty(s))
+                {
+                    if (s.Length > maxLen) maxLen = s.Length;
+                }
+            }
+            w = maxLen;
+            if (showScroll) w++;
+
+            // Constrain
+            if (w > availableSize.Width) w = availableSize.Width;
+        }
+
+        return new Size(w, h);
     }
 
     protected override void ArrangeOverride(Size finalSize)

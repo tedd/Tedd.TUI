@@ -62,6 +62,7 @@ public class VirtualBuffer
 
     public void Clear()
     {
+        _clipStack.Clear();
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
