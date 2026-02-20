@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
 using Tedd.TUI;
@@ -51,7 +52,7 @@ public class MarkdownParser
         else if (block is ParagraphBlock para)
         {
             var p = new Paragraph();
-            AddInlineContent(p, para.Text, _theme.Paragraph);
+            AddInlineContent(p, para.Text.ToString(), _theme.Paragraph);
             return p;
         }
         else if (block is ListBlock list)
@@ -94,7 +95,7 @@ public class MarkdownParser
             var marker = new TextBlock { Text = "│ ", Foreground = _theme.Quote.Foreground ?? ConsoleColor.DarkGray };
             p.AddChild(marker);
 
-            AddInlineContent(p, quote.Text, _theme.Quote);
+            AddInlineContent(p, quote.Text.ToString(), _theme.Quote);
             return p;
         }
         else if (block is TableBlock tableBlock)
@@ -224,10 +225,10 @@ public class MarkdownParser
 
     private abstract class Block { }
     private class HeaderBlock : Block { public int Level; public string Text; }
-    private class ParagraphBlock : Block { public string Text; }
+    private class ParagraphBlock : Block { public StringBuilder Text = new StringBuilder(); }
     private class ListBlock : Block { public List<string> Items = new List<string>(); }
     private class CodeBlock : Block { public string Code; public string Language; }
-    private class QuoteBlock : Block { public string Text; }
+    private class QuoteBlock : Block { public StringBuilder Text = new StringBuilder(); }
     private class TableBlock : Block { public List<string> Headers; public List<List<string>> Rows = new List<List<string>>(); }
 
     private List<Block> ParseBlocks(List<string> lines)
@@ -302,7 +303,11 @@ public class MarkdownParser
                 // Append text (handle multiline quotes)
                 var q = (QuoteBlock)currentBlock;
                 string content = trimmed.TrimStart('>', ' ');
-                q.Text = string.IsNullOrEmpty(q.Text) ? content : q.Text + " " + content;
+                if (q.Text.Length > 0)
+                {
+                    q.Text.Append(' ');
+                }
+                q.Text.Append(content);
                 continue;
             }
 
@@ -333,12 +338,15 @@ public class MarkdownParser
             // Paragraph
             if (currentBlock is ParagraphBlock pb)
             {
-                pb.Text += " " + trimmed;
+                pb.Text.Append(' ');
+                pb.Text.Append(trimmed);
             }
             else
             {
                 if (currentBlock != null) blocks.Add(currentBlock);
-                currentBlock = new ParagraphBlock { Text = trimmed };
+                var pbNew = new ParagraphBlock();
+                pbNew.Text.Append(trimmed);
+                currentBlock = pbNew;
             }
         }
 

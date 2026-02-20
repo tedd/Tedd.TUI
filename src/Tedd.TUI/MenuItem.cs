@@ -24,6 +24,7 @@ public class MenuItem : UIElement
     public List<UIElement> Items { get; } = new List<UIElement>();
     public Action? Command { get; set; }
     public bool IsExpanded { get; private set; }
+    public MenuItem? ParentMenuItem { get; set; }
 
     private Border? _popupBorder;
 
@@ -213,21 +214,39 @@ public class MenuItem : UIElement
              {
                  NavigateSibling(-1);
              }
-             else
+             else if (ParentMenuItem != null)
              {
                  // Close submenu (back to parent)
-                 // We need to find our parent MenuItem.
-                 // Parent is StackPanel (popup), its Parent is Border, Border doesn't know MenuItem.
-                 // We relied on `GetRoot()?.ClearOverlay()` which closes ALL. 
-                 // To navigate back one level, we need reference to specific parent MenuItem.
-                 // We don't have it easily.
-                 // HACK: Close all for now? No, specifically LEFT should close THIS level.
-                 // But `CloseParentMenu` closes everything.
-                 // `CloseSubMenu` is on the PARENT. 
-                 // We are the CHILD. We want our PARENT to close its submenu.
-                 // But we don't have ref to Parent MenuItem.
-                 // Limitations of current structure.
-                 // For now, let's just allow MenuBar navigation.
+                 // We are in a submenu, so ParentMenuItem is the item that opened this submenu.
+                 // Calling CloseSubMenu on ParentMenuItem closes the current level.
+                 ParentMenuItem.CloseSubMenu();
+
+                 // Navigate focus back to parent
+                 if (ParentMenuItem.Parent is MenuBar)
+                 {
+                     ParentMenuItem.Focus();
+                 }
+                 else
+                 {
+                     // If we are deeper in nested menus, the parent menu itself was an overlay that got replaced.
+                     // We need to restore it.
+                     // The ParentMenuItem belongs to a GrandParentMenuItem's submenu.
+                     var grandParent = ParentMenuItem.ParentMenuItem;
+                     if (grandParent != null)
+                     {
+                         // Re-open the grandparent's submenu to visualize the previous level
+                         grandParent.CloseSubMenu(); // Ensure clean state
+                         grandParent.OpenSubMenu();
+
+                         // Focus the parent item in that menu
+                         ParentMenuItem.Focus();
+                     }
+                     else
+                     {
+                         // Should not happen if structure is valid (nested menu must have grandparent unless root context menu)
+                         ParentMenuItem.Focus();
+                     }
+                 }
              }
              e.Handled = true;
         }
@@ -275,6 +294,10 @@ public class MenuItem : UIElement
         var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
         foreach (var item in Items)
         {
+            if (item is MenuItem mi)
+            {
+                mi.ParentMenuItem = this;
+            }
             stackPanel.AddChild(item);
         }
 
@@ -385,9 +408,23 @@ public class MenuItem : UIElement
             }
             else
             {
-                current = current.Parent;
+                 current = current.ParentMenuItem;
             }
+
         }
+
+        // If we are at top level (ParentMenuItem is null), check if we have submenu open?
+        // CloseParentMenu usually means "close the menu I am in".
+        // If I am top level, I am in MenuBar. I don't close.
+        // But if I have a submenu open, should I close it?
+        // Usually CloseParentMenu is called when a leaf item is activated.
+        // If the leaf item is in a submenu, we close all parents.
+        // If the leaf item is top level (e.g. "Save" button on toolbar), we don't need to close anything
+        // unless it had a submenu open (which it wouldn't if it was clicked as a leaf).
+
+        // However, if we are a top level item with submenu open, clicking it toggles (handled in OnMouseDown).
+        // If we are a leaf item in submenu, ParentMenuItem is not null.
+        // So the loop handles closing the parent.
     }
 
     private class MenuPopupBorder : Border
