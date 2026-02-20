@@ -35,4 +35,33 @@ public class MarkdownViewTests
         // Since we changed inheritance, this is compile-time check mostly.
         Assert.False(md.GetType().IsSubclassOf(typeof(ScrollViewer)));
     }
+
+    [Fact]
+    public void MarkdownView_Parses_Multiline_Quotes_With_Spaces()
+    {
+        var md = new MarkdownView();
+        md.Text = "> Line 1\n> Line 2";
+        md.Refresh(); // Force parse
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        // Doc children: Quote block -> Paragraph
+        // Depending on how FlowDocument stores children (it inherits UIElement but usually has a collection)
+        // FlowDocument.AddChild adds to a collection, but usually it exposes them via GetVisualChild if it implements it correctly.
+        // Assuming FlowDocument implements GetVisualChild.
+
+        var p = (Paragraph)doc.GetVisualChild(0);
+
+        var text = "";
+        for (int i = 0; i < p.VisualChildrenCount; i++)
+        {
+             var child = p.GetVisualChild(i);
+             if (child is TextBlock tb)
+             {
+                 text += tb.Text;
+             }
+        }
+
+        // Expected: "| Line 1 Line 2" (Marker is "| ")
+        Assert.Contains("Line 1 Line 2", text);
+    }
 }
