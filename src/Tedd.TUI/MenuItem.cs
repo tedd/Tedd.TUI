@@ -388,40 +388,15 @@ public class MenuItem : UIElement
 
     private void CloseParentMenu()
     {
-        // Walk up to find the root of the menu chain and close submenus
-        UIElement? current = Parent;
-        while (current != null)
+        var current = this;
+        // Find the top-most menu item
+        while (current.ParentMenuItem != null)
         {
-            if (current is MenuPopupBorder mpb)
-            {
-                var owner = mpb.Owner;
-                owner.CloseSubMenu();
-                current = owner.Parent;
-            }
-            else if (current is MenuBar)
-            {
-                // Top level reached.
-                break;
-            }
-            else
-            {
-                current = current.Parent;
-            }
-
+            current = current.ParentMenuItem;
         }
 
-        // If we are at top level (ParentMenuItem is null), check if we have submenu open?
-        // CloseParentMenu usually means "close the menu I am in".
-        // If I am top level, I am in MenuBar. I don't close.
-        // But if I have a submenu open, should I close it?
-        // Usually CloseParentMenu is called when a leaf item is activated.
-        // If the leaf item is in a submenu, we close all parents.
-        // If the leaf item is top level (e.g. "Save" button on toolbar), we don't need to close anything
-        // unless it had a submenu open (which it wouldn't if it was clicked as a leaf).
-
-        // However, if we are a top level item with submenu open, clicking it toggles (handled in OnMouseDown).
-        // If we are a leaf item in submenu, ParentMenuItem is not null.
-        // So the loop handles closing the parent.
+        // If current is top-level (in MenuBar), close its submenu.
+        current.CloseSubMenu();
     }
 
     private class MenuPopupBorder : Border

@@ -190,4 +190,20 @@ public class BorderTests
         Assert.Equal(10, status.RenderSize.Width);
         Assert.Equal(1, status.RenderSize.Height);
     }
+
+    [Fact]
+    public void Border_Positions_Content_At_Offset()
+    {
+        var border = new Border();
+        var child = new MeasuringChild();
+        border.Child = child;
+
+        border.Measure(new Size(20, 20));
+        border.Arrange(new Rect(0, 0, 20, 20));
+
+        // Expect child at (1, 1) relative to Border
+        // This ensures absolute position calculations (traversing RenderSize) work correctly for nested elements.
+        Assert.Equal(1, child.RenderSize.X);
+        Assert.Equal(1, child.RenderSize.Y);
+    }
 }
