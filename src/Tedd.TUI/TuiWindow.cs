@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using System;
 
 namespace Tedd.TUI;
@@ -361,27 +362,58 @@ public class TuiWindow : UIElement
         }
     }
 
-    private IEnumerable<UIElement> GetVisualTree(UIElement root)
+    private VisualTreeEnumerable GetVisualTree(UIElement root)
     {
-        var stack = new Stack<(UIElement element, bool secondPass)>();
-        stack.Push((root, false));
+        return new VisualTreeEnumerable(root);
+    }
 
-        while (stack.Count > 0)
+    private readonly struct VisualTreeEnumerable : IEnumerable<UIElement>
+    {
+        private readonly UIElement _root;
+        public VisualTreeEnumerable(UIElement root) => _root = root;
+        public VisualTreeEnumerator GetEnumerator() => new VisualTreeEnumerator(_root);
+
+        IEnumerator<UIElement> IEnumerable<UIElement>.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    private struct VisualTreeEnumerator : IEnumerator<UIElement>
+    {
+        private readonly Stack<(UIElement element, bool secondPass)> _stack;
+        private UIElement _current;
+
+        public VisualTreeEnumerator(UIElement root)
         {
-            var (current, secondPass) = stack.Pop();
-            yield return current;
+            _stack = new Stack<(UIElement element, bool secondPass)>();
+            if (root != null)
+                _stack.Push((root, false));
+            _current = default!;
+        }
+
+        public UIElement Current => _current;
+        object IEnumerator.Current => _current;
+
+        public void Dispose() { }
+        public void Reset() => throw new NotSupportedException();
+
+        public bool MoveNext()
+        {
+            if (_stack.Count == 0) return false;
+
+            var (current, secondPass) = _stack.Pop();
+            _current = current;
 
             if (!secondPass)
             {
                 if (current is TabControl tab)
                 {
                     // Second yield for tab strip
-                    stack.Push((current, true));
+                    _stack.Push((current, true));
                     // Content
                     if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
                     {
                         var content = tab.Items[tab.SelectedIndex].Content as UIElement;
-                        if (content != null) stack.Push((content, false));
+                        if (content != null) _stack.Push((content, false));
                     }
                 }
                 else
@@ -389,10 +421,11 @@ public class TuiWindow : UIElement
                     // Normal children in reverse order
                     for (int i = current.VisualChildrenCount - 1; i >= 0; i--)
                     {
-                        stack.Push((current.GetVisualChild(i), false));
+                        _stack.Push((current.GetVisualChild(i), false));
                     }
                 }
             }
+            return true;
         }
     }
 
