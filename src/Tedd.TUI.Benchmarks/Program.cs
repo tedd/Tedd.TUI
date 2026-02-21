@@ -10,5 +10,6 @@ public class Program
         BenchmarkRunner.Run<PaginationBenchmark>();
         BenchmarkRunner.Run<MarkdownBenchmark>();
         BenchmarkRunner.Run<VisualTreeBenchmark>();
+        BenchmarkRunner.Run<VirtualBufferBenchmark>();
     }
 }
