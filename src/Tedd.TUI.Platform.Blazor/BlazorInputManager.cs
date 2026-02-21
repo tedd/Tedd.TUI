@@ -10,6 +10,8 @@ public class BlazorInputManager
     private readonly TuiWindow _window;
     private readonly ConcurrentQueue<Action> _eventQueue = new();
 
+    public event Action? InputAvailable;
+
     public int CharWidth { get; set; } = 10;
     public int CharHeight { get; set; } = 18;
 
@@ -44,6 +46,7 @@ public class BlazorInputManager
         };
 
         _eventQueue.Enqueue(() => _window.ProcessKey(args));
+        InputAvailable?.Invoke();
     }
 
     public void QueueMouse(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, string type)
@@ -109,6 +112,7 @@ public class BlazorInputManager
                 }
             }
         });
+        InputAvailable?.Invoke();
     }
 
     private ConsoleModifiers GetModifiers(KeyboardEventArgs e)
