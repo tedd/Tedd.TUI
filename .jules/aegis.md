@@ -25,3 +25,24 @@ Implemented comprehensive unit tests for the identified components, increasing t
 - Monitor coverage reports for further gaps.
 - Consider adding tests for `VirtualBuffer` rendering logic directly.
 - Investigate `Platform.Console` and `Platform.Blazor` specific tests.
+
+## 2024-05-23 - ScrollBar and VirtualBuffer Test Expansion
+
+**Observation:**
+Identified that `ScrollBar` and `VirtualBuffer` lack direct unit tests. `ScrollBar` contains significant logic for value clamping, rendering (thumb position/size), and input handling (mouse interactions) which is currently unverified. `VirtualBuffer` is a foundational component for rendering and clipping, and while used implicitly, requires explicit verification of boundary checks and clipping stack logic.
+
+**Strategic Action:**
+Implement comprehensive parameterized unit tests for `ScrollBar` and `VirtualBuffer`.
+
+**Test Coverage Expansion:**
+- **ScrollBar:**
+    - Verify `Value` clamping (Min/Max).
+    - Verify `Render` logic for thumb size and position across various ranges and viewport sizes.
+    - Verify `OnMouseDown` interactions for stepping (arrows), paging (track), and dragging (thumb).
+- **VirtualBuffer:**
+    - Verify `SetPixel` bounds checking.
+    - Verify `PushClip`/`PopClip` logic for nested clipping.
+    - Verify `Clear` functionality.
+
+**Next Steps:**
+- Execute tests and verify coverage.
