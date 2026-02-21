@@ -1,0 +1,6 @@
+/app/obj/Debug/net10.0/CellSizeTest.csproj.AssemblyReference.cache
+/app/obj/Debug/net10.0/CellSizeTest.GeneratedMSBuildEditorConfig.editorconfig
+/app/obj/Debug/net10.0/CellSizeTest.AssemblyInfoInputs.cache
+/app/obj/Debug/net10.0/CellSizeTest.AssemblyInfo.cs
+/app/obj/Debug/net10.0/CellSizeTest.csproj.CoreCompileInputs.cache
+/app/obj/Debug/net10.0/CellSizeTest.sourcelink.json
