@@ -1,5 +1,3 @@
-using System;
-
 namespace Tedd.TUI;
 
 public class Button : UIElement
@@ -10,8 +8,8 @@ public class Button : UIElement
     }
     public string Content
     {
-        get { return (string)GetValue(ContentProperty); }
-        set { SetValue(ContentProperty, value); }
+        get => (string)GetValue(ContentProperty);
+        set => SetValue(ContentProperty, value);
     }
 
     public static readonly DependencyProperty ContentProperty =
@@ -22,8 +20,8 @@ public class Button : UIElement
 
     public BoxStyle BoxStyle
     {
-        get { return (BoxStyle)GetValue(BoxStyleProperty); }
-        set { SetValue(BoxStyleProperty, value); }
+        get => (BoxStyle)GetValue(BoxStyleProperty);
+        set => SetValue(BoxStyleProperty, value);
     }
 
     public static readonly RoutedEvent ClickEvent =
@@ -31,8 +29,8 @@ public class Button : UIElement
 
     public event RoutedEventHandler Click
     {
-        add { AddHandler(ClickEvent, value); }
-        remove { RemoveHandler(ClickEvent, value); }
+        add => AddHandler(ClickEvent, value);
+        remove => RemoveHandler(ClickEvent, value);
     }
 
     public override void OnMouseDown(MouseEventArgs e)
@@ -93,7 +91,7 @@ public class Button : UIElement
         int textY = y + (h - 1) / 2;
         for (int i = 0; i < text.Length; i++)
         {
-             if (textX + i > x && textX + i < x + w - 1)
+            if (textX + i > x && textX + i < x + w - 1)
                 buffer.SetPixel(textX + i, textY, text[i], textFg, bg);
         }
     }
