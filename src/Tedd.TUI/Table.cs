@@ -790,46 +790,53 @@ public class Table : UIElement
         }
     }
 
-    private string? _cachedPaginationString;
-    private int _cachedPaginationAvailableWidth = -1;
-    private int _cachedPaginationCurrentPage = -1;
-    private int _cachedPaginationTotalPages = -1;
-
     private void HandlePaginationClick(int localX)
     {
         int w = RenderSize.Width;
         int totalPages = TotalPages;
         if (totalPages <= 1) return;
 
-        string text = GetPaginationString(w, totalPages);
-        int startX = (w - text.Length) / 2;
-        if (localX < startX || localX >= startX + text.Length) return;
+        Span<char> buffer = stackalloc char[256];
+        int len = GetPaginationString(buffer, w, totalPages, CurrentPage);
+        var text = buffer.Slice(0, len);
+
+        int startX = (w - len) / 2;
+        if (localX < startX || localX >= startX + len) return;
 
         int charIdx = localX - startX;
         
-        if (text.Contains("<") && text.IndexOf('<') == charIdx)
+        // Check for <
+        int lessThanIdx = text.IndexOf('<');
+        if (lessThanIdx >= 0 && lessThanIdx == charIdx)
         {
             if (CurrentPage > 0) CurrentPage--;
             return;
         }
-        if (text.Contains(">") && text.LastIndexOf('>') == charIdx)
+        // Check for >
+        int greaterThanIdx = text.LastIndexOf('>');
+        if (greaterThanIdx >= 0 && greaterThanIdx == charIdx)
         {
             if (CurrentPage < totalPages - 1) CurrentPage++;
             return;
         }
 
-        if (charIdx < 0 || charIdx >= text.Length || text[charIdx] == ' ') return;
+        if (charIdx < 0 || charIdx >= len || text[charIdx] == ' ') return;
 
-        int tokenStart = text.LastIndexOf(' ', charIdx);
+        // Find token boundaries around charIdx
+        int tokenStart = text.Slice(0, charIdx).LastIndexOf(' ');
         if (tokenStart == -1) tokenStart = 0; else tokenStart++;
         
-        int tokenEnd = text.IndexOf(' ', charIdx);
-        if (tokenEnd == -1) tokenEnd = text.Length;
+        int tokenEnd = text.Slice(charIdx).IndexOf(' ');
+        if (tokenEnd == -1) tokenEnd = len; else tokenEnd += charIdx;
 
-        if (tokenStart >= 0 && tokenEnd > tokenStart && tokenEnd <= text.Length)
+        if (tokenStart >= 0 && tokenEnd > tokenStart && tokenEnd <= len)
         {
-            string token = text.Substring(tokenStart, tokenEnd - tokenStart);
-            if (token.StartsWith("[") && token.EndsWith("]")) token = token.Substring(1, token.Length - 2);
+            var token = text.Slice(tokenStart, tokenEnd - tokenStart);
+            if (token.Length > 2 && token[0] == '[' && token[token.Length - 1] == ']')
+            {
+                token = token.Slice(1, token.Length - 2);
+            }
+
             if (int.TryParse(token, out int pNum))
             {
                 CurrentPage = pNum - 1;
@@ -837,82 +844,63 @@ public class Table : UIElement
         }
     }
 
-    internal string GetPaginationString(int availableWidth, int totalPages)
+    internal static int GetPaginationString(Span<char> destination, int availableWidth, int totalPages, int currentPage)
     {
-        // Cache Check
-        if (_cachedPaginationString != null &&
-            _cachedPaginationAvailableWidth == availableWidth &&
-            _cachedPaginationCurrentPage == CurrentPage &&
-            _cachedPaginationTotalPages == totalPages)
-        {
-            return _cachedPaginationString;
-        }
-
-        int cp = CurrentPage + 1;
+        int cp = currentPage + 1;
 
         // Calculate status string length: "< {cp} of {totalPages} >"
         // "< " (2) + digits(cp) + " of " (4) + digits(totalPages) + " >" (2)
         int statusLen = 8 + GetDigitCount(cp) + GetDigitCount(totalPages);
 
-        string result;
         if (statusLen > availableWidth)
         {
-             result = "< >";
+             // "< >"
+             if (destination.Length < 3) return 0;
+             destination[0] = '<'; destination[1] = ' '; destination[2] = '>';
+             return 3;
         }
-        else
+
+        // detailed check
+        if (availableWidth > 30)
         {
-            // detailed check
-            if (availableWidth > 30)
-            {
-                 // Try generate detailed string
-                 Span<char> buffer = stackalloc char[256];
-                 int pos = 0;
+             // Try generate detailed string
+             int pos = 0;
 
-                 buffer[pos++] = '<';
+             // Ensure destination is big enough?
+             // We assume caller passes 256 which is enough for logic.
+             // But we should be safe.
+             if (destination.Length < 256) return 0; // Should not happen with stackalloc 256
 
-                 // Page 1
-                 AppendPage(buffer, ref pos, 1, cp);
-                 
-                 int start = Math.Max(2, cp - 2);
-                 int end = Math.Min(totalPages - 1, cp + 2);
-                 
-                 if (start > 2) AppendDots(buffer, ref pos);
-                 
-                 for(int i = start; i <= end; i++)
-                 {
-                     AppendPage(buffer, ref pos, i, cp);
-                 }
-                 
-                 if (end < totalPages - 1) AppendDots(buffer, ref pos);
+             destination[pos++] = '<';
 
-                 if (totalPages > 1) AppendPage(buffer, ref pos, totalPages, cp);
+             // Page 1
+             AppendPage(destination, ref pos, 1, cp);
 
-                 buffer[pos++] = ' ';
-                 buffer[pos++] = '>';
+             int start = Math.Max(2, cp - 2);
+             int end = Math.Min(totalPages - 1, cp + 2);
 
-                 if (pos <= availableWidth)
-                 {
-                     result = new string(buffer.Slice(0, pos));
-                 }
-                 else
-                 {
-                     // Fallback to status string
-                     result = CreateStatusString(cp, totalPages, statusLen);
-                 }
-            }
-            else
-            {
-                result = CreateStatusString(cp, totalPages, statusLen);
-            }
+             if (start > 2) AppendDots(destination, ref pos);
+
+             for(int i = start; i <= end; i++)
+             {
+                 AppendPage(destination, ref pos, i, cp);
+             }
+
+             if (end < totalPages - 1) AppendDots(destination, ref pos);
+
+             if (totalPages > 1) AppendPage(destination, ref pos, totalPages, cp);
+
+             destination[pos++] = ' ';
+             destination[pos++] = '>';
+
+             if (pos <= availableWidth)
+             {
+                 return pos;
+             }
         }
 
-        // Cache update
-        _cachedPaginationString = result;
-        _cachedPaginationAvailableWidth = availableWidth;
-        _cachedPaginationCurrentPage = CurrentPage;
-        _cachedPaginationTotalPages = totalPages;
-
-        return result;
+        // Fallback to status string
+        return CreateStatusString(destination, cp, totalPages);
     }
 
     private static void AppendPage(Span<char> span, ref int pos, int p, int cp)
@@ -940,20 +928,19 @@ public class Table : UIElement
         pos += 4;
     }
 
-    private string CreateStatusString(int cp, int totalPages, int len)
+    private static int CreateStatusString(Span<char> span, int cp, int totalPages)
     {
-        return string.Create(len, (cp, totalPages), (span, state) =>
-        {
-            var (c, t) = state;
-            span[0] = '<'; span[1] = ' ';
-            int written;
-            c.TryFormat(span.Slice(2), out written);
-            var slice2 = span.Slice(2 + written);
-            " of ".CopyTo(slice2);
-            t.TryFormat(slice2.Slice(4), out written);
-            var slice3 = slice2.Slice(4 + written);
-            slice3[0] = ' '; slice3[1] = '>';
-        });
+        // "< {cp} of {totalPages} >"
+        span[0] = '<'; span[1] = ' ';
+        int pos = 2;
+        cp.TryFormat(span.Slice(pos), out int written);
+        pos += written;
+        " of ".CopyTo(span.Slice(pos));
+        pos += 4;
+        totalPages.TryFormat(span.Slice(pos), out written);
+        pos += written;
+        span[pos++] = ' '; span[pos++] = '>';
+        return pos;
     }
 
     private static int GetDigitCount(int n)
@@ -981,13 +968,15 @@ public class Table : UIElement
        
        for(int i=0; i<w; i++) buffer.SetPixel(RenderSize.X + offsetX + i, RenderSize.Y + offsetY + y, ' ', ConsoleColor.Gray, ConsoleColor.Black);
        
-       string text = GetPaginationString(w, totalPages);
+       Span<char> textBuffer = stackalloc char[256];
+       int len = GetPaginationString(textBuffer, w, totalPages, CurrentPage);
+       var text = textBuffer.Slice(0, len);
        
-       int startX = (w - text.Length) / 2;
+       int startX = (w - len) / 2;
        int absX = RenderSize.X + offsetX + startX;
        int absY = RenderSize.Y + offsetY + y;
        
-       for(int i=0; i<text.Length; i++)
+       for(int i=0; i<len; i++)
        {
            char c = text[i];
            buffer.SetPixel(absX + i, absY, c, ConsoleColor.Gray, ConsoleColor.Black);

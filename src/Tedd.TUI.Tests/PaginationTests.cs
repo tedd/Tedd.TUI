@@ -1,3 +1,4 @@
+using System;
 using Xunit;
 using Tedd.TUI;
 
@@ -5,6 +6,13 @@ namespace Tedd.TUI.Tests
 {
     public class PaginationTests
     {
+        private string GetPaginationString(Table table, int availableWidth, int totalPages)
+        {
+            Span<char> buffer = stackalloc char[256];
+            int len = Table.GetPaginationString(buffer, availableWidth, totalPages, table.CurrentPage);
+            return new string(buffer.Slice(0, len));
+        }
+
         [Fact]
         public void ShortWidth_ReturnsStatusString()
         {
@@ -18,8 +26,8 @@ namespace Tedd.TUI.Tests
             // If availableWidth < 13, returns < >
             // If availableWidth >= 13 but <= 30, returns < 51 of 100 >
 
-            Assert.Equal("< >", table.GetPaginationString(10, 100));
-            Assert.Equal("< 51 of 100 >", table.GetPaginationString(20, 100));
+            Assert.Equal("< >", GetPaginationString(table, 10, 100));
+            Assert.Equal("< 51 of 100 >", GetPaginationString(table, 20, 100));
         }
 
         [Fact]
@@ -37,7 +45,7 @@ namespace Tedd.TUI.Tests
             // 2+2+4+3+3+4+3+3+4+4+2 = 34 chars approx.
 
             string expected = "< 1 ... 49 50 [51] 52 53 ... 100 >";
-            string actual = table.GetPaginationString(100, 100);
+            string actual = GetPaginationString(table, 100, 100);
 
             Assert.Equal(expected, actual);
         }
@@ -55,7 +63,7 @@ namespace Tedd.TUI.Tests
 
             string status = "< 51 of 100 >";
             // width 32
-            string actual = table.GetPaginationString(32, 100);
+            string actual = GetPaginationString(table, 32, 100);
 
             Assert.Equal(status, actual);
         }
@@ -72,7 +80,7 @@ namespace Tedd.TUI.Tests
             // "< 1 2 [3] 4 5 >"
 
             string expected = "< 1 2 [3] 4 5 >";
-            string actual = table.GetPaginationString(100, 5);
+            string actual = GetPaginationString(table, 100, 5);
 
             Assert.Equal(expected, actual);
         }
@@ -89,7 +97,7 @@ namespace Tedd.TUI.Tests
             // "< [1] 2 3 ... 100 >"
 
             string expected = "< [1] 2 3 ... 100 >";
-            string actual = table.GetPaginationString(100, 100);
+            string actual = GetPaginationString(table, 100, 100);
 
             Assert.Equal(expected, actual);
         }
@@ -106,7 +114,7 @@ namespace Tedd.TUI.Tests
             // "< 1 ... 98 99 [100] >"
 
             string expected = "< 1 ... 98 99 [100] >";
-            string actual = table.GetPaginationString(100, 100);
+            string actual = GetPaginationString(table, 100, 100);
 
             Assert.Equal(expected, actual);
         }
