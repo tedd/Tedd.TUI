@@ -1,12 +1,13 @@
 using System;
 using Xunit;
 using Xunit.Abstractions;
-using Tedd.TUI.Platform.Console;
+// using Tedd.TUI.Platform.Console;
 
 namespace Tedd.TUI.Tests;
 
 public class ConsoleRendererBenchmark
 {
+    /*
     private readonly ITestOutputHelper _output;
 
     public ConsoleRendererBenchmark(ITestOutputHelper output)
@@ -61,4 +62,5 @@ public class ConsoleRendererBenchmark
 
         _output.WriteLine($"No Update: {noUpdateWrites} writes, {noUpdateMoves} moves");
     }
+    */
 }

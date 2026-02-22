@@ -1,5 +1,7 @@
+using System;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Tedd.TUI.Benchmarks.Legacy;
 
 namespace Tedd.TUI.Benchmarks;
 
@@ -22,24 +24,49 @@ public class PaginationBenchmark
         _table.CurrentPage = 50;
     }
 
-    [Benchmark]
-    public string ShortString()
+    // Legacy Benchmarks (Baseline)
+
+    [Benchmark(Baseline = true)]
+    public string Legacy_ShortString()
     {
         // width 20, should fall back to "< 51 of 100 >"
-        return _table.GetPaginationString(20, 100);
+        return PaginationLegacy.GetPaginationString(20, 100, 50);
     }
 
     [Benchmark]
-    public string FullList()
+    public string Legacy_FullList()
     {
         // width 100, total pages 10. Should show all.
-        return _table.GetPaginationString(100, 10);
+        return PaginationLegacy.GetPaginationString(100, 10, 5);
     }
 
     [Benchmark]
-    public string Ellipses()
+    public string Legacy_Ellipses()
     {
         // width 100, total pages 100. Should show ellipses.
-        return _table.GetPaginationString(100, 100);
+        return PaginationLegacy.GetPaginationString(100, 100, 50);
+    }
+
+    // Optimized Benchmarks
+
+    [Benchmark]
+    public int Optimized_ShortString()
+    {
+        Span<char> buffer = stackalloc char[256];
+        return Table.GetPaginationString(buffer, 20, 100, 50);
+    }
+
+    [Benchmark]
+    public int Optimized_FullList()
+    {
+        Span<char> buffer = stackalloc char[256];
+        return Table.GetPaginationString(buffer, 100, 10, 5);
+    }
+
+    [Benchmark]
+    public int Optimized_Ellipses()
+    {
+        Span<char> buffer = stackalloc char[256];
+        return Table.GetPaginationString(buffer, 100, 100, 50);
     }
 }
