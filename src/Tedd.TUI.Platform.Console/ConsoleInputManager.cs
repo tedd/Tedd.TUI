@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Threading;
+using System.Collections.Concurrent;
 using Tedd.TUI;
 
 namespace Tedd.TUI.Platform.Console;
@@ -9,6 +10,15 @@ public class ConsoleInputManager
 {
     private readonly TuiWindow _window;
     private uint _lastButtonState;
+    private readonly ConcurrentQueue<InputEvent> _inputQueue = new();
+    private readonly AutoResetEvent _inputWaitHandle = new AutoResetEvent(false);
+    private bool _running;
+
+    private struct InputEvent
+    {
+        public ConsoleKeyInfo Key;
+        public string Sequence;
+    }
 
     public ConsoleInputManager(TuiWindow window)
     {
@@ -27,6 +37,50 @@ public class ConsoleInputManager
     }
 
     public IntPtr InputHandle { get; private set; }
+    public WaitHandle InputWaitHandle => _inputWaitHandle;
+
+    public void Start()
+    {
+        if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            _running = true;
+            var t = new Thread(UnixInputLoop) { IsBackground = true, Name = "UnixInputReader" };
+            t.Start();
+        }
+    }
+
+    private void UnixInputLoop()
+    {
+        while (_running)
+        {
+            try
+            {
+                if (System.Console.IsInputRedirected)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+
+                // Blocking read
+                var key = System.Console.ReadKey(true);
+
+                string seq = null;
+                // Check for Escape Sequence
+                if (key.Key == ConsoleKey.Escape && System.Console.KeyAvailable)
+                {
+                    seq = ReadSequence();
+                }
+
+                _inputQueue.Enqueue(new InputEvent { Key = key, Sequence = seq });
+                _inputWaitHandle.Set();
+            }
+            catch
+            {
+                // In case of error (e.g. strict environment), wait a bit to avoid hot loop
+                Thread.Sleep(100);
+            }
+        }
+    }
 
     public void ProcessInput()
     {
@@ -157,29 +211,23 @@ public class ConsoleInputManager
 
     private void ProcessUnixInput()
     {
-        while (System.Console.KeyAvailable)
+        while (_inputQueue.TryDequeue(out var item))
         {
-            // Read first key
-            var keyInfo = System.Console.ReadKey(true);
-
-            // Check for Escape Sequence
-            if (keyInfo.Key == ConsoleKey.Escape && System.Console.KeyAvailable)
+            if (item.Sequence != null)
             {
-                // Likely a sequence
-                var seq = ReadSequence();
-                if (seq.StartsWith("[<"))
+                if (item.Sequence.StartsWith("[<"))
                 {
-                    ParseMouseSGR(seq);
+                    ParseMouseSGR(item.Sequence);
                 }
                 else
                 {
                     // Treat as normal Escape if not recognized or handle other VT keys
-                     _window.ProcessKey(ToKeyArgs(keyInfo));
+                     _window.ProcessKey(ToKeyArgs(item.Key));
                 }
             }
             else
             {
-                _window.ProcessKey(ToKeyArgs(keyInfo));
+                _window.ProcessKey(ToKeyArgs(item.Key));
             }
         }
     }
