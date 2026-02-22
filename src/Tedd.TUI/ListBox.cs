@@ -48,6 +48,51 @@ public class ListBox : UIElement
     /// </summary>
     public bool ShowSelection { get; set; } = true;
 
+    public static readonly DependencyProperty ForegroundProperty =
+        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Gray);
+
+    public ConsoleColor Foreground
+    {
+        get { return (ConsoleColor)GetValue(ForegroundProperty); }
+        set { SetValue(ForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty SelectionForegroundProperty =
+        DependencyProperty.Register("SelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Black);
+
+    public ConsoleColor SelectionForeground
+    {
+        get { return (ConsoleColor)GetValue(SelectionForegroundProperty); }
+        set { SetValue(SelectionForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty SelectionBackgroundProperty =
+        DependencyProperty.Register("SelectionBackground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
+
+    public ConsoleColor SelectionBackground
+    {
+        get { return (ConsoleColor)GetValue(SelectionBackgroundProperty); }
+        set { SetValue(SelectionBackgroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedSelectionForegroundProperty =
+        DependencyProperty.Register("FocusedSelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
+
+    public ConsoleColor FocusedSelectionForeground
+    {
+        get { return (ConsoleColor)GetValue(FocusedSelectionForegroundProperty); }
+        set { SetValue(FocusedSelectionForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedSelectionBackgroundProperty =
+        DependencyProperty.Register("FocusedSelectionBackground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Blue);
+
+    public ConsoleColor FocusedSelectionBackground
+    {
+        get { return (ConsoleColor)GetValue(FocusedSelectionBackgroundProperty); }
+        set { SetValue(FocusedSelectionBackgroundProperty, value); }
+    }
+
     private int _scrollOffset = 0;
 
     public override int VisualChildrenCount => 1;
@@ -156,20 +201,20 @@ public class ListBox : UIElement
             {
                 bool isSelected = (itemIndex == SelectedIndex);
                 var bg = Background ?? buffer.GetPixel(x, y + i).Background;
-                var fg = ConsoleColor.Gray;
+                var fg = Foreground;
                 if (isSelected)
                 {
                     if (IsFocused)
                     {
                         // Focused: selected item is blue
-                        bg = ConsoleColor.Blue;
-                        fg = ConsoleColor.White;
+                        bg = FocusedSelectionBackground;
+                        fg = FocusedSelectionForeground;
                     }
                     else if (ShowSelection)
                     {
                         // Not focused but ShowSelection enabled: inverted black/white
-                        bg = ConsoleColor.White;
-                        fg = ConsoleColor.Black;
+                        bg = SelectionBackground;
+                        fg = SelectionForeground;
                     }
                     // else: ShowSelection is false and not focused, use default colors
                 }

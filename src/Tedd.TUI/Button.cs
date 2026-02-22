@@ -26,6 +26,42 @@ public class Button : UIElement
         set { SetValue(BoxStyleProperty, value); }
     }
 
+    public static readonly DependencyProperty ForegroundProperty =
+        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(Button), ConsoleColor.White);
+
+    public ConsoleColor Foreground
+    {
+        get { return (ConsoleColor)GetValue(ForegroundProperty); }
+        set { SetValue(ForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty BorderColorProperty =
+        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Gray);
+
+    public ConsoleColor BorderColor
+    {
+        get { return (ConsoleColor)GetValue(BorderColorProperty); }
+        set { SetValue(BorderColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedForegroundProperty =
+        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(Button), ConsoleColor.Yellow);
+
+    public ConsoleColor FocusedForeground
+    {
+        get { return (ConsoleColor)GetValue(FocusedForegroundProperty); }
+        set { SetValue(FocusedForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedBorderColorProperty =
+        DependencyProperty.Register("FocusedBorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Yellow);
+
+    public ConsoleColor FocusedBorderColor
+    {
+        get { return (ConsoleColor)GetValue(FocusedBorderColorProperty); }
+        set { SetValue(FocusedBorderColorProperty, value); }
+    }
+
     public static readonly RoutedEvent ClickEvent =
         RoutedEvent.Register("Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Button));
 
@@ -69,10 +105,23 @@ public class Button : UIElement
         string text = Content;
         var chars = BoxDrawingChars.Get(BoxStyle);
 
-        var borderFg = IsFocused ? ConsoleColor.Yellow : ConsoleColor.Gray;
-        var textFg = IsFocused ? ConsoleColor.Yellow : ConsoleColor.White;
+        var borderFg = IsFocused ? FocusedBorderColor : BorderColor;
+        var textFg = IsFocused ? FocusedForeground : Foreground;
         // Check first pixel for default background if transparent
         var bg = Background ?? buffer.GetPixel(x, y).Background;
+
+        // Fill background
+        for (int j = 0; j < h; j++)
+        {
+            for (int i = 0; i < w; i++)
+            {
+                // Only fill if not border? Or overwrite with border later?
+                // Overwriting later is simpler but less efficient.
+                // Since we iterate anyway, let's fill everything.
+                // However, borders will be drawn on top.
+                buffer.SetPixel(x + i, y + j, ' ', textFg, bg);
+            }
+        }
 
         // Draw Border (Unicode box drawing)
         // Top/Bottom
