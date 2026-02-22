@@ -65,9 +65,9 @@ public class CheckBoxTests
         var buffer = new VirtualBuffer(5, 1);
         cb.Render(buffer, 0, 0);
 
-        // Expected: "[x] A"
+        // Expected: "[√] A"
         Assert.Equal('[', buffer.GetPixel(0, 0).Character);
-        Assert.Equal('x', buffer.GetPixel(1, 0).Character);
+        Assert.Equal('√', buffer.GetPixel(1, 0).Character);
         Assert.Equal(']', buffer.GetPixel(2, 0).Character);
         Assert.Equal('A', buffer.GetPixel(4, 0).Character);
     }

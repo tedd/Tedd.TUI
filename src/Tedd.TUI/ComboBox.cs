@@ -32,6 +32,87 @@ public class ComboBox : UIElement
         }
     }
 
+    public static readonly DependencyProperty ForegroundProperty =
+        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.White);
+
+    public ConsoleColor Foreground
+    {
+        get { return (ConsoleColor)GetValue(ForegroundProperty); }
+        set { SetValue(ForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedForegroundProperty =
+        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
+
+    public ConsoleColor FocusedForeground
+    {
+        get { return (ConsoleColor)GetValue(FocusedForegroundProperty); }
+        set { SetValue(FocusedForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedTextBackgroundColorProperty =
+        DependencyProperty.Register("FocusedTextBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
+
+    public ConsoleColor FocusedTextBackgroundColor
+    {
+        get { return (ConsoleColor)GetValue(FocusedTextBackgroundColorProperty); }
+        set { SetValue(FocusedTextBackgroundColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty ArrowColorProperty =
+        DependencyProperty.Register("ArrowColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
+
+    public ConsoleColor ArrowColor
+    {
+        get { return (ConsoleColor)GetValue(ArrowColorProperty); }
+        set { SetValue(ArrowColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty ArrowBackgroundColorProperty =
+        DependencyProperty.Register("ArrowBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Gray);
+
+    public ConsoleColor ArrowBackgroundColor
+    {
+        get { return (ConsoleColor)GetValue(ArrowBackgroundColorProperty); }
+        set { SetValue(ArrowBackgroundColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedArrowColorProperty =
+        DependencyProperty.Register("FocusedArrowColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
+
+    public ConsoleColor FocusedArrowColor
+    {
+        get { return (ConsoleColor)GetValue(FocusedArrowColorProperty); }
+        set { SetValue(FocusedArrowColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedArrowBackgroundColorProperty =
+        DependencyProperty.Register("FocusedArrowBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
+
+    public ConsoleColor FocusedArrowBackgroundColor
+    {
+        get { return (ConsoleColor)GetValue(FocusedArrowBackgroundColorProperty); }
+        set { SetValue(FocusedArrowBackgroundColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty PopupBackgroundProperty =
+        DependencyProperty.Register("PopupBackground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
+
+    public ConsoleColor PopupBackground
+    {
+        get { return (ConsoleColor)GetValue(PopupBackgroundProperty); }
+        set { SetValue(PopupBackgroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty PopupBorderColorProperty =
+        DependencyProperty.Register("PopupBorderColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.White);
+
+    public ConsoleColor PopupBorderColor
+    {
+        get { return (ConsoleColor)GetValue(PopupBorderColorProperty); }
+        set { SetValue(PopupBorderColorProperty, value); }
+    }
+
     public ComboBox()
     {
         Focusable = true;
@@ -51,8 +132,8 @@ public class ComboBox : UIElement
         int w = RenderSize.Width;
 
         // Draw text area
-        var textBg = IsFocused && !_arrowFocused ? ConsoleColor.DarkGray : ConsoleColor.Black;
-        var textFg = IsFocused && !_arrowFocused ? ConsoleColor.Yellow : ConsoleColor.White;
+        var textBg = IsFocused && !_arrowFocused ? FocusedTextBackgroundColor : (Background ?? ConsoleColor.Black);
+        var textFg = IsFocused && !_arrowFocused ? FocusedForeground : Foreground;
 
         string text = SelectedItem?.ToString() ?? "";
         if (text.Length > w - 2) text = text.Substring(0, w - 2);
@@ -65,8 +146,8 @@ public class ComboBox : UIElement
         }
 
         // Draw Arrow with focus indication
-        var arrowBg = IsFocused && _arrowFocused ? ConsoleColor.DarkGray : ConsoleColor.Gray;
-        var arrowFg = IsFocused && _arrowFocused ? ConsoleColor.Yellow : ConsoleColor.Black;
+        var arrowBg = IsFocused && _arrowFocused ? FocusedArrowBackgroundColor : ArrowBackgroundColor;
+        var arrowFg = IsFocused && _arrowFocused ? FocusedArrowColor : ArrowColor;
         buffer.SetPixel(x + w - 1, y, 'v', arrowFg, arrowBg);
     }
 
@@ -182,7 +263,7 @@ public class ComboBox : UIElement
         _popupListBox.Height = Math.Min(desiredHeight, maxContentHeight);
         
         // Ensure ListBox is opaque
-        _popupListBox.Background = ConsoleColor.Black;
+        _popupListBox.Background = PopupBackground;
 
         // Create a Border for the popup
         _popupBorder = new Border
@@ -190,7 +271,7 @@ public class ComboBox : UIElement
             Width = RenderSize.Width,
             Height = _popupListBox.Height + 2,
             Child = _popupListBox,
-            BorderColor = ConsoleColor.White,
+            BorderColor = PopupBorderColor,
             BoxStyle = BoxStyle.Single
         };
 
