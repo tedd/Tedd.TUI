@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Tedd.TUI;
 
 namespace Tedd.TUI.Platform.Console;
 
@@ -9,15 +10,13 @@ public class ConsoleRenderer : IRenderer
     private int _width;
     private int _height;
 
-    private readonly IConsole _console;
-
-    // Bug: ConsoleRendererBenchmark failing with System.IO.IOException: The handle is invalid.
-    // Root cause: Benchmark runs without a console window, but ConsoleRenderer statically used System.Console.
-    // Fix: Injected IConsole interface allowing MockConsole to be used for benchmarks.
-    // Regression: Tedd.TUI.Tests.ConsoleRendererBenchmark.Benchmark_Render_Updates
-    public ConsoleRenderer(IConsole console = null)
+    public ConsoleRenderer() : this(new SystemConsoleWrapper())
     {
-        _console = console ?? new SystemConsoleWrapper();
+    }
+
+    public ConsoleRenderer(IConsole console)
+    {
+        _console = console;
         _width = _console.WindowWidth;
         _height = _console.WindowHeight;
         _console.CursorVisible = false;
@@ -35,6 +34,7 @@ public class ConsoleRenderer : IRenderer
         int lastFg = -1;
         int lastBg = -1;
 
+        // Use _console properties
         int bufH = Math.Min(buffer.Height, Math.Min(_console.WindowHeight, _console.BufferHeight));
         int bufW = Math.Min(buffer.Width, Math.Min(_console.WindowWidth, _console.BufferWidth));
 
