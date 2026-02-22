@@ -1,7 +1,4 @@
-using System;
-using Xunit;
 using Xunit.Abstractions;
-using Tedd.TUI.Platform.Console;
 
 namespace Tedd.TUI.Tests;
 

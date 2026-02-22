@@ -9,7 +9,13 @@ public class ConsoleRenderer : IRenderer
     private int _width;
     private int _height;
 
-    public ConsoleRenderer(IConsole? console = null)
+    private readonly IConsole _console;
+
+    // Bug: ConsoleRendererBenchmark failing with System.IO.IOException: The handle is invalid.
+    // Root cause: Benchmark runs without a console window, but ConsoleRenderer statically used System.Console.
+    // Fix: Injected IConsole interface allowing MockConsole to be used for benchmarks.
+    // Regression: Tedd.TUI.Tests.ConsoleRendererBenchmark.Benchmark_Render_Updates
+    public ConsoleRenderer(IConsole console = null)
     {
         _console = console ?? new SystemConsoleWrapper();
         _width = _console.WindowWidth;
