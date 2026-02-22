@@ -23,7 +23,7 @@ public class ConsoleRendererBenchmark
         mockConsole.BufferWidth = 80;
         mockConsole.BufferHeight = 25;
 
-        var renderer = new ConsoleRenderer(mockConsole);
+        var renderer = new Tedd.TUI.Platform.Console.ConsoleRenderer(mockConsole);
         var buffer = new VirtualBuffer(80, 25);
 
         // Fill buffer with something

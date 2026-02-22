@@ -279,6 +279,128 @@ public abstract class UIElement : DependencyObject
     }
 
     // Input & Event System
+
+    private Dictionary<RoutedEvent, List<RoutedEventHandlerInfo>> _eventHandlers;
+
+    private struct RoutedEventHandlerInfo
+    {
+        public Delegate Handler;
+        public bool HandledEventsToo;
+
+        public RoutedEventHandlerInfo(Delegate handler, bool handledEventsToo)
+        {
+            Handler = handler;
+            HandledEventsToo = handledEventsToo;
+        }
+    }
+
+    public void AddHandler(RoutedEvent routedEvent, Delegate handler, bool handledEventsToo = false)
+    {
+        if (routedEvent == null) throw new ArgumentNullException(nameof(routedEvent));
+        if (handler == null) throw new ArgumentNullException(nameof(handler));
+
+        if (_eventHandlers == null)
+            _eventHandlers = new Dictionary<RoutedEvent, List<RoutedEventHandlerInfo>>();
+
+        if (!_eventHandlers.TryGetValue(routedEvent, out var handlers))
+        {
+            handlers = new List<RoutedEventHandlerInfo>();
+            _eventHandlers[routedEvent] = handlers;
+        }
+
+        handlers.Add(new RoutedEventHandlerInfo(handler, handledEventsToo));
+    }
+
+    public void RemoveHandler(RoutedEvent routedEvent, Delegate handler)
+    {
+        if (routedEvent == null || handler == null || _eventHandlers == null) return;
+
+        if (_eventHandlers.TryGetValue(routedEvent, out var handlers))
+        {
+            for (int i = 0; i < handlers.Count; i++)
+            {
+                if (handlers[i].Handler == handler)
+                {
+                    handlers.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    public void RaiseEvent(RoutedEventArgs e)
+    {
+        if (e == null) throw new ArgumentNullException(nameof(e));
+
+        e.Source = this;
+        if (e.OriginalSource == null) e.OriginalSource = this;
+
+        // Build Route
+        var route = new List<UIElement>();
+        var current = this;
+        while (current != null)
+        {
+            route.Add(current);
+            current = current.Parent;
+        }
+
+        // Tunnel Phase (Root -> Source)
+        if (e.RoutedEvent.RoutingStrategy == RoutingStrategy.Tunnel)
+        {
+            for (int i = route.Count - 1; i >= 0; i--)
+            {
+                route[i].InvokeHandler(e);
+            }
+        }
+
+        // Bubble Phase (Source -> Root)
+        else if (e.RoutedEvent.RoutingStrategy == RoutingStrategy.Bubble)
+        {
+            for (int i = 0; i < route.Count; i++)
+            {
+                route[i].InvokeHandler(e);
+                // Continue bubbling even if handled, so parents can see handled events if they subscribed with handledEventsToo
+            }
+        }
+        else // Direct
+        {
+            InvokeHandler(e);
+        }
+    }
+
+    private void InvokeHandler(RoutedEventArgs e)
+    {
+        // 1. Class Handler (virtual method)
+        OnEvent(e);
+
+        // 2. Instance Handlers
+        if (_eventHandlers != null && _eventHandlers.TryGetValue(e.RoutedEvent, out var handlers))
+        {
+            // Clone list to allow modification during event? Or just iterate carefully.
+            // Using for loop is safer.
+            for (int i = 0; i < handlers.Count; i++)
+            {
+                var info = handlers[i];
+                if (!e.Handled || info.HandledEventsToo)
+                {
+                    if (info.Handler is RoutedEventHandler reh)
+                    {
+                        reh(this, e);
+                    }
+                    else
+                    {
+                        info.Handler.DynamicInvoke(this, e);
+                    }
+                }
+            }
+        }
+    }
+
+    protected virtual void OnEvent(RoutedEventArgs e)
+    {
+        // Base implementation does nothing
+    }
+
     public virtual void OnKeyDown(KeyEventArgs e) { }
     public virtual void OnKeyUp(KeyEventArgs e) { }
     public virtual void OnMouseDown(MouseEventArgs e) { }

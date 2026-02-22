@@ -5,15 +5,17 @@ namespace Tedd.TUI.Platform.Console;
 
 public class ConsoleRenderer : IRenderer
 {
+    private readonly IConsole _console;
     private int _width;
     private int _height;
 
-    public ConsoleRenderer()
+    public ConsoleRenderer(IConsole? console = null)
     {
-        _width = System.Console.WindowWidth;
-        _height = System.Console.WindowHeight;
-        System.Console.CursorVisible = false;
-        System.Console.OutputEncoding = Encoding.UTF8;
+        _console = console ?? new SystemConsoleWrapper();
+        _width = _console.WindowWidth;
+        _height = _console.WindowHeight;
+        _console.CursorVisible = false;
+        _console.OutputEncoding = Encoding.UTF8;
     }
 
     public void Render(VirtualBuffer buffer)
@@ -27,21 +29,21 @@ public class ConsoleRenderer : IRenderer
         int lastFg = -1;
         int lastBg = -1;
 
-        int bufH = Math.Min(buffer.Height, Math.Min(System.Console.WindowHeight, System.Console.BufferHeight));
-        int bufW = Math.Min(buffer.Width, Math.Min(System.Console.WindowWidth, System.Console.BufferWidth));
+        int bufH = Math.Min(buffer.Height, Math.Min(_console.WindowHeight, _console.BufferHeight));
+        int bufW = Math.Min(buffer.Width, Math.Min(_console.WindowWidth, _console.BufferWidth));
 
-        System.Console.SetCursorPosition(0, 0);
+        _console.SetCursorPosition(0, 0);
 
         var sb = new StringBuilder();
 
         for (int y = 0; y < bufH; y++)
         {
             // Runtime check: BufferHeight might have changed since loop started (e.g. async resize)
-            if (y >= System.Console.BufferHeight) break;
+            if (y >= _console.BufferHeight) break;
 
             try
             {
-                System.Console.SetCursorPosition(0, y);
+                _console.SetCursorPosition(0, y);
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -59,18 +61,18 @@ public class ConsoleRenderer : IRenderer
                 {
                     if (sb.Length > 0)
                     {
-                        System.Console.Write(sb.ToString());
+                        _console.Write(sb.ToString());
                         sb.Clear();
                     }
 
                     if ((int)cell.Foreground != lastFg)
                     {
-                        System.Console.ForegroundColor = cell.Foreground;
+                        _console.ForegroundColor = cell.Foreground;
                         lastFg = (int)cell.Foreground;
                     }
                     if ((int)cell.Background != lastBg)
                     {
-                        System.Console.BackgroundColor = cell.Background;
+                        _console.BackgroundColor = cell.Background;
                         lastBg = (int)cell.Background;
                     }
                 }
@@ -81,11 +83,11 @@ public class ConsoleRenderer : IRenderer
             // Flush end of line
             if (sb.Length > 0)
             {
-                System.Console.Write(sb.ToString());
+                _console.Write(sb.ToString());
                 sb.Clear();
             }
         }
 
-        System.Console.ResetColor();
+        _console.ResetColor();
     }
 }
