@@ -26,13 +26,20 @@ public class Button : UIElement
         set { SetValue(BoxStyleProperty, value); }
     }
 
-    public event EventHandler Click;
+    public static readonly RoutedEvent ClickEvent =
+        RoutedEvent.Register("Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Button));
+
+    public event RoutedEventHandler Click
+    {
+        add { AddHandler(ClickEvent, value); }
+        remove { RemoveHandler(ClickEvent, value); }
+    }
 
     public override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
         Focus();
-        Click?.Invoke(this, EventArgs.Empty);
+        RaiseEvent(new RoutedEventArgs(ClickEvent, this));
         e.Handled = true;
     }
 
@@ -41,7 +48,7 @@ public class Button : UIElement
         base.OnKeyDown(e);
         if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter)
         {
-            Click?.Invoke(this, EventArgs.Empty);
+            RaiseEvent(new RoutedEventArgs(ClickEvent, this));
             e.Handled = true;
         }
     }
