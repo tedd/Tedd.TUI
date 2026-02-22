@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Tedd.TUI;
 
@@ -13,6 +14,10 @@ public class BlazorTuiApp : IDisposable
     private int _width;
     private int _height;
 
+    // Event-driven loop primitives
+    private volatile bool _needsRender = true; // Start with a render
+    private readonly SemaphoreSlim _loopSemaphore = new SemaphoreSlim(1, 1); // Start signaled
+
     public BlazorInputManager InputManager => _inputManager;
     public TuiWindow Window => _window;
 
@@ -21,6 +26,27 @@ public class BlazorTuiApp : IDisposable
         _window = window;
         _renderer = renderer;
         _inputManager = new BlazorInputManager(window);
+
+        // Subscribe to events to wake up the loop
+        _window.VisualChanged += (s, e) => RequestRender();
+        _inputManager.InputAvailable += () => SignalLoop();
+    }
+
+    private void RequestRender()
+    {
+        _needsRender = true;
+        SignalLoop();
+    }
+
+    private void SignalLoop()
+    {
+        try
+        {
+            if (_loopSemaphore.CurrentCount == 0)
+                _loopSemaphore.Release();
+        }
+        catch (SemaphoreFullException) { }
+        catch (ObjectDisposedException) { }
     }
 
     public async Task StartAsync(int width, int height)
@@ -41,87 +67,97 @@ public class BlazorTuiApp : IDisposable
     {
         _width = width;
         _height = height;
+        RequestRender();
     }
 
     private async Task LoopAsync()
     {
-        while (_running)
+        try
         {
-            var start = DateTime.UtcNow;
-
-            // 1. Input
-            _inputManager.ProcessInput();
-
-            // 2. Measure & Arrange
-            // Only strictly needed if something changed, but TUI usually redraws
-            _window.Measure(new Size(_width, _height));
-            _window.Arrange(new Rect(0, 0, _width, _height));
-
-            // 3. Render
-            if (_renderer is ILayeredRenderer layeredRenderer)
+            while (_running)
             {
-                var layers = new System.Collections.Generic.List<RenderLayer>();
+                // Wait for signal with timeout (100ms) for safety/polling backup
+                // We use WaitAsync to yield the thread.
+                await _loopSemaphore.WaitAsync(100);
 
-                // Layer 0: Main Content
-                var contentBuffer = new VirtualBuffer(_width, _height);
-                if (_window.Content != null)
+                if (!_running) break;
+
+                // 1. Process Input
+                // Processing input might trigger VisualChanged, setting _needsRender to true
+                _inputManager.ProcessInput();
+
+                // 2. Render if needed
+                if (_needsRender)
                 {
-                     _window.Content.Render(contentBuffer, 0, 0);
-                }
-                layers.Add(new RenderLayer { Buffer = contentBuffer, X = 0, Y = 0, ZIndex = 0 });
+                    _needsRender = false;
 
-                // Layer 1: Overlay
-                if (_window.Overlay != null)
-                {
-                    // Overlay usually renders at Window coords, but we want it in its own layer.
-                    // If Overlay is formatted to window size (like Dialog in current impl), 
-                    // it draws relative to 0,0 anyway.
-                    // But if we want to OPTIMIZE size, we should check RenderSize of overlay.
-                    // DialogBox.Show() sets position and size in Arrange(rect).
-                    // So RenderSize should be correct.
-                    var overlay = _window.Overlay;
-                    var ovW = overlay.RenderSize.Width;
-                    var ovH = overlay.RenderSize.Height;
-                    var ovX = overlay.RenderSize.X;
-                    var ovY = overlay.RenderSize.Y;
+                    // Measure & Arrange
+                    _window.Measure(new Size(_width, _height));
+                    _window.Arrange(new Rect(0, 0, _width, _height));
 
-                    if (ovW > 0 && ovH > 0)
+                    // Render
+                    if (_renderer is ILayeredRenderer layeredRenderer)
                     {
-                        var overlayBuffer = new VirtualBuffer(ovW, ovH);
-                        // Render relative to itself (0,0 in its buffer)
-                        // DialogBox.Render adds RenderSize.X/Y to the passed offset.
-                        // So to render at 0,0 in this new buffer, we must subtract the component's position.
-                        overlay.Render(overlayBuffer, -ovX, -ovY); 
-                        
-                        layers.Add(new RenderLayer { Buffer = overlayBuffer, X = ovX, Y = ovY, ZIndex = 10 });
+                        var layers = new System.Collections.Generic.List<RenderLayer>();
+
+                        // Layer 0: Main Content
+                        var contentBuffer = new VirtualBuffer(_width, _height);
+                        if (_window.Content != null)
+                        {
+                             _window.Content.Render(contentBuffer, 0, 0);
+                        }
+                        layers.Add(new RenderLayer { Buffer = contentBuffer, X = 0, Y = 0, ZIndex = 0 });
+
+                        // Layer 1: Overlay
+                        if (_window.Overlay != null)
+                        {
+                            var overlay = _window.Overlay;
+                            var ovW = overlay.RenderSize.Width;
+                            var ovH = overlay.RenderSize.Height;
+                            var ovX = overlay.RenderSize.X;
+                            var ovY = overlay.RenderSize.Y;
+
+                            if (ovW > 0 && ovH > 0)
+                            {
+                                var overlayBuffer = new VirtualBuffer(ovW, ovH);
+                                // Render relative to itself (0,0 in its buffer)
+                                overlay.Render(overlayBuffer, -ovX, -ovY);
+
+                                layers.Add(new RenderLayer { Buffer = overlayBuffer, X = ovX, Y = ovY, ZIndex = 10 });
+                            }
+                        }
+
+                        await layeredRenderer.RenderLayersAsync(layers);
+                    }
+                    else
+                    {
+                        // Fallback / Canvas
+                        var buffer = new VirtualBuffer(_width, _height);
+                        _window.Render(buffer);
+                        await _renderer.RenderAsync(buffer);
                     }
                 }
-
-                await layeredRenderer.RenderLayersAsync(layers);
             }
-            else
-            {
-                // Fallback / Canvas
-                var buffer = new VirtualBuffer(_width, _height);
-                _window.Render(buffer);
-                await _renderer.RenderAsync(buffer);
-            }
-
-            // 4. Wait
-            var elapsed = (DateTime.UtcNow - start).TotalMilliseconds;
-            var delay = 16 - (int)elapsed; // Target ~60fps
-            if (delay > 0) await Task.Delay(delay);
-            else await Task.Yield();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Allowed during shutdown
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"TUI Loop Error: {ex}");
         }
     }
 
     public void Stop()
     {
         _running = false;
+        SignalLoop();
     }
 
     public void Dispose()
     {
         Stop();
+        _loopSemaphore.Dispose();
     }
 }
