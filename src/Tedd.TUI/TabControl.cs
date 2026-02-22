@@ -23,6 +23,20 @@ public class TabControl : UIElement
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
+    public override UIElement FindName(string name)
+    {
+        if (Name == name) return this;
+        foreach (var item in Items)
+        {
+            if (item.Content is UIElement uie)
+            {
+                var found = uie.FindName(name);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
     public static readonly DependencyProperty BoxStyleProperty =
         DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(TabControl), BoxStyle.Single);
 

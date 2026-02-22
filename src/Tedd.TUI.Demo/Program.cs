@@ -1,12 +1,79 @@
 using Tedd.TUI.Platform.Console;
 using Tedd.TUI.CodeColoring;
 using Tedd.TUI.Markdown;
+using System.IO;
+using System.Linq;
 
 namespace Tedd.TUI.Demo;
 
 class Program
 {
     static void Main(string[] args)
+    {
+        bool useXaml = false;
+        if (args.Length == 0)
+        {
+            System.Console.WriteLine("Select Demo Mode:");
+            System.Console.WriteLine("1. Programmatic (Code)");
+            System.Console.WriteLine("2. XAML");
+            System.Console.Write("Enter choice (1/2): ");
+            var key = System.Console.ReadKey().KeyChar;
+            System.Console.WriteLine();
+
+            if (key == '2') useXaml = true;
+        }
+        else if (args.Contains("--xaml"))
+        {
+             useXaml = true;
+        }
+
+        if (useXaml)
+        {
+            RunXamlDemo();
+        }
+        else
+        {
+            RunCodeDemo();
+        }
+    }
+
+    static void RunXamlDemo()
+    {
+        // Load XAML
+        string xamlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "demo.xaml");
+        if (!File.Exists(xamlPath))
+        {
+            System.Console.WriteLine($"Error: demo.xaml not found at {xamlPath}");
+            return;
+        }
+        string xaml = File.ReadAllText(xamlPath);
+
+        var controller = new DemoController();
+        // Load returns the Window defined in XAML
+        var loadedWindow = (TuiWindow)XamlLoader.Load(xaml, controller);
+
+        var app = new TuiApp(loadedWindow);
+
+        // Initialize controller
+        controller.Initialize(app, loadedWindow);
+
+        System.Console.CancelKeyPress += (s, e) =>
+        {
+            app.Stop();
+            e.Cancel = true;
+        };
+
+        try
+        {
+            app.Run();
+        }
+        finally
+        {
+            app.Stop();
+        }
+    }
+
+    static void RunCodeDemo()
     {
         var window = new TuiWindow();
         var app = new TuiApp(window);
@@ -138,18 +205,6 @@ class Program
 
             dialog.Content = dialogStack;
 
-            // We need to add it to the window overlay. 
-            // In a real app we might have a better way, but for now we manually use SetOverlay via a helper or direct access?
-            // TuiWindow has SetOverlay but it's public. We need access to 'window' variable.
-            // Since we are inside main, we have 'window'.
-
-            // BUT wait, DialogBox.Show/Hide methods rely on Visibility property. 
-            // TuiWindow's overlay mechanism is: SetOverlay(UIElement).
-            // DialogBox.Show() just sets Visibility=true. It doesn't attach itself to the window if not already there.
-            // The current DialogBox implementation expects to be placed somewhere. 
-            // If we want it to be a true modal overlay handled by TuiWindow, we need to pass it to window.SetOverlay.
-
-            // Let's adjust how we use it here.
             window.SetOverlay(dialog);
             dialog.Show();
         };
@@ -168,9 +223,10 @@ class Program
         listStack.AddChild(progressBar);
 
         listStack.AddChild(new TextBlock { Text = "Items:" });
-        var listBox = new ListBox { Width = 40, Height = 10 };
-        for (int i = 1; i <= 20; i++) listBox.Items.Add($"Item {i}");
-        listStack.AddChild(listBox);
+        // listBox already created
+        var listBoxList = new ListBox { Width = 40, Height = 10 };
+        for (int i = 1; i <= 20; i++) listBoxList.Items.Add($"Item {i}");
+        listStack.AddChild(listBoxList);
 
         tabs.AddItem(new TabItem { Header = "Lists", Content = listStack });
 
@@ -204,7 +260,6 @@ class Program
         table.Columns.Add(colAge);
 
         // 4. Custom key selector example for Actions (sort by length of content?)
-        // Or just leave unsortable or default string.
         table.Columns.Add(new TableColumn { Header = "Actions", Width = GridLength.Pixel(15) });
 
         // Helper to create Edit Button
@@ -359,9 +414,6 @@ public void Hello() {
 
         // Run App
         
-        // Manual hook for logging for now since we don't have a global message bus
-        // In a real app we'd bind or use events.
-
         System.Console.CancelKeyPress += (s, e) =>
         {
             app.Stop();

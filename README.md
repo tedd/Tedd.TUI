@@ -103,8 +103,43 @@ Rendering is decoupled from the platform implementation.
 - **Optimization:** Heavy use of `Span<char>` and stack allocations ensures that the rendering loop generates minimal garbage, maintaining high throughput even on lower-end hardware.
 
 ### Roadmap / Future Capabilities
-- **XAML Support:** Basic `XamlLoader` exists, with plans to expand into full XAML parsing and instantiation.
+- **XAML Support:** Comprehensive XAML parsing and instantiation via `XamlLoader`, supporting code-behind wiring and object injection.
 - **Advanced DataBinding:** Enhancing the current `Binding` infrastructure to support complex paths and converters.
+
+### XAML Support
+
+Tedd.TUI supports defining UI in XAML. You can load XAML at runtime using `XamlLoader`.
+
+**Example XAML (`demo.xaml`):**
+```xml
+<TuiWindow>
+  <StackPanel Orientation="Vertical">
+    <TextBlock Text="Hello from XAML!" Foreground="Cyan"/>
+    <Button Name="SubmitButton" Content="Click Me" Click="OnSubmit"/>
+  </StackPanel>
+</TuiWindow>
+```
+
+**Loading XAML:**
+```csharp
+var controller = new MyController(); // Contains OnSubmit method
+var window = (TuiWindow)XamlLoader.Load(File.ReadAllText("demo.xaml"), controller);
+var app = new TuiApp(window);
+app.Run();
+```
+
+**Controller:**
+```csharp
+class MyController
+{
+    public Button SubmitButton; // Injected by XamlLoader (matches Name="SubmitButton")
+
+    public void OnSubmit(object sender, RoutedEventArgs e)
+    {
+        // Handle click
+    }
+}
+```
 
 ## License
 

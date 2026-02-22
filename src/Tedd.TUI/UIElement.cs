@@ -20,8 +20,23 @@ public enum VerticalAlignment
 
 public abstract class UIElement : DependencyObject
 {
+    public string Name { get; set; }
+
     public UIElement Parent { get; internal set; }
     protected override DependencyObject InheritanceParent => Parent;
+
+    public virtual UIElement FindName(string name)
+    {
+        if (this.Name == name) return this;
+        int count = VisualChildrenCount;
+        for (int i = 0; i < count; i++)
+        {
+            var child = GetVisualChild(i);
+            var found = child?.FindName(name);
+            if (found != null) return found;
+        }
+        return null;
+    }
 
     public static readonly DependencyProperty BackgroundProperty =
         DependencyProperty.Register("Background", typeof(ConsoleColor?), typeof(UIElement), null);
