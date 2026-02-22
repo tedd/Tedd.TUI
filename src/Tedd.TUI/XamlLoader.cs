@@ -318,6 +318,11 @@ public static class XamlLoader
         if (childrenProp != null && childrenProp.PropertyType.IsGenericType && childrenProp.GetValue(parent) is IList list)
         {
             list.Add(child);
+            // Explicitly set Parent if it's a UIElement and parent is UIElement
+            if (child is UIElement childUi && parent is UIElement parentUi)
+            {
+                childUi.Parent = parentUi;
+            }
             return;
         }
 
@@ -342,6 +347,20 @@ public static class XamlLoader
         if (itemsProp != null && itemsProp.GetValue(parent) is IList itemsList)
         {
             itemsList.Add(child);
+            // ItemsControl usually manages parent?
+            // TabControl does: item.Parent = this; in AddItem. But here we add to list directly.
+            // TabControl.Items is List<TabItem>.
+            // TabItem has Parent property.
+            if (child is DependencyObject childDo && parent is UIElement parentUi)
+            {
+                // TabItem is DependencyObject but has Parent property?
+                // TabItem definition: public UIElement Parent { get; set; }
+                var pProp = child.GetType().GetProperty("Parent");
+                if (pProp != null && pProp.CanWrite && pProp.PropertyType == typeof(UIElement))
+                {
+                    pProp.SetValue(child, parentUi);
+                }
+            }
             return;
         }
 

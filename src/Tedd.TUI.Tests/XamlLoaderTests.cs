@@ -32,4 +32,21 @@ public class XamlLoaderTests
         Assert.Equal(2, stack.Children.Count);
         Assert.Equal("Top", ((TextBlock)stack.Children[0]).Text);
     }
+
+    [Fact]
+    public void TestParentSetCorrectly()
+    {
+        string xaml = @"
+<StackPanel>
+    <TextBlock Text='Child' />
+</StackPanel>";
+
+        var element = XamlLoader.Load(xaml);
+        Assert.IsType<StackPanel>(element);
+        var stack = (StackPanel)element;
+        var child = stack.Children[0] as TextBlock;
+
+        Assert.NotNull(child);
+        Assert.Equal(stack, child.Parent);
+    }
 }
