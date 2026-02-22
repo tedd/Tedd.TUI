@@ -1,8 +1,6 @@
-using System;
-using Tedd.TUI;
 using Tedd.TUI.CodeColoring;
 using Tedd.TUI.Markdown;
-using System.Collections.Generic;
+using Tedd.TUI.Platform.Console;
 
 namespace Tedd.TUI.Demo;
 
@@ -56,16 +54,16 @@ public class DemoController
             {
                 DemoTable.Columns[0].SortComparer = (a, b) =>
                 {
-                     if (int.TryParse(a.ToString(), out int i1) && int.TryParse(b.ToString(), out int i2)) return i1.CompareTo(i2);
-                     return 0;
+                    if (int.TryParse(a.ToString(), out int i1) && int.TryParse(b.ToString(), out int i2)) return i1.CompareTo(i2);
+                    return 0;
                 };
             }
             if (DemoTable.Columns.Count > 2)
             {
                 DemoTable.Columns[2].SortComparer = (a, b) =>
                 {
-                     if (int.TryParse(a.ToString(), out int i1) && int.TryParse(b.ToString(), out int i2)) return i1.CompareTo(i2);
-                     return 0;
+                    if (int.TryParse(a.ToString(), out int i1) && int.TryParse(b.ToString(), out int i2)) return i1.CompareTo(i2);
+                    return 0;
                 };
             }
 
@@ -233,10 +231,10 @@ public void Hello() {
     {
         if (sender is UIElement uie && uie.Parent is TableRow row)
         {
-             if (row.Cells.Count > 1 && row.Cells[1] is TextBlock tb)
-             {
-                 LogBox?.Items.Add($"Edit Clicked (XAML Row): {tb.Text}");
-             }
+            if (row.Cells.Count > 1 && row.Cells[1] is TextBlock tb)
+            {
+                LogBox?.Items.Add($"Edit Clicked (XAML Row): {tb.Text}");
+            }
         }
     }
 
