@@ -2,6 +2,7 @@ using System;
 using Xunit;
 using Xunit.Abstractions;
 using Tedd.TUI.Platform.Console;
+using Tedd.TUI;
 
 namespace Tedd.TUI.Tests;
 

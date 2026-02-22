@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 
-namespace Tedd.TUI.Platform.Console;
+namespace Tedd.TUI;
 
 public interface IConsole
 {
