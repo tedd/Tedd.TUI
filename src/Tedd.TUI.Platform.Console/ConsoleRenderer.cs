@@ -5,6 +5,7 @@ namespace Tedd.TUI.Platform.Console;
 
 public class ConsoleRenderer : IRenderer
 {
+    private readonly IConsole _console;
     private int _width;
     private int _height;
 
