@@ -206,6 +206,22 @@ public class Table : UIElement
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
+    public override UIElement FindName(string name)
+    {
+        if (Name == name) return this;
+        // Search rows (logical children)
+        foreach (var row in Rows)
+        {
+            var found = row.FindName(name);
+            if (found != null) return found;
+        }
+        // Also check scrollviewer (which contains visible rows, so redundant but safe)
+        // Actually, visible rows are subset of Rows, so checking Rows is sufficient.
+        // But if ScrollViewer has other children? No, just stackpanel of rows.
+
+        return null;
+    }
+
     protected override void OnDataContextChanged(object newValue)
     {
         base.OnDataContextChanged(newValue);

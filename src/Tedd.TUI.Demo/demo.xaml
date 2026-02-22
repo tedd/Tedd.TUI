@@ -1,0 +1,151 @@
+<TuiWindow>
+  <StackPanel Orientation="Vertical">
+
+    <!-- Menu Bar -->
+    <MenuBar>
+      <MenuItem>
+         <MenuItem.Header><TextBlock Text="File " Foreground="Black"/></MenuItem.Header>
+         <MenuItem.Items>
+            <MenuItem Command="OnNewClick">
+                <MenuItem.Header><TextBlock Text="New " Foreground="Black"/></MenuItem.Header>
+            </MenuItem>
+            <MenuItem Command="OnOpenClick">
+                <MenuItem.Header><TextBlock Text="Open " Foreground="Black"/></MenuItem.Header>
+            </MenuItem>
+            <MenuItem Command="OnExitClick">
+                <MenuItem.Header><TextBlock Text="Exit " Foreground="Black"/></MenuItem.Header>
+            </MenuItem>
+         </MenuItem.Items>
+      </MenuItem>
+      <MenuItem>
+         <MenuItem.Header><TextBlock Text="Edit " Foreground="Black"/></MenuItem.Header>
+         <MenuItem.Items>
+            <MenuItem Command="OnCutClick">
+                <MenuItem.Header><TextBlock Text="Cut " Foreground="Black"/></MenuItem.Header>
+            </MenuItem>
+            <MenuItem Command="OnCopyClick">
+                <MenuItem.Header><TextBlock Text="Copy " Foreground="Black"/></MenuItem.Header>
+            </MenuItem>
+            <MenuItem Command="OnPasteClick">
+                <MenuItem.Header><TextBlock Text="Paste " Foreground="Black"/></MenuItem.Header>
+            </MenuItem>
+         </MenuItem.Items>
+      </MenuItem>
+       <MenuItem>
+         <MenuItem.Header><TextBlock Text="Help " Foreground="Black"/></MenuItem.Header>
+         <MenuItem.Items>
+            <MenuItem Command="OnAboutClick">
+                <MenuItem.Header><TextBlock Text="About " Foreground="Black"/></MenuItem.Header>
+            </MenuItem>
+         </MenuItem.Items>
+      </MenuItem>
+    </MenuBar>
+
+    <!-- Header -->
+    <Border BoxStyle="Double">
+       <TextBlock Text="Tedd.TUI Demo Application (XAML)" Foreground="Cyan"/>
+    </Border>
+
+    <!-- Tabs -->
+    <TabControl Height="20">
+
+       <!-- Tab 1: Form -->
+       <TabItem Header="Form">
+          <StackPanel Orientation="Vertical">
+             <TextBlock Text="Name:"/>
+             <TextBox Name="NameBox" Width="30" Text="John Doe"/>
+
+             <TextBlock Text="Password:"/>
+             <TextBox Name="PassBox" Width="30" IsPassword="True" Text="secret"/>
+
+             <CheckBox Name="TermsCheck" Content="I agree to Terms &amp; Conditions"/>
+
+             <TextBlock Text="Gender:"/>
+             <StackPanel Orientation="Horizontal">
+                <RadioButton Content="Male" GroupName="Gender" IsChecked="True"/>
+                <RadioButton Content="Female" GroupName="Gender"/>
+                <RadioButton Content="Other" GroupName="Gender"/>
+             </StackPanel>
+
+             <TextBlock Text="Country:"/>
+             <ComboBox Name="CountryCombo" Width="20"/>
+
+             <StackPanel Orientation="Horizontal">
+                <Button Content="Submit" BoxStyle="Double" Click="OnSubmit"/>
+                <TextBlock Text="  "/>
+                <Button Content="Show Dialog" BoxStyle="Single" Click="OnShowDialog"/>
+             </StackPanel>
+          </StackPanel>
+       </TabItem>
+
+       <!-- Tab 2: Lists -->
+       <TabItem Header="Lists">
+           <StackPanel Orientation="Vertical">
+              <TextBlock Text="Progress:"/>
+              <ProgressBar Width="40" Value="35"/>
+              <TextBlock Text="Items:"/>
+              <ListBox Name="SimpleList" Width="40" Height="10"/>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 3: Table -->
+       <TabItem Header="Table">
+          <StackPanel Orientation="Vertical">
+              <TextBlock Text="Table Control:"/>
+              <Table Name="DemoTable" Width="60" Height="10" ShowHeader="True" PageSize="5">
+                 <Table.Columns>
+                    <TableColumn Header="ID" Width="5"/>
+                    <TableColumn Header="Name" Width="*"/>
+                    <TableColumn Header="Age" Width="Auto"/>
+                    <TableColumn Header="Actions" Width="15"/>
+                 </Table.Columns>
+              </Table>
+          </StackPanel>
+       </TabItem>
+
+       <!-- Tab 4: Scroll -->
+       <TabItem Header="Scroll">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="ScrollBars Demo"/>
+               <TextBlock Name="ScrollLabel" Text="H: 0, V: 0"/>
+
+               <TextBlock Text="Horizontal:"/>
+               <ScrollBar Name="HScroll" Orientation="Horizontal" Width="40" Minimum="0" Maximum="100" ViewportSize="20" Value="30"/>
+
+               <TextBlock Text="Vertical:"/>
+               <ScrollBar Name="VScroll" Orientation="Vertical" Height="10" Minimum="0" Maximum="50" ViewportSize="10"/>
+
+               <TextBlock Text="ScrollViewer:"/>
+               <ScrollViewer Width="40" Height="10" HorizontalScrollBarVisibility="True" VerticalScrollBarVisibility="True">
+                   <StackPanel Orientation="Vertical" Name="ScrollStackPanel"/>
+               </ScrollViewer>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 5: Code -->
+       <TabItem Header="Code">
+          <StackPanel Orientation="Vertical">
+              <TextBlock Text="Code Coloring Demo"/>
+              <ScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="True" HorizontalScrollBarVisibility="True">
+                  <CodeDocument Name="CodeDoc"/>
+              </ScrollViewer>
+          </StackPanel>
+       </TabItem>
+
+       <!-- Tab 6: Markdown -->
+       <TabItem Header="Markdown">
+          <StackPanel Orientation="Vertical">
+              <TextBlock Text="Markdown View:"/>
+              <ScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="True">
+                  <MarkdownView Name="MdView"/>
+              </ScrollViewer>
+          </StackPanel>
+       </TabItem>
+
+    </TabControl>
+
+    <TextBlock Text="--- Log ---" Foreground="DarkGray"/>
+    <ListBox Name="LogBox" Width="80" Height="5"/>
+
+  </StackPanel>
+</TuiWindow>
