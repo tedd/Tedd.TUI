@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Tedd.TUI.Platform.Console\Tedd.TUI.Platform.Console.csproj" />
     <ProjectReference Include="..\Tedd.TUI\Tedd.TUI.csproj" />
   </ItemGroup>
 

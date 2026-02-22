@@ -12,7 +12,11 @@ public class SystemConsoleWrapper : IConsole
 
     public bool CursorVisible
     {
-        set => System.Console.CursorVisible = value;
+        set
+        {
+            try { System.Console.CursorVisible = value; }
+            catch (System.IO.IOException) { /* Ignore if no console handle */ }
+        }
     }
 
     public Encoding OutputEncoding

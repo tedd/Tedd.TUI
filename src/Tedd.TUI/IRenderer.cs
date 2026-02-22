@@ -13,7 +13,8 @@ public class ConsoleRenderer : IRenderer
 
     public void Render(VirtualBuffer buffer)
     {
-        Console.CursorVisible = false;
+        try { Console.CursorVisible = false; }
+        catch (System.IO.IOException) { /* Ignore if no console handle */ }
 
         // Check if buffer size changed or not initialized
         if (_previousBuffer == null || buffer.Width != _prevWidth || buffer.Height != _prevHeight)
