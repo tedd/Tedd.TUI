@@ -5,87 +5,109 @@ namespace Tedd.TUI.Platform.Console;
 
 public class ConsoleRenderer : IRenderer
 {
+    private readonly IConsole _console;
     private int _width;
     private int _height;
 
-    public ConsoleRenderer()
+    private Cell[,]? _backBuffer;
+    private int _backBufferWidth;
+    private int _backBufferHeight;
+
+    public ConsoleRenderer(IConsole? console = null)
     {
-        _width = System.Console.WindowWidth;
-        _height = System.Console.WindowHeight;
-        System.Console.CursorVisible = false;
-        System.Console.OutputEncoding = Encoding.UTF8;
+        _console = console ?? new SystemConsoleWrapper();
+        _width = _console.WindowWidth;
+        _height = _console.WindowHeight;
+        _console.CursorVisible = false;
+        _console.OutputEncoding = Encoding.UTF8;
     }
 
     public void Render(VirtualBuffer buffer)
     {
-        // Simple optimization: only draw if buffer changed?
-        // For now, full redraw or line-by-line.
-        // To avoid flicker, we should buffer writes, but Console.Write is buffered usually.
+        int bufH = Math.Min(buffer.Height, Math.Min(_console.WindowHeight, _console.BufferHeight));
+        int bufW = Math.Min(buffer.Width, Math.Min(_console.WindowWidth, _console.BufferWidth));
 
-        // We will just draw character by character for now, optimizing state changes.
+        // Check if backbuffer needs resize or initialization
+        if (_backBuffer == null || _backBufferWidth != bufW || _backBufferHeight != bufH)
+        {
+            _backBuffer = new Cell[bufH, bufW];
+            _backBufferWidth = bufW;
+            _backBufferHeight = bufH;
 
-        int lastFg = -1;
-        int lastBg = -1;
+            // Initialize with a value that is unlikely to match any real cell to force redraw
+            // default(Cell) has Character = '\0', which usually differs from ' ' or other content.
+        }
 
-        int bufH = Math.Min(buffer.Height, Math.Min(System.Console.WindowHeight, System.Console.BufferHeight));
-        int bufW = Math.Min(buffer.Width, Math.Min(System.Console.WindowWidth, System.Console.BufferWidth));
+        // We track the state of the console to minimize API calls
+        int cursorX = -1;
+        int cursorY = -1;
 
-        System.Console.SetCursorPosition(0, 0);
+        // Initialize with invalid color to force set on first write
+        ConsoleColor lastFg = (ConsoleColor)(-1);
+        ConsoleColor lastBg = (ConsoleColor)(-1);
 
-        var sb = new StringBuilder();
+        try
+        {
+            // Optional: Hide cursor during render if not already hidden?
+            // Constructor sets it, but maybe it changed.
+            // _console.CursorVisible = false;
+        }
+        catch { }
 
         for (int y = 0; y < bufH; y++)
         {
-            // Runtime check: BufferHeight might have changed since loop started (e.g. async resize)
-            if (y >= System.Console.BufferHeight) break;
-
-            try
-            {
-                System.Console.SetCursorPosition(0, y);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                // If cursor position is out of bounds, we can't draw this line.
-                // Stop rendering this frame to avoid further errors.
-                break;
-            }
+            // Runtime check for resizing
+            if (y >= _console.BufferHeight) break;
 
             for (int x = 0; x < bufW; x++)
             {
                 var cell = buffer.GetPixel(x, y);
+                ref var backCell = ref _backBuffer[y, x];
 
-                // Flush buffer if color changes
-                if ((int)cell.Foreground != lastFg || (int)cell.Background != lastBg)
+                // Diffing: Only write if changed
+                if (cell.Character != backCell.Character ||
+                    cell.Foreground != backCell.Foreground ||
+                    cell.Background != backCell.Background)
                 {
-                    if (sb.Length > 0)
+                    // Move cursor if needed
+                    if (x != cursorX || y != cursorY)
                     {
-                        System.Console.Write(sb.ToString());
-                        sb.Clear();
+                        try
+                        {
+                            _console.SetCursorPosition(x, y);
+                            cursorX = x;
+                            cursorY = y;
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            // If we can't move to this position, we can't write this cell.
+                            continue;
+                        }
                     }
 
-                    if ((int)cell.Foreground != lastFg)
+                    // Update colors if needed
+                    if (cell.Foreground != lastFg)
                     {
-                        System.Console.ForegroundColor = cell.Foreground;
-                        lastFg = (int)cell.Foreground;
+                        _console.ForegroundColor = cell.Foreground;
+                        lastFg = cell.Foreground;
                     }
-                    if ((int)cell.Background != lastBg)
+                    if (cell.Background != lastBg)
                     {
-                        System.Console.BackgroundColor = cell.Background;
-                        lastBg = (int)cell.Background;
+                        _console.BackgroundColor = cell.Background;
+                        lastBg = cell.Background;
                     }
+
+                    // Write character
+                    _console.Write(cell.Character);
+
+                    // Update state
+                    backCell = cell;
+                    cursorX++; // Cursor moves 1 step to the right
                 }
-
-                sb.Append(cell.Character);
-            }
-
-            // Flush end of line
-            if (sb.Length > 0)
-            {
-                System.Console.Write(sb.ToString());
-                sb.Clear();
             }
         }
 
-        System.Console.ResetColor();
+        // Reset colors at end
+        _console.ResetColor();
     }
 }
