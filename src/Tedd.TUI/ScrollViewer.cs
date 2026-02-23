@@ -43,6 +43,18 @@ public class ScrollViewer : UIElement
     public int VerticalOffset => _verticalScrollBar.Value;
     public int HorizontalOffset => _horizontalScrollBar.Value;
 
+    public void ScrollToVerticalOffset(int offset)
+    {
+        _verticalScrollBar.Value = offset;
+        Invalidate();
+    }
+
+    public void ScrollToHorizontalOffset(int offset)
+    {
+        _horizontalScrollBar.Value = offset;
+        Invalidate();
+    }
+
     private void OnScroll(object? sender, EventArgs e)
     {
         Invalidate();
