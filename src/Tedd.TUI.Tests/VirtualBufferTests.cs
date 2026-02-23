@@ -130,5 +130,85 @@ namespace Tedd.TUI.Tests
             cell = buffer.GetPixel(100, 0);
             Assert.Equal(' ', cell.Character);
         }
+
+        [Theory]
+        [InlineData(-100, -100)]
+        [InlineData(int.MinValue, int.MinValue)]
+        [InlineData(int.MaxValue, int.MaxValue)]
+        [InlineData(1000, 1000)]
+        public void TestSetPixel_OutOfBounds_DoesNotThrow(int x, int y)
+        {
+            var buffer = new VirtualBuffer(10, 10);
+
+            // Should not throw
+            var exception = Record.Exception(() =>
+                buffer.SetPixel(x, y, 'X', ConsoleColor.White, ConsoleColor.Black));
+
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void TestPushClip_EmptyRect()
+        {
+            var buffer = new VirtualBuffer(10, 10);
+
+            // Push empty clip
+            buffer.PushClip(new Rect(0, 0, 0, 0));
+
+            // Try to set pixel (should be clipped)
+            buffer.SetPixel(0, 0, 'X', ConsoleColor.White, ConsoleColor.Black);
+
+            Assert.Equal(' ', buffer.GetPixel(0, 0).Character);
+
+            buffer.PopClip();
+
+            // Should work now
+            buffer.SetPixel(0, 0, 'X', ConsoleColor.White, ConsoleColor.Black);
+            Assert.Equal('X', buffer.GetPixel(0, 0).Character);
+        }
+
+        [Fact]
+        public void TestPushClip_Intersect_ResultEmpty()
+        {
+            var buffer = new VirtualBuffer(20, 20);
+
+            buffer.PushClip(new Rect(0, 0, 5, 5));
+            // Push non-intersecting clip (start at 10,10)
+            buffer.PushClip(new Rect(10, 10, 5, 5));
+
+            // Result intersection should be empty or invalid (width <= 0)
+            // VirtualBuffer intersection logic uses Max/Min.
+            // X = Max(0, 10) = 10.
+            // R = Min(5, 15) = 5.
+            // Width = Max(0, 5 - 10) = 0.
+
+            var clip = buffer.GetClip();
+            Assert.Equal(0, clip.Width);
+            Assert.Equal(0, clip.Height);
+
+            // Try set pixel in the second rect area
+            buffer.SetPixel(10, 10, 'X', ConsoleColor.White, ConsoleColor.Black);
+            Assert.Equal(' ', buffer.GetPixel(10, 10).Character);
+        }
+
+        [Fact]
+        public void TestClear_ResetsClipStack()
+        {
+            var buffer = new VirtualBuffer(10, 10);
+            buffer.PushClip(new Rect(0, 0, 2, 2));
+
+            buffer.Clear();
+
+            // Clip should be reset to full buffer
+            var clip = buffer.GetClip();
+            Assert.Equal(0, clip.X);
+            Assert.Equal(0, clip.Y);
+            Assert.Equal(10, clip.Width);
+            Assert.Equal(10, clip.Height);
+
+            // Pixel outside previous clip should now work
+            buffer.SetPixel(5, 5, 'X', ConsoleColor.White, ConsoleColor.Black);
+            Assert.Equal('X', buffer.GetPixel(5, 5).Character);
+        }
     }
 }
