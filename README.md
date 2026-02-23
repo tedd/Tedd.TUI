@@ -20,12 +20,14 @@
 ### Building
 
 ```bash
+cd src
 dotnet build
 ```
 
 ### Running Tests
 
 ```bash
+cd src
 dotnet test
 ```
 
@@ -101,9 +103,9 @@ Rendering is decoupled from the platform implementation.
 - **VirtualBuffer:** The UI renders to an abstract double-buffered grid.
 - **Diffing Algorithm:** The renderer compares the current frame with the previous one, emitting only the changed characters and color codes to the console.
 - **Optimization:** Heavy use of `Span<char>` and stack allocations ensures that the rendering loop generates minimal garbage, maintaining high throughput even on lower-end hardware.
+- **Event-Driven Loop:** The application loop utilizes efficient OS-specific wait handles (WaitForMultipleObjects on Windows, poll/wait on Linux) to minimize CPU usage during inactivity, rendering only when visual changes or input occur.
 
 ### Roadmap / Future Capabilities
-- **XAML Support:** Comprehensive XAML parsing and instantiation via `XamlLoader`, supporting code-behind wiring and object injection.
 - **Advanced DataBinding:** Enhancing the current `Binding` infrastructure to support complex paths and converters.
 
 ### XAML Support

@@ -13,3 +13,14 @@
 - Articulate the Routed Event System and Layout Engine mechanics in a dedicated "Architecture" section.
 - Expand the "Features" list to include `Table`, `Grid`, `MarkdownView`, and performance characteristics.
 - Delineate "XAML Support" as foundational/experimental versus established capabilities.
+
+## 2025-05-25 - Project Structure Alignment
+**Observation:**
+- **Operational Reality:** The root `Tedd.TUI.sln` solution file contains broken project references, causing `dotnet build` to fail in the root directory. The functional solution file resides in `src/`.
+- **Roadmap Drift:** The "XAML Support" feature was listed as a future capability despite being fully implemented and documented with examples.
+- **Architectural Omission:** The efficient, event-driven nature of the render loop (using `WaitForMultipleObjects`/`WaitHandle`) was not explicitly documented in the Architecture section.
+
+**Strategic Action:**
+- Updated `README.md` build and test instructions to direct users to the `src/` directory.
+- Removed "XAML Support" from the Roadmap section.
+- Added "Event-Driven Loop" description to the Rendering Pipeline section.
