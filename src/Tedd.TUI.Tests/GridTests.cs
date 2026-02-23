@@ -122,4 +122,57 @@ public class GridTests
         // UIElement handles inheritance
         Assert.Equal(data, child.DataContext);
     }
+
+    [Fact]
+    public void Grid_MinMax_Constraints_AreRespected()
+    {
+        var grid = new Grid();
+        // Star with max constraint
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star, MaxWidth = 10 });
+        // Auto with min constraint
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, MinWidth = 20 });
+
+        // Add a child to Auto column (col 1) with small content
+        var child = new TextBlock { Text = "S" }; // Width 1
+        grid.AddChild(child);
+        Grid.SetColumn(child, 1);
+
+        grid.Measure(new Size(100, 100));
+        grid.Arrange(new Rect(0, 0, 100, 100));
+
+        // Col 0: Star -> Remaining space. But MaxWidth 10.
+        // Col 1: Auto -> Content "S" (1). But MinWidth 20.
+
+        Assert.Equal(20, grid.ColumnDefinitions[1].ActualWidth); // MinWidth respected
+
+        // Remaining space: 100 - 20 = 80.
+        // Col 0 star share is 80. MaxWidth is 10.
+        Assert.Equal(10, grid.ColumnDefinitions[0].ActualWidth); // MaxWidth respected
+    }
+
+    [Fact]
+    public void Grid_Span_Auto_Handling()
+    {
+        // This test documents the current limitation: Auto columns only consider span=1 children.
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var child = new TextBlock { Text = "1234567890" }; // Width 10
+        grid.AddChild(child);
+        Grid.SetColumn(child, 0);
+        Grid.SetColumnSpan(child, 2);
+
+        grid.Measure(new Size(100, 100));
+        grid.Arrange(new Rect(0, 0, 100, 100));
+
+        // Since child spans 2 columns, it is ignored by Auto sizing logic for individual columns.
+        // Columns should be 0 width (or default minimal).
+        // Actually, if they are 0, the child gets 0 width and clips.
+
+        // This confirms the "known limitation" or bug.
+        // If fixed, this test should be updated to expect correct sizing (e.g. 5 + 5 or 0 + 10).
+        Assert.Equal(0, grid.ColumnDefinitions[0].ActualWidth);
+        Assert.Equal(0, grid.ColumnDefinitions[1].ActualWidth);
+    }
 }

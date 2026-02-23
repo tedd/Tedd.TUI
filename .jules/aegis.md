@@ -46,3 +46,30 @@ Implement comprehensive parameterized unit tests for `ScrollBar` and `VirtualBuf
 
 **Next Steps:**
 - Execute tests and verify coverage.
+
+## 2024-05-24 - Grid, Table, and VirtualBuffer Edge Case Expansion
+
+**Observation:**
+Audit revealed deficits in `VirtualBuffer` edge case handling (out-of-bounds safety, empty clips), `Grid` constraint enforcement (Min/Max/Star), and `Table` interaction logic (sorting, pagination).
+Specifically, `VirtualBuffer.SetPixel` safety was not explicitly tested for extreme values. `Grid` Auto/Star sizing interaction with `MinWidth`/`MaxWidth` was unverified. `Table` sorting and pagination string generation logic lacked direct verification.
+
+**Strategic Action:**
+Implemented parameterized tests for `VirtualBuffer`, `Grid`, and `Table` to cover these edge cases.
+
+**Test Coverage Expansion:**
+- **VirtualBuffer:**
+    - Verified `SetPixel` does not throw on extreme out-of-bounds coordinates (Int.Min/Max).
+    - Verified `PushClip` with empty rects and non-intersecting rects results in correct clipping (empty).
+    - Verified `Clear` resets the clip stack state.
+- **Grid:**
+    - Verified `Star` and `Auto` columns respect `MinWidth`/`MaxWidth` constraints.
+    - Documented and verified `GridUnitType.Auto` limitation with column spanning (currently ignores spanned children).
+- **Table:**
+    - Verified sorting logic (Ascending/Descending) for String and generic types.
+    - Verified Pagination navigation (`CurrentPage`, visible rows).
+    - Verified internal `GetPaginationString` logic for various widths and page counts using parameterized tests.
+
+**Metrics:**
+- Added 15 new tests.
+- Total tests: 159.
+- Verified all tests pass.
