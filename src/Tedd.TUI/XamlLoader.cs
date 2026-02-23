@@ -318,6 +318,10 @@ public static class XamlLoader
         if (childrenProp != null && childrenProp.PropertyType.IsGenericType && childrenProp.GetValue(parent) is IList list)
         {
             list.Add(child);
+            if (parent is UIElement uieParent && child is UIElement uieChild)
+            {
+                uieChild.Parent = uieParent;
+            }
             return;
         }
 
