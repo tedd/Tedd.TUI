@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Tedd.TUI;
 
-namespace Tedd.TUI;
+namespace Tedd.TUI.Benchmarks.Legacy;
 
-public class Grid : UIElement
+public class GridLegacy : UIElement
 {
     public List<RowDefinition> RowDefinitions { get; } = new List<RowDefinition>();
     public List<ColumnDefinition> ColumnDefinitions { get; } = new List<ColumnDefinition>();
-
-    private List<RowDefinition> _implicitRows;
-    private List<ColumnDefinition> _implicitCols;
 
     private readonly List<UIElement> _children = new List<UIElement>();
     public IList<UIElement> Children => _children;
@@ -50,19 +48,6 @@ public class Grid : UIElement
     protected override void OnDataContextChanged(object newValue)
     {
         base.OnDataContextChanged(newValue);
-        foreach (var child in _children)
-        {
-            // If child doesn't have a local DataContext, it inherits.
-            // The base UIElement implementation usually handles this if we implement VisualChildrenCount correctly.
-            // But base implementation says:
-            /*
-            if (dp.IsInherited) {
-               // ... iterates children ...
-            }
-            */
-            // Since DataContext is inherited, base.OnPropertyChanged(DataContextProperty) will call OnPropertyChanged on children.
-            // So we don't need to do anything manual here provided VisualChildrenCount is correct.
-        }
     }
 
     protected override Size MeasureOverride(Size availableSize)
@@ -71,27 +56,8 @@ public class Grid : UIElement
         bool implicitRow = RowDefinitions.Count == 0;
         bool implicitCol = ColumnDefinitions.Count == 0;
 
-        List<RowDefinition> rows;
-        if (implicitRow)
-        {
-            if (_implicitRows == null) _implicitRows = new List<RowDefinition> { new RowDefinition() };
-            rows = _implicitRows;
-        }
-        else
-        {
-            rows = RowDefinitions;
-        }
-
-        List<ColumnDefinition> cols;
-        if (implicitCol)
-        {
-            if (_implicitCols == null) _implicitCols = new List<ColumnDefinition> { new ColumnDefinition() };
-            cols = _implicitCols;
-        }
-        else
-        {
-            cols = ColumnDefinitions;
-        }
+        var rows = implicitRow ? new List<RowDefinition> { new RowDefinition() } : RowDefinitions;
+        var cols = implicitCol ? new List<ColumnDefinition> { new ColumnDefinition() } : ColumnDefinitions;
 
         // Reset actual sizes
         foreach (var r in rows) r.ActualHeight = 0;
@@ -258,28 +224,8 @@ public class Grid : UIElement
         bool implicitRow = RowDefinitions.Count == 0;
         bool implicitCol = ColumnDefinitions.Count == 0;
 
-        List<RowDefinition> rows;
-        if (implicitRow)
-        {
-            // Use existing implicit row list, ensuring it's initialized (though Measure should have done it)
-            if (_implicitRows == null) _implicitRows = new List<RowDefinition> { new RowDefinition { Height = GridLength.Star } };
-            rows = _implicitRows;
-        }
-        else
-        {
-            rows = RowDefinitions;
-        }
-
-        List<ColumnDefinition> cols;
-        if (implicitCol)
-        {
-            if (_implicitCols == null) _implicitCols = new List<ColumnDefinition> { new ColumnDefinition { Width = GridLength.Star } };
-            cols = _implicitCols;
-        }
-        else
-        {
-            cols = ColumnDefinitions;
-        }
+        var rows = implicitRow ? new List<RowDefinition> { new RowDefinition { Height = GridLength.Star } } : RowDefinitions;
+        var cols = implicitCol ? new List<ColumnDefinition> { new ColumnDefinition { Width = GridLength.Star } } : ColumnDefinitions;
 
         // Recalculate stars if size changed
         // ... Optimization: Skip if size matches DesiredSize
