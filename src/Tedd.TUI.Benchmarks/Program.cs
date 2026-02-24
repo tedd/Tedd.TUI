@@ -1,5 +1,5 @@
-using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using System.Reflection;
 
 namespace Tedd.TUI.Benchmarks;
 
@@ -7,10 +7,6 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        BenchmarkRunner.Run<GridBenchmark>();
-        // BenchmarkRunner.Run<PaginationBenchmark>();
-        // BenchmarkRunner.Run<MarkdownBenchmark>();
-        // BenchmarkRunner.Run<VisualTreeBenchmark>();
-        // BenchmarkRunner.Run<VirtualBufferBenchmark>();
+        BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
     }
 }
