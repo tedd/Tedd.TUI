@@ -73,3 +73,20 @@ Implemented parameterized tests for `VirtualBuffer`, `Grid`, and `Table` to cove
 - Added 15 new tests.
 - Total tests: 159.
 - Verified all tests pass.
+
+## 2025-02-18 - Table Component Coverage Expansion
+
+**Observation:**
+`Tedd.TUI.Table` initially exhibited 48.14% coverage, with significant gaps in pagination logic, sorting algorithms, and event handling (mouse/keyboard). `TableSeparator` rendering was largely untested due to `ShowHorizontalLines` defaulting to false.
+
+**Strategic Action:**
+Implemented parameterized unit tests targeting:
+- Detailed pagination string generation (edges, middle, tiny width).
+- Mouse interaction for header sorting (column selection, direction toggle).
+- Mouse interaction for pagination (prev/next, direct page jump).
+- Keyboard navigation (selection change, page traversal).
+- Custom sorting logic (comparer, key selector, null handling).
+- Edge cases (empty table, no columns, zero page size).
+
+**Metrics:**
+- Resulted in `Tedd.TUI.Table` coverage increase to 74.79%.
