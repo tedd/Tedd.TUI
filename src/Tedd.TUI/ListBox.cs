@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
+using System.Reflection;
 
 namespace Tedd.TUI;
 
-public class ListBox : UIElement
+public class ListBox : Selector
 {
     private readonly ScrollBar _scrollBar;
 
@@ -23,23 +23,6 @@ public class ListBox : UIElement
     {
         _scrollOffset = _scrollBar.Value;
         Invalidate();
-    }
-
-    private List<object> _items = new List<object>();
-    public List<object> Items => _items;
-
-    private int _selectedIndex = -1;
-    public int SelectedIndex
-    {
-        get => _selectedIndex;
-        set
-        {
-            if (_selectedIndex != value)
-            {
-                _selectedIndex = value;
-                Invalidate();
-            }
-        }
     }
 
     /// <summary>
@@ -147,7 +130,7 @@ public class ListBox : UIElement
             int maxLen = 0;
             foreach (var item in Items)
             {
-                var s = item?.ToString();
+                var s = GetItemText(item);
                 if (!string.IsNullOrEmpty(s))
                 {
                     if (s.Length > maxLen) maxLen = s.Length;
@@ -219,7 +202,7 @@ public class ListBox : UIElement
                     // else: ShowSelection is false and not focused, use default colors
                 }
 
-                string content = Items[itemIndex]?.ToString() ?? "";
+                string content = GetItemText(Items[itemIndex]);
                 if (content.Length > effectiveW) content = content.Substring(0, effectiveW);
 
                 for (int dx = 0; dx < content.Length; dx++)
@@ -270,12 +253,10 @@ public class ListBox : UIElement
         if (itemIndex >= 0 && itemIndex < Items.Count)
         {
             SelectedIndex = itemIndex;
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            // SelectionChanged is raised by base.SelectedIndex setter
         }
         e.Handled = true;
     }
-
-    public event EventHandler SelectionChanged;
 
     public override void OnKeyDown(KeyEventArgs e)
     {
@@ -300,7 +281,7 @@ public class ListBox : UIElement
         }
         else if (e.Key == ConsoleKey.Enter || e.Key == ConsoleKey.Spacebar)
         {
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            OnSelectionChanged();
             e.Handled = true;
         }
     }

@@ -1,36 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Tedd.TUI;
 
-public class ComboBox : UIElement
+public class ComboBox : Selector
 {
     private ListBox _popupListBox;
     private Border? _popupBorder;
     private bool _isDroppedDown = false;
-    private object _selectedItem;
     private bool _arrowFocused = false; // True when focus is on the dropdown arrow
-
-    public List<object> Items { get; } = new List<object>();
-
-    public event EventHandler? SelectionChanged;
-
-    public object SelectedItem
-    {
-        get { return _selectedItem; }
-        set
-        {
-            if (_selectedItem != value)
-            {
-                _selectedItem = value;
-                if (_popupListBox != null)
-                {
-                    _popupListBox.SelectedIndex = Items.IndexOf(value);
-                }
-                SelectionChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
-    }
 
     public static readonly DependencyProperty ForegroundProperty =
         DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.White);
@@ -117,7 +96,6 @@ public class ComboBox : UIElement
     {
         Focusable = true;
         _popupListBox = new ListBox();
-        _popupListBox.Items.AddRange(Items); // Sync logic needed
     }
 
     protected override Size MeasureOverride(Size availableSize)
@@ -135,7 +113,7 @@ public class ComboBox : UIElement
         var textBg = IsFocused && !_arrowFocused ? FocusedTextBackgroundColor : (Background ?? ConsoleColor.Black);
         var textFg = IsFocused && !_arrowFocused ? FocusedForeground : Foreground;
 
-        string text = SelectedItem?.ToString() ?? "";
+        string text = GetItemText(SelectedItem);
         if (text.Length > w - 2) text = text.Substring(0, w - 2);
 
         // Draw content
@@ -250,8 +228,9 @@ public class ComboBox : UIElement
         int maxContentHeight = Math.Max(0, spaceBelow - 2);
 
         // Setup ListBox
-        _popupListBox.Items.Clear();
-        _popupListBox.Items.AddRange(Items);
+        _popupListBox.ItemsSource = this.Items;
+        _popupListBox.DisplayMemberPath = this.DisplayMemberPath;
+        _popupListBox.SelectedIndex = this.SelectedIndex;
 
         // Popup width matches ComboBox width, adjusted for border
         int contentWidth = Math.Max(0, RenderSize.Width - 2); 
@@ -307,7 +286,7 @@ public class ComboBox : UIElement
             // Sync selection back
             if (_popupListBox.SelectedIndex >= 0 && _popupListBox.SelectedIndex < Items.Count)
             {
-                SelectedItem = Items[_popupListBox.SelectedIndex];
+                SelectedIndex = _popupListBox.SelectedIndex;
             }
         }
         _isDroppedDown = false;
