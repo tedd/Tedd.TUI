@@ -339,20 +339,16 @@ public class Border : ScrollViewer
         buffer.SetPixel(x + w - 1, y + h - 1, chars.BottomRight, c, bg);
 
         // Horizontal Top
-        for (int i = 1; i < w - 1; i++)
-            buffer.SetPixel(x + i, y, chars.Horizontal, c, bg);
+        buffer.DrawHLine(x + 1, y, w - 2, chars.Horizontal, c, bg);
 
         // Horizontal Bottom
-        for (int i = 1; i < w - 1; i++)
-            buffer.SetPixel(x + i, y + h - 1, chars.Horizontal, c, bg);
+        buffer.DrawHLine(x + 1, y + h - 1, w - 2, chars.Horizontal, c, bg);
 
         // Vertical Left
-        for (int i = 1; i < h - 1; i++)
-            buffer.SetPixel(x, y + i, chars.Vertical, c, bg);
+        buffer.DrawVLine(x, y + 1, h - 2, chars.Vertical, c, bg);
 
         // Vertical Right
-        for (int i = 1; i < h - 1; i++)
-            buffer.SetPixel(x + w - 1, y + i, chars.Vertical, c, bg);
+        buffer.DrawVLine(x + w - 1, y + 1, h - 2, chars.Vertical, c, bg);
 
         // 2. Render Children
 
