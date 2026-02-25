@@ -61,7 +61,7 @@ public abstract class ItemsControl : UIElement
         }
     }
 
-    private void OnItemsSourceChanged(IEnumerable? newValue)
+    protected virtual void OnItemsSourceChanged(IEnumerable? newValue)
     {
         _isUpdating = true;
         try
