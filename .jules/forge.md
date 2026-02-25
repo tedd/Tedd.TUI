@@ -9,3 +9,9 @@
 **Observation:** The TUI environment lacks a `TreeView` control, a staple of retro-modern environments (e.g., Norton Commander, Windows Explorer) for hierarchical data visualization. The existing `Table` and `ListBox` controls do not support hierarchical data binding or visual indentation with expanding/collapsing nodes.
 
 **Strategic Action:** Implement `TreeView` and `TreeViewItem` controls. Synthesize the visual style of DOS directory trees (pipe characters `|`, `+`, `\-`) with modern WPF-style `ItemsSource` binding (via `ChildItemsPath` simplified template) and `ObservableCollection` support. Ensure `DataContext` propagates through the logical tree to support deep binding scenarios.
+
+## 2024-05-24 - DataGrid Integration
+
+**Observation:** The codebase lacks a standard `DataGrid` control for displaying tabular data with automatic column generation and data binding. The existing `Table` control requires manual row construction, which is tedious for dynamic data sources and deviates from modern WPF/Avalonia patterns.
+
+**Strategic Action:** Implement `DataGrid` inheriting from `ItemsControl`. This control will utilize composition by hosting a `Table` internally for rendering but expose `ItemsSource` and `Columns` (with `BindingPath`) for modern data binding. It will support `AutoGenerateColumns` to simplify usage for rapid prototyping.
