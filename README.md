@@ -5,6 +5,17 @@
 ## Features
 
 - **WPF-Inspired Core:** Built on a `UIElement` base with a lightweight `DependencyProperty` system and hierarchical Visual Tree.
+- **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol.
+  - **Grid:** Supports `RowDefinition`, `ColumnDefinition`, `Star` (*) sizing, and `Auto` sizing.
+  - **StackPanel:** Vertical and horizontal stacking.
+  - **Border:** Decorative borders with box-drawing characters.
+- **Rich Control Suite:**
+  - **Table:** Features sorting, pagination, header customization, and data binding support.
+  - **MarkdownView:** Renders Markdown content with theming support.
+  - **Standard Controls:** `Button`, `TextBox`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`.
+- **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
+- **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
+- **Cross-Platform:** Decoupled rendering pipeline supporting Console (Windows/Linux/Mac).
 - **Hierarchical Data Binding:** Supports `DataContext` inheritance and property binding, enabling MVVM patterns.
 - **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol, supporting `Grid` (with Row/Col definitions), `StackPanel`, and `Border`.
 - **Routed Event System:** Full support for **Bubbling** and **Tunneling** event strategies, enabling complex interaction models.
@@ -116,8 +127,16 @@ class Program
 
         // Button with Click Handler
         var button = new Button { Content = "Click Me" };
+
+        // Subscribe to the Bubbling Click event
         button.Click += (s, e) =>
         {
+            window.Content = new TextBlock
+            {
+                Text = "Button Clicked!",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Foreground = ConsoleColor.Green
+            };
             viewModel.OnButtonClick();
         };
         stack.AddChild(button);
@@ -135,18 +154,61 @@ class Program
 
 ### Core System
 At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation for:
-- **Visual Tree:** A hierarchical structure where every element (except the root) has a `Parent`. This structure is crucial for event routing and property inheritance.
-- **Dependency Properties:** A property system that supports value inheritance (e.g., `DataContext` flows down the tree) and change notification. Properties are registered via `DependencyProperty.Register` and stored in a sparse dictionary on each `DependencyObject`.
-- **Data Binding:** The `DataContext` property is inherited by all children in the visual tree. Elements can bind their properties to the `DataContext` using `SetBinding`, enabling clean separation of UI and logic (MVVM).
+- **Visual Tree:** A hierarchical structure of elements allowing for complex composition.
+- **Dependency Properties:** A property system that supports value inheritance, change notification, and memory conservation.
+
+### Data Binding
+Tedd.TUI supports a hierarchical data binding system similar to WPF.
+- **DataContext:** The `DataContext` property is inherited down the visual tree.
+- **INotifyPropertyChanged:** Models should implement `System.ComponentModel.INotifyPropertyChanged` to drive UI updates.
+- **Binding:** Use `SetBinding` to link a dependency property to a property on the `DataContext`.
+
+**Example:**
+```csharp
+using System.ComponentModel;
+using Tedd.TUI;
+
+public class ViewModel : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler PropertyChanged;
+    private string _status = "Ready";
+
+    public string Status
+    {
+        get => _status;
+        set
+        {
+            _status = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Status)));
+        }
+    }
+}
+
+// In your application setup:
+var vm = new ViewModel();
+window.DataContext = vm;
+
+var statusText = new TextBlock();
+// Bind TextBlock.Text to ViewModel.Status
+statusText.SetBinding(TextBlock.TextProperty, new Binding("Status"));
+```
 
 ### Layout Engine
 The framework utilizes a recursive two-pass layout system:
-1.  **Measure Pass:** Parents query children for their `DesiredSize` based on available constraints. Elements calculate their size requirements (handling `Auto`, `Star`, and `Pixel` sizing).
-2.  **Arrange Pass:** Parents position children within the final render rectangle. This phase commits the `RenderSize` and final coordinates relative to the parent.
+1.  **Measure Pass:** Parents query children for their `DesiredSize` based on available constraints. `Grid` calculates `Star` (*) sizing during this pass based on available space.
+2.  **Arrange Pass:** Parents position children within the final render rectangle.
 
 ### Input & Interaction
 Tedd.TUI implements a **Routed Event** system, superior to standard .NET events for UI hierarchies:
 - **Tunneling:** Events travel down from the root to the source (e.g., `PreviewKeyDown`).
+- **Bubbling:** Events travel up from the source to the root (e.g., `Click`, `KeyDown`), allowing parent controls to handle events from their children.
+
+### Rendering Pipeline
+Rendering is decoupled from the platform implementation.
+- **VirtualBuffer:** The UI renders to an abstract double-buffered grid.
+- **Diffing Algorithm:** The renderer compares the current frame with the previous one, emitting only the changed characters and color codes to the console.
+- **Optimization:** Heavy use of `Span<char>` and stack allocations ensures that the rendering loop generates minimal garbage, maintaining high throughput.
+- **Event-Driven Loop:** The application loop utilizes efficient OS-specific wait handles (`WaitForMultipleObjects` on Windows, `WaitHandle` on Linux) to minimize CPU usage during inactivity.
 - **Bubbling:** Events travel up from the source to the root (e.g., `Click`, `KeyDown`, `MouseDown`), allowing parent controls (like `ListBoxItem`) to intercept or handle events triggered by their children.
 - **Event Handling:** Handlers are attached using `AddHandler` and removed with `RemoveHandler`. The `RaiseEvent` method traverses the visual tree to invoke handlers according to the routing strategy.
 
@@ -181,6 +243,21 @@ var controller = new MyController(); // Contains OnSubmit method
 var window = (TuiWindow)XamlLoader.Load(File.ReadAllText("demo.xaml"), controller);
 var app = new TuiApp(window);
 app.Run();
+```
+
+**Controller:**
+```csharp
+class MyController
+{
+    // Field name matches x:Name in XAML for injection
+    public Button SubmitButton;
+
+    // Method name matches Click handler in XAML
+    public void OnSubmit(object sender, RoutedEventArgs e)
+    {
+        // Handle click
+    }
+}
 ```
 
 ## License

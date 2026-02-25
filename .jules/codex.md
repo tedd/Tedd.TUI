@@ -24,6 +24,19 @@
 - Updated `README.md` build and test instructions to direct users to the `src/` directory.
 - Removed "XAML Support" from the Roadmap section.
 - Added "Event-Driven Loop" description to the Rendering Pipeline section.
+
+## 2025-05-26 - Documentation Synchronization Protocol
+**Observation:**
+- **Documentation Drift:** The `README.md` requires synchronization with recent API capabilities, specifically for `Grid`, `Table`, `MarkdownView`, and the Data Binding infrastructure.
+- **Architectural Gaps:** The "Usage Example" and "Architecture" sections lack detailed explanations of hierarchical data binding (INotifyPropertyChanged inheritance) and `Grid` star sizing.
+- **Verification:** Verified APIs for `Table` (pagination, sorting), `Grid` (Rows/Cols), `MarkdownView`, and `XamlLoader`.
+
+**Strategic Action:**
+- Update `README.md` to mandate `.NET 10.0 SDK`.
+- Expand "Features" to include `Grid`, `Table`, and `MarkdownView`.
+- Add a dedicated "Data Binding" architectural section with code examples.
+- Detail the `Grid` layout mechanics (Star sizing).
+- Reinforce performance messaging (Zero-Allocation, VirtualBuffer).
 ## 2025-05-26 - Documentation Synchronization Protocol
 **Observation:**
 - **Framework Target:** The current `README.md` documentation has not been fully updated to reflect the mandatory .NET 10.0 prerequisite.
