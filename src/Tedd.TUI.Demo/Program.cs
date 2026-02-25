@@ -412,6 +412,35 @@ public void Hello() {
 
         tabs.AddItem(new TabItem { Header = "Markdown", Content = mdStack });
 
+        // --- Tab 7: DataGrid ---
+        var dataGridStack = new StackPanel { Orientation = Orientation.Vertical };
+        dataGridStack.AddChild(new TextBlock { Text = "DataGrid (Auto Generated Columns):" });
+
+        var dataGrid = new DataGrid
+        {
+            Width = 60,
+            Height = 10,
+            ShowHeader = true,
+            PageSize = 5,
+            AutoGenerateColumns = true,
+            ShowBorder = true,
+            BorderStyle = BoxStyle.Single
+        };
+
+        var people = new List<Person>
+        {
+            new Person { Id = 1, Name = "Alice", Age = 30, Role = "Dev" },
+            new Person { Id = 2, Name = "Bob", Age = 25, Role = "QA" },
+            new Person { Id = 3, Name = "Charlie", Age = 35, Role = "Manager" },
+            new Person { Id = 4, Name = "Dave", Age = 40, Role = "Dev" },
+            new Person { Id = 5, Name = "Eve", Age = 22, Role = "Intern" },
+            new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
+        };
+        dataGrid.ItemsSource = people;
+        dataGridStack.AddChild(dataGrid);
+
+        tabs.AddItem(new TabItem { Header = "DataGrid", Content = dataGridStack });
+
         // Run App
         
         System.Console.CancelKeyPress += (s, e) =>
@@ -429,4 +458,12 @@ public void Hello() {
             app.Stop();
         }
     }
+}
+
+public class Person
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+    public string Role { get; set; }
 }

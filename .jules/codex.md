@@ -37,3 +37,16 @@
 - Add a dedicated "Data Binding" architectural section with code examples.
 - Detail the `Grid` layout mechanics (Star sizing).
 - Reinforce performance messaging (Zero-Allocation, VirtualBuffer).
+## 2025-05-26 - Documentation Synchronization Protocol
+**Observation:**
+- **Framework Target:** The current `README.md` documentation has not been fully updated to reflect the mandatory .NET 10.0 prerequisite.
+- **Architectural Drift:** The "Usage Example" is overly simplistic and does not demonstrate the framework's core architectural strengths, such as Data Binding and the MVVM pattern.
+- **Feature Omission:** The `README.md` lacks explicit sections detailing the "Hierarchical Data Binding", "Zero-Allocation Rendering", and "Event-Driven Loop" which are critical differentiators.
+- **Structural Clarity:** The distinction between the core `Tedd.TUI` library and the `Tedd.TUI.Platform.Console` implementation is not clearly articulated.
+
+**Strategic Action:**
+- Explicitly state `.NET 10.0 SDK` as a prerequisite.
+- Expand the "Features" list to include Data Binding, Zero-Allocation Rendering, and Event-Driven Loop.
+- Add a detailed "Architecture" section explaining the Visual Tree, Dependency Properties, Routed Events, and the Render Loop.
+- Replace the "Getting Started" example with a robust `Program.cs` that demonstrates `TuiApp`, `TuiWindow`, and a `ViewModel` with Data Binding.
+- Clarify the separation between `Tedd.TUI` (Core) and `Tedd.TUI.Platform.Console` (Platform).

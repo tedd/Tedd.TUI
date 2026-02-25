@@ -90,3 +90,19 @@ Implemented parameterized unit tests targeting:
 
 **Metrics:**
 - Resulted in `Tedd.TUI.Table` coverage increase to 74.79%.
+
+## 2025-10-26 - Selector Logic Verification and Coverage Expansion
+
+**Observation:**
+`Selector.cs` (base class for `ListBox` and `ComboBox`) lacked direct unit tests, leaving critical selection synchronization and collection change handling logic unverified. `ListBoxTests.cs` only covered invalidation.
+
+**Strategic Action:**
+Implemented comprehensive parameterized unit tests in `SelectorTests.cs`.
+Constructed a `TestSelector` harness to isolate abstract logic.
+Applied `[Theory]` for index boundary testing and `[Fact]` for state transitions.
+Verified `SelectedIndex`/`SelectedItem` synchronization, `SelectionChanged` event firing, and complex `Items` collection mutations (Add, Remove, Insert, Clear, Replace) including edge cases with `null` items.
+
+**Metrics:**
+- Added 24 new tests.
+- Achieved high confidence in `Selector` logic stability.
+- Verified handling of `null` items and collection synchronization.
