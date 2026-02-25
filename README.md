@@ -5,11 +5,18 @@
 ## Features
 
 - **WPF-Inspired Core:** Built on a `UIElement` base with a lightweight `DependencyProperty` system and hierarchical Visual Tree.
-- **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol, supporting `Grid` (with Row/Col definitions), `StackPanel`, and `Border`.
-- **Routed Event System:** Full support for **Bubbling** and **Tunneling** event strategies, enabling complex interaction models.
-- **Rich Control Suite:** Includes `Table` (with pagination/sorting), `Grid`, `StackPanel`, `Button`, `TextBox`, `CheckBox`, `ProgressBar`, `TabControl`, and `MarkdownView`.
+- **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol.
+  - **Grid:** Supports `RowDefinition`, `ColumnDefinition`, `Star` (*) sizing, and `Auto` sizing.
+  - **StackPanel:** Vertical and horizontal stacking.
+  - **Border:** Decorative borders with box-drawing characters.
+- **Rich Control Suite:**
+  - **Table:** Features sorting, pagination, header customization, and data binding support.
+  - **MarkdownView:** Renders Markdown content with theming support.
+  - **Standard Controls:** `Button`, `TextBox`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`.
+- **Routed Event System:** Full support for **Bubbling** and **Tunneling** event strategies.
+- **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
 - **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
-- **Cross-Platform:** Decoupled rendering pipeline supporting Console (Windows/Linux/Mac) and extensible for other backends (e.g., Blazor).
+- **Cross-Platform:** Decoupled rendering pipeline supporting Console (Windows/Linux/Mac).
 
 ## Getting Started
 
@@ -61,12 +68,15 @@ class Program
         });
 
         var button = new Button { Content = "Click Me" };
+
+        // Subscribe to the Bubbling Click event
         button.Click += (s, e) =>
         {
             window.Content = new TextBlock
             {
                 Text = "Button Clicked!",
-                HorizontalAlignment = HorizontalAlignment.Center
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Foreground = ConsoleColor.Green
             };
         };
         stack.AddChild(button);
@@ -85,28 +95,60 @@ class Program
 ### Core System
 At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation for:
 - **Visual Tree:** A hierarchical structure of elements allowing for complex composition.
-- **Dependency Properties:** A property system that supports value inheritance and change notification.
-- **DataContext:** Built-in support for data binding contexts, paving the way for MVVM patterns.
+- **Dependency Properties:** A property system that supports value inheritance, change notification, and memory conservation.
+
+### Data Binding
+Tedd.TUI supports a hierarchical data binding system similar to WPF.
+- **DataContext:** The `DataContext` property is inherited down the visual tree.
+- **INotifyPropertyChanged:** Models should implement `System.ComponentModel.INotifyPropertyChanged` to drive UI updates.
+- **Binding:** Use `SetBinding` to link a dependency property to a property on the `DataContext`.
+
+**Example:**
+```csharp
+using System.ComponentModel;
+using Tedd.TUI;
+
+public class ViewModel : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler PropertyChanged;
+    private string _status = "Ready";
+
+    public string Status
+    {
+        get => _status;
+        set
+        {
+            _status = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Status)));
+        }
+    }
+}
+
+// In your application setup:
+var vm = new ViewModel();
+window.DataContext = vm;
+
+var statusText = new TextBlock();
+// Bind TextBlock.Text to ViewModel.Status
+statusText.SetBinding(TextBlock.TextProperty, new Binding("Status"));
+```
 
 ### Layout Engine
-The framework utilizes a recursive two-pass layout system similar to WPF:
-1.  **Measure Pass:** Parents query children for their `DesiredSize` based on available constraints.
+The framework utilizes a recursive two-pass layout system:
+1.  **Measure Pass:** Parents query children for their `DesiredSize` based on available constraints. `Grid` calculates `Star` (*) sizing during this pass based on available space.
 2.  **Arrange Pass:** Parents position children within the final render rectangle.
 
 ### Input & Interaction
 Tedd.TUI implements a **Routed Event** system, superior to standard .NET events for UI hierarchies:
-- **Tunneling:** Events travel down from the root to the source (e.g., PreviewKeyDown).
-- **Bubbling:** Events travel up from the source to the root (e.g., Click, KeyDown), allowing parent controls (like ListBoxItems) to handle events from their children.
+- **Tunneling:** Events travel down from the root to the source (e.g., `PreviewKeyDown`).
+- **Bubbling:** Events travel up from the source to the root (e.g., `Click`, `KeyDown`), allowing parent controls to handle events from their children.
 
 ### Rendering Pipeline
 Rendering is decoupled from the platform implementation.
 - **VirtualBuffer:** The UI renders to an abstract double-buffered grid.
 - **Diffing Algorithm:** The renderer compares the current frame with the previous one, emitting only the changed characters and color codes to the console.
-- **Optimization:** Heavy use of `Span<char>` and stack allocations ensures that the rendering loop generates minimal garbage, maintaining high throughput even on lower-end hardware.
-- **Event-Driven Loop:** The application loop utilizes efficient OS-specific wait handles (WaitForMultipleObjects on Windows, poll/wait on Linux) to minimize CPU usage during inactivity, rendering only when visual changes or input occur.
-
-### Roadmap / Future Capabilities
-- **Advanced DataBinding:** Enhancing the current `Binding` infrastructure to support complex paths and converters.
+- **Optimization:** Heavy use of `Span<char>` and stack allocations ensures that the rendering loop generates minimal garbage, maintaining high throughput.
+- **Event-Driven Loop:** The application loop utilizes efficient OS-specific wait handles (`WaitForMultipleObjects` on Windows, `WaitHandle` on Linux) to minimize CPU usage during inactivity.
 
 ### XAML Support
 
@@ -134,8 +176,10 @@ app.Run();
 ```csharp
 class MyController
 {
-    public Button SubmitButton; // Injected by XamlLoader (matches Name="SubmitButton")
+    // Field name matches x:Name in XAML for injection
+    public Button SubmitButton;
 
+    // Method name matches Click handler in XAML
     public void OnSubmit(object sender, RoutedEventArgs e)
     {
         // Handle click
