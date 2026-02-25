@@ -5,3 +5,7 @@
 ## 2026-02-24 - VirtualBuffer Bulk Rendering Optimization
 **Observation:** `VirtualBuffer` operations relied heavily on `SetPixel` inside tight loops (e.g., in `Table.Render` and `Border.Render`). This incurred per-pixel bounds checking, clipping, and method call overhead.
 **Strategic Action:** Implemented `DrawString` (Span-based), `DrawHLine`, `DrawVLine`, and `FillRect` with hoisted bounds/clip checks and direct array access. Refactored `Table` and `Border` to utilize these methods. Benchmarks show up to 2.75x performance improvement for `FillRect` and ~2.4x for `DrawString`.
+
+## 2026-02-25 - ConsoleRenderer Double Buffering
+**Observation:** `ConsoleRenderer` performed a full redraw of the buffer on every frame, emitting redundant ANSI sequences and `Console.Write` calls. This caused excessive I/O and potential flicker. Latency was ~24us for a 2000-cell buffer with 10KB allocations per frame.
+**Strategic Action:** Implemented double-buffering with a `Cell[] _backBuffer`. The renderer now diffs the current frame against the previous frame, batching contiguous changes into a `StringBuilder` and only emitting necessary updates. Optimized cursor positioning and color state changes. Result: "No Change" render latency reduced to ~20us with 98% memory allocation reduction (208B vs 10KB). Sparse updates (1 char) reduced allocation by 97%.
