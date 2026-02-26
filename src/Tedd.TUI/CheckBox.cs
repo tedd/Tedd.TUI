@@ -26,14 +26,7 @@ public class CheckBox : UIElement
         set { SetValue(ContentProperty, value); }
     }
 
-    public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.White);
-
-    public ConsoleColor Foreground
-    {
-        get { return (ConsoleColor)GetValue(ForegroundProperty); }
-        set { SetValue(ForegroundProperty, value); }
-    }
+    public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     public static readonly DependencyProperty FocusedForegroundProperty =
         DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Yellow);

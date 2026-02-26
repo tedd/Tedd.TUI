@@ -17,6 +17,8 @@ public class ListBox : Selector
         };
         _scrollBar.Parent = this;
         _scrollBar.ValueChanged += OnScroll;
+
+        Foreground = ConsoleColor.Gray;
     }
 
     private void OnScroll(object? sender, EventArgs e)
@@ -31,14 +33,7 @@ public class ListBox : Selector
     /// </summary>
     public bool ShowSelection { get; set; } = true;
 
-    public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Gray);
-
-    public ConsoleColor Foreground
-    {
-        get { return (ConsoleColor)GetValue(ForegroundProperty); }
-        set { SetValue(ForegroundProperty, value); }
-    }
+    public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     public static readonly DependencyProperty SelectionForegroundProperty =
         DependencyProperty.Register("SelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Black);

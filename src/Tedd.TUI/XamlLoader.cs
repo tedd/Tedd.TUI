@@ -11,14 +11,18 @@ namespace Tedd.TUI;
 
 public static class XamlLoader
 {
-    public static UIElement Load(string xml, object controller = null)
+    public static UIElement Load(string xml, object? controller = null)
     {
         var doc = new XmlDocument();
         doc.LoadXml(xml);
+
+        if (doc.DocumentElement == null)
+            throw new InvalidOperationException("XML document is empty.");
+
         return (UIElement)ParseElement(doc.DocumentElement, controller);
     }
 
-    private static object ParseElement(XmlElement element, object controller)
+    private static object ParseElement(XmlElement element, object? controller)
     {
         // 1. Create Instance
         string typeName = "Tedd.TUI." + element.Name;
@@ -34,13 +38,15 @@ public static class XamlLoader
         }
 
         // Handle specific sub-namespaces if any (e.g. MarkdownView in Tedd.TUI.Markdown)
-        Type type = ResolveType(element.Name);
+        Type? type = ResolveType(element.Name);
         if (type == null)
         {
             throw new InvalidOperationException($"Type {element.Name} not found.");
         }
 
         var instance = Activator.CreateInstance(type);
+        if (instance == null)
+            throw new InvalidOperationException($"Failed to create instance of {type.Name}.");
 
         // 2. Set Properties (Attributes)
         foreach (XmlAttribute attr in element.Attributes)
@@ -72,7 +78,7 @@ public static class XamlLoader
                     if (propInfo != null)
                     {
                         // Add children of this property element to the property
-                        object propValue = propInfo.GetValue(instance);
+                        object? propValue = propInfo.GetValue(instance);
                         if (propValue is IList list)
                         {
                             foreach(XmlNode grandChild in childElement.ChildNodes)
@@ -108,7 +114,7 @@ public static class XamlLoader
             }
             else if (childNode is XmlText textNode)
             {
-                string text = textNode.Value?.Trim();
+                string? text = textNode.Value?.Trim();
                 if (!string.IsNullOrEmpty(text))
                 {
                     SetContentProperty(instance, text);
@@ -133,7 +139,7 @@ public static class XamlLoader
         return instance;
     }
 
-    private static Type ResolveType(string name)
+    private static Type? ResolveType(string name)
     {
         // Try common namespaces
         string[] namespaces = new[]
@@ -146,7 +152,7 @@ public static class XamlLoader
         foreach (var ns in namespaces)
         {
             string typeName = ns + "." + name;
-            Type type = Type.GetType(typeName);
+            Type? type = Type.GetType(typeName);
             if (type != null) return type;
 
             // Also check loaded assemblies?
@@ -167,7 +173,7 @@ public static class XamlLoader
         return null;
     }
 
-    private static void SetProperty(object instance, string name, string value, object controller)
+    private static void SetProperty(object instance, string name, string value, object? controller)
     {
         if (name == "Name" && instance is UIElement uie)
         {
@@ -188,7 +194,10 @@ public static class XamlLoader
              {
                  try
                  {
-                    Delegate handler = Delegate.CreateDelegate(eventInfo.EventHandlerType, controller, method);
+                    // Create delegate
+                    // Note: Delegate.CreateDelegate requires non-null target if instance method
+                    // controller is not null here.
+                    Delegate handler = Delegate.CreateDelegate(eventInfo.EventHandlerType!, controller, method);
                     eventInfo.AddEventHandler(instance, handler);
                  }
                  catch (Exception)
@@ -274,7 +283,7 @@ public static class XamlLoader
         string propName = parts[1];
 
         // Find owner type
-        Type type = ResolveType(ownerType);
+        Type? type = ResolveType(ownerType);
         if (type == null) return;
 
         // Find Set method: SetRow(UIElement element, int value)

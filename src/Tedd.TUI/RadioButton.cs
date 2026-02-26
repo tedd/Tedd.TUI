@@ -35,14 +35,7 @@ public class RadioButton : UIElement
         set { SetValue(GroupNameProperty, value); }
     }
 
-    public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(RadioButton), ConsoleColor.White);
-
-    public ConsoleColor Foreground
-    {
-        get { return (ConsoleColor)GetValue(ForegroundProperty); }
-        set { SetValue(ForegroundProperty, value); }
-    }
+    public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     public static readonly DependencyProperty FocusedForegroundProperty =
         DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(RadioButton), ConsoleColor.Yellow);

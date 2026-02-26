@@ -11,14 +11,7 @@ public class ComboBox : Selector
     private bool _isDroppedDown = false;
     private bool _arrowFocused = false; // True when focus is on the dropdown arrow
 
-    public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.White);
-
-    public ConsoleColor Foreground
-    {
-        get { return (ConsoleColor)GetValue(ForegroundProperty); }
-        set { SetValue(ForegroundProperty, value); }
-    }
+    public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     public static readonly DependencyProperty FocusedForegroundProperty =
         DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);

@@ -20,11 +20,15 @@ public class FocusOrderTests
         var window = new TuiWindow();
         var tree = GetTree(window, root).ToList();
 
-        // Order: StackPanel, B1, B2
-        Assert.Equal(3, tree.Count);
+        // Order: StackPanel, B1 (tree), B2 (tree)
+        // Button tree depth has increased due to ControlTemplate (Button -> Border -> (ContentPresenter, ScrollBar?) -> TextBlock).
+        // Actual node count is 11.
+        // 1 (SP) + 5 (B1) + 5 (B2) = 11.
+        Assert.Equal(11, tree.Count);
         Assert.Same(root, tree[0]);
         Assert.Same(b1, tree[1]);
-        Assert.Same(b2, tree[2]);
+        // B2 is at index 1 + 5 = 6
+        Assert.Same(b2, tree[6]);
     }
 
     [Fact]
@@ -38,11 +42,12 @@ public class FocusOrderTests
         var window = new TuiWindow();
         var tree = GetTree(window, tc).ToList();
 
-        // Order: TabControl, B1, TabControl (special double yield)
-        Assert.Equal(3, tree.Count);
+        // Order: TabControl, B1 (tree), TabControl (special double yield)
+        // 1 (Tab) + 5 (B1) + 1 (Tab) = 7.
+        Assert.Equal(7, tree.Count);
         Assert.Same(tc, tree[0]);
         Assert.Same(b1, tree[1]);
-        Assert.Same(tc, tree[2]);
+        Assert.Same(tc, tree[6]);
     }
 
     [Fact]

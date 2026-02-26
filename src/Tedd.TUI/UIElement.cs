@@ -22,6 +22,31 @@ public abstract class UIElement : DependencyObject
 {
     public string Name { get; set; }
 
+    // TemplatedParent for TemplateBinding
+    private DependencyObject _templatedParent;
+    public DependencyObject TemplatedParent
+    {
+        get => _templatedParent;
+        internal set
+        {
+            if (_templatedParent != value)
+            {
+                _templatedParent = value;
+                OnTemplatedParentChanged();
+            }
+        }
+    }
+
+    protected virtual void OnTemplatedParentChanged()
+    {
+        // Update bindings that might rely on TemplatedParent
+        foreach (var binding in _bindings)
+        {
+            binding.UpdateTarget();
+        }
+    }
+
+    private UIElement _parent;
     public UIElement Parent
     {
         get => field;
@@ -62,6 +87,15 @@ public abstract class UIElement : DependencyObject
     {
         get { return (ConsoleColor?)GetValue(BackgroundProperty); }
         set { SetValue(BackgroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty ForegroundProperty =
+        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(UIElement), ConsoleColor.White, isInherited: true);
+
+    public ConsoleColor Foreground
+    {
+        get { return (ConsoleColor)GetValue(ForegroundProperty); }
+        set { SetValue(ForegroundProperty, value); }
     }
 
     public static readonly DependencyProperty IsFocusedProperty =
@@ -181,7 +215,7 @@ public abstract class UIElement : DependencyObject
             for (int i = 0; i < count; i++)
             {
                 var child = GetVisualChild(i);
-                if (!child.HasLocalValue(dp))
+                if (child != null && !child.HasLocalValue(dp))
                 {
                     child.OnPropertyChanged(dp);
                 }
