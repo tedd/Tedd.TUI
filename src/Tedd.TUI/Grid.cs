@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Tedd.TUI;
 
@@ -135,9 +134,20 @@ public class Grid : UIElement
         }
 
         // 2c. Star
-        int usedWidth = cols.Sum(c => c.ActualWidth);
+        // Optimization: Replaced LINQ Sum() with manual loop to avoid allocation.
+        // O(C) where C is column count.
+        int usedWidth = 0;
+        foreach (var c in cols) usedWidth += c.ActualWidth;
+
         int remainingWidth = Math.Max(0, availableSize.Width - usedWidth);
-        double totalStarsX = cols.Where(c => c.Width.GridUnitType == GridUnitType.Star).Sum(c => c.Width.Value);
+
+        // Optimization: Replaced LINQ Where().Sum() with manual loop.
+        double totalStarsX = 0;
+        foreach (var c in cols)
+        {
+            if (c.Width.GridUnitType == GridUnitType.Star)
+                totalStarsX += c.Width.Value;
+        }
 
         if (totalStarsX > 0)
         {
@@ -200,9 +210,19 @@ public class Grid : UIElement
         }
 
         // 3c. Star
-        int usedHeight = rows.Sum(r => r.ActualHeight);
+        // Optimization: Replaced LINQ Sum() with manual loop.
+        int usedHeight = 0;
+        foreach (var r in rows) usedHeight += r.ActualHeight;
+
         int remainingHeight = Math.Max(0, availableSize.Height - usedHeight);
-        double totalStarsY = rows.Where(r => r.Height.GridUnitType == GridUnitType.Star).Sum(r => r.Height.Value);
+
+        // Optimization: Replaced LINQ Where().Sum() with manual loop.
+        double totalStarsY = 0;
+        foreach (var r in rows)
+        {
+            if (r.Height.GridUnitType == GridUnitType.Star)
+                totalStarsY += r.Height.Value;
+        }
 
         if (totalStarsY > 0)
         {
@@ -238,8 +258,12 @@ public class Grid : UIElement
              child.Measure(new Size(finalW, finalH));
         }
 
-        int totalW = cols.Sum(c => c.ActualWidth);
-        int totalH = rows.Sum(r => r.ActualHeight);
+        // Optimization: Replaced LINQ Sum() with manual loop.
+        int totalW = 0;
+        foreach (var c in cols) totalW += c.ActualWidth;
+
+        int totalH = 0;
+        foreach (var r in rows) totalH += r.ActualHeight;
 
         return new Size(totalW, totalH);
     }
@@ -287,11 +311,21 @@ public class Grid : UIElement
         // For MVP, let's just stick to what we calculated in Measure or do a quick re-calc for Stars.
         // To be safe and correct (e.g. window resize), let's re-distribute extra space to stars.
 
-        int currentTotalW = cols.Sum(c => c.ActualWidth);
+        // Optimization: Replaced LINQ Sum() with manual loop.
+        int currentTotalW = 0;
+        foreach (var c in cols) currentTotalW += c.ActualWidth;
+
         int extraW = finalSize.Width - currentTotalW;
         if (extraW != 0)
         {
-            double totalStarsX = cols.Where(c => c.Width.GridUnitType == GridUnitType.Star).Sum(c => c.Width.Value);
+            // Optimization: Replaced LINQ Where().Sum() with manual loop.
+            double totalStarsX = 0;
+            foreach (var c in cols)
+            {
+                if (c.Width.GridUnitType == GridUnitType.Star)
+                    totalStarsX += c.Width.Value;
+            }
+
             if (totalStarsX > 0)
             {
                  int usedW = 0;
@@ -312,11 +346,21 @@ public class Grid : UIElement
             }
         }
 
-        int currentTotalH = rows.Sum(r => r.ActualHeight);
+        // Optimization: Replaced LINQ Sum() with manual loop.
+        int currentTotalH = 0;
+        foreach (var r in rows) currentTotalH += r.ActualHeight;
+
         int extraH = finalSize.Height - currentTotalH;
         if (extraH != 0)
         {
-             double totalStarsY = rows.Where(r => r.Height.GridUnitType == GridUnitType.Star).Sum(r => r.Height.Value);
+             // Optimization: Replaced LINQ Where().Sum() with manual loop.
+             double totalStarsY = 0;
+             foreach (var r in rows)
+             {
+                 if (r.Height.GridUnitType == GridUnitType.Star)
+                     totalStarsY += r.Height.Value;
+             }
+
              if (totalStarsY > 0)
              {
                  foreach(var r in rows)

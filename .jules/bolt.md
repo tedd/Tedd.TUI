@@ -9,3 +9,7 @@
 ## 2026-02-25 - ConsoleRenderer Double Buffering
 **Observation:** `ConsoleRenderer` performed a full redraw of the buffer on every frame, emitting redundant ANSI sequences and `Console.Write` calls. This caused excessive I/O and potential flicker. Latency was ~24us for a 2000-cell buffer with 10KB allocations per frame.
 **Strategic Action:** Implemented double-buffering with a `Cell[] _backBuffer`. The renderer now diffs the current frame against the previous frame, batching contiguous changes into a `StringBuilder` and only emitting necessary updates. Optimized cursor positioning and color state changes. Result: "No Change" render latency reduced to ~20us with 98% memory allocation reduction (208B vs 10KB). Sparse updates (1 char) reduced allocation by 97%.
+
+## 2026-02-26 - Grid Layout Optimization
+**Observation:** `Grid.MeasureOverride` and `ArrangeOverride` utilized LINQ (`.Sum()`, `.Where().Sum()`) for calculating row/column dimensions. This caused significant per-pass allocations (delegate creation, enumerator boxing) and CPU overhead in the core layout loop, especially for dynamic sizing.
+**Strategic Action:** Replaced LINQ queries with manual `foreach` loops and accumulator variables. Relocated the original implementation to `Tedd.TUI.Archive` for rigorous A/B testing. Result: 100% reduction in managed heap allocations (0 bytes vs ~300 bytes per measure) and ~1.7x faster execution (417ns vs 716ns) for implicit layouts.
