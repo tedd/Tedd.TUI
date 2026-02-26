@@ -12,13 +12,17 @@ public class Grid : UIElement
     private List<RowDefinition> _implicitRows;
     private List<ColumnDefinition> _implicitCols;
 
-    private readonly List<UIElement> _children = new List<UIElement>();
+    private readonly UIElementCollection _children;
     public IList<UIElement> Children => _children;
+
+    public Grid()
+    {
+        _children = new UIElementCollection(this);
+    }
 
     public void AddChild(UIElement child)
     {
         _children.Add(child);
-        child.Parent = this;
     }
 
     // Attached Properties

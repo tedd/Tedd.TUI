@@ -15,3 +15,11 @@
 **Observation:** The codebase lacks a standard `DataGrid` control for displaying tabular data with automatic column generation and data binding. The existing `Table` control requires manual row construction, which is tedious for dynamic data sources and deviates from modern WPF/Avalonia patterns.
 
 **Strategic Action:** Implement `DataGrid` inheriting from `ItemsControl`. This control will utilize composition by hosting a `Table` internally for rendering but expose `ItemsSource` and `Columns` (with `BindingPath`) for modern data binding. It will support `AutoGenerateColumns` to simplify usage for rapid prototyping.
+
+## 2026-02-26 - [Input Event Infrastructure & Data Context]
+**Observation:** Standard input events (KeyDown, MouseDown) were virtual methods detached from the Routed Event system, preventing logical bubbling. Container controls used `List<UIElement>` exposing raw collections, causing failures in `Parent` assignment and DataContext inheritance when items were added manually.
+**Strategic Action:**
+- Refactored `KeyDown`, `KeyUp`, `MouseDown`, `MouseUp` to use the Routed Event system.
+- Implemented `UIElementCollection` to enforce parentage on item addition/removal.
+- Integrated `Slider` control to demonstrate new input capabilities.
+- Implemented `OnParentChanged` in `UIElement` to automatically refresh inherited DataContext bindings.
