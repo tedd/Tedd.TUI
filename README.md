@@ -1,28 +1,22 @@
 # Tedd.TUI
 
-**Tedd.TUI** is a high-performance, Cross-Platform Text User Interface (TUI) Framework for .NET 10, architected with WPF-inspired design patterns. It features a robust visual tree, hierarchical data binding, a recursive layout engine, and a routed event system, all optimized for zero-allocation rendering.
+**Tedd.TUI** is a high-performance, Cross-Platform Text User Interface (TUI) Framework for .NET 10, architected with WPF-inspired design patterns. It features a robust visual tree, hierarchical data binding, a recursive layout engine, and an event system, all optimized for zero-allocation rendering.
 
 ## Features
 
 - **WPF-Inspired Core:** Built on a `UIElement` base with a lightweight `DependencyProperty` system and hierarchical Visual Tree.
 - **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol.
   - **Grid:** Supports `RowDefinition`, `ColumnDefinition`, `Star` (*) sizing, and `Auto` sizing.
-  - **StackPanel:** Vertical and horizontal stacking.
+  - **StackPanel:** Vertical and horizontal stacking (requires explicit `AddChild` for parenting).
   - **Border:** Decorative borders with box-drawing characters.
 - **Rich Control Suite:**
-  - **Table:** Features sorting, pagination, header customization, and data binding support.
+  - **DataGrid:** Supports `ItemsSource` binding, `AutoGenerateColumns`, selection, and pagination.
+  - **Table:** Manual row management with sorting, pagination, and header customization.
   - **MarkdownView:** Renders Markdown content with theming support.
   - **Standard Controls:** `Button`, `TextBox`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`.
 - **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
 - **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
 - **Cross-Platform:** Decoupled rendering pipeline supporting Console (Windows/Linux/Mac).
-- **Hierarchical Data Binding:** Supports `DataContext` inheritance and property binding, enabling MVVM patterns.
-- **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol, supporting `Grid` (with Row/Col definitions), `StackPanel`, and `Border`.
-- **Routed Event System:** Full support for **Bubbling** and **Tunneling** event strategies, enabling complex interaction models.
-- **Rich Control Suite:** Includes `Table` (with pagination/sorting), `Grid`, `StackPanel`, `Button`, `TextBox`, `CheckBox`, `ProgressBar`, `TabControl`, and `MarkdownView`.
-- **Zero-Allocation Rendering:** Designed with a philosophy of minimizing GC pressure by utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing.
-- **Event-Driven Loop:** The application loop utilizes efficient OS-specific wait handles (`WaitForMultipleObjects` on Windows, poll/wait on Linux) to minimize CPU usage during inactivity.
-- **Cross-Platform Architecture:** The core `Tedd.TUI` library is platform-agnostic, while `Tedd.TUI.Platform.Console` provides the concrete implementation for console environments.
 
 ## Getting Started
 
@@ -104,7 +98,12 @@ class Program
         var app = new TuiApp(window);
 
         // 5. Define the UI layout
-        var stack = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        var stack = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
 
         // Title TextBlock
         var titleBlock = new TextBlock
@@ -113,7 +112,7 @@ class Program
             Foreground = ConsoleColor.Cyan,
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        stack.AddChild(titleBlock);
+        stack.AddChild(titleBlock); // Use AddChild to set Parent automatically
 
         // Status TextBlock with Data Binding
         var statusBlock = new TextBlock
@@ -128,15 +127,9 @@ class Program
         // Button with Click Handler
         var button = new Button { Content = "Click Me" };
 
-        // Subscribe to the Bubbling Click event
+        // Subscribe to the Click event (Routed Event)
         button.Click += (s, e) =>
         {
-            window.Content = new TextBlock
-            {
-                Text = "Button Clicked!",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Foreground = ConsoleColor.Green
-            };
             viewModel.OnButtonClick();
         };
         stack.AddChild(button);
@@ -162,55 +155,19 @@ Tedd.TUI supports a hierarchical data binding system similar to WPF.
 - **DataContext:** The `DataContext` property is inherited down the visual tree.
 - **INotifyPropertyChanged:** Models should implement `System.ComponentModel.INotifyPropertyChanged` to drive UI updates.
 - **Binding:** Use `SetBinding` to link a dependency property to a property on the `DataContext`.
-
-**Example:**
-```csharp
-using System.ComponentModel;
-using Tedd.TUI;
-
-public class ViewModel : INotifyPropertyChanged
-{
-    public event PropertyChangedEventHandler PropertyChanged;
-    private string _status = "Ready";
-
-    public string Status
-    {
-        get => _status;
-        set
-        {
-            _status = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Status)));
-        }
-    }
-}
-
-// In your application setup:
-var vm = new ViewModel();
-window.DataContext = vm;
-
-var statusText = new TextBlock();
-// Bind TextBlock.Text to ViewModel.Status
-statusText.SetBinding(TextBlock.TextProperty, new Binding("Status"));
-```
+- **Collections:** Use `DataGrid` or `ItemsControl` derivatives (`ListBox`, `ComboBox`) to bind to collections.
 
 ### Layout Engine
 The framework utilizes a recursive two-pass layout system:
 1.  **Measure Pass:** Parents query children for their `DesiredSize` based on available constraints. `Grid` calculates `Star` (*) sizing during this pass based on available space.
 2.  **Arrange Pass:** Parents position children within the final render rectangle.
 
-### Input & Interaction
-Tedd.TUI implements a **Routed Event** system, superior to standard .NET events for UI hierarchies:
-- **Tunneling:** Events travel down from the root to the source (e.g., `PreviewKeyDown`).
-- **Bubbling:** Events travel up from the source to the root (e.g., `Click`, `KeyDown`), allowing parent controls to handle events from their children.
+**Important:** For controls like `StackPanel`, use the `AddChild()` method instead of `Children.Add()`. `AddChild()` ensures the `Parent` property is set correctly, which is required for the visual tree, event bubbling, and invalidation propagation.
 
-### Rendering Pipeline
-Rendering is decoupled from the platform implementation.
-- **VirtualBuffer:** The UI renders to an abstract double-buffered grid.
-- **Diffing Algorithm:** The renderer compares the current frame with the previous one, emitting only the changed characters and color codes to the console.
-- **Optimization:** Heavy use of `Span<char>` and stack allocations ensures that the rendering loop generates minimal garbage, maintaining high throughput.
-- **Event-Driven Loop:** The application loop utilizes efficient OS-specific wait handles (`WaitForMultipleObjects` on Windows, `WaitHandle` on Linux) to minimize CPU usage during inactivity.
-- **Bubbling:** Events travel up from the source to the root (e.g., `Click`, `KeyDown`, `MouseDown`), allowing parent controls (like `ListBoxItem`) to intercept or handle events triggered by their children.
-- **Event Handling:** Handlers are attached using `AddHandler` and removed with `RemoveHandler`. The `RaiseEvent` method traverses the visual tree to invoke handlers according to the routing strategy.
+### Input & Interaction
+Input handling in Tedd.TUI follows a hybrid model:
+- **Standard Input:** Key presses and mouse events are handled via virtual methods (`OnKeyDown`, `OnMouseDown`) on the currently focused element. These events do not bubble automatically; the focused element is responsible for processing them.
+- **Routed Events:** High-level interactions (like `Button.Click`) utilize a routed event system. These events can bubble up the visual tree, allowing parent controls to intercept or handle actions triggered by their children.
 
 ### Rendering Pipeline
 Rendering is decoupled from the platform implementation.
