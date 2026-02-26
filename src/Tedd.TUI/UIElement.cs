@@ -215,7 +215,7 @@ public abstract class UIElement : DependencyObject
             for (int i = 0; i < count; i++)
             {
                 var child = GetVisualChild(i);
-                if (!child.HasLocalValue(dp))
+                if (child != null && !child.HasLocalValue(dp))
                 {
                     child.OnPropertyChanged(dp);
                 }

@@ -17,6 +17,8 @@ public class ListBox : Selector
         };
         _scrollBar.Parent = this;
         _scrollBar.ValueChanged += OnScroll;
+
+        Foreground = ConsoleColor.Gray;
     }
 
     private void OnScroll(object? sender, EventArgs e)

@@ -24,7 +24,7 @@ public enum RelativeSourceMode
 public class RelativeSource
 {
     public RelativeSourceMode Mode { get; set; }
-    public Type AncestorType { get; set; }
+    public Type? AncestorType { get; set; }
     public int AncestorLevel { get; set; } = 1;
 
     public RelativeSource(RelativeSourceMode mode)
@@ -44,13 +44,13 @@ public interface IValueConverter
 
 public class Binding
 {
-    public string Path { get; set; }
-    public object Source { get; set; }
-    public RelativeSource RelativeSource { get; set; }
+    public string? Path { get; set; }
+    public object? Source { get; set; }
+    public RelativeSource? RelativeSource { get; set; }
     public BindingMode Mode { get; set; } = BindingMode.OneWay;
-    public IValueConverter Converter { get; set; }
-    public object ConverterParameter { get; set; }
-    public object FallbackValue { get; set; }
+    public IValueConverter? Converter { get; set; }
+    public object? ConverterParameter { get; set; }
+    public object? FallbackValue { get; set; }
 
     public Binding(string path)
     {
@@ -76,7 +76,7 @@ public class BindingExpression
         _binding = binding;
     }
 
-    private object ResolveSource()
+    private object? ResolveSource()
     {
         if (_binding.Source != null)
         {
@@ -99,7 +99,7 @@ public class BindingExpression
         return _target.DataContext;
     }
 
-    private object FindAncestor(UIElement start, Type ancestorType, int level)
+    private object? FindAncestor(UIElement start, Type? ancestorType, int level)
     {
         if (start == null || ancestorType == null) return null;
         var current = start;
@@ -138,16 +138,18 @@ public class BindingExpression
 
         if (newSource == null)
         {
-            // If fallback value is set, use it? Or clear?
-            // For now do nothing or set default.
+            // If fallback value is set, use it
+            if (_binding.FallbackValue != null)
+            {
+                 _target.SetValue(_property, _binding.FallbackValue);
+            }
             return;
         }
 
-        object value = newSource;
+        object? value = newSource;
         if (!string.IsNullOrEmpty(_binding.Path))
         {
              // Simple reflection to get property value from context
-             // Supports basic property paths? For now just one level.
              var propInfo = newSource.GetType().GetProperty(_binding.Path);
              if (propInfo != null)
              {
@@ -156,15 +158,15 @@ public class BindingExpression
              else
              {
                  // Property not found
-                 // Check if it's a field? No.
-                 // Maybe check if source IS the value (Path=".")
-                 if (_binding.Path == ".") value = newSource;
-                 else value = _binding.FallbackValue ?? _property.DefaultValue;
+                 if (_binding.Path == ".")
+                     value = newSource;
+                 else
+                     value = _binding.FallbackValue ?? _property.DefaultValue;
              }
         }
 
         // Apply Converter
-        if (_binding.Converter != null)
+        if (_binding.Converter != null && value != null)
         {
             value = _binding.Converter.Convert(value, _property.PropertyType, _binding.ConverterParameter, CultureInfo.CurrentCulture);
         }
@@ -176,9 +178,6 @@ public class BindingExpression
     {
         if (e.PropertyName == _binding.Path || string.IsNullOrEmpty(e.PropertyName))
         {
-             // Context hasn't changed, but property value inside it has.
-             // But we need to re-evaluate the property value.
-             // We can just call UpdateTarget() but that re-resolves source (which is fine, it's fast).
              UpdateTarget();
         }
     }
