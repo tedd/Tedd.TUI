@@ -9,8 +9,7 @@ public class TabControl : UIElement
     {
         Focusable = true;
     }
-    private List<TabItem> _items = new List<TabItem>();
-    public List<TabItem> Items => _items;
+    public List<TabItem> Items { get; } = [];
 
     public override int VisualChildrenCount => (SelectedIndex >= 0 && SelectedIndex < Items.Count && Items[SelectedIndex].Content is UIElement) ? 1 : 0;
 
@@ -46,23 +45,22 @@ public class TabControl : UIElement
         set { SetValue(BoxStyleProperty, value); }
     }
 
-    private int _selectedIndex = 0;
     public int SelectedIndex
     {
-        get { return _selectedIndex; }
+        get => field;
         set
         {
-            if (_selectedIndex != value)
+            if (field != value)
             {
-                _selectedIndex = value;
+                field = value;
                 UpdateContent();
             }
         }
-    }
+    } = 0;
 
     public void AddItem(TabItem item)
     {
-        _items.Add(item);
+        Items.Add(item);
         item.Parent = this;
         if (item.Content is UIElement uie)
         {
@@ -71,7 +69,7 @@ public class TabControl : UIElement
         }
 
         // If it's the first item, select it
-        if (_items.Count == 1)
+        if (Items.Count == 1)
         {
             UpdateContent();
         }
@@ -93,7 +91,7 @@ public class TabControl : UIElement
         int h = Height > 0 ? Height : availableSize.Height;
 
         // Measure children
-        foreach(var item in _items)
+        foreach(var item in Items)
         {
             if (item.Content is UIElement uie)
             {
@@ -108,7 +106,7 @@ public class TabControl : UIElement
     {
         // Headers are drawn by TabControl
         // Content is arranged below header
-        foreach(var item in _items)
+        foreach(var item in Items)
         {
             if (item.Content is UIElement uie)
             {

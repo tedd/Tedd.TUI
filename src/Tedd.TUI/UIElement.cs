@@ -22,15 +22,14 @@ public abstract class UIElement : DependencyObject
 {
     public string Name { get; set; }
 
-    private UIElement _parent;
     public UIElement Parent
     {
-        get => _parent;
+        get => field;
         internal set
         {
-            if (_parent != value)
+            if (field != value)
             {
-                _parent = value;
+                field = value;
                 OnParentChanged();
             }
         }
@@ -153,7 +152,7 @@ public abstract class UIElement : DependencyObject
         }
     }
 
-    private readonly List<BindingExpression> _bindings = new List<BindingExpression>();
+    private readonly List<BindingExpression> _bindings = [];
 
     public void SetBinding(DependencyProperty dp, Binding binding)
     {
