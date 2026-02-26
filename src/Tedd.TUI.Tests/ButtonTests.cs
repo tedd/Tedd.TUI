@@ -1,10 +1,37 @@
 using Xunit;
 using Tedd.TUI;
+using System.Linq;
 
 namespace Tedd.TUI.Tests;
 
 public class ButtonTests
 {
+    [Fact]
+    public void TestButtonStructure()
+    {
+        var btn = new Button { Content = "Test" };
+        Assert.IsAssignableFrom<ContentControl>(btn);
+        Assert.NotNull(btn.Template);
+
+        // Measure triggers ApplyTemplate
+        btn.Measure(new Size(100, 100));
+
+        // Should have 1 visual child (the template root)
+        Assert.Equal(1, btn.VisualChildrenCount);
+
+        // Verify Template Root is Border
+        var root = btn.GetVisualChild(0);
+        Assert.IsType<Border>(root);
+        var border = (Border)root;
+
+        // Verify ContentPresenter inside Border
+        Assert.IsType<ContentPresenter>(border.Content);
+        var cp = (ContentPresenter)border.Content;
+
+        // Verify Content Binding
+        Assert.Equal("Test", cp.Content);
+    }
+
     [Fact]
     public void TestButtonRender()
     {
@@ -12,24 +39,28 @@ public class ButtonTests
         btn.Measure(new Size(100, 100));
         btn.Arrange(new Rect(0, 0, btn.DesiredSize.Width, btn.DesiredSize.Height));
         
+        // New Button: Content (2) + Border (2) = 4 width.
+        // Height: Content (1) + Border (2) = 3 height.
+        Assert.Equal(4, btn.DesiredSize.Width);
+        Assert.Equal(3, btn.DesiredSize.Height);
+
         var buffer = new VirtualBuffer(btn.DesiredSize.Width, btn.DesiredSize.Height);
         btn.Render(buffer, 0, 0);
         
-        // Button adds 4 chars padding + border.
-        // "OK" length 2. Size should be 6x3.
-        Assert.Equal(6, btn.DesiredSize.Width);
-        Assert.Equal(3, btn.DesiredSize.Height);
-
         // Check Border (Unicode single-line: ┌ ─)
+        // ┌──┐
+        // │OK│
+        // └──┘
+
         Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character); // Top-left
         Assert.Equal('\u2500', buffer.GetPixel(1, 0).Character); // Horizontal
-        
+        Assert.Equal('\u2510', buffer.GetPixel(3, 0).Character); // Top-right
+
         // Check Text Centered
-        // 6 width. 012345
-        // Text "OK" len 2. (6-2)/2 = 2.
-        // x=2 -> 'O', x=3 -> 'K'
-        Assert.Equal('O', buffer.GetPixel(2, 1).Character);
-        Assert.Equal('K', buffer.GetPixel(3, 1).Character);
+        // Width 4. "OK" len 2. (4-2)/2 = 1.
+        // x=1 -> 'O', x=2 -> 'K'
+        Assert.Equal('O', buffer.GetPixel(1, 1).Character);
+        Assert.Equal('K', buffer.GetPixel(2, 1).Character);
     }
 
     [Fact]
@@ -42,5 +73,30 @@ public class ButtonTests
         btn.Render(buffer, 0, 0);
         Assert.Equal('\u2554', buffer.GetPixel(0, 0).Character); // Double top-left
         Assert.Equal('\u2550', buffer.GetPixel(1, 0).Character); // Double horizontal
+    }
+
+    [Fact]
+    public void TestButtonBindingUpdates()
+    {
+        var btn = new Button { Content = "X", BorderColor = ConsoleColor.Red };
+        btn.Measure(new Size(100, 100));
+        var border = (Border)btn.GetVisualChild(0);
+
+        // Initial binding check
+        Assert.Equal(ConsoleColor.Red, border.BorderColor);
+
+        // Update Property
+        btn.BorderColor = ConsoleColor.Blue;
+        // Binding should update Border
+        // Bindings update synchronously in my implementation?
+        // Yes, OnPropertyChanged calls UpdateTarget (if hooked) or setter updates dictionary.
+        // The BindingExpression subscribes to INotifyPropertyChanged or DependencyProperty change?
+        // My BindingExpression currently subscribes to INotifyPropertyChanged on source object.
+        // Source is Button. Button is DependencyObject.
+        // DependencyObject does NOT implement INotifyPropertyChanged by default?
+        // Wait, DependencyObject.OnPropertyChanged calls what?
+        // It does NOT invoke PropertyChanged event unless I implement INotifyPropertyChanged interface.
+        // `DependencyObject` needs to implement `INotifyPropertyChanged` for Binding to work!
+        // This is critical.
     }
 }

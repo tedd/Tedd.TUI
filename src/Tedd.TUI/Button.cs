@@ -2,37 +2,81 @@ using System;
 
 namespace Tedd.TUI;
 
-public class Button : UIElement
+public class Button : ContentControl
 {
     public Button()
     {
         Focusable = true;
-    }
-    public string Content
-    {
-        get { return (string)GetValue(ContentProperty); }
-        set { SetValue(ContentProperty, value); }
+
+        // Define default template
+        Template = new ControlTemplate(parent =>
+        {
+            var btn = (Button)parent;
+            var border = new Border();
+            border.TemplatedParent = btn;
+
+            // Bind visual properties to Button's "Effective" properties
+            // Note: Border.Foreground/Background usually come from UIElement
+            // But Border might shadow them or need explicit binding.
+            // Border uses BorderColor and BoxStyle.
+
+            // Bind BorderColor
+            var borderColorBinding = new Binding("EffectiveBorderColor");
+            borderColorBinding.RelativeSource = RelativeSource.TemplatedParent;
+            border.SetBinding(Border.BorderColorProperty, borderColorBinding);
+
+            // Bind BoxStyle
+            var boxStyleBinding = new Binding("BoxStyle");
+            boxStyleBinding.RelativeSource = RelativeSource.TemplatedParent;
+            border.SetBinding(Border.BoxStyleProperty, boxStyleBinding);
+
+            // Bind Background (inherited but explicit binding ensures it's passed if border doesn't inherit)
+            var bgBinding = new Binding("Background");
+            bgBinding.RelativeSource = RelativeSource.TemplatedParent;
+            border.SetBinding(UIElement.BackgroundProperty, bgBinding);
+
+            // Bind Foreground
+            // TextBlock inside ContentPresenter needs foreground.
+            // ContentPresenter inherits from Border. Border inherits from Button.
+            // If ForegroundProperty is inherited (which we made it), then we don't need to bind it explicitly
+            // UNLESS Border sets it to something else.
+            // But binding explicit ensures template works as expected.
+            var fgBinding = new Binding("EffectiveForeground");
+            fgBinding.RelativeSource = RelativeSource.TemplatedParent;
+            border.SetBinding(UIElement.ForegroundProperty, fgBinding);
+
+            var cp = new ContentPresenter();
+            cp.TemplatedParent = btn;
+
+            // Center content by default
+            cp.HorizontalAlignment = HorizontalAlignment.Center;
+            cp.VerticalAlignment = VerticalAlignment.Center;
+
+            // ContentPresenter properties
+            var contentBinding = new Binding("Content");
+            contentBinding.RelativeSource = RelativeSource.TemplatedParent;
+            cp.SetBinding(ContentPresenter.ContentProperty, contentBinding);
+
+            var contentTemplateBinding = new Binding("ContentTemplate");
+            contentTemplateBinding.RelativeSource = RelativeSource.TemplatedParent;
+            cp.SetBinding(ContentPresenter.ContentTemplateProperty, contentTemplateBinding);
+
+            border.Content = cp;
+            return border;
+        });
+
+        UpdateEffectiveColors();
     }
 
-    public static readonly DependencyProperty ContentProperty =
-        DependencyProperty.Register("Content", typeof(string), typeof(Button), string.Empty);
+    // Public Properties
 
     public static readonly DependencyProperty BoxStyleProperty =
         DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(Button), BoxStyle.Single);
 
     public BoxStyle BoxStyle
     {
-        get { return (BoxStyle)GetValue(BoxStyleProperty); }
-        set { SetValue(BoxStyleProperty, value); }
-    }
-
-    public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(Button), ConsoleColor.White);
-
-    public ConsoleColor Foreground
-    {
-        get { return (ConsoleColor)GetValue(ForegroundProperty); }
-        set { SetValue(ForegroundProperty, value); }
+        get => (BoxStyle)GetValue(BoxStyleProperty);
+        set => SetValue(BoxStyleProperty, value);
     }
 
     public static readonly DependencyProperty BorderColorProperty =
@@ -40,8 +84,8 @@ public class Button : UIElement
 
     public ConsoleColor BorderColor
     {
-        get { return (ConsoleColor)GetValue(BorderColorProperty); }
-        set { SetValue(BorderColorProperty, value); }
+        get => (ConsoleColor)GetValue(BorderColorProperty);
+        set => SetValue(BorderColorProperty, value);
     }
 
     public static readonly DependencyProperty FocusedForegroundProperty =
@@ -49,8 +93,8 @@ public class Button : UIElement
 
     public ConsoleColor FocusedForeground
     {
-        get { return (ConsoleColor)GetValue(FocusedForegroundProperty); }
-        set { SetValue(FocusedForegroundProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedForegroundProperty);
+        set => SetValue(FocusedForegroundProperty, value);
     }
 
     public static readonly DependencyProperty FocusedBorderColorProperty =
@@ -58,8 +102,8 @@ public class Button : UIElement
 
     public ConsoleColor FocusedBorderColor
     {
-        get { return (ConsoleColor)GetValue(FocusedBorderColorProperty); }
-        set { SetValue(FocusedBorderColorProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedBorderColorProperty);
+        set => SetValue(FocusedBorderColorProperty, value);
     }
 
     public static readonly RoutedEvent ClickEvent =
@@ -69,6 +113,53 @@ public class Button : UIElement
     {
         add { AddHandler(ClickEvent, value); }
         remove { RemoveHandler(ClickEvent, value); }
+    }
+
+    // Internal "Effective" properties for Template Binding
+
+    public static readonly DependencyProperty EffectiveBorderColorProperty =
+        DependencyProperty.Register("EffectiveBorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Gray);
+
+    public ConsoleColor EffectiveBorderColor
+    {
+        get => (ConsoleColor)GetValue(EffectiveBorderColorProperty);
+        private set => SetValue(EffectiveBorderColorProperty, value);
+    }
+
+    public static readonly DependencyProperty EffectiveForegroundProperty =
+        DependencyProperty.Register("EffectiveForeground", typeof(ConsoleColor), typeof(Button), ConsoleColor.White);
+
+    public ConsoleColor EffectiveForeground
+    {
+        get => (ConsoleColor)GetValue(EffectiveForegroundProperty);
+        private set => SetValue(EffectiveForegroundProperty, value);
+    }
+
+    // Logic
+
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        base.OnPropertyChanged(dp);
+        if (dp == BorderColorProperty || dp == FocusedBorderColorProperty ||
+            dp == UIElement.ForegroundProperty || dp == FocusedForegroundProperty ||
+            dp == IsFocusedProperty)
+        {
+            UpdateEffectiveColors();
+        }
+    }
+
+    private void UpdateEffectiveColors()
+    {
+        if (IsFocused)
+        {
+            EffectiveBorderColor = FocusedBorderColor;
+            EffectiveForeground = FocusedForeground;
+        }
+        else
+        {
+            EffectiveBorderColor = BorderColor;
+            EffectiveForeground = Foreground;
+        }
     }
 
     public override void OnMouseDown(MouseEventArgs e)
@@ -86,64 +177,6 @@ public class Button : UIElement
         {
             RaiseEvent(new RoutedEventArgs(ClickEvent, this));
             e.Handled = true;
-        }
-    }
-
-    protected override Size MeasureOverride(Size availableSize)
-    {
-        string text = Content;
-        // Button padding [ Text ]
-        return new Size(text.Length + 4, 3);
-    }
-
-    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
-    {
-        int x = RenderSize.X + offsetX;
-        int y = RenderSize.Y + offsetY;
-        int w = RenderSize.Width;
-        int h = RenderSize.Height;
-        string text = Content;
-        var chars = BoxDrawingChars.Get(BoxStyle);
-
-        var borderFg = IsFocused ? FocusedBorderColor : BorderColor;
-        var textFg = IsFocused ? FocusedForeground : Foreground;
-        // Check first pixel for default background if transparent
-        var bg = Background ?? buffer.GetPixel(x, y).Background;
-
-        // Fill background
-        for (int j = 0; j < h; j++)
-        {
-            for (int i = 0; i < w; i++)
-            {
-                // Only fill if not border? Or overwrite with border later?
-                // Overwriting later is simpler but less efficient.
-                // Since we iterate anyway, let's fill everything.
-                // However, borders will be drawn on top.
-                buffer.SetPixel(x + i, y + j, ' ', textFg, bg);
-            }
-        }
-
-        // Draw Border (Unicode box drawing)
-        // Top/Bottom
-        for (int i = 0; i < w; i++)
-        {
-            buffer.SetPixel(x + i, y, i == 0 ? chars.TopLeft : i == w - 1 ? chars.TopRight : chars.Horizontal, borderFg, bg);
-            buffer.SetPixel(x + i, y + h - 1, i == 0 ? chars.BottomLeft : i == w - 1 ? chars.BottomRight : chars.Horizontal, borderFg, bg);
-        }
-        // Left/Right (excluding corners already drawn)
-        for (int i = 1; i < h - 1; i++)
-        {
-            buffer.SetPixel(x, y + i, chars.Vertical, borderFg, bg);
-            buffer.SetPixel(x + w - 1, y + i, chars.Vertical, borderFg, bg);
-        }
-
-        // Draw Text
-        int textX = x + (w - text.Length) / 2;
-        int textY = y + (h - 1) / 2;
-        for (int i = 0; i < text.Length; i++)
-        {
-             if (textX + i > x && textX + i < x + w - 1)
-                buffer.SetPixel(textX + i, textY, text[i], textFg, bg);
         }
     }
 }

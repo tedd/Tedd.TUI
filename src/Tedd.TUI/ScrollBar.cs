@@ -272,6 +272,6 @@ public class ScrollBar : UIElement
         e.Handled = true;
     }
 
-    public ConsoleColor Foreground { get; set; } = ConsoleColor.White;
+    public new ConsoleColor Foreground { get; set; } = ConsoleColor.White;
 
 }
