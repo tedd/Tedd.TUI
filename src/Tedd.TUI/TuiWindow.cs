@@ -267,7 +267,7 @@ public class TuiWindow : UIElement
     {
         // Bubble? Tunnel?
         // WPF uses Bubble for KeyDown.
-        _focusedElement?.OnKeyDown(e);
+        _focusedElement?.RaiseEvent(e);
 
         // Tab Navigation
         if (!e.Handled && e.Key == System.ConsoleKey.Tab)

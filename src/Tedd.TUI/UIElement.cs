@@ -22,8 +22,26 @@ public abstract class UIElement : DependencyObject
 {
     public string Name { get; set; }
 
-    public UIElement Parent { get; internal set; }
+    private UIElement _parent;
+    public UIElement Parent
+    {
+        get => _parent;
+        internal set
+        {
+            if (_parent != value)
+            {
+                _parent = value;
+                OnParentChanged();
+            }
+        }
+    }
     protected override DependencyObject InheritanceParent => Parent;
+
+    protected virtual void OnParentChanged()
+    {
+        // Notify that inherited DataContext might have changed
+        OnPropertyChanged(DataContextProperty);
+    }
 
     public virtual UIElement FindName(string name)
     {
@@ -385,6 +403,14 @@ public abstract class UIElement : DependencyObject
 
     private void InvokeHandler(RoutedEventArgs e)
     {
+        // Update Local Coordinates for MouseEvents
+        if (e is MouseEventArgs me)
+        {
+            var local = this.PointFromScreen(new Point(me.GlobalX, me.GlobalY));
+            me.X = local.X;
+            me.Y = local.Y;
+        }
+
         // 1. Class Handler (virtual method)
         OnEvent(e);
 
@@ -411,9 +437,23 @@ public abstract class UIElement : DependencyObject
         }
     }
 
+    public static readonly RoutedEvent KeyDownEvent = RoutedEvent.Register("KeyDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent KeyUpEvent = RoutedEvent.Register("KeyUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseDownEvent = RoutedEvent.Register("MouseDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseUpEvent = RoutedEvent.Register("MouseUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseMoveEvent = RoutedEvent.Register("MouseMove", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent GotFocusEvent = RoutedEvent.Register("GotFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent LostFocusEvent = RoutedEvent.Register("LostFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+
     protected virtual void OnEvent(RoutedEventArgs e)
     {
-        // Base implementation does nothing
+        if (e.RoutedEvent == KeyDownEvent) OnKeyDown((KeyEventArgs)e);
+        else if (e.RoutedEvent == KeyUpEvent) OnKeyUp((KeyEventArgs)e);
+        else if (e.RoutedEvent == MouseDownEvent) OnMouseDown((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseUpEvent) OnMouseUp((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseMoveEvent) OnMouseMove((MouseEventArgs)e);
+        else if (e.RoutedEvent == GotFocusEvent) OnGotFocus();
+        else if (e.RoutedEvent == LostFocusEvent) OnLostFocus();
     }
 
     public virtual void OnKeyDown(KeyEventArgs e) { }
@@ -473,22 +513,78 @@ public abstract class UIElement : DependencyObject
         }
         return null;
     }
+
+    public Point PointToScreen(Point point)
+    {
+        int x = point.X;
+        int y = point.Y;
+        var current = this;
+        while (current != null)
+        {
+            x += current.RenderSize.X;
+            y += current.RenderSize.Y;
+            current = current.Parent;
+        }
+        return new Point(x, y);
+    }
+
+    public Point PointFromScreen(Point point)
+    {
+        int x = point.X;
+        int y = point.Y;
+        var current = this;
+        // This is tricky because we need to subtract parent's offsets.
+        // Or we just calculate this.PointToScreen(0,0) and subtract it from point.
+        var screenPos = PointToScreen(new Point(0, 0));
+        return new Point(x - screenPos.X, y - screenPos.Y);
+    }
 }
 
-public class KeyEventArgs
+public class KeyEventArgs : RoutedEventArgs
 {
     public ConsoleKey Key { get; set; }
     public char KeyChar { get; set; }
     public ConsoleModifiers Modifiers { get; set; }
-    public bool Handled { get; set; }
+
+    public KeyEventArgs(RoutedEvent routedEvent, object source) : base(routedEvent, source)
+    {
+    }
+
+    public KeyEventArgs(RoutedEvent routedEvent) : base(routedEvent)
+    {
+    }
+
+    public KeyEventArgs() : base(UIElement.KeyDownEvent)
+    {
+    }
 }
 
-public class MouseEventArgs
+public class MouseEventArgs : RoutedEventArgs
 {
     public int X { get; set; }
     public int Y { get; set; }
-    public bool Handled { get; set; }
-    // Add Buttons state etc if needed
+
+    // Global Coordinates (Screen/Console space)
+    public int GlobalX { get; set; }
+    public int GlobalY { get; set; }
+
+    public MouseEventArgs(RoutedEvent routedEvent, object source) : base(routedEvent, source)
+    {
+    }
+
+    public MouseEventArgs(RoutedEvent routedEvent) : base(routedEvent)
+    {
+    }
+
+    public MouseEventArgs() : base(UIElement.MouseDownEvent)
+    {
+    }
+
+    public Point GetPosition(UIElement relativeTo)
+    {
+        if (relativeTo == null) return new Point(GlobalX, GlobalY);
+        return relativeTo.PointFromScreen(new Point(GlobalX, GlobalY));
+    }
 }
 
 public class HitTestResult

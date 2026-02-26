@@ -12,13 +12,17 @@ public enum Orientation
 
 public class StackPanel : UIElement
 {
-    private readonly List<UIElement> _children = new List<UIElement>();
+    private readonly UIElementCollection _children;
     public IList<UIElement> Children => _children;
+
+    public StackPanel()
+    {
+        _children = new UIElementCollection(this);
+    }
 
     public void AddChild(UIElement child)
     {
         _children.Add(child);
-        child.Parent = this;
     }
 
     public override int VisualChildrenCount => _children.Count;

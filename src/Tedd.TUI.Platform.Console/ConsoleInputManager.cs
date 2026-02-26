@@ -115,7 +115,7 @@ public class ConsoleInputManager
                 if (record.KeyEvent.bKeyDown != 0) // bKeyDown is int (BOOL)
                 {
                     // Map to KeyEventArgs
-                    var args = new KeyEventArgs
+                    var args = new KeyEventArgs(UIElement.KeyDownEvent)
                     {
                         Key = (ConsoleKey)record.KeyEvent.wVirtualKeyCode,
                         KeyChar = record.KeyEvent.UnicodeChar,
@@ -140,50 +140,31 @@ public class ConsoleInputManager
                 var hit = _window.InputHitTest(x, y);
                 if (hit != null)
                 {
-                     var argsMove = new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY };
-                     var argsDown = (leftDown && !wasLeftDown) ? new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY } : null;
-                     var argsUp = (!leftDown && wasLeftDown) ? new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY } : null;
+                     // Use Routed Events with Global Coordinates
+                     // Note: x, y are global console coordinates here?
+                     // record.MouseEvent.dwMousePosition is SCREEN buffer coordinates (Global).
+                     // InputHitTest uses them as relative to window usually?
+                     // TuiApp adjusts buffer size to window size.
+                     // Assuming x,y are Global relative to the TuiWindow Root (0,0).
                      
-                     var current = hit.Element;
-                     while (current != null)
+                     if (!hit.Element.IsFocused && hit.Element.Focusable && leftDown && !wasLeftDown)
                      {
-                         // Dispatch Move
-                         if (!argsMove.Handled) current.OnMouseMove(argsMove);
+                         _window.SetFocus(hit.Element);
+                     }
 
-                         // Dispatch Down
-                         if (argsDown != null && !argsDown.Handled)
-                         {
-                             // Focus logic (Leaf only)
-                             if (current == hit.Element && current.Focusable) 
-                             {
-                                 _window.SetFocus(current);
-                             }
-                             current.OnMouseDown(argsDown);
-                         }
+                     var argsMove = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = x, GlobalY = y };
+                     hit.Element.RaiseEvent(argsMove);
 
-                         // Dispatch Up
-                         if (argsUp != null && !argsUp.Handled)
-                         {
-                             current.OnMouseUp(argsUp);
-                         }
-                         
-                         // Optimization: Stop if all active events are handled
-                         if (argsMove.Handled && 
-                             (argsDown == null || argsDown.Handled) && 
-                             (argsUp == null || argsUp.Handled))
-                         {
-                             break;
-                         }
+                     if (leftDown && !wasLeftDown)
+                     {
+                         var argsDown = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
+                         hit.Element.RaiseEvent(argsDown);
+                     }
 
-                         // Transform coordinates to parent space
-                         int ox = current.RenderSize.X;
-                         int oy = current.RenderSize.Y;
-                         
-                         argsMove.X += ox; argsMove.Y += oy;
-                         if (argsDown != null) { argsDown.X += ox; argsDown.Y += oy; }
-                         if (argsUp != null) { argsUp.X += ox; argsUp.Y += oy; }
-                         
-                         current = current.Parent;
+                     if (!leftDown && wasLeftDown)
+                     {
+                         var argsUp = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
+                         hit.Element.RaiseEvent(argsUp);
                      }
                 }
             }
@@ -267,7 +248,7 @@ public class ConsoleInputManager
 
     private KeyEventArgs ToKeyArgs(ConsoleKeyInfo info)
     {
-        return new KeyEventArgs
+        return new KeyEventArgs(UIElement.KeyDownEvent)
         {
             Key = info.Key,
             KeyChar = info.KeyChar,
@@ -326,31 +307,20 @@ public class ConsoleInputManager
                 // Simple Left Click logic
                 if (btn == 0)
                 {
-                    // HitTest returns result with local coordinates now
-                    // HitTest returns result with local coordinates now
                     var result = _window.InputHitTest(x, y);
                     if (result != null)
                     {
-                        var args = new MouseEventArgs { X = result.LocalX, Y = result.LocalY };
-                        var current = result.Element;
+                        if (isDown && result.Element.Focusable) _window.SetFocus(result.Element);
 
-                        while (current != null)
+                        if (isDown)
                         {
-                            if (isDown) 
-                            {
-                                if (current == result.Element && current.Focusable) _window.SetFocus(current);
-                                current.OnMouseDown(args);
-                            }
-                            else 
-                            {
-                                current.OnMouseUp(args);
-                            }
-
-                            if (args.Handled) break;
-
-                            args.X += current.RenderSize.X;
-                            args.Y += current.RenderSize.Y;
-                            current = current.Parent;
+                            var args = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
+                            result.Element.RaiseEvent(args);
+                        }
+                        else
+                        {
+                            var args = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
+                            result.Element.RaiseEvent(args);
                         }
                     }
                 }
