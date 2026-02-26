@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace Tedd.TUI;
 
@@ -26,11 +27,13 @@ public class DependencyProperty
     }
 }
 
-public class DependencyObject
+public class DependencyObject : INotifyPropertyChanged
 {
     private readonly Dictionary<DependencyProperty, object> _values = new Dictionary<DependencyProperty, object>();
 
     protected virtual DependencyObject InheritanceParent => null;
+
+    public event PropertyChangedEventHandler PropertyChanged;
 
     public object GetValue(DependencyProperty dp)
     {
@@ -64,6 +67,6 @@ public class DependencyObject
 
     protected virtual void OnPropertyChanged(DependencyProperty dp)
     {
-        // Hook for inheritance or binding updates
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(dp.Name));
     }
 }

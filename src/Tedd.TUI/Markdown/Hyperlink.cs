@@ -34,14 +34,7 @@ public class Hyperlink : UIElement
         Foreground = ConsoleColor.Blue;
     }
 
-    public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(Hyperlink), ConsoleColor.Blue);
-
-    public ConsoleColor Foreground
-    {
-        get { return (ConsoleColor)GetValue(ForegroundProperty); }
-        set { SetValue(ForegroundProperty, value); }
-    }
+    public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     protected override Size MeasureOverride(Size availableSize)
     {
