@@ -23,3 +23,9 @@
 - Implemented `UIElementCollection` to enforce parentage on item addition/removal.
 - Integrated `Slider` control to demonstrate new input capabilities.
 - Implemented `OnParentChanged` in `UIElement` to automatically refresh inherited DataContext bindings.
+
+## 2024-05-25 - DockPanel Integration
+
+**Observation:** The TUI environment lacks a `DockPanel` control, which is essential for creating layouts where elements are docked to the edges of a container (e.g., toolbars, status bars, side panels). Currently, achieving this requires complex nesting of `StackPanel` and `Grid` controls.
+
+**Strategic Action:** Implement `DockPanel` control with `Dock` attached property (Left, Top, Right, Bottom) and `LastChildFill` property. This will allow for flexible and efficient layout management, mirroring the behavior of the WPF `DockPanel`.

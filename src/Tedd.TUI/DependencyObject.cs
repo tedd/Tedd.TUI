@@ -25,6 +25,12 @@ public class DependencyProperty
     {
         return new DependencyProperty(name, propertyType, ownerType, defaultValue, isInherited);
     }
+
+    public static DependencyProperty RegisterAttached(string name, Type propertyType, Type ownerType, object? defaultValue = null, bool isInherited = false)
+    {
+        // Attached properties are essentially the same structure in this simple implementation
+        return new DependencyProperty(name, propertyType, ownerType, defaultValue, isInherited);
+    }
 }
 
 public class DependencyObject : INotifyPropertyChanged
