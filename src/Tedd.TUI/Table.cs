@@ -124,38 +124,36 @@ public class Table : UIElement
     public bool ShowBorder { get; set; } = false;
     public bool ShowVerticalLines { get; set; } = true;
 
-    private bool _showHorizontalLines = false;
     public bool ShowHorizontalLines
     {
-        get => _showHorizontalLines;
+        get;
         set
         {
-            if (_showHorizontalLines != value)
+            if (field != value)
             {
-                _showHorizontalLines = value;
+                field = value;
                 _rowsDirty = true;
                 Invalidate();
             }
         }
-    }
+    } = false;
 
     public BoxStyle BorderStyle { get; set; } = BoxStyle.Heavy; // Default to Heavy per user request
 
     // Selection
-    private int _selectedIndex = -1;
     public int SelectedIndex
     {
-        get => _selectedIndex;
+        get;
         set
         {
-            if (_selectedIndex != value)
+            if (field != value)
             {
-                _selectedIndex = value;
+                field = value;
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
         }
-    }
+    } = -1;
     public event EventHandler SelectionChanged;
 
     public Table()
@@ -726,60 +724,57 @@ public class Table : UIElement
         e.Handled = true;
     }
 
-    private int _pageSize = 0;
     public int PageSize
     {
-        get => _pageSize;
+        get;
         set
         {
-            if (_pageSize != value)
+            if (field != value)
             {
-                _pageSize = value;
+                field = value;
                 _rowsDirty = true;
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
-    private int _currentPage = 0;
     public int CurrentPage
     {
-        get => _currentPage;
+        get;
         set
         {
             if (value < 0) value = 0;
             int max = TotalPages > 0 ? TotalPages - 1 : 0;
             if (value > max) value = max;
 
-            if (_currentPage != value)
+            if (field != value)
             {
-                _currentPage = value;
+                field = value;
                 PageChanged?.Invoke(this, EventArgs.Empty);
                 _rowsDirty = true;
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
-    private int _totalRows = -1;
     public int TotalRows
     {
-        get => _totalRows;
+        get;
         set
         {
-            if (_totalRows != value)
+            if (field != value)
             {
-                _totalRows = value;
+                field = value;
                 _rowsDirty = true;
                 Invalidate();
             }
         }
-    }
+    } = -1;
 
     public event EventHandler? PageChanged;
 
-    private bool IsInternalPaging => PageSize > 0 && (_totalRows < 0 || _totalRows <= _rows.Count) && _rows.Count > PageSize;
-    private int EffectiveTotalRows => _totalRows >= 0 ? _totalRows : _rows.Count;
+    private bool IsInternalPaging => PageSize > 0 && (TotalRows < 0 || TotalRows <= _rows.Count) && _rows.Count > PageSize;
+    private int EffectiveTotalRows => TotalRows >= 0 ? TotalRows : _rows.Count;
     public int TotalPages
     {
         get
