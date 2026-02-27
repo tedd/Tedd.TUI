@@ -1,39 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
 
 namespace Tedd.TUI;
 
-public class TabControl : UIElement
+public class TabControl : Selector
 {
     public TabControl()
     {
         Focusable = true;
-    }
-    public List<TabItem> Items { get; } = [];
-
-    public override int VisualChildrenCount => (SelectedIndex >= 0 && SelectedIndex < Items.Count && Items[SelectedIndex].Content is UIElement) ? 1 : 0;
-
-    public override UIElement GetVisualChild(int index)
-    {
-        if (VisualChildrenCount > 0 && index == 0)
-        {
-             return (UIElement)Items[SelectedIndex].Content;
-        }
-        throw new ArgumentOutOfRangeException(nameof(index));
-    }
-
-    public override UIElement FindName(string name)
-    {
-        if (Name == name) return this;
-        foreach (var item in Items)
-        {
-            if (item.Content is UIElement uie)
-            {
-                var found = uie.FindName(name);
-                if (found != null) return found;
-            }
-        }
-        return null;
     }
 
     public static readonly DependencyProperty BoxStyleProperty =
@@ -45,58 +21,130 @@ public class TabControl : UIElement
         set { SetValue(BoxStyleProperty, value); }
     }
 
-    public int SelectedIndex
+    public override int VisualChildrenCount => (SelectedIndex >= 0 && SelectedIndex < Items.Count) ? 1 : 0;
+
+    public override UIElement GetVisualChild(int index)
     {
-        get => field;
-        set
+        if (VisualChildrenCount > 0 && index == 0)
         {
-            if (field != value)
+             var selected = SelectedItem;
+             if (selected is TabItem ti && ti.Content is UIElement uie) return uie;
+             if (selected is UIElement element) return element; // Direct UIElement content
+        }
+        throw new ArgumentOutOfRangeException(nameof(index));
+    }
+
+    public override UIElement FindName(string name)
+    {
+        if (Name == name) return this;
+        foreach (var item in Items)
+        {
+            if (item is TabItem ti)
             {
-                field = value;
-                UpdateContent();
+                // Search inside TabItem content
+                if (ti.Content is UIElement uie)
+                {
+                    var found = uie.FindName(name);
+                    if (found != null) return found;
+                }
+                // Also TabItem itself
+                if (ti.Name == name) return ti;
+            }
+            else if (item is UIElement uie)
+            {
+                var found = uie.FindName(name);
+                if (found != null) return found;
             }
         }
-    } = 0;
+        return null;
+    }
 
-    public void AddItem(TabItem item)
+    // Handle Parent/DataContext propagation for Items
+    protected override void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        Items.Add(item);
-        item.Parent = this;
-        if (item.Content is UIElement uie)
+        base.OnItemsCollectionChanged(sender, e);
+
+        // When items are added, set their Parent to this TabControl to ensure DataContext flows.
+        if (e.NewItems != null)
         {
-            uie.Parent = this;
-            uie.DataContext = this.DataContext; 
+            foreach (var item in e.NewItems)
+            {
+                if (item is UIElement uie)
+                {
+                    uie.Parent = this;
+                }
+            }
         }
 
-        // If it's the first item, select it
-        if (Items.Count == 1)
+        // If removed, clear parent?
+        if (e.OldItems != null)
         {
-            UpdateContent();
+            foreach (var item in e.OldItems)
+            {
+                if (item is UIElement uie && uie.Parent == this)
+                {
+                    uie.Parent = null;
+                }
+            }
+        }
+
+        // Ensure selection is valid
+        if (SelectedIndex == -1 && Items.Count > 0)
+        {
+            SelectedIndex = 0;
         }
     }
 
-    private void UpdateContent()
+    protected override void OnSelectionChanged()
     {
-        // No-op here, render handles showing correct content?
-        // Or we need to manage visibility of content.
-        // Actually TabControl should render headers AND the selected content.
+        base.OnSelectionChanged();
+
+        // Update IsSelected on TabItems
+        for (int i = 0; i < Items.Count; i++)
+        {
+            if (Items[i] is TabItem ti)
+            {
+                ti.IsSelected = (i == SelectedIndex);
+            }
+        }
+
+        // Parent management for Content
+        // We need to ensure the Content of the selected TabItem has the correct parent chain for DataContext
+        if (SelectedItem is TabItem selectedTab && selectedTab.Content is UIElement content)
+        {
+            // Set Content's parent to TabItem (logical)
+            // But wait, if we didn't use Template, Content.Parent might be null.
+            // We force it here to ensure DataContext flows: TabControl -> TabItem -> Content
+            if (content.Parent != selectedTab)
+            {
+                content.Parent = selectedTab;
+            }
+            // Ensure TabItem parent is this
+            if (selectedTab.Parent != this)
+            {
+                selectedTab.Parent = this;
+            }
+        }
+
+        Invalidate();
     }
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        // Height = Header Height (1) + Max Content Height
-        // Width = Max Content Width or available
-
         int w = Width > 0 ? Width : availableSize.Width;
         int h = Height > 0 ? Height : availableSize.Height;
 
-        // Measure children
-        foreach(var item in Items)
+        // Header Height = 1 (Text) + 1 (Border line) = 2
+        int headerHeight = 2;
+
+        // Measure Content
+        if (SelectedItem is TabItem ti && ti.Content is UIElement uie)
         {
-            if (item.Content is UIElement uie)
-            {
-                uie.Measure(new Size(w, h - 2)); // -2 for header and border
-            }
+            uie.Measure(new Size(w, Math.Max(0, h - headerHeight)));
+        }
+        else if (SelectedItem is UIElement content)
+        {
+             content.Measure(new Size(w, Math.Max(0, h - headerHeight)));
         }
 
         return new Size(w, h);
@@ -104,14 +152,15 @@ public class TabControl : UIElement
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        // Headers are drawn by TabControl
-        // Content is arranged below header
-        foreach(var item in Items)
+        int headerHeight = 2;
+
+        if (SelectedItem is TabItem ti && ti.Content is UIElement uie)
         {
-            if (item.Content is UIElement uie)
-            {
-                uie.Arrange(new Rect(0, 2, finalSize.Width, finalSize.Height - 2));
-            }
+            uie.Arrange(new Rect(0, headerHeight, finalSize.Width, Math.Max(0, finalSize.Height - headerHeight)));
+        }
+        else if (SelectedItem is UIElement content)
+        {
+            content.Arrange(new Rect(0, headerHeight, finalSize.Width, Math.Max(0, finalSize.Height - headerHeight)));
         }
     }
 
@@ -126,12 +175,21 @@ public class TabControl : UIElement
         for (int i = 0; i < Items.Count; i++)
         {
             var item = Items[i];
-            string header = $" {item.Header} ";
+            string headerText = "";
+            if (item is TabItem ti)
+            {
+                headerText = ti.Header?.ToString() ?? "";
+            }
+            else
+            {
+                headerText = GetItemText(item);
+            }
+
+            string header = $" {headerText} ";
 
             ConsoleColor bg, fg;
             if (i == SelectedIndex)
             {
-                // Selected tab: use different colors based on focus state
                 if (IsFocused)
                 {
                     fg = ConsoleColor.Yellow;
@@ -145,7 +203,6 @@ public class TabControl : UIElement
             }
             else
             {
-                // Unselected tabs
                 fg = ConsoleColor.White;
                 bg = ConsoleColor.Black;
             }
@@ -157,7 +214,7 @@ public class TabControl : UIElement
             headerX += header.Length + 1;
         }
 
-        // Draw Content Border line (Unicode horizontal)
+        // Draw Content Border line
         char hChar = BoxDrawingChars.Get(BoxStyle).Horizontal;
         for (int i = 0; i < w; i++)
             buffer.SetPixel(x + i, y + 1, hChar, ConsoleColor.Gray, ConsoleColor.Black);
@@ -165,14 +222,13 @@ public class TabControl : UIElement
         // Draw Selected Content
         if (SelectedIndex >= 0 && SelectedIndex < Items.Count)
         {
-             var content = Items[SelectedIndex].Content as UIElement;
+             UIElement? content = null;
+             if (Items[SelectedIndex] is TabItem ti) content = ti.Content as UIElement;
+             else content = Items[SelectedIndex] as UIElement;
+
              if (content != null)
              {
-                 content.Render(buffer, x, y); // Relative position handled in Arrange, but wait.
-                 // Render uses parent's offsetX/Y + RenderSize.X/Y.
-                 // The child's RenderSize (from Arrange) is (0, 2).
-                 // So we pass offsetX, offsetY, and it adds its own RenderSize.
-                 // Correct.
+                 content.Render(buffer, x, y);
              }
         }
     }
@@ -203,7 +259,6 @@ public class TabControl : UIElement
             if (next >= Items.Count) next = 0;
             SelectedIndex = next;
             e.Handled = true;
-            // Keep focus on TabControl (WinForms behavior) so user can keep navigating with arrows
         }
     }
 
@@ -212,41 +267,25 @@ public class TabControl : UIElement
         base.OnMouseDown(e);
         Focus();
 
-        // e.X/Y are local coordinates
-        if (e.Y == 0) // Header click
+        // Check Header Click
+        if (e.Y == 0)
         {
             int currentX = 0;
             for (int i = 0; i < Items.Count; i++)
             {
-                var headerStr = Items[i].Header?.ToString() ?? "";
-                int len = headerStr.Length + 2; // " Header "
+                string headerText = "";
+                if (Items[i] is TabItem ti) headerText = ti.Header?.ToString() ?? "";
+                else headerText = GetItemText(Items[i]);
+
+                int len = headerText.Length + 2; // " Header "
                 if (e.X >= currentX && e.X < currentX + len)
                 {
                     SelectedIndex = i;
                     e.Handled = true;
-                    FocusFirstInSelectedTab();
                     return;
                 }
                 currentX += len + 1;
             }
         }
     }
-
-    private void FocusFirstInSelectedTab()
-    {
-        if (GetRoot() is TuiWindow window && SelectedIndex >= 0 && SelectedIndex < Items.Count)
-        {
-            var content = Items[SelectedIndex].Content as UIElement;
-            if (content != null)
-                window.FocusFirstIn(content);
-        }
-    }
-}
-
-public class TabItem : DependencyObject
-{
-    public UIElement Parent { get; set; }
-
-    public object Header { get; set; }
-    public object Content { get; set; }
 }
