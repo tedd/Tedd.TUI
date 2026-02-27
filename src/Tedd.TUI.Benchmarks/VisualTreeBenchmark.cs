@@ -139,7 +139,11 @@ public class VisualTreeBenchmark
                     // Content
                     if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
                     {
-                        var content = tab.Items[tab.SelectedIndex].Content as UIElement;
+                        var item = tab.Items[tab.SelectedIndex];
+                        UIElement? content = null;
+                        if (item is TabItem ti) content = ti.Content as UIElement;
+                        else content = item as UIElement;
+
                         if (content != null) stack.Push((content, false));
                     }
                 }
@@ -196,7 +200,11 @@ public class VisualTreeBenchmark
                     _stack.Push((current, true));
                     if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
                     {
-                        var content = tab.Items[tab.SelectedIndex].Content as UIElement;
+                        var item = tab.Items[tab.SelectedIndex];
+                        UIElement? content = null;
+                        if (item is TabItem ti) content = ti.Content as UIElement;
+                        else content = item as UIElement;
+
                         if (content != null) _stack.Push((content, false));
                     }
                 }

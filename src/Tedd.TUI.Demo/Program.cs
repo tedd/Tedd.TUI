@@ -213,7 +213,7 @@ class Program
 
         formStack.AddChild(btnPanel);
 
-        tabs.AddItem(new TabItem { Header = "Form", Content = formStack });
+        tabs.Items.Add(new TabItem { Header = "Form", Content = formStack });
 
         // --- Tab 2: Lists & Progress ---
         var listStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -228,7 +228,7 @@ class Program
         for (int i = 1; i <= 20; i++) listBoxList.Items.Add($"Item {i}");
         listStack.AddChild(listBoxList);
 
-        tabs.AddItem(new TabItem { Header = "Lists", Content = listStack });
+        tabs.Items.Add(new TabItem { Header = "Lists", Content = listStack });
 
         // --- Tab 3: Table ---
         var tableStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -286,7 +286,7 @@ class Program
         table.AddRow("9", "Mallory", "29", CreateEditBtn("Mallory"));
 
         tableStack.AddChild(table);
-        tabs.AddItem(new TabItem { Header = "Table", Content = tableStack });
+        tabs.Items.Add(new TabItem { Header = "Table", Content = tableStack });
 
         // --- Tab 4: ScrollBar & ScrollViewer ---
         var scrollStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -342,7 +342,7 @@ class Program
         // Initial update
         UpdateLabel(null, EventArgs.Empty);
 
-        tabs.AddItem(new TabItem { Header = "Scroll", Content = scrollStack });
+        tabs.Items.Add(new TabItem { Header = "Scroll", Content = scrollStack });
 
         // --- Tab 5: Code Coloring ---
         var codeStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -370,7 +370,7 @@ public class Test
 
         codeStack.AddChild(scrollCode);
 
-        tabs.AddItem(new TabItem { Header = "Code", Content = codeStack });
+        tabs.Items.Add(new TabItem { Header = "Code", Content = codeStack });
 
         // --- Tab 6: Markdown ---
         var mdStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -410,7 +410,7 @@ public void Hello() {
         mdScrollViewer.Content = mdView;
         mdStack.AddChild(mdScrollViewer);
 
-        tabs.AddItem(new TabItem { Header = "Markdown", Content = mdStack });
+        tabs.Items.Add(new TabItem { Header = "Markdown", Content = mdStack });
 
         // --- Tab 7: DataGrid ---
         var dataGridStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -439,7 +439,7 @@ public void Hello() {
         dataGrid.ItemsSource = people;
         dataGridStack.AddChild(dataGrid);
 
-        tabs.AddItem(new TabItem { Header = "DataGrid", Content = dataGridStack });
+        tabs.Items.Add(new TabItem { Header = "DataGrid", Content = dataGridStack });
 
         // Run App
         

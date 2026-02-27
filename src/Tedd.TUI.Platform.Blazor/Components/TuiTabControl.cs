@@ -12,7 +12,7 @@ public class TuiTabControl : TuiComponentBase
 
     public void AddTab(TabItem item)
     {
-        _tabControl.AddItem(item);
+        _tabControl.Items.Add(item);
     }
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
