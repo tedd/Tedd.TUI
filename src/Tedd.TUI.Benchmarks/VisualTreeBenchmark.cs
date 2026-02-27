@@ -75,6 +75,27 @@ public class VisualTreeBenchmark
         }
     }
 
+    [Benchmark]
+    public void CurrentImplementation()
+    {
+        // This invokes the actual code in TuiWindow we just exposed
+        // Note: TuiWindow is an instance, but GetVisualTree is an instance method.
+        // We need a TuiWindow instance or make it static if possible.
+        // GetVisualTree in TuiWindow is an instance method but doesn't use `this`.
+        // However, I can't call it directly from here because I don't have a TuiWindow instance in _root setup.
+        // But wait, GetVisualTree is inside TuiWindow.
+        // Let's instantiate a dummy window to access the method, or rely on the fact that
+        // the method is internal and I can just create an instance of TuiWindow
+        // or make the method static in TuiWindow since it only takes `root`.
+        // Let's assume for now I'll create a dummy window.
+
+        var window = new TuiWindow();
+        foreach (var item in window.GetVisualTree(_root))
+        {
+             if (item == null) { }
+        }
+    }
+
     // Original Recursive Implementation (from user snippet)
     private void FlattenTree(UIElement parent, List<UIElement> list)
     {
