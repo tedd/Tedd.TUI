@@ -330,4 +330,50 @@ public class TableCoverageTests
         var stack = (StackPanel)((ScrollViewer)table.GetVisualChild(0)).Content!;
         Assert.Single(stack.Children);
     }
+
+    [Fact]
+    public void Table_Separator_Rendering()
+    {
+        var table = new Table { ShowHorizontalLines = true, ShowVerticalLines = true, ShowBorder = true };
+
+        // Two columns to verify cross character
+        table.Columns.Add(new TableColumn { Width = new GridLength(3, GridUnitType.Pixel) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(3, GridUnitType.Pixel) });
+
+        // Two rows to verify separator between them
+        table.AddRow("A", "B");
+        table.AddRow("C", "D");
+
+        // Header(2) + Row1(1) + Sep(1) + Row2(1) + Border(2) = 7 height needed.
+        // Width: Border(1) + Col1(3) + VLine(1) + Col2(3) + Border(1) = 9.
+
+        table.Measure(new Size(20, 20));
+        table.Arrange(new Rect(0, 0, 9, 7));
+
+        var buffer = new VirtualBuffer(9, 7);
+        table.Render(buffer, 0, 0);
+
+        // Expected Layout:
+        // 0: ┌───────┐
+        // 1: │   │   │ (Header)
+        // 2: ├───┼───┤ (Header Sep)
+        // 3: │A  │B  │ (Row 1)
+        // 4: ├───┼───┤ (Separator) <-- Target
+        // 5: │C  │D  │ (Row 2)
+        // 6: └───────┘
+
+        // Row 4 should be separator
+        // X=0: Left Junction (u2520 ┠) if ShowBorder && ShowHorizontalLines
+        // X=1..3: Horz Line (u2500 ─)
+        // X=4: Cross (u253C ┼) if ShowVerticalLines
+        // X=5..7: Horz Line
+        // X=8: Right Junction (u2528 ┨)
+
+        // Verify Row 4
+        Assert.Equal('\u2520', buffer.GetPixel(0, 4).Character);
+        Assert.Equal('\u2500', buffer.GetPixel(1, 4).Character);
+        Assert.Equal('\u253C', buffer.GetPixel(4, 4).Character); // Cross
+        Assert.Equal('\u2500', buffer.GetPixel(5, 4).Character);
+        Assert.Equal('\u2528', buffer.GetPixel(8, 4).Character);
+    }
 }
