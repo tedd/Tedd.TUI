@@ -179,7 +179,7 @@
 
         formStack.AddChild(btnPanel);
 
-        tabs.AddItem(new TabItem { Header = "Form", Content = formStack });
+        tabs.Items.Add(new TabItem { Header = "Form", Content = formStack });
 
         // --- Tab 2: Lists & Progress ---
         var listStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -193,7 +193,7 @@
         for (int i = 1; i <= 20; i++) listBox.Items.Add($"Item {i}");
         listStack.AddChild(listBox);
 
-        tabs.AddItem(new TabItem { Header = "Lists", Content = listStack });
+        tabs.Items.Add(new TabItem { Header = "Lists", Content = listStack });
 
         // --- Tab 3: Table ---
         var tableStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -268,6 +268,6 @@
         LoadPage();
 
         tableStack.AddChild(table);
-        tabs.AddItem(new TabItem { Header = "Table", Content = tableStack });
+        tabs.Items.Add(new TabItem { Header = "Table", Content = tableStack });
     }
 }
