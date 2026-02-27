@@ -32,6 +32,11 @@ public class MockConsole : IConsole
         WriteCount++;
     }
 
+    public void Write(ReadOnlySpan<char> value)
+    {
+        WriteCount += value.Length;
+    }
+
     private ConsoleColor _foregroundColor;
     public ConsoleColor ForegroundColor
     {

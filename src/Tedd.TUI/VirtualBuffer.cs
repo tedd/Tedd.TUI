@@ -37,6 +37,9 @@ public class VirtualBuffer
     public int Width { get; }
     public int Height { get; }
 
+    // Direct access to buffer for optimized rendering
+    public ReadOnlySpan<Cell> Cells => _buffer;
+
     private Stack<Rect> _clipStack = new Stack<Rect>();
     private Rect _currentClip;
     private bool _isClipped;

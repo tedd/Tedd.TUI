@@ -1,6 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using Tedd.TUI.Benchmarks.Legacy;
 using Tedd.TUI.Platform.Console;
+using Tedd.TUI.Archive;
 using System;
 using Tedd.TUI;
 
@@ -11,8 +12,11 @@ public class ConsoleRendererBenchmark
 {
     private VirtualBuffer _buffer;
     private MockConsole _mockConsole;
-    private ConsoleRenderer _renderer;
-    private ConsoleRendererLegacy _rendererLegacy;
+    private ConsoleRenderer _renderer; // New optimized renderer
+    private ConsoleRendererArchive _rendererArchive; // The one we just archived (previous version)
+
+    // We also keep the legacy one from before just in case, but our main comparison is Archive (Baseline) vs Optimized.
+    // Actually, let's replace "Legacy" with "Archive" as the baseline, as that represents the state before this change.
 
     [GlobalSetup]
     public void Setup()
@@ -27,67 +31,61 @@ public class ConsoleRendererBenchmark
         }
 
         _renderer = new ConsoleRenderer(_mockConsole);
-        _rendererLegacy = new ConsoleRendererLegacy(_mockConsole);
+        _rendererArchive = new ConsoleRendererArchive(_mockConsole);
     }
 
     [Benchmark(Baseline = true)]
-    public void Legacy_Render_Full()
+    public void Archive_Render_Full()
     {
-        _mockConsole.ResetStats();
-        _rendererLegacy.Render(_buffer);
+        // Force full redraw by new instance
+        var renderer = new ConsoleRendererArchive(_mockConsole);
+        renderer.Render(_buffer);
     }
 
     [Benchmark]
-    public void New_Render_Full()
+    public void Optimized_Render_Full()
     {
-        // To benchmark full render, we need to force a full redraw.
-        // We can do this by using a fresh renderer instance which has no backbuffer state.
-        // This includes allocation cost of the renderer, but that's minimal compared to I/O usually.
-        // However, in this microbenchmark with MockConsole, allocation might dominate.
-        // A better way is to pretend we have a fresh renderer.
+        // Force full redraw by new instance
         var renderer = new ConsoleRenderer(_mockConsole);
         renderer.Render(_buffer);
     }
 
     [Benchmark]
-    public void Legacy_Render_NoChange()
-    {
-        // Pre-render to set state (irrelevant for legacy but good for consistency)
-        _rendererLegacy.Render(_buffer);
-        _mockConsole.ResetStats();
-
-        _rendererLegacy.Render(_buffer);
-    }
-
-    [Benchmark]
-    public void New_Render_NoChange()
-    {
-        // Pre-render to populate backbuffer
-        _renderer.Render(_buffer);
-        _mockConsole.ResetStats();
-
-        // This should be very fast (diff is zero)
-        _renderer.Render(_buffer);
-    }
-
-    [Benchmark]
-    public void Legacy_Render_SmallChange()
+    public void Archive_Render_NoChange()
     {
         // Pre-render
-        _rendererLegacy.Render(_buffer);
+        _rendererArchive.Render(_buffer);
+        _mockConsole.ResetStats();
+        _rendererArchive.Render(_buffer);
+    }
+
+    [Benchmark]
+    public void Optimized_Render_NoChange()
+    {
+        // Pre-render
+        _renderer.Render(_buffer);
+        _mockConsole.ResetStats();
+        _renderer.Render(_buffer);
+    }
+
+    [Benchmark]
+    public void Archive_Render_SmallChange()
+    {
+        // Pre-render
+        _rendererArchive.Render(_buffer);
 
         // Change one pixel
         _buffer.SetPixel(10, 10, 'X', ConsoleColor.Red, ConsoleColor.Black);
 
         _mockConsole.ResetStats();
-        _rendererLegacy.Render(_buffer);
+        _rendererArchive.Render(_buffer);
 
         // Revert
         _buffer.SetPixel(10, 10, '.', ConsoleColor.White, ConsoleColor.Black);
     }
 
     [Benchmark]
-    public void New_Render_SmallChange()
+    public void Optimized_Render_SmallChange()
     {
         // Pre-render
         _renderer.Render(_buffer);

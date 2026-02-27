@@ -2,9 +2,9 @@ using System;
 using System.Text;
 using Tedd.TUI;
 
-namespace Tedd.TUI.Platform.Console;
+namespace Tedd.TUI.Archive;
 
-public class ConsoleRenderer : IRenderer
+public class ConsoleRendererArchive : IRenderer
 {
     private readonly IConsole _console;
     private int _width;
@@ -23,15 +23,11 @@ public class ConsoleRenderer : IRenderer
     private int _consoleCurrentFg = -1;
     private int _consoleCurrentBg = -1;
 
-    // Rendering optimization
-    private char[] _charBuffer = new char[1024];
-    private int _charBufferPos = 0;
-
-    public ConsoleRenderer() : this(new SystemConsoleWrapper())
+    public ConsoleRendererArchive() : this(new Tedd.TUI.Platform.Console.SystemConsoleWrapper())
     {
     }
 
-    public ConsoleRenderer(IConsole console)
+    public ConsoleRendererArchive(IConsole console)
     {
         _console = console;
         _width = _console.WindowWidth;
@@ -64,12 +60,6 @@ public class ConsoleRenderer : IRenderer
             // Invalidate cursor tracking on resize/reset
             _consoleCursorX = -1;
             _consoleCursorY = -1;
-
-            // Resize char buffer if it's too small for a full row (unlikely but safe)
-            if (_charBuffer.Length < bufW)
-            {
-                _charBuffer = new char[Math.Max(1024, bufW)];
-            }
         }
 
         // Reset color state tracking at start of frame as we don't know external state
@@ -84,58 +74,52 @@ public class ConsoleRenderer : IRenderer
         int pendingX = -1;
         int pendingY = -1;
 
-        var bufferSpan = buffer.Cells;
-        var backBufferSpan = _backBuffer.AsSpan();
+        var sb = new StringBuilder();
 
         for (int y = 0; y < bufH; y++)
         {
-            int rowOffset = y * bufW;
-
-            // Optimization: Hoist source row calculation
-            int sourceRowOffset = y * buffer.Width;
-
             for (int x = 0; x < bufW; x++)
             {
-                int idx = rowOffset + x;
-
-                // Direct span access avoids bounds check in loop
-                var newCell = bufferSpan[sourceRowOffset + x];
+                var newCell = buffer.GetPixel(x, y);
+                int idx = y * bufW + x; // Backbuffer index (row-major)
 
                 // Skip if unchanged
-                if (IsSame(newCell, backBufferSpan[idx]))
+                if (IsSame(newCell, _backBuffer[idx]))
                 {
                     // If we were accumulating a chunk, flush it now because we hit a gap (unchanged cell)
-                    if (_charBufferPos > 0)
+                    if (sb.Length > 0)
                     {
-                        FlushBuffer(pendingX, pendingY, lastFg, lastBg);
+                        FlushBuffer(sb, pendingX, pendingY, lastFg, lastBg);
                     }
                     continue;
                 }
 
                 // Update backbuffer
-                backBufferSpan[idx] = newCell;
+                _backBuffer[idx] = newCell;
 
                 bool colorChanged = (int)newCell.Foreground != lastFg || (int)newCell.Background != lastBg;
 
-                if (_charBufferPos > 0)
+                if (sb.Length > 0)
                 {
                      // We have a pending chunk.
+                     // Since we iterate sequentially, continuity is guaranteed (current x is prev x + 1).
+                     // We just need to check color.
                      if (colorChanged)
                      {
                          // Flush current chunk
-                         FlushBuffer(pendingX, pendingY, lastFg, lastBg);
+                         FlushBuffer(sb, pendingX, pendingY, lastFg, lastBg);
 
                          // Start new chunk
                          pendingX = x;
                          pendingY = y;
                          lastFg = (int)newCell.Foreground;
                          lastBg = (int)newCell.Background;
-                         AppendChar(newCell.Character);
+                         sb.Append(newCell.Character);
                      }
                      else
                      {
                          // Append to current chunk
-                         AppendChar(newCell.Character);
+                         sb.Append(newCell.Character);
                      }
                 }
                 else
@@ -145,34 +129,23 @@ public class ConsoleRenderer : IRenderer
                     pendingY = y;
                     lastFg = (int)newCell.Foreground;
                     lastBg = (int)newCell.Background;
-                    AppendChar(newCell.Character);
+                    sb.Append(newCell.Character);
                 }
             }
 
             // End of line flush
-            if (_charBufferPos > 0)
+            if (sb.Length > 0)
             {
-                FlushBuffer(pendingX, pendingY, lastFg, lastBg);
+                FlushBuffer(sb, pendingX, pendingY, lastFg, lastBg);
             }
         }
 
         _console.ResetColor();
     }
 
-    private void AppendChar(char c)
+    private void FlushBuffer(StringBuilder sb, int startX, int startY, int fg, int bg)
     {
-        if (_charBufferPos >= _charBuffer.Length)
-        {
-            var newBuffer = new char[_charBuffer.Length * 2];
-            _charBuffer.CopyTo(newBuffer, 0);
-            _charBuffer = newBuffer;
-        }
-        _charBuffer[_charBufferPos++] = c;
-    }
-
-    private void FlushBuffer(int startX, int startY, int fg, int bg)
-    {
-        if (_charBufferPos == 0) return;
+        if (sb.Length == 0) return;
 
         // Optimization: Only move cursor if not already there
         if (_consoleCursorX != startX || _consoleCursorY != startY)
@@ -185,7 +158,7 @@ public class ConsoleRenderer : IRenderer
             }
             catch (ArgumentOutOfRangeException)
             {
-                _charBufferPos = 0;
+                sb.Clear();
                 return;
             }
         }
@@ -203,13 +176,13 @@ public class ConsoleRenderer : IRenderer
             _consoleCurrentBg = bg;
         }
 
-        _console.Write(new ReadOnlySpan<char>(_charBuffer, 0, _charBufferPos));
+        _console.Write(sb.ToString());
 
         // Update tracked cursor position
-        _consoleCursorX += _charBufferPos;
+        _consoleCursorX += sb.Length;
         // _consoleCursorY stays same assuming no wrap/newline
 
-        _charBufferPos = 0;
+        sb.Clear();
     }
 
     private bool IsSame(Cell a, Cell b)
