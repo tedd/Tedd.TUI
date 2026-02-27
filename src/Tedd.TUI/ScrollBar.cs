@@ -18,52 +18,49 @@ public class ScrollBar : UIElement
         // Default size?
     }
 
-    private int _value;
     public int Value
     {
-        get => _value;
+        get;
         set
         {
             int newVal = Math.Clamp(value, Minimum, Maximum);
-            if (_value != newVal)
+            if (field != newVal)
             {
-                _value = newVal;
+                field = newVal;
                 ValueChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
         }
     }
 
-    private int _minimum = 0;
     public int Minimum
     {
-        get => _minimum;
+        get;
         set
         {
-            if (_minimum != value)
+            if (field != value)
             {
-                _minimum = value;
+                field = value;
                 // Re-clamp value?
-                Value = _value; // will clamp
+                Value = Value; // will clamp
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
-    private int _maximum = 100;
     public int Maximum
     {
-        get => _maximum;
+        get;
         set
         {
-            if (_maximum != value)
+            if (field != value)
             {
-                _maximum = value;
-                Value = _value; // will clamp
+                field = value;
+                Value = Value; // will clamp
                 Invalidate();
             }
         }
-    }
+    } = 100;
 
     public int SmallChange { get; set; } = 1;
     public int LargeChange { get; set; } = 10;
