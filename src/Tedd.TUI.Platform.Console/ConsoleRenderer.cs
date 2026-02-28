@@ -1,5 +1,7 @@
 using System;
 using System.Text;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Tedd.TUI;
 
 namespace Tedd.TUI.Platform.Console;
@@ -84,25 +86,27 @@ public class ConsoleRenderer : IRenderer
         int pendingX = -1;
         int pendingY = -1;
 
-        var bufferSpan = buffer.Cells;
-        var backBufferSpan = _backBuffer.AsSpan();
+        ref Cell bufferRef = ref MemoryMarshal.GetReference(buffer.Cells);
+        ref Cell backBufferRef = ref MemoryMarshal.GetArrayDataReference(_backBuffer);
+
+        int bufferWidth = buffer.Width;
 
         for (int y = 0; y < bufH; y++)
         {
             int rowOffset = y * bufW;
-
-            // Optimization: Hoist source row calculation
-            int sourceRowOffset = y * buffer.Width;
+            int sourceRowOffset = y * bufferWidth;
 
             for (int x = 0; x < bufW; x++)
             {
                 int idx = rowOffset + x;
 
-                // Direct span access avoids bounds check in loop
-                var newCell = bufferSpan[sourceRowOffset + x];
+                ref Cell newCell = ref Unsafe.Add(ref bufferRef, sourceRowOffset + x);
+                ref Cell backCell = ref Unsafe.Add(ref backBufferRef, idx);
 
-                // Skip if unchanged
-                if (IsSame(newCell, backBufferSpan[idx]))
+                // Inline IsSame comparison for speed
+                if (newCell.Character == backCell.Character &&
+                    newCell.Foreground == backCell.Foreground &&
+                    newCell.Background == backCell.Background)
                 {
                     // If we were accumulating a chunk, flush it now because we hit a gap (unchanged cell)
                     if (_charBufferPos > 0)
@@ -113,9 +117,11 @@ public class ConsoleRenderer : IRenderer
                 }
 
                 // Update backbuffer
-                backBufferSpan[idx] = newCell;
+                backCell = newCell;
 
-                bool colorChanged = (int)newCell.Foreground != lastFg || (int)newCell.Background != lastBg;
+                int newFg = (int)newCell.Foreground;
+                int newBg = (int)newCell.Background;
+                bool colorChanged = newFg != lastFg || newBg != lastBg;
 
                 if (_charBufferPos > 0)
                 {
@@ -128,8 +134,9 @@ public class ConsoleRenderer : IRenderer
                          // Start new chunk
                          pendingX = x;
                          pendingY = y;
-                         lastFg = (int)newCell.Foreground;
-                         lastBg = (int)newCell.Background;
+                         lastFg = newFg;
+                         lastBg = newBg;
+
                          AppendChar(newCell.Character);
                      }
                      else
@@ -143,8 +150,9 @@ public class ConsoleRenderer : IRenderer
                     // Start new pending chunk
                     pendingX = x;
                     pendingY = y;
-                    lastFg = (int)newCell.Foreground;
-                    lastBg = (int)newCell.Background;
+                    lastFg = newFg;
+                    lastBg = newBg;
+
                     AppendChar(newCell.Character);
                 }
             }
@@ -159,6 +167,7 @@ public class ConsoleRenderer : IRenderer
         _console.ResetColor();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AppendChar(char c)
     {
         if (_charBufferPos >= _charBuffer.Length)
@@ -170,6 +179,7 @@ public class ConsoleRenderer : IRenderer
         _charBuffer[_charBufferPos++] = c;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void FlushBuffer(int startX, int startY, int fg, int bg)
     {
         if (_charBufferPos == 0) return;
@@ -210,10 +220,5 @@ public class ConsoleRenderer : IRenderer
         // _consoleCursorY stays same assuming no wrap/newline
 
         _charBufferPos = 0;
-    }
-
-    private bool IsSame(Cell a, Cell b)
-    {
-        return a.Character == b.Character && a.Foreground == b.Foreground && a.Background == b.Background;
     }
 }
