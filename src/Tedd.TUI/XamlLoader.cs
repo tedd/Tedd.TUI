@@ -322,14 +322,21 @@ public static class XamlLoader
     {
         if (parent == null) return;
 
-        // 1. StackPanel / Panel (Children)
+        // 1. Panel (Children)
+        if (parent is Panel panel && child is UIElement uieChild)
+        {
+            panel.AddChild(uieChild);
+            return;
+        }
+
+        // Fallback for non-Panel collections named "Children" (if any)
         var childrenProp = parent.GetType().GetProperty("Children");
-        if (childrenProp != null && childrenProp.PropertyType.IsGenericType && childrenProp.GetValue(parent) is IList list)
+        if (childrenProp != null && childrenProp.PropertyType.IsGenericType && childrenProp.GetValue(parent) is System.Collections.IList list)
         {
             list.Add(child);
-            if (parent is UIElement uieParent && child is UIElement uieChild)
+            if (parent is UIElement uieParentFallback && child is UIElement uieChildFallback)
             {
-                uieChild.Parent = uieParent;
+                uieChildFallback.Parent = uieParentFallback;
             }
             return;
         }

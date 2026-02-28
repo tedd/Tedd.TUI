@@ -11,21 +11,8 @@ public enum Dock
     Bottom
 }
 
-public class DockPanel : UIElement
+public class DockPanel : Panel
 {
-    private readonly UIElementCollection _children;
-    public IList<UIElement> Children => _children;
-
-    public DockPanel()
-    {
-        _children = new UIElementCollection(this);
-    }
-
-    public void AddChild(UIElement child)
-    {
-        _children.Add(child);
-    }
-
     public static readonly DependencyProperty LastChildFillProperty =
         DependencyProperty.Register("LastChildFill", typeof(bool), typeof(DockPanel), true);
 
@@ -50,14 +37,6 @@ public class DockPanel : UIElement
         return (Dock)element.GetValue(DockProperty);
     }
 
-    public override int VisualChildrenCount => _children.Count;
-
-    public override UIElement GetVisualChild(int index)
-    {
-        if (index < 0 || index >= _children.Count) throw new ArgumentOutOfRangeException(nameof(index));
-        return _children[index];
-    }
-
     protected override Size MeasureOverride(Size availableSize)
     {
         int accumulatedWidth = 0;
@@ -69,10 +48,10 @@ public class DockPanel : UIElement
         int currentAvailableWidth = availableSize.Width;
         int currentAvailableHeight = availableSize.Height;
 
-        int count = _children.Count;
+        int count = Children.Count;
         for (int i = 0; i < count; i++)
         {
-            var child = _children[i];
+            var child = Children[i];
 
             // If LastChildFill is true and this is the last child, it gets remaining space
             if (LastChildFill && i == count - 1)
@@ -117,10 +96,10 @@ public class DockPanel : UIElement
         int width = finalSize.Width;
         int height = finalSize.Height;
 
-        int count = _children.Count;
+        int count = Children.Count;
         for (int i = 0; i < count; i++)
         {
-            var child = _children[i];
+            var child = Children[i];
 
             if (LastChildFill && i == count - 1)
             {
@@ -149,33 +128,6 @@ public class DockPanel : UIElement
                     child.Arrange(new Rect(left, height - bottom - desired.Height, Math.Max(0, width - (left + right)), Math.Min(desired.Height, height - (top + bottom))));
                     bottom += desired.Height;
                     break;
-            }
-        }
-    }
-
-    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
-    {
-        int x = RenderSize.X + offsetX;
-        int y = RenderSize.Y + offsetY;
-
-        Rect clip = buffer.GetClip();
-
-        foreach (var child in Children)
-        {
-            // Calculate child's absolute bounding box
-            int childX = x + child.RenderSize.X;
-            int childY = y + child.RenderSize.Y;
-            int childW = child.RenderSize.Width;
-            int childH = child.RenderSize.Height;
-
-            // Simple intersection test with current clip
-            bool overlapsClip =
-                childX < clip.X + clip.Width && childX + childW > clip.X &&
-                childY < clip.Y + clip.Height && childY + childH > clip.Y;
-
-            if (overlapsClip)
-            {
-                child.Render(buffer, x, y);
             }
         }
     }

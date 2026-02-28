@@ -29,3 +29,13 @@
 **Observation:** The TUI environment lacks a `DockPanel` control, which is essential for creating layouts where elements are docked to the edges of a container (e.g., toolbars, status bars, side panels). Currently, achieving this requires complex nesting of `StackPanel` and `Grid` controls.
 
 **Strategic Action:** Implement `DockPanel` control with `Dock` attached property (Left, Top, Right, Bottom) and `LastChildFill` property. This will allow for flexible and efficient layout management, mirroring the behavior of the WPF `DockPanel`.
+
+## 2024-05-26 - Panel Base Class & Missing Layouts Integration
+
+**Observation:** The TUI framework lacked a common base class for layout panels, leading to duplicated `UIElementCollection` management and redundant optimized `Render` implementations in `Grid`, `StackPanel`, and `DockPanel`. Additionally, standard WPF layout controls `WrapPanel` and `Canvas` were missing, preventing flexible flow and absolute-positioned layouts.
+
+**Strategic Action:**
+- Extracted common collection management and rendering logic into a new abstract `Panel` class.
+- Refactored `Grid`, `StackPanel`, and `DockPanel` to inherit from `Panel`.
+- Implemented `WrapPanel` with dynamic `Orientation` line-breaking logic.
+- Implemented `Canvas` utilizing explicit `Canvas.Left` and `Canvas.Top` attached dependency properties for zero-constraint positioning.
