@@ -133,3 +133,15 @@ Implemented `GridCoverageTests.cs` covering:
 **Next Steps:**
 - Monitor for potential memory leaks in `BindingExpression` regarding `INotifyPropertyChanged` subscription if `UIElement` lifecycle is not managed.
 - Consider implementing `TwoWay` binding support in future.
+
+## 2025-10-28 - Geometry structs and Thickness test Expansion
+
+**Observation:**
+The struct `Tedd.TUI.Thickness` showed 0% branch and 25% line coverage. It's a foundational layout struct without explicit unit tests.
+
+**Strategic Action:**
+Created `ThicknessTests.cs` to test the uniform constructor, 4-parameter constructor, equality methods (`Equals`), equality operators (`==`, `!=`), and property getters/setters using `[Theory]` and `[InlineData]`.
+
+**Metrics:**
+- Coverage for `Thickness` increased to 100% lines and branches.
+- Added 10 tests for `Thickness`.
