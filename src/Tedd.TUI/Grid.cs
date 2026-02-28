@@ -3,26 +3,13 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI;
 
-public class Grid : UIElement
+public class Grid : Panel
 {
     public List<RowDefinition> RowDefinitions { get; } = new List<RowDefinition>();
     public List<ColumnDefinition> ColumnDefinitions { get; } = new List<ColumnDefinition>();
 
     private List<RowDefinition> _implicitRows;
     private List<ColumnDefinition> _implicitCols;
-
-    private readonly UIElementCollection _children;
-    public IList<UIElement> Children => _children;
-
-    public Grid()
-    {
-        _children = new UIElementCollection(this);
-    }
-
-    public void AddChild(UIElement child)
-    {
-        _children.Add(child);
-    }
 
     // Attached Properties
     public static readonly DependencyProperty RowProperty = DependencyProperty.Register("Row", typeof(int), typeof(Grid), 0);
@@ -42,18 +29,10 @@ public class Grid : UIElement
     public static void SetColumnSpan(UIElement element, int value) => element.SetValue(ColumnSpanProperty, value);
     public static int GetColumnSpan(UIElement element) => (int)element.GetValue(ColumnSpanProperty);
 
-    public override int VisualChildrenCount => _children.Count;
-
-    public override UIElement GetVisualChild(int index)
-    {
-        if (index < 0 || index >= _children.Count) throw new ArgumentOutOfRangeException(nameof(index));
-        return _children[index];
-    }
-
     protected override void OnDataContextChanged(object newValue)
     {
         base.OnDataContextChanged(newValue);
-        foreach (var child in _children)
+        foreach (var child in Children)
         {
             // If child doesn't have a local DataContext, it inherits.
             // The base UIElement implementation usually handles this if we implement VisualChildrenCount correctly.
@@ -110,7 +89,7 @@ public class Grid : UIElement
 
         // 2b. Auto
         // Filter children that are in Auto columns
-        foreach (var child in _children)
+        foreach (var child in Children)
         {
             int colIdx = Math.Min(GetColumn(child), cols.Count - 1);
             int colSpan = Math.Min(GetColumnSpan(child), cols.Count - colIdx);
@@ -180,7 +159,7 @@ public class Grid : UIElement
         }
 
         // 3b. Auto
-        foreach (var child in _children)
+        foreach (var child in Children)
         {
             int rowIdx = Math.Min(GetRow(child), rows.Count - 1);
             int rowSpan = Math.Min(GetRowSpan(child), rows.Count - rowIdx);
@@ -246,7 +225,7 @@ public class Grid : UIElement
         foreach(var r in rows) { r.Offset = currentY; currentY += r.ActualHeight; }
 
         // 4. Final Measure for all children (to ensure correct DesiredSize based on final grid slots)
-        foreach (var child in _children)
+        foreach (var child in Children)
         {
              int colIdx = Math.Min(GetColumn(child), cols.Count - 1);
              int colSpan = Math.Min(GetColumnSpan(child), cols.Count - colIdx);
@@ -383,7 +362,7 @@ public class Grid : UIElement
         int offX = 0; foreach(var c in cols) { c.Offset = offX; offX += c.ActualWidth; }
         int offY = 0; foreach(var r in rows) { r.Offset = offY; offY += r.ActualHeight; }
 
-        foreach (var child in _children)
+        foreach (var child in Children)
         {
              int colIdx = Math.Min(GetColumn(child), cols.Count - 1);
              int colSpan = Math.Min(GetColumnSpan(child), cols.Count - colIdx);
@@ -400,32 +379,6 @@ public class Grid : UIElement
              for(int k=0; k<rowSpan; k++) h += rows[rowIdx+k].ActualHeight;
 
              child.Arrange(new Rect(x, y, w, h));
-        }
-    }
-
-    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
-    {
-        int x = RenderSize.X + offsetX;
-        int y = RenderSize.Y + offsetY;
-        Rect clip = buffer.GetClip();
-
-        foreach (var child in _children)
-        {
-            // Calculate child's absolute bounding box
-            int childX = x + child.RenderSize.X;
-            int childY = y + child.RenderSize.Y;
-            int childW = child.RenderSize.Width;
-            int childH = child.RenderSize.Height;
-
-            // Clip check
-            bool overlapsClip =
-                childX < clip.X + clip.Width && childX + childW > clip.X &&
-                childY < clip.Y + clip.Height && childY + childH > clip.Y;
-
-            if (overlapsClip)
-            {
-                child.Render(buffer, x, y);
-            }
         }
     }
 }
