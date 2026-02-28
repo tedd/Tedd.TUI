@@ -8,7 +8,7 @@ namespace Tedd.TUI;
 
 public abstract class ItemsControl : UIElement
 {
-    private readonly ItemCollection _items = new ItemCollection();
+    private readonly ItemCollection _items = [];
     public ItemCollection Items => _items;
 
     public static readonly DependencyProperty ItemsSourceProperty =
@@ -30,7 +30,8 @@ public abstract class ItemsControl : UIElement
     }
 
     private IEnumerable? _currentItemsSource;
-    private Dictionary<Type, PropertyInfo?> _displayMemberCache = new Dictionary<Type, PropertyInfo?>();
+    private Dictionary<Type, PropertyInfo?> _displayMemberCache = [];
+    private System.Threading.Lock _displayMemberCacheLock = new System.Threading.Lock();
     private bool _isUpdating = false;
 
     public ItemsControl()
@@ -56,7 +57,10 @@ public abstract class ItemsControl : UIElement
         }
         else if (dp == DisplayMemberPathProperty)
         {
-            _displayMemberCache.Clear();
+            lock (_displayMemberCacheLock)
+            {
+                _displayMemberCache.Clear();
+            }
             Invalidate();
         }
     }
@@ -195,10 +199,14 @@ public abstract class ItemsControl : UIElement
         if (string.IsNullOrEmpty(DisplayMemberPath)) return item.ToString() ?? "";
 
         var type = item.GetType();
-        if (!_displayMemberCache.TryGetValue(type, out var prop))
+        PropertyInfo? prop = null;
+        lock (_displayMemberCacheLock)
         {
-            prop = type.GetProperty(DisplayMemberPath);
-            _displayMemberCache[type] = prop;
+            if (!_displayMemberCache.TryGetValue(type, out prop))
+            {
+                prop = type.GetProperty(DisplayMemberPath);
+                _displayMemberCache[type] = prop;
+            }
         }
 
         if (prop != null)

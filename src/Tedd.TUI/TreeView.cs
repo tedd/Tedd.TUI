@@ -12,7 +12,7 @@ public class TreeView : UIElement
 {
     private readonly ScrollViewer _scrollViewer;
     private readonly StackPanel _stackPanel;
-    private ObservableCollection<TreeViewItem> _items = new ObservableCollection<TreeViewItem>();
+    private ObservableCollection<TreeViewItem> _items = [];
     public IList<TreeViewItem> Items => _items;
 
     public static readonly DependencyProperty ItemsSourceProperty =
@@ -28,32 +28,68 @@ public class TreeView : UIElement
         }
     }
 
-    public string DisplayMemberPath { get; set; }
-    public string ChildItemsPath { get; set; }
+    private System.Threading.Lock _displayMemberCacheLock = new System.Threading.Lock();
+    private Dictionary<Type, PropertyInfo?> _displayMemberCache = [];
 
-    private TreeViewItem? _selectedItem;
-    public TreeViewItem? SelectedItem
+    public string DisplayMemberPath
     {
-        get => _selectedItem;
+        get;
         set
         {
-            if (_selectedItem != value)
+            if (field != value)
             {
-                if (_selectedItem != null) _selectedItem.IsSelected = false;
-                _selectedItem = value;
-                if (_selectedItem != null)
+                field = value;
+                lock (_displayMemberCacheLock)
+                {
+                    _displayMemberCache.Clear();
+                }
+                RebuildVisualTree();
+            }
+        }
+    }
+
+    private System.Threading.Lock _childItemsCacheLock = new System.Threading.Lock();
+    private Dictionary<Type, PropertyInfo?> _childItemsCache = [];
+
+    public string ChildItemsPath
+    {
+        get;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                lock (_childItemsCacheLock)
+                {
+                    _childItemsCache.Clear();
+                }
+                RebuildVisualTree();
+            }
+        }
+    }
+
+    public TreeViewItem? SelectedItem
+    {
+        get;
+        set
+        {
+            if (field != value)
+            {
+                if (field != null) field.IsSelected = false;
+                field = value;
+                if (field != null)
                 {
                     // Auto-expand parents
-                    var parent = _selectedItem.ParentItem;
+                    var parent = field.ParentItem;
                     while (parent != null)
                     {
                         if (!parent.IsExpanded) parent.IsExpanded = true;
                         parent = parent.ParentItem;
                     }
-                    _selectedItem.IsSelected = true;
+                    field.IsSelected = true;
                 }
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
-                EnsureVisible(_selectedItem);
+                EnsureVisible(field);
             }
         }
     }
@@ -167,7 +203,16 @@ public class TreeView : UIElement
         // Header
         if (!string.IsNullOrEmpty(DisplayMemberPath))
         {
-            var prop = data.GetType().GetProperty(DisplayMemberPath);
+            var type = data.GetType();
+            PropertyInfo? prop = null;
+            lock (_displayMemberCacheLock)
+            {
+                if (!_displayMemberCache.TryGetValue(type, out prop))
+                {
+                    prop = type.GetProperty(DisplayMemberPath);
+                    _displayMemberCache[type] = prop;
+                }
+            }
             item.Header = prop?.GetValue(data) ?? data.ToString();
         }
         else
@@ -180,7 +225,16 @@ public class TreeView : UIElement
         // We will do one-time generation for now (lazy loading not supported in this simple version).
         if (!string.IsNullOrEmpty(ChildItemsPath))
         {
-            var prop = data.GetType().GetProperty(ChildItemsPath);
+            var type = data.GetType();
+            PropertyInfo? prop = null;
+            lock (_childItemsCacheLock)
+            {
+                if (!_childItemsCache.TryGetValue(type, out prop))
+                {
+                    prop = type.GetProperty(ChildItemsPath);
+                    _childItemsCache[type] = prop;
+                }
+            }
             if (prop != null)
             {
                 var children = prop.GetValue(data) as IEnumerable;

@@ -57,30 +57,40 @@ public class DataGrid : ItemsControl
         set => _table.SelectedIndex = value;
     }
 
-    private object _selectedItem;
     public object SelectedItem
     {
-        get => _selectedItem;
+        get;
         set
         {
-            if (_selectedItem != value)
+            if (field != value)
             {
-                _selectedItem = value;
+                field = value;
                 // Sync to Table
-                if (_selectedItem != null)
+                if (!_isUpdatingSelection)
                 {
-                    foreach (var row in _table.Rows)
+                    _isUpdatingSelection = true;
+                    try
                     {
-                        if (row.Tag == _selectedItem)
+                        if (field != null)
                         {
-                            _table.SelectedIndex = _table.Rows.IndexOf(row);
-                            break;
+                            foreach (var row in _table.Rows)
+                            {
+                                if (row.Tag == field)
+                                {
+                                    _table.SelectedIndex = _table.Rows.IndexOf(row);
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            _table.SelectedIndex = -1;
                         }
                     }
-                }
-                else
-                {
-                    _table.SelectedIndex = -1;
+                    finally
+                    {
+                        _isUpdatingSelection = false;
+                    }
                 }
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -103,24 +113,30 @@ public class DataGrid : ItemsControl
         Columns.CollectionChanged += OnColumnsCollectionChanged;
     }
 
+    private bool _isUpdatingSelection = false;
+
     private void OnTableSelectionChanged(object? sender, EventArgs e)
     {
-        if (_table.SelectedIndex >= 0 && _table.SelectedIndex < _table.Rows.Count)
+        if (_isUpdatingSelection) return;
+        _isUpdatingSelection = true;
+        try
         {
-            var row = _table.Rows[_table.SelectedIndex];
-            if (row.Tag != null)
+            if (_table.SelectedIndex >= 0 && _table.SelectedIndex < _table.Rows.Count)
             {
-                // Update SelectedItem without triggering loop
-                if (_selectedItem != row.Tag)
+                var row = _table.Rows[_table.SelectedIndex];
+                if (row.Tag != null && SelectedItem != row.Tag)
                 {
-                    _selectedItem = row.Tag;
-                    SelectionChanged?.Invoke(this, EventArgs.Empty);
+                    SelectedItem = row.Tag;
                 }
             }
+            else
+            {
+                SelectedItem = null;
+            }
         }
-        else
+        finally
         {
-            _selectedItem = null;
+            _isUpdatingSelection = false;
         }
     }
 
