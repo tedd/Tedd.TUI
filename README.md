@@ -7,7 +7,7 @@
 - **WPF-Inspired Core:** Built on a `UIElement` base with a lightweight `DependencyProperty` system and hierarchical Visual Tree.
 - **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol.
   - **Grid:** Supports `RowDefinition`, `ColumnDefinition`, `Star` (*) sizing, and `Auto` sizing.
-  - **StackPanel:** Vertical and horizontal stacking (requires explicit `AddChild` for parenting).
+  - **StackPanel:** Vertical and horizontal stacking.
   - **Border:** Decorative borders with box-drawing characters.
 - **Rich Control Suite:**
   - **DataGrid:** Supports `ItemsSource` binding, `AutoGenerateColumns`, selection, and pagination.
@@ -112,7 +112,7 @@ class Program
             Foreground = ConsoleColor.Cyan,
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        stack.AddChild(titleBlock); // Use AddChild to set Parent automatically
+        stack.Children.Add(titleBlock); // UIElementCollection sets Parent automatically
 
         // Status TextBlock with Data Binding
         var statusBlock = new TextBlock
@@ -122,7 +122,7 @@ class Program
         };
         // Bind Text property to ViewModel.Status
         statusBlock.SetBinding(TextBlock.TextProperty, new Binding("Status"));
-        stack.AddChild(statusBlock);
+        stack.Children.Add(statusBlock);
 
         // Button with Click Handler
         var button = new Button { Content = "Click Me" };
@@ -132,7 +132,7 @@ class Program
         {
             viewModel.OnButtonClick();
         };
-        stack.AddChild(button);
+        stack.Children.Add(button);
 
         // 6. Set the window content
         window.Content = stack;
@@ -162,12 +162,12 @@ The framework utilizes a recursive two-pass layout system:
 1.  **Measure Pass:** Parents query children for their `DesiredSize` based on available constraints. `Grid` calculates `Star` (*) sizing during this pass based on available space.
 2.  **Arrange Pass:** Parents position children within the final render rectangle.
 
-**Important:** For controls like `StackPanel`, use the `AddChild()` method instead of `Children.Add()`. `AddChild()` ensures the `Parent` property is set correctly, which is required for the visual tree, event bubbling, and invalidation propagation.
+**Important:** For container controls exposing a `Children` collection (like `StackPanel` and `Grid`), the underlying `UIElementCollection` automatically manages the `Parent` property. Utilizing standard collection methods like `Children.Add()` implicitly establishes the correct visual tree hierarchy, enabling inheritance for data binding and routed event propagation.
 
 ### Input & Interaction
-Input handling in Tedd.TUI follows a hybrid model:
-- **Standard Input:** Key presses and mouse events are handled via virtual methods (`OnKeyDown`, `OnMouseDown`) on the currently focused element. These events do not bubble automatically; the focused element is responsible for processing them.
-- **Routed Events:** High-level interactions (like `Button.Click`) utilize a routed event system. These events can bubble up the visual tree, allowing parent controls to intercept or handle actions triggered by their children.
+Input handling in Tedd.TUI is powered by a robust Routed Event infrastructure:
+- **Standard Input:** Standard inputs (e.g., `KeyDownEvent`, `MouseDownEvent`) are implemented as bubbling Routed Events. They originate at the focused element or the visual leaf under the cursor and systematically bubble up the visual tree. Virtual methods such as `OnKeyDown` and `OnMouseDown` serve as class handlers for these core events.
+- **High-Level Events:** Custom control interactions (e.g., `Button.ClickEvent`) seamlessly integrate into the same routed architecture, providing identical bubbling and interception mechanics for composition and templated boundaries.
 
 ### Rendering Pipeline
 Rendering is decoupled from the platform implementation.
