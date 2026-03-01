@@ -6,7 +6,7 @@ namespace Tedd.TUI.Markdown;
 
 public class Paragraph : UIElement
 {
-    private readonly List<UIElement> _children = new List<UIElement>();
+    private readonly List<UIElement> _children = [];
     public IList<UIElement> Children => _children;
 
     public void AddChild(UIElement child)

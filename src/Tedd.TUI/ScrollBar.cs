@@ -105,7 +105,7 @@ public class ScrollBar : UIElement
         ConsoleColor bg = Background ?? buffer.GetPixel(x, y).Background;
 
         int trackLen = (Orientation == Orientation.Vertical) ? h : w;
-        
+
         if (trackLen < 2) return;
 
         // Draw Arrows
@@ -122,7 +122,7 @@ public class ScrollBar : UIElement
             // Range of values is [Minimum, Maximum]
             long range = (long)Maximum - Minimum;
             long contentSize = range + ViewportSize;
-            
+
             int thumbSize = 1;
             if (contentSize > 0)
                 thumbSize = (int)Math.Max(1, (long)innerLen * ViewportSize / contentSize);
@@ -136,13 +136,13 @@ public class ScrollBar : UIElement
             {
                 thumbPos = (int)((long)availableSlide * (Value - Minimum) / range);
             }
-            
+
             // Draw Track and Thumb
             for (int i = 0; i < innerLen; i++)
             {
                 int px = (Orientation == Orientation.Vertical) ? x : x + 1 + i;
                 int py = (Orientation == Orientation.Vertical) ? y + 1 + i : y;
-                
+
                 if (i >= thumbPos && i < thumbPos + thumbSize)
                     buffer.SetPixel(px, py, thumbChar, fg, bg);
                 else
@@ -158,7 +158,7 @@ public class ScrollBar : UIElement
     public override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
-        
+
         int w = RenderSize.Width;
         int h = RenderSize.Height;
         int clickPos = (Orientation == Orientation.Vertical) ? e.Y : e.X;
@@ -179,7 +179,7 @@ public class ScrollBar : UIElement
 
             long range = (long)Maximum - Minimum;
             long contentSize = range + ViewportSize;
-            
+
             int thumbSize = 1;
             if (contentSize > 0)
                 thumbSize = (int)Math.Max(1, (long)innerLen * ViewportSize / contentSize);
@@ -192,7 +192,7 @@ public class ScrollBar : UIElement
                 thumbPos = (int)((long)availableSlide * (Value - Minimum) / range);
             }
 
-            int clickTrackPos = clickPos - 1; 
+            int clickTrackPos = clickPos - 1;
 
             // Check if clicked ON Thumb
             if (clickTrackPos >= thumbPos && clickTrackPos < thumbPos + thumbSize)
@@ -201,7 +201,7 @@ public class ScrollBar : UIElement
                 _isDragging = true;
                 _dragAnchor = clickPos;
                 _dragStartValue = Value;
-                
+
                 var root = GetRoot() as TuiWindow;
                 root?.CaptureMouse(this);
             }
@@ -239,18 +239,18 @@ public class ScrollBar : UIElement
             {
                 // Calculate delta in pixels
                 int deltaPixels = currentPos - _dragAnchor;
-                
+
                 // Convert pixels to value
                 // thumbPos = availableSlide * (Value - Min) / Range
                 // Value - Min = thumbPos * Range / availableSlide
                 // DeltaValue = DeltaPixels * Range / availableSlide
-                
+
                 // We use float/double for better precision during drag? 
                 // Int is fine if we accumulate, but straightforward mapping:
                 // NewValue = StartValue + (Delta * Range / Slide)
-                
+
                 long deltaValue = (long)deltaPixels * range / availableSlide;
-                
+
                 Value = _dragStartValue + (int)deltaValue;
             }
         }

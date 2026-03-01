@@ -40,9 +40,9 @@ public class BlazorInputManager
 
         var args = new KeyEventArgs
         {
-             Key = key,
-             KeyChar = keyChar,
-             Modifiers = modifiers
+            Key = key,
+            KeyChar = keyChar,
+            Modifiers = modifiers
         };
 
         _eventQueue.Enqueue(() => _window.ProcessKey(args));
@@ -62,28 +62,28 @@ public class BlazorInputManager
             {
                 var args = new Tedd.TUI.MouseEventArgs { X = hit.LocalX, Y = hit.LocalY };
                 var current = hit.Element;
-                
+
                 // Bubble up
                 while (current != null)
                 {
                     if (type == "mousedown")
                     {
-                         if (e.Button == 0) // Left button
-                         {
-                             // Special focus handling at the leaf or bubble? 
-                             // Usually focus happens on the element that was actually clicked (leaf).
-                             // But if leaf isn't focusable, maybe bubble?
-                             // Existing code: if (hit.Element.Focusable) _window.SetFocus(hit.Element);
-                             // Let's stick to original intent: Try to focus the HIT element (leaf).
-                             // If that fails, maybe we should try focus parents? 
-                             // For now, let's keep original focus logic ONCE at the start.
-                             if (current == hit.Element && current.Focusable) 
-                             {
-                                 _window.SetFocus(current);
-                             }
+                        if (e.Button == 0) // Left button
+                        {
+                            // Special focus handling at the leaf or bubble?
+                            // Usually focus happens on the element that was actually clicked (leaf).
+                            // But if leaf isn't focusable, maybe bubble?
+                            // Existing code: if (hit.Element.Focusable) _window.SetFocus(hit.Element);
+                            // Let's stick to original intent: Try to focus the HIT element (leaf).
+                            // If that fails, maybe we should try focus parents?
+                            // For now, let's keep original focus logic ONCE at the start.
+                            if (current == hit.Element && current.Focusable)
+                            {
+                                _window.SetFocus(current);
+                            }
 
-                             current.OnMouseDown(args);
-                         }
+                            current.OnMouseDown(args);
+                        }
                     }
                     else if (type == "mouseup")
                     {
@@ -104,9 +104,9 @@ public class BlazorInputManager
                     // Parent Local X = Child Local X + Child X
                     args.X += current.RenderSize.X;
                     args.Y += current.RenderSize.Y;
-                    
+
                     current = current.Parent;
-                    
+
                     // Stop at Window? Window is UIElement, so it handles it too.
                     // But Window.Parent is null. Loop terminates.
                 }

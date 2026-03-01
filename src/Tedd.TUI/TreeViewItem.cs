@@ -6,41 +6,34 @@ using System.Linq;
 
 namespace Tedd.TUI;
 
-public class TreeViewItem : UIElement
+public class TreeViewItem : HeaderedItemsControl
 {
-    public object Header { get; set; }
+    public bool HasItems => Items.Count > 0;
 
-    private ObservableCollection<TreeViewItem> _items = new ObservableCollection<TreeViewItem>();
-    public IList<TreeViewItem> Items => _items;
-
-    public bool HasItems => _items.Count > 0;
-
-    private bool _isExpanded;
     public bool IsExpanded
     {
-        get => _isExpanded;
+        get;
         set
         {
-            if (_isExpanded != value)
+            if (field != value)
             {
-                _isExpanded = value;
-                if (_isExpanded) Expanded?.Invoke(this, EventArgs.Empty);
+                field = value;
+                if (field) Expanded?.Invoke(this, EventArgs.Empty);
                 else Collapsed?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
         }
     }
 
-    private bool _isSelected;
     public bool IsSelected
     {
-        get => _isSelected;
+        get;
         set
         {
-            if (_isSelected != value)
+            if (field != value)
             {
-                _isSelected = value;
-                if (_isSelected) Selected?.Invoke(this, EventArgs.Empty);
+                field = value;
+                if (field) Selected?.Invoke(this, EventArgs.Empty);
                 else Unselected?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
@@ -63,11 +56,11 @@ public class TreeViewItem : UIElement
 
     public TreeViewItem()
     {
-        _items.CollectionChanged += OnItemsChanged;
     }
 
-    private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    protected override void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        base.OnItemsCollectionChanged(sender, e);
         if (e.NewItems != null)
         {
             foreach (var obj in e.NewItems)
@@ -134,7 +127,7 @@ public class TreeViewItem : UIElement
         string text = Header?.ToString() ?? "";
         for (int i = 0; i < text.Length; i++)
         {
-             buffer.SetPixel(contentX + i, y, text[i], fg, bg);
+            buffer.SetPixel(contentX + i, y, text[i], fg, bg);
         }
     }
 }

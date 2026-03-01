@@ -160,7 +160,7 @@ namespace Tedd.TUI.Tests
         [Fact]
         public void TestInput_Drag()
         {
-             var scrollBar = new ScrollBar
+            var scrollBar = new ScrollBar
             {
                 Orientation = Orientation.Vertical,
                 Minimum = 0,

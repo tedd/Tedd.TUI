@@ -302,7 +302,7 @@ public class TableCoverageTests
     public void Table_PageSize_Zero()
     {
         var table = new Table();
-        for (int i=0; i<10; i++) table.AddRow(i.ToString());
+        for (int i = 0; i < 10; i++) table.AddRow(i.ToString());
 
         table.PageSize = 0;
         Assert.Equal(1, table.TotalPages);

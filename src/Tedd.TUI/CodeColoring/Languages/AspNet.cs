@@ -19,18 +19,18 @@ public class AspNetLanguage : ILanguage
 
         if (markup.ContainsKey("tag") && markup["tag"][0].Inside != null)
         {
-             foreach(var kvp in markup["tag"][0].Inside!)
-             {
-                 if (!pageDirectiveInside.ContainsKey(kvp.Key))
+            foreach (var kvp in markup["tag"][0].Inside!)
+            {
+                if (!pageDirectiveInside.ContainsKey(kvp.Key))
                     pageDirectiveInside[kvp.Key] = kvp.Value;
-             }
+            }
         }
 
         var directiveInside = new Grammar();
         directiveInside.Add("directive", new Pattern(@"<%\s*?[$=%#:]{0,2}|%>", alias: "tag"));
-        foreach(var kvp in csharp)
+        foreach (var kvp in csharp)
         {
-             if (!directiveInside.ContainsKey(kvp.Key))
+            if (!directiveInside.ContainsKey(kvp.Key))
                 directiveInside[kvp.Key] = kvp.Value;
         }
 
@@ -47,18 +47,18 @@ public class AspNetLanguage : ILanguage
 
         if (grammar.ContainsKey("tag"))
         {
-             var tagToken = grammar["tag"][0];
-             if (tagToken.Inside != null && tagToken.Inside.TryGetValue("attr-value", out var attrValues))
-             {
-                 var attrValueInside = attrValues[0].Inside;
-                 if (attrValueInside != null)
-                 {
-                     attrValueInside.InsertBefore("punctuation", new Grammar
+            var tagToken = grammar["tag"][0];
+            if (tagToken.Inside != null && tagToken.Inside.TryGetValue("attr-value", out var attrValues))
+            {
+                var attrValueInside = attrValues[0].Inside;
+                if (attrValueInside != null)
+                {
+                    attrValueInside.InsertBefore("punctuation", new Grammar
                      {
                          { "directive", grammar["directive"] }
                      });
-                 }
-             }
+                }
+            }
         }
 
         grammar.InsertBefore("comment", new Grammar

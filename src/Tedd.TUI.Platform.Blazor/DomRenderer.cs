@@ -12,15 +12,15 @@ public class DomRenderer : IRendererAsync, ILayeredRenderer
     public List<RenderLayer>? Layers { get; private set; }
     public int CharWidth { get; private set; } = 10;
     public int CharHeight { get; private set; } = 18;
-    
+
     // For backward compatibility (single layer)
     public VirtualBuffer? CurrentBuffer => Layers?.Count > 0 ? Layers[0].Buffer : null;
 
     private readonly IJSRuntime? _js;
 
     public DomRenderer() { }
-    
-    public DomRenderer(IJSRuntime js) 
+
+    public DomRenderer(IJSRuntime js)
     {
         _js = js;
     }
@@ -29,14 +29,14 @@ public class DomRenderer : IRendererAsync, ILayeredRenderer
     {
         if (_js != null)
         {
-            try 
+            try
             {
                 var res = await _js.InvokeAsync<MetricResult>("tuiInterop.measureDom");
                 CharWidth = (int)Math.Round(res.CharWidth);
                 CharHeight = (int)Math.Round(res.CharHeight);
                 return (CharWidth, CharHeight);
             }
-            catch 
+            catch
             {
                 // Fallback if JS fails
             }
@@ -53,9 +53,9 @@ public class DomRenderer : IRendererAsync, ILayeredRenderer
     public Task RenderAsync(VirtualBuffer buffer)
     {
         // Wrap single buffer in a layer
-        Layers = new List<RenderLayer> 
-        { 
-            new RenderLayer { Buffer = buffer, X = 0, Y = 0, ZIndex = 0 } 
+        Layers = new List<RenderLayer>
+        {
+            new RenderLayer { Buffer = buffer, X = 0, Y = 0, ZIndex = 0 }
         };
         OnRender?.Invoke();
         return Task.CompletedTask;

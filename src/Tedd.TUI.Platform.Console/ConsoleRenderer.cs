@@ -125,25 +125,25 @@ public class ConsoleRenderer : IRenderer
 
                 if (_charBufferPos > 0)
                 {
-                     // We have a pending chunk.
-                     if (colorChanged)
-                     {
-                         // Flush current chunk
-                         FlushBuffer(pendingX, pendingY, lastFg, lastBg);
+                    // We have a pending chunk.
+                    if (colorChanged)
+                    {
+                        // Flush current chunk
+                        FlushBuffer(pendingX, pendingY, lastFg, lastBg);
 
-                         // Start new chunk
-                         pendingX = x;
-                         pendingY = y;
-                         lastFg = newFg;
-                         lastBg = newBg;
+                        // Start new chunk
+                        pendingX = x;
+                        pendingY = y;
+                        lastFg = newFg;
+                        lastBg = newBg;
 
-                         AppendChar(newCell.Character);
-                     }
-                     else
-                     {
-                         // Append to current chunk
-                         AppendChar(newCell.Character);
-                     }
+                        AppendChar(newCell.Character);
+                    }
+                    else
+                    {
+                        // Append to current chunk
+                        AppendChar(newCell.Character);
+                    }
                 }
                 else
                 {
@@ -187,7 +187,7 @@ public class ConsoleRenderer : IRenderer
         // Optimization: Only move cursor if not already there
         if (_consoleCursorX != startX || _consoleCursorY != startY)
         {
-             try
+            try
             {
                 _console.SetCursorPosition(startX, startY);
                 _consoleCursorX = startX;

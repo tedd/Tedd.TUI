@@ -1,13 +1,5 @@
-## 2024-05-27 - Architectural Discrepancies
-**Observation:** The documentation claims full Bubbling/Tunneling support for standard input events (`KeyDown`, `MouseDown`). Code analysis reveals these are virtual method calls (`OnKeyDown`) on the focused element and do not utilize the `RoutedEvent` infrastructure, with the exception of `Button.Click`.
-**Strategic Action:** Update README to accurately reflect that input is handled via virtual methods on the focused element, while the Routed Event system is available for custom control events like `Click`.
+## 2024-05-24 - Documentation Synchronization of Architectural Mechanics
 
-**Observation:** `StackPanel.Children` exposes a raw `List<UIElement>`, meaning `Children.Add()` fails to set the `Parent` property, breaking the visual tree. Users must use `AddChild()` or `XamlLoader` (which likely handles this).
-**Strategic Action:** Documentation must emphasize `AddChild`.
+**Observation:** The README.md exhibited documentation drift regarding the integration of `DockPanel` and lacked precise articulation of core framework mechanisms. The layout system description omitted the `Panel` base class and its `UIElementCollection` (`Children`) implementation. Data binding documentation was missing an explicit explanation of automatic `DataContext` inheritance. Additionally, the event routing section lacked specifics about `UIElement` class handlers (`OnKeyDown`, etc.) and the automatic translation of global coordinates to local space during the `InvokeHandler` execution.
 
-**Observation:** `Table` control is manual. `DataGrid` provides `ItemsSource` binding and `AutoGenerateColumns`.
-**Strategic Action:** Documentation should highlight `DataGrid` for list binding scenarios.
-
-## 2024-05-28 - Architectural Articulation Update
-**Observation:** The `README.md` contained outdated statements regarding explicit `AddChild` requirements for container controls like `StackPanel`, despite the framework employing `UIElementCollection` which implicitly propagates the `Parent` dependency property context. Furthermore, standard inputs (`KeyDownEvent`, `MouseDownEvent`) were incorrectly documented as isolated virtual method invocations rather than formally integrated components of the bubbling Routed Event architecture.
-**Strategic Action:** Synchronized `README.md` to accurately reflect the implicit visual tree hierarchy establishment via standard collection methods (e.g., `Children.Add`) and articulated the comprehensive integration of standard inputs into the Routed Event framework.
+**Strategic Action:** Executed a comprehensive revision of the README.md to synthesize these architectural paradigms. Integrated `DockPanel` into the Control Suite. Re-architected the Layout Engine section to detail the `Panel` structure and `Render` clipping optimization. Refined the Data Binding explanation to cover inheritance and `RelativeSource` resolutions. Enhanced the Input section to document standard event bubbling, class handlers, and coordinate resolution mapping. This procedural adjustment ensures that the epistemological interface maintains parity with the current TUI implementation reality.

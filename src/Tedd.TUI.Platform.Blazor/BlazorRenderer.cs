@@ -113,8 +113,8 @@ public class BlazorRenderer : IRenderer, IRendererAsync
 
     public async Task<(int CharWidth, int CharHeight)> InitAsync(int width, int height)
     {
-         var res = await _js.InvokeAsync<MetricResult>("tuiInterop.init", _canvasId, width, height);
-         return (res.CharWidth, res.CharHeight);
+        var res = await _js.InvokeAsync<MetricResult>("tuiInterop.init", _canvasId, width, height);
+        return (res.CharWidth, res.CharHeight);
     }
 
     private class MetricResult

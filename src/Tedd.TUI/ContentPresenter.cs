@@ -130,11 +130,11 @@ public class ContentPresenter : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-         if (_visualChild != null)
-         {
-             int x = RenderSize.X + offsetX;
-             int y = RenderSize.Y + offsetY;
-             _visualChild.Render(buffer, x, y);
-         }
+        if (_visualChild != null)
+        {
+            int x = RenderSize.X + offsetX;
+            int y = RenderSize.Y + offsetY;
+            _visualChild.Render(buffer, x, y);
+        }
     }
 }

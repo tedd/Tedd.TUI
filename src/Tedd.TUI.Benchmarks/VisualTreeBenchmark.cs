@@ -92,7 +92,7 @@ public class VisualTreeBenchmark
         var window = new TuiWindow();
         foreach (var item in window.GetVisualTree(_root))
         {
-             if (item == null) { }
+            if (item == null) { }
         }
     }
 
@@ -103,7 +103,7 @@ public class VisualTreeBenchmark
 
         if (parent is StackPanel stack)
         {
-            foreach(var child in stack.Children) FlattenTree(child, list);
+            foreach (var child in stack.Children) FlattenTree(child, list);
         }
         else if (parent is Border border && border.Child != null)
         {

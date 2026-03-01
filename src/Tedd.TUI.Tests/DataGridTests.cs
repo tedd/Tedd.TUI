@@ -45,7 +45,7 @@ public class DataGridTests
 
         // Let's check headers to find index
         int nameIdx = -1;
-        for(int i=0; i<grid.Columns.Count; i++)
+        for (int i = 0; i < grid.Columns.Count; i++)
         {
             if (grid.Columns[i].Header == "Name") nameIdx = i;
         }

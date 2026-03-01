@@ -31,7 +31,7 @@ public abstract class ItemsControl : UIElement
 
     private IEnumerable? _currentItemsSource;
     private Dictionary<Type, PropertyInfo?> _displayMemberCache = [];
-    private System.Threading.Lock _displayMemberCacheLock = new System.Threading.Lock();
+    private System.Threading.Lock _displayMemberCacheLock = new();
     private bool _isUpdating = false;
 
     public ItemsControl()
@@ -122,9 +122,9 @@ public abstract class ItemsControl : UIElement
                     int index = e.OldStartingIndex;
                     if (index >= 0)
                     {
-                        for(int i=0; i<e.OldItems.Count; i++)
+                        for (int i = 0; i < e.OldItems.Count; i++)
                         {
-                             if (index < _items.Count) _items.InternalRemoveAt(index);
+                            if (index < _items.Count) _items.InternalRemoveAt(index);
                         }
                     }
                     else
@@ -140,27 +140,27 @@ public abstract class ItemsControl : UIElement
             case NotifyCollectionChangedAction.Replace:
                 if (e.NewItems != null && e.OldItems != null)
                 {
-                     int index = e.NewStartingIndex;
-                     if (index >= 0)
-                     {
-                         for (int i = 0; i < e.NewItems.Count; i++)
-                         {
-                             if (index + i < _items.Count)
-                                 _items.InternalSet(index + i, e.NewItems[i]);
-                         }
-                     }
-                     else
-                     {
-                         foreach (var oldItem in e.OldItems)
-                         {
-                             int i = _items.IndexOf(oldItem);
-                             if (i >= 0) _items.InternalRemoveAt(i);
-                         }
-                         foreach (var newItem in e.NewItems)
-                         {
-                             _items.InternalAdd(newItem);
-                         }
-                     }
+                    int index = e.NewStartingIndex;
+                    if (index >= 0)
+                    {
+                        for (int i = 0; i < e.NewItems.Count; i++)
+                        {
+                            if (index + i < _items.Count)
+                                _items.InternalSet(index + i, e.NewItems[i]);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var oldItem in e.OldItems)
+                        {
+                            int i = _items.IndexOf(oldItem);
+                            if (i >= 0) _items.InternalRemoveAt(i);
+                        }
+                        foreach (var newItem in e.NewItems)
+                        {
+                            _items.InternalAdd(newItem);
+                        }
+                    }
                 }
                 break;
             case NotifyCollectionChangedAction.Move:
@@ -171,20 +171,20 @@ public abstract class ItemsControl : UIElement
                     if (oldIndex >= 0 && newIndex >= 0)
                     {
                         var itemsToMove = new List<object>();
-                        foreach(var item in e.OldItems) itemsToMove.Add(item);
+                        foreach (var item in e.OldItems) itemsToMove.Add(item);
 
-                        for(int i=0; i<itemsToMove.Count; i++) _items.InternalRemoveAt(oldIndex);
-                        for(int i=0; i<itemsToMove.Count; i++) _items.InternalInsert(newIndex + i, itemsToMove[i]);
+                        for (int i = 0; i < itemsToMove.Count; i++) _items.InternalRemoveAt(oldIndex);
+                        for (int i = 0; i < itemsToMove.Count; i++) _items.InternalInsert(newIndex + i, itemsToMove[i]);
                     }
                 }
                 break;
             case NotifyCollectionChangedAction.Reset:
-                 _items.InternalClear();
-                 if (sender is IEnumerable ie)
-                 {
-                     foreach(var i in ie) _items.InternalAdd(i);
-                 }
-                 break;
+                _items.InternalClear();
+                if (sender is IEnumerable ie)
+                {
+                    foreach (var i in ie) _items.InternalAdd(i);
+                }
+                break;
         }
     }
 

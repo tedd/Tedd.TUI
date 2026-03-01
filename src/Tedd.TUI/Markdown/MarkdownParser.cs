@@ -316,7 +316,7 @@ public class MarkdownParser
             {
                 // Check if it's a table start (header + separator)
                 // We need to look ahead for separator `|---|`
-                if (currentBlock == null && i + 1 < lines.Count && lines[i+1].Trim().StartsWith("|") && lines[i+1].Contains("-"))
+                if (currentBlock == null && i + 1 < lines.Count && lines[i + 1].Trim().StartsWith("|") && lines[i + 1].Contains("-"))
                 {
                     var table = new TableBlock();
                     table.Headers = ParseTableLine(line);
@@ -383,7 +383,7 @@ public class MarkdownParser
         while (i < text.Length)
         {
             // Check for Image ![alt](url)
-            if (text[i] == '!' && i + 1 < text.Length && text[i+1] == '[')
+            if (text[i] == '!' && i + 1 < text.Length && text[i + 1] == '[')
             {
                 var match = MatchLink(text, i + 1); // Skip !
                 if (match != null)
@@ -407,7 +407,7 @@ public class MarkdownParser
             }
 
             // Check for Bold **
-            if (i + 1 < text.Length && text[i] == '*' && text[i+1] == '*')
+            if (i + 1 < text.Length && text[i] == '*' && text[i + 1] == '*')
             {
                 int end = text.IndexOf("**", i + 2);
                 if (end != -1)

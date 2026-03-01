@@ -11,47 +11,44 @@ public class Border : ScrollViewer
         set => Content = value;
     }
 
-    private UIElement _title;
     public UIElement Title
     {
-        get => _title;
+        get;
         set
         {
-            if (_title != value)
+            if (field != value)
             {
-                if (_title != null) _title.Parent = null;
-                _title = value;
-                if (_title != null) _title.Parent = this;
+                if (field != null) field.Parent = null;
+                field = value;
+                if (field != null) field.Parent = this;
                 Invalidate();
             }
         }
     }
 
-    private HorizontalAlignment _titleAlignment = HorizontalAlignment.Left;
     public HorizontalAlignment TitleAlignment
     {
-        get => _titleAlignment;
+        get;
         set
         {
-            if (_titleAlignment != value)
+            if (field != value)
             {
-                _titleAlignment = value;
+                field = value;
                 Invalidate();
             }
         }
-    }
+    } = HorizontalAlignment.Left;
 
-    private UIElement _statusBar;
     public UIElement StatusBar
     {
-        get => _statusBar;
+        get;
         set
         {
-            if (_statusBar != value)
+            if (field != value)
             {
-                if (_statusBar != null) _statusBar.Parent = null;
-                _statusBar = value;
-                if (_statusBar != null) _statusBar.Parent = this;
+                if (field != null) field.Parent = null;
+                field = value;
+                if (field != null) field.Parent = this;
                 Invalidate();
             }
         }
@@ -75,61 +72,57 @@ public class Border : ScrollViewer
         set { SetValue(BoxStyleProperty, value); }
     }
 
-    private int _verticalScrollBarMarginTop = 0;
     public int VerticalScrollBarMarginTop
     {
-        get => _verticalScrollBarMarginTop;
+        get;
         set
         {
-            if (_verticalScrollBarMarginTop != value)
+            if (field != value)
             {
-                _verticalScrollBarMarginTop = value;
+                field = value;
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
-    private int _verticalScrollBarMarginBottom = 0;
     public int VerticalScrollBarMarginBottom
     {
-        get => _verticalScrollBarMarginBottom;
+        get;
         set
         {
-            if (_verticalScrollBarMarginBottom != value)
+            if (field != value)
             {
-                _verticalScrollBarMarginBottom = value;
+                field = value;
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
-    private int _horizontalScrollBarMarginLeft = 0;
     public int HorizontalScrollBarMarginLeft
     {
-        get => _horizontalScrollBarMarginLeft;
+        get;
         set
         {
-            if (_horizontalScrollBarMarginLeft != value)
+            if (field != value)
             {
-                _horizontalScrollBarMarginLeft = value;
+                field = value;
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
-    private int _horizontalScrollBarMarginRight = 0;
     public int HorizontalScrollBarMarginRight
     {
-        get => _horizontalScrollBarMarginRight;
+        get;
         set
         {
-            if (_horizontalScrollBarMarginRight != value)
+            if (field != value)
             {
-                _horizontalScrollBarMarginRight = value;
+                field = value;
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
     public Border()
     {
@@ -139,8 +132,8 @@ public class Border : ScrollViewer
     protected override void OnDataContextChanged(object newValue)
     {
         base.OnDataContextChanged(newValue);
-        if (_title != null) _title.DataContext = newValue;
-        if (_statusBar != null) _statusBar.DataContext = newValue;
+        if (Title != null) Title.DataContext = newValue;
+        if (StatusBar != null) StatusBar.DataContext = newValue;
     }
 
     public override int VisualChildrenCount
@@ -148,8 +141,8 @@ public class Border : ScrollViewer
         get
         {
             int count = base.VisualChildrenCount;
-            if (_title != null) count++;
-            if (_statusBar != null) count++;
+            if (Title != null) count++;
+            if (StatusBar != null) count++;
             return count;
         }
     }
@@ -163,15 +156,15 @@ public class Border : ScrollViewer
         }
         index -= baseCount;
 
-        if (_title != null)
+        if (Title != null)
         {
-            if (index == 0) return _title;
+            if (index == 0) return Title;
             index--;
         }
 
-        if (_statusBar != null)
+        if (StatusBar != null)
         {
-            if (index == 0) return _statusBar;
+            if (index == 0) return StatusBar;
         }
 
         throw new ArgumentOutOfRangeException(nameof(index));
@@ -203,14 +196,14 @@ public class Border : ScrollViewer
         // They are constrained by Width - corners
         Size decorationAvailable = new Size(Math.Max(0, availableSize.Width - borderW), 1);
 
-        if (_title != null)
+        if (Title != null)
         {
-            _title.Measure(decorationAvailable);
+            Title.Measure(decorationAvailable);
         }
 
-        if (_statusBar != null)
+        if (StatusBar != null)
         {
-            _statusBar.Measure(decorationAvailable);
+            StatusBar.Measure(decorationAvailable);
         }
 
         // Measure Content
@@ -235,7 +228,7 @@ public class Border : ScrollViewer
             _verticalScrollBar.ViewportSize = viewport;
             _verticalScrollBar.Maximum = Math.Max(0, extent - viewport);
             _verticalScrollBar.Minimum = 0;
-            
+
             // Measure ScrollBar with margins taken into account
             int vScrollHeight = Math.Max(0, availableSize.Height - borderH - VerticalScrollBarMarginTop - VerticalScrollBarMarginBottom);
             _verticalScrollBar.Measure(new Size(1, vScrollHeight));
@@ -276,9 +269,9 @@ public class Border : ScrollViewer
         }
 
         // Arrange Title
-        if (_title != null)
+        if (Title != null)
         {
-            int titleW = Math.Min(w - 2, _title.DesiredSize.Width);
+            int titleW = Math.Min(w - 2, Title.DesiredSize.Width);
             int titleX = 1;
 
             if (TitleAlignment == HorizontalAlignment.Center)
@@ -286,15 +279,15 @@ public class Border : ScrollViewer
             else if (TitleAlignment == HorizontalAlignment.Right)
                 titleX = Math.Max(1, w - 1 - titleW);
 
-            _title.Arrange(new Rect(titleX, 0, titleW, 1));
+            Title.Arrange(new Rect(titleX, 0, titleW, 1));
         }
 
         // Arrange StatusBar
         int statusW = 0;
-        if (_statusBar != null)
+        if (StatusBar != null)
         {
-            statusW = Math.Min(w - 2, _statusBar.DesiredSize.Width);
-            _statusBar.Arrange(new Rect(1, h - 1, statusW, 1));
+            statusW = Math.Min(w - 2, StatusBar.DesiredSize.Width);
+            StatusBar.Arrange(new Rect(1, h - 1, statusW, 1));
         }
 
         // Arrange ScrollBars
@@ -353,15 +346,15 @@ public class Border : ScrollViewer
         // 2. Render Children
 
         // Title (on top border)
-        if (_title != null)
+        if (Title != null)
         {
-            _title.Render(buffer, x, y);
+            Title.Render(buffer, x, y);
         }
 
         // StatusBar (on bottom border)
-        if (_statusBar != null)
+        if (StatusBar != null)
         {
-            _statusBar.Render(buffer, x, y);
+            StatusBar.Render(buffer, x, y);
         }
 
         // ScrollBars (on border lines)
