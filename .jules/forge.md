@@ -39,3 +39,12 @@
 - Refactored `Grid`, `StackPanel`, and `DockPanel` to inherit from `Panel`.
 - Implemented `WrapPanel` with dynamic `Orientation` line-breaking logic.
 - Implemented `Canvas` utilizing explicit `Canvas.Left` and `Canvas.Top` attached dependency properties for zero-constraint positioning.
+
+## 2026-03-05 - TextEditor Integration
+
+**Observation:** The TUI framework lacked an advanced multi-line `TextEditor` control, which is necessary to fill a parity gap with modern UI frameworks like WPF and Avalonia. A multi-line editing paradigm is critical for robust text input capabilities, expanding beyond the single-line `TextBox`.
+
+**Strategic Action:**
+- Implemented `TextEditor` as a `UIElement` handling multi-line state directly.
+- Leveraged `List<string>` for lightweight line management to mitigate extensive text reallocations during simple keystrokes.
+- Integrated arrow key navigation, text insertion, multi-line separation (Enter), and text deletion (Backspace/Delete) along with view scrolling bounded by `RenderSize`.
