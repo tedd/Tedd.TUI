@@ -13,7 +13,7 @@
   - **DataGrid:** Supports `ItemsSource` binding, `AutoGenerateColumns`, selection, and pagination.
   - **Table:** Manual row management with sorting, pagination, and header customization.
   - **MarkdownView:** Renders Markdown content with theming support.
-  - **Standard Controls:** `Button`, `TextBox`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`.
+  - **Standard Controls:** `Button`, `TextBox`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `DockPanel`.
 - **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
 - **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
 - **Cross-Platform:** Decoupled rendering pipeline supporting Console (Windows/Linux/Mac).
@@ -151,23 +151,25 @@ At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation
 - **Dependency Properties:** A property system that supports value inheritance, change notification, and memory conservation.
 
 ### Data Binding
-Tedd.TUI supports a hierarchical data binding system similar to WPF.
-- **DataContext:** The `DataContext` property is inherited down the visual tree.
-- **INotifyPropertyChanged:** Models should implement `System.ComponentModel.INotifyPropertyChanged` to drive UI updates.
-- **Binding:** Use `SetBinding` to link a dependency property to a property on the `DataContext`.
-- **Collections:** Use `DataGrid` or `ItemsControl` derivatives (`ListBox`, `ComboBox`) to bind to collections.
+Tedd.TUI supports a hierarchical data binding system analogous to WPF, driven by the `DataContext` inherited dependency property.
+- **DataContext Inheritance:** The `DataContext` property is automatically inherited down the visual tree. Assigning a `DataContext` at the root (e.g., `TuiWindow`) seamlessly propagates the data model to all descendant elements, eliminating the need for redundant assignments.
+- **INotifyPropertyChanged:** Models must implement `System.ComponentModel.INotifyPropertyChanged` to trigger reactive UI updates.
+- **Binding Resolutions:** The `SetBinding` method establishes a dynamic link between a target dependency property and a source property. Bindings primarily resolve against the current `DataContext`, but the framework also supports `RelativeSource` resolutions (e.g., `Self`, `TemplatedParent`, `FindAncestor`) for complex control templates.
+- **Collections:** Utilizing `DataGrid` or derivatives of the `Selector` class (`ListBox`, `ComboBox`, `TabControl`) enables binding directly to collections via the `ItemsSource` property, complete with `DisplayMemberPath` text resolution.
 
 ### Layout Engine
-The framework utilizes a recursive two-pass layout system:
-1.  **Measure Pass:** Parents query children for their `DesiredSize` based on available constraints. `Grid` calculates `Star` (*) sizing during this pass based on available space.
-2.  **Arrange Pass:** Parents position children within the final render rectangle.
+The framework employs a robust, recursive two-pass layout system orchestrated by the abstract `Panel` class:
+1.  **Measure Pass:** Container elements recursively query their children, invoking `Measure(Size availableSize)` to compute their `DesiredSize` based on layout constraints.
+2.  **Arrange Pass:** Parents position and size their children within the computed physical bounds by invoking `Arrange(Rect finalRect)`.
+3.  **Render Pass:** The actual rendering to the `VirtualBuffer` is heavily optimized. Containers executing the `Render` method utilize clipping rects to skip elements that are fully clipped or lie completely outside the current clip rectangle, drastically reducing CPU cycles in complex visual trees.
 
-**Important:** For container controls exposing a `Children` collection (like `StackPanel` and `Grid`), the underlying `UIElementCollection` automatically manages the `Parent` property. Utilizing standard collection methods like `Children.Add()` implicitly establishes the correct visual tree hierarchy, enabling inheritance for data binding and routed event propagation.
+**Hierarchical Composition:** For container controls descending from `Panel` (such as `StackPanel`, `Grid`, `DockPanel`, `WrapPanel`, and `Canvas`), the underlying `UIElementCollection` (`Children`) systematically intercepts collection modifications. Executing `Panel.Children.Add(child)` strictly enforces visual tree integrity by automatically assigning the parent node, which inherently triggers `DataContext` propagation and establishes the routing infrastructure for input events.
 
 ### Input & Interaction
-Input handling in Tedd.TUI is powered by a robust Routed Event infrastructure:
-- **Standard Input:** Standard inputs (e.g., `KeyDownEvent`, `MouseDownEvent`) are implemented as bubbling Routed Events. They originate at the focused element or the visual leaf under the cursor and systematically bubble up the visual tree. Virtual methods such as `OnKeyDown` and `OnMouseDown` serve as class handlers for these core events.
-- **High-Level Events:** Custom control interactions (e.g., `Button.ClickEvent`) seamlessly integrate into the same routed architecture, providing identical bubbling and interception mechanics for composition and templated boundaries.
+Input handling is driven by a deterministic Routed Event architecture defined within `UIElement`:
+- **Standard Input Events:** Primitive interactions (`KeyDown`, `KeyUp`, `MouseDown`, `MouseUp`, `GotFocus`, `LostFocus`) are registered as bubbling `RoutedEvent` instances. They originate at the focused element or visual leaf node and systematically traverse upwards to the visual root.
+- **Class Handlers:** `UIElement` exposes virtual methods (e.g., `OnKeyDown`, `OnMouseDown`) that function as internal class handlers, allowing derived controls to intercept and handle core inputs prior to instance-level event delegates. Furthermore, input coordinate resolution dynamically translates absolute global coordinates (`GlobalX`, `GlobalY`) into relative local spaces (`X`, `Y`) during event propagation via `InvokeHandler`.
+- **High-Level Abstractions:** Semantic control events (e.g., `Button.ClickEvent`) seamlessly integrate into the identical bubbling routing topology, ensuring uniform event interception and traversal behavior across component boundaries.
 
 ### Rendering Pipeline
 Rendering is decoupled from the platform implementation.
