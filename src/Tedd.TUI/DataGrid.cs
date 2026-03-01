@@ -102,6 +102,8 @@ public class DataGrid : ItemsControl
     private List<Func<object, string>> _cachedGetters;
     private bool _isGeneratingColumns;
 
+    private static readonly Dictionary<PropertyInfo, Func<object, object>> _globalCompiledGetters = new();
+
     public DataGrid()
     {
         _table = new Table();
@@ -310,19 +312,54 @@ public class DataGrid : ItemsControl
                         var prop = type.GetProperty(col.BindingPath);
                         if (prop != null)
                         {
-                            _cachedGetters.Add(obj =>
+                            try
                             {
-                                if (obj == null) return "";
-                                try
+                                Func<object, object>? getter = null;
+                                lock (_globalCompiledGetters)
                                 {
-                                    var val = prop.GetValue(obj);
-                                    return val?.ToString() ?? "";
+                                    if (!_globalCompiledGetters.TryGetValue(prop, out getter))
+                                    {
+                                        var param = System.Linq.Expressions.Expression.Parameter(typeof(object), "obj");
+                                        var castObj = System.Linq.Expressions.Expression.Convert(param, type);
+                                        var propAccess = System.Linq.Expressions.Expression.Property(castObj, prop);
+                                        var castResult = System.Linq.Expressions.Expression.Convert(propAccess, typeof(object));
+                                        var lambda = System.Linq.Expressions.Expression.Lambda<Func<object, object>>(castResult, param);
+                                        getter = lambda.Compile();
+                                        _globalCompiledGetters[prop] = getter;
+                                    }
                                 }
-                                catch
+
+                                _cachedGetters.Add(obj =>
                                 {
-                                    return "";
-                                }
-                            });
+                                    if (obj == null) return "";
+                                    try
+                                    {
+                                        var val = getter(obj);
+                                        return val?.ToString() ?? "";
+                                    }
+                                    catch
+                                    {
+                                        return "";
+                                    }
+                                });
+                            }
+                            catch
+                            {
+                                // Fallback to reflection if expression compilation fails
+                                _cachedGetters.Add(obj =>
+                                {
+                                    if (obj == null) return "";
+                                    try
+                                    {
+                                        var val = prop.GetValue(obj);
+                                        return val?.ToString() ?? "";
+                                    }
+                                    catch
+                                    {
+                                        return "";
+                                    }
+                                });
+                            }
                         }
                         else
                         {
