@@ -23,7 +23,7 @@ public class TuiTable : TuiComponentBase
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _table.PageChanged += (s, e) => 
+        _table.PageChanged += (s, e) =>
         {
             if (CurrentPage != _table.CurrentPage)
             {

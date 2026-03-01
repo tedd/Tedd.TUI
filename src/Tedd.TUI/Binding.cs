@@ -141,7 +141,7 @@ public class BindingExpression
             // If fallback value is set, use it
             if (_binding.FallbackValue != null)
             {
-                 _target.SetValue(_property, _binding.FallbackValue);
+                _target.SetValue(_property, _binding.FallbackValue);
             }
             return;
         }
@@ -149,20 +149,20 @@ public class BindingExpression
         object? value = newSource;
         if (!string.IsNullOrEmpty(_binding.Path))
         {
-             // Simple reflection to get property value from context
-             var propInfo = newSource.GetType().GetProperty(_binding.Path);
-             if (propInfo != null)
-             {
-                 value = propInfo.GetValue(newSource);
-             }
-             else
-             {
-                 // Property not found
-                 if (_binding.Path == ".")
-                     value = newSource;
-                 else
-                     value = _binding.FallbackValue ?? _property.DefaultValue;
-             }
+            // Simple reflection to get property value from context
+            var propInfo = newSource.GetType().GetProperty(_binding.Path);
+            if (propInfo != null)
+            {
+                value = propInfo.GetValue(newSource);
+            }
+            else
+            {
+                // Property not found
+                if (_binding.Path == ".")
+                    value = newSource;
+                else
+                    value = _binding.FallbackValue ?? _property.DefaultValue;
+            }
         }
 
         // Apply Converter
@@ -178,7 +178,7 @@ public class BindingExpression
     {
         if (e.PropertyName == _binding.Path || string.IsNullOrEmpty(e.PropertyName))
         {
-             UpdateTarget();
+            UpdateTarget();
         }
     }
 }

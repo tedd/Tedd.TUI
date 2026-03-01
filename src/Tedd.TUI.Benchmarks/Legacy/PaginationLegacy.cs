@@ -15,48 +15,48 @@ public static class PaginationLegacy
 
         if (statusLen > availableWidth)
         {
-             return "< >";
+            return "< >";
         }
         else
         {
             // detailed check
             if (availableWidth > 30)
             {
-                 // Try generate detailed string
-                 Span<char> buffer = stackalloc char[256];
-                 int pos = 0;
+                // Try generate detailed string
+                Span<char> buffer = stackalloc char[256];
+                int pos = 0;
 
-                 buffer[pos++] = '<';
+                buffer[pos++] = '<';
 
-                 // Page 1
-                 AppendPage(buffer, ref pos, 1, cp);
+                // Page 1
+                AppendPage(buffer, ref pos, 1, cp);
 
-                 int start = Math.Max(2, cp - 2);
-                 int end = Math.Min(totalPages - 1, cp + 2);
+                int start = Math.Max(2, cp - 2);
+                int end = Math.Min(totalPages - 1, cp + 2);
 
-                 if (start > 2) AppendDots(buffer, ref pos);
+                if (start > 2) AppendDots(buffer, ref pos);
 
-                 for(int i = start; i <= end; i++)
-                 {
-                     AppendPage(buffer, ref pos, i, cp);
-                 }
+                for (int i = start; i <= end; i++)
+                {
+                    AppendPage(buffer, ref pos, i, cp);
+                }
 
-                 if (end < totalPages - 1) AppendDots(buffer, ref pos);
+                if (end < totalPages - 1) AppendDots(buffer, ref pos);
 
-                 if (totalPages > 1) AppendPage(buffer, ref pos, totalPages, cp);
+                if (totalPages > 1) AppendPage(buffer, ref pos, totalPages, cp);
 
-                 buffer[pos++] = ' ';
-                 buffer[pos++] = '>';
+                buffer[pos++] = ' ';
+                buffer[pos++] = '>';
 
-                 if (pos <= availableWidth)
-                 {
-                     return new string(buffer.Slice(0, pos));
-                 }
-                 else
-                 {
-                     // Fallback to status string
-                     return CreateStatusString(cp, totalPages, statusLen);
-                 }
+                if (pos <= availableWidth)
+                {
+                    return new string(buffer.Slice(0, pos));
+                }
+                else
+                {
+                    // Fallback to status string
+                    return CreateStatusString(cp, totalPages, statusLen);
+                }
             }
             else
             {
@@ -69,18 +69,18 @@ public static class PaginationLegacy
     {
         if (p == cp)
         {
-             // " [{p}]"
-             span[pos++] = ' '; span[pos++] = '[';
-             p.TryFormat(span.Slice(pos), out int chars);
-             pos += chars;
-             span[pos++] = ']';
+            // " [{p}]"
+            span[pos++] = ' '; span[pos++] = '[';
+            p.TryFormat(span.Slice(pos), out int chars);
+            pos += chars;
+            span[pos++] = ']';
         }
         else
         {
-             // " {p}"
-             span[pos++] = ' ';
-             p.TryFormat(span.Slice(pos), out int chars);
-             pos += chars;
+            // " {p}"
+            span[pos++] = ' ';
+            p.TryFormat(span.Slice(pos), out int chars);
+            pos += chars;
         }
     }
 

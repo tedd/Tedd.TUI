@@ -10,7 +10,7 @@ public class TuiTableRow : TuiComponentBase
 
     // TuiTableRow is a TuiComponentBase.
     // Any child added to it via ChildContent (TuiLabel, TuiButton) will call AddChild.
-    
+
     public override void AddChild(UIElement child)
     {
         _row.AddCell(child);

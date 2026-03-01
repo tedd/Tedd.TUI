@@ -49,9 +49,9 @@ public class TableTest : TestPage
         var col1 = new TableColumn { Header = "Num", Width = GridLength.Pixel(10) };
         col1.SortComparer = (a, b) =>
         {
-             if (int.TryParse(a.ToString(), out int i1) && int.TryParse(b.ToString(), out int i2))
-                 return i1.CompareTo(i2);
-             return string.Compare(a.ToString(), b.ToString());
+            if (int.TryParse(a.ToString(), out int i1) && int.TryParse(b.ToString(), out int i2))
+                return i1.CompareTo(i2);
+            return string.Compare(a.ToString(), b.ToString());
         };
         sortTable.Columns.Add(col1);
         sortTable.Columns.Add(new TableColumn { Header = "Text", Width = GridLength.Star });

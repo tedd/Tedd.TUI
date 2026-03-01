@@ -104,7 +104,7 @@ public class BlazorTuiApp : IDisposable
                         var contentBuffer = new VirtualBuffer(_width, _height);
                         if (_window.Content != null)
                         {
-                             _window.Content.Render(contentBuffer, 0, 0);
+                            _window.Content.Render(contentBuffer, 0, 0);
                         }
                         layers.Add(new RenderLayer { Buffer = contentBuffer, X = 0, Y = 0, ZIndex = 0 });
 

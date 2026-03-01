@@ -18,7 +18,7 @@ public class TuiButton : TuiComponentBase
         base.OnInitialized();
         _button.Click += (s, e) =>
         {
-             InvokeAsync(async () => await OnClick.InvokeAsync());
+            InvokeAsync(async () => await OnClick.InvokeAsync());
         };
     }
 

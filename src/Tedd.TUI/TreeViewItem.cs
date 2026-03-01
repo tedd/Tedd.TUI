@@ -6,14 +6,9 @@ using System.Linq;
 
 namespace Tedd.TUI;
 
-public class TreeViewItem : UIElement
+public class TreeViewItem : HeaderedItemsControl
 {
-    public object Header { get; set; }
-
-    private ObservableCollection<TreeViewItem> _items = new ObservableCollection<TreeViewItem>();
-    public IList<TreeViewItem> Items => _items;
-
-    public bool HasItems => _items.Count > 0;
+    public bool HasItems => Items.Count > 0;
 
     private bool _isExpanded;
     public bool IsExpanded
@@ -63,11 +58,11 @@ public class TreeViewItem : UIElement
 
     public TreeViewItem()
     {
-        _items.CollectionChanged += OnItemsChanged;
     }
 
-    private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    protected override void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        base.OnItemsCollectionChanged(sender, e);
         if (e.NewItems != null)
         {
             foreach (var obj in e.NewItems)
@@ -134,7 +129,7 @@ public class TreeViewItem : UIElement
         string text = Header?.ToString() ?? "";
         for (int i = 0; i < text.Length; i++)
         {
-             buffer.SetPixel(contentX + i, y, text[i], fg, bg);
+            buffer.SetPixel(contentX + i, y, text[i], fg, bg);
         }
     }
 }

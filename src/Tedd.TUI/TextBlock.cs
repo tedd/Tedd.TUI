@@ -31,16 +31,16 @@ public class TextBlock : UIElement
 
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
-        
+
         for (int i = 0; i < text.Length; i++)
         {
             // Clip to bounds
             if (i < RenderSize.Width && RenderSize.Height > 0)
-            if (i < RenderSize.Width && RenderSize.Height > 0)
-            {
-                var bg = Background ?? buffer.GetPixel(x + i, y).Background;
-                buffer.SetPixel(x + i, y, text[i], Foreground, bg);
-            }
+                if (i < RenderSize.Width && RenderSize.Height > 0)
+                {
+                    var bg = Background ?? buffer.GetPixel(x + i, y).Background;
+                    buffer.SetPixel(x + i, y, text[i], Foreground, bg);
+                }
         }
     }
 }

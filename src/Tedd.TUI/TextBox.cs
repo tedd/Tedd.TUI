@@ -32,7 +32,7 @@ public class TextBox : UIElement
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
         base.OnPropertyChanged(dp);
-        
+
         if (dp == TextProperty && !_isUserInput)
         {
             // Move cursor to end when text is set programmatically
@@ -96,7 +96,7 @@ public class TextBox : UIElement
         // Draw cursor at end if needed
         if (IsFocused && _cursorPos == display.Length && display.Length - start < w)
         {
-             buffer.SetPixel(x + (display.Length - start), y, ' ', ConsoleColor.Black, ConsoleColor.Gray);
+            buffer.SetPixel(x + (display.Length - start), y, ' ', ConsoleColor.Black, ConsoleColor.Gray);
         }
     }
 
@@ -138,13 +138,13 @@ public class TextBox : UIElement
         }
         else if (e.Key == ConsoleKey.Delete)
         {
-             if (_cursorPos < text.Length)
-             {
-                 _isUserInput = true;
-                 Text = text.Remove(_cursorPos, 1);
-                 _isUserInput = false;
-             }
-             e.Handled = true;
+            if (_cursorPos < text.Length)
+            {
+                _isUserInput = true;
+                Text = text.Remove(_cursorPos, 1);
+                _isUserInput = false;
+            }
+            e.Handled = true;
         }
         else if (!char.IsControl(e.KeyChar))
         {

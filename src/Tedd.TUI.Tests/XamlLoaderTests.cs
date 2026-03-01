@@ -25,7 +25,7 @@ public class XamlLoaderTests
     <TextBlock Text='Top' />
     <TextBlock Text='Bottom' />
 </StackPanel>";
-        
+
         var element = XamlLoader.Load(xaml);
         Assert.IsType<StackPanel>(element);
         var stack = (StackPanel)element;

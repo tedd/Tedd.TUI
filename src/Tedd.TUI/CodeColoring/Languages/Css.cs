@@ -39,7 +39,7 @@ public class CssLanguage : ILanguage
         grammar.Add("punctuation", new Pattern(@"[(){};:,]"));
 
         // Copy grammar to atRuleInside
-        foreach(var kvp in grammar)
+        foreach (var kvp in grammar)
         {
             if (!atRuleInside.ContainsKey(kvp.Key))
                 atRuleInside[kvp.Key] = kvp.Value;

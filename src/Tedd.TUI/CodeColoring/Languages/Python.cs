@@ -40,9 +40,9 @@ public class PythonLanguage : ILanguage
         // Recursive assignment for rest
         // We can't assign 'grammar' directly to 'interpolationInside' because it copies.
         // We can append grammar patterns to interpolationInside.
-        foreach(var kvp in grammar)
+        foreach (var kvp in grammar)
         {
-             if (!interpolationInside.ContainsKey(kvp.Key))
+            if (!interpolationInside.ContainsKey(kvp.Key))
                 interpolationInside[kvp.Key] = kvp.Value;
         }
 

@@ -7,8 +7,8 @@ namespace Tedd.TUI;
 public class TuiWindow : UIElement
 {
     private UIElement _content;
-    public UIElement Content 
-    { 
+    public UIElement Content
+    {
         get => _content;
         set
         {
@@ -23,7 +23,7 @@ public class TuiWindow : UIElement
     {
         int contentCount = _content != null ? 1 : 0;
         if (index < contentCount)
-             return _content!;
+            return _content!;
 
         index -= contentCount;
         if (index < _overlays.Count)
@@ -215,8 +215,8 @@ public class TuiWindow : UIElement
             if (overlay.Visibility)
             {
                 var hit = InputHitTestRecursive(overlay, x, y);
-                if (hit != null) 
-                return hit;
+                if (hit != null)
+                    return hit;
 
                 // If overlay is a modal dialog, block input to background/lower overlays
                 if (overlay is DialogBox dialog && dialog.IsModal)
@@ -231,16 +231,16 @@ public class TuiWindow : UIElement
 
     private Point GetAbsolutePosition(UIElement element)
     {
-         int x = 0;
-         int y = 0;
-         var current = element;
-         while (current != null)
-         {
-             x += current.RenderSize.X;
-             y += current.RenderSize.Y;
-             current = current.Parent;
-         }
-         return new Point(x, y);
+        int x = 0;
+        int y = 0;
+        var current = element;
+        while (current != null)
+        {
+            x += current.RenderSize.X;
+            y += current.RenderSize.Y;
+            current = current.Parent;
+        }
+        return new Point(x, y);
     }
 
     private HitTestResult InputHitTestRecursive(UIElement element, int x, int y)

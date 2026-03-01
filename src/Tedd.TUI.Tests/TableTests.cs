@@ -221,7 +221,7 @@ public class TableTests
         table.Measure(new Size(100, 100));
 
         stack = GetRowStack(table);
-        Assert.Equal(1, stack.Children.Count);
+        Assert.Single(stack.Children);
         Assert.Equal("5", ((TextBlock)((TableRow)stack.Children[0]).Cells[0]).Text);
     }
 

@@ -11,7 +11,7 @@ public class TuiComboBox : TuiComponentBase
     public override UIElement Element => _comboBox;
 
     [Parameter] public List<string> Items { get; set; } = new List<string>();
-    
+
     [Parameter] public string? SelectedItem { get; set; }
     [Parameter] public EventCallback<string?> SelectedItemChanged { get; set; }
 
@@ -32,7 +32,7 @@ public class TuiComboBox : TuiComponentBase
     protected override void ApplyProperties()
     {
         base.ApplyProperties();
-        
+
         // Sync Items
         // Note: Full sync might be expensive if done every render, but for TUI scale it is fine.
         // We should clear and re-add if count differs or content?

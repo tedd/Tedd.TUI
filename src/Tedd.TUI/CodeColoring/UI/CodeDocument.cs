@@ -72,7 +72,7 @@ public class CodeDocument : StackPanel
         }
         else if (token.TextContent != null) // Fallback if Content is string but not matched by pattern above (should cover string)
         {
-             RenderText(token.TextContent, type);
+            RenderText(token.TextContent, type);
         }
     }
 

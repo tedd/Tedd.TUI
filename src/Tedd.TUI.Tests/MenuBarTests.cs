@@ -17,7 +17,7 @@ public class MenuBarTests
 
         var fileMenu = new MenuItem { Header = new TextBlock { Text = "File" } };
         fileMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "Open" } });
-        
+
         var editMenu = new MenuItem { Header = new TextBlock { Text = "Edit" } };
         editMenu.Items.Add(new MenuItem { Header = new TextBlock { Text = "Cut" } });
 
@@ -47,7 +47,7 @@ public class MenuBarTests
         // Visual Verification
         var buffer = new VirtualBuffer(20, 5);
         window.Render(buffer, 0, 0);
-        
+
         // File at (0,0)
         Assert.Equal('F', buffer.GetPixel(0, 0).Character);
         // Edit at (4,0)
@@ -92,7 +92,7 @@ public class MenuBarTests
         // Width of Open is 4.
         // Nested popup should be at X = absX + Width = 1 + 4 = 5.
         // Y = absY = 2.
-        
+
         Assert.Equal('┌', buffer.GetPixel(5, 2).Character);
     }
 
@@ -110,7 +110,7 @@ public class MenuBarTests
 
         window.Measure(new Size(80, 25));
         window.Arrange(new Rect(0, 0, 80, 25));
-        
+
         fileMenu.Focus();
 
         // Act

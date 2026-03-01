@@ -44,7 +44,7 @@ public class ConsoleRendererBenchmarks
         // Modify half cells to trigger delta rendering
         for (int i = 0; i < 60; i++)
         {
-            for(int j = 0; j < 30; j++)
+            for (int j = 0; j < 30; j++)
             {
                 _buffer.SetPixel(i, j, 'X', ConsoleColor.Red, ConsoleColor.Yellow);
             }

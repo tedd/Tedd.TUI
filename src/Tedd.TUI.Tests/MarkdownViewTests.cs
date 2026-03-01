@@ -54,11 +54,11 @@ public class MarkdownViewTests
         var text = "";
         for (int i = 0; i < p.VisualChildrenCount; i++)
         {
-             var child = p.GetVisualChild(i);
-             if (child is TextBlock tb)
-             {
-                 text += tb.Text;
-             }
+            var child = p.GetVisualChild(i);
+            if (child is TextBlock tb)
+            {
+                text += tb.Text;
+            }
         }
 
         // Expected: "| Line 1 Line 2" (Marker is "| ")

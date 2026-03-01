@@ -13,6 +13,13 @@ public class TreeViewTests
     }
 
     [Fact]
+    public void TreeViewItem_InheritsFromHeaderedItemsControl()
+    {
+        var item = new TreeViewItem();
+        Assert.IsAssignableFrom<HeaderedItemsControl>(item);
+    }
+
+    [Fact]
     public void CanAddItemsManually()
     {
         var tree = new TreeView();
@@ -21,7 +28,7 @@ public class TreeViewTests
         item1.Items.Add(item2);
         tree.Items.Add(item1);
 
-        Assert.Equal(1, tree.Items.Count);
+        Assert.Single(tree.Items);
         Assert.Single(item1.Items);
         Assert.Equal("Root", item1.Header);
         Assert.Equal("Child", item2.Header);
@@ -87,11 +94,11 @@ public class TreeViewTests
         tree.ItemsSource = data;
 
         Assert.Single(tree.Items);
-        var rootItem = tree.Items[0];
+        var rootItem = (TreeViewItem)tree.Items[0];
         Assert.Equal("Root", rootItem.Header);
 
         Assert.Single(rootItem.Items);
-        var childItem = rootItem.Items[0];
+        var childItem = (TreeViewItem)rootItem.Items[0];
         Assert.Equal("Child", childItem.Header);
 
         // Check data context of items

@@ -147,7 +147,7 @@ public class ComboBox : Selector
     public override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        
+
         // Handle Tab for internal focus navigation (text area <-> arrow)
         if (e.Key == ConsoleKey.Tab)
         {
@@ -174,7 +174,7 @@ public class ComboBox : Selector
                 // else: on text area, don't handle - let focus move to previous control
             }
         }
-        
+
         // Space, Enter, or Arrow keys open dropdown
         if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter
             || e.Key == ConsoleKey.DownArrow || e.Key == ConsoleKey.UpArrow)
@@ -226,14 +226,14 @@ public class ComboBox : Selector
         _popupListBox.SelectedIndex = this.SelectedIndex;
 
         // Popup width matches ComboBox width, adjusted for border
-        int contentWidth = Math.Max(0, RenderSize.Width - 2); 
+        int contentWidth = Math.Max(0, RenderSize.Width - 2);
         _popupListBox.Width = contentWidth;
 
         // Dynamic height based on items, clamped to available space
         int desiredHeight = Items.Count;
         if (desiredHeight == 0) desiredHeight = 1;
         _popupListBox.Height = Math.Min(desiredHeight, maxContentHeight);
-        
+
         // Ensure ListBox is opaque
         _popupListBox.Background = PopupBackground;
 
