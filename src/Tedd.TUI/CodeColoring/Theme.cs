@@ -10,7 +10,7 @@ public class Theme
 
     public static Theme Default { get; set; } = new Theme();
 
-    public Dictionary<string, ConsoleColor> TokenColors { get; } = new Dictionary<string, ConsoleColor>();
+    public Dictionary<string, ConsoleColor> TokenColors { get; } = [];
 
     public Theme()
     {

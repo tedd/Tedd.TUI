@@ -28,7 +28,7 @@ public class TreeView : UIElement
         }
     }
 
-    private System.Threading.Lock _displayMemberCacheLock = new System.Threading.Lock();
+    private System.Threading.Lock _displayMemberCacheLock = new();
     private Dictionary<Type, PropertyInfo?> _displayMemberCache = [];
 
     public string DisplayMemberPath
@@ -48,7 +48,7 @@ public class TreeView : UIElement
         }
     }
 
-    private System.Threading.Lock _childItemsCacheLock = new System.Threading.Lock();
+    private System.Threading.Lock _childItemsCacheLock = new();
     private Dictionary<Type, PropertyInfo?> _childItemsCache = [];
 
     public string ChildItemsPath

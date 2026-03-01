@@ -7,8 +7,8 @@ namespace Tedd.TUI.CodeColoring;
 
 public static class LanguageRegistry
 {
-    private static Dictionary<string, Grammar> _grammars = new Dictionary<string, Grammar>();
-    private static Dictionary<string, Type> _languageTypes = new Dictionary<string, Type>();
+    private static Dictionary<string, Grammar> _grammars = [];
+    private static Dictionary<string, Type> _languageTypes = [];
     private static bool _initialized = false;
 
     private static void Initialize()
