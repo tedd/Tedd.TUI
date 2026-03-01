@@ -161,7 +161,7 @@ Tedd.TUI supports a hierarchical data binding system analogous to WPF, driven by
 The framework employs a robust, recursive two-pass layout system orchestrated by the abstract `Panel` class:
 1.  **Measure Pass:** Container elements recursively query their children, invoking `Measure(Size availableSize)` to compute their `DesiredSize` based on layout constraints.
 2.  **Arrange Pass:** Parents position and size their children within the computed physical bounds by invoking `Arrange(Rect finalRect)`.
-3.  **Render Pass:** The actual rendering to the `VirtualBuffer` is heavily optimized. Containers executing the `Render` method utilize clipping rects to bypass fully obscured elements, drastically reducing CPU cycles in complex visual trees.
+3.  **Render Pass:** The actual rendering to the `VirtualBuffer` is heavily optimized. Containers executing the `Render` method utilize clipping rects to skip elements that are fully clipped or lie completely outside the current clip rectangle, drastically reducing CPU cycles in complex visual trees.
 
 **Hierarchical Composition:** For container controls descending from `Panel` (such as `StackPanel`, `Grid`, `DockPanel`, `WrapPanel`, and `Canvas`), the underlying `UIElementCollection` (`Children`) systematically intercepts collection modifications. Executing `Panel.Children.Add(child)` strictly enforces visual tree integrity by automatically assigning the parent node, which inherently triggers `DataContext` propagation and establishes the routing infrastructure for input events.
 
