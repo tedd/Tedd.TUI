@@ -55,6 +55,12 @@ public class TextEditor : UIElement
         return new Size(Width > 0 ? Width : 40, Height > 0 ? Height : 10);
     }
 
+    protected override void ArrangeOverride(Size finalSize)
+    {
+        base.ArrangeOverride(finalSize);
+        AdjustScroll();
+    }
+
     private void AdjustScroll()
     {
         int w = RenderSize.Width;
