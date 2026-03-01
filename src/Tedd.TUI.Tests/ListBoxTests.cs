@@ -35,7 +35,7 @@ public class ListBoxTests
         listBox.Items.Add("Item 1");
         listBox.Items.Add("Item 2");
         listBox.SelectedIndex = 0;
-        
+
         bool invalidated = false;
         window.VisualChanged += (s, e) => invalidated = true;
 

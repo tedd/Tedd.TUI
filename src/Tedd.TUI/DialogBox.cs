@@ -257,7 +257,7 @@ public class DialogBox : UIElement
             if (y < 0) y = 0;
 
             Arrange(new Rect(x, y, DesiredSize.Width, DesiredSize.Height));
-            
+
             // Set focus to the first element in the dialog
             root.FocusFirstIn(this);
         }

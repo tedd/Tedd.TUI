@@ -111,7 +111,7 @@ namespace Tedd.TUI.Tests
 
             // Verify clip stack is cleared?
             // Push clip, clear, try set outside clip.
-            buffer.PushClip(new Rect(0,0, 1,1));
+            buffer.PushClip(new Rect(0, 0, 1, 1));
             buffer.Clear(); // Should reset clip stack
 
             buffer.SetPixel(5, 5, 'B', ConsoleColor.White, ConsoleColor.Black);

@@ -24,7 +24,7 @@ class Program
         }
         else if (args.Contains("--xaml"))
         {
-             useXaml = true;
+            useXaml = true;
         }
 
         if (useXaml)
@@ -233,9 +233,9 @@ class Program
         // --- Tab 3: Table ---
         var tableStack = new StackPanel { Orientation = Orientation.Vertical };
         tableStack.AddChild(new TextBlock { Text = "Table Control:" });
-        
+
         var table = new Table { Width = 60, Height = 10, ShowHeader = true, PageSize = 5 }; // Enable Pagination
-        
+
         // 1. Numeric Sort for ID
         var colId = new TableColumn { Header = "ID", Width = GridLength.Pixel(5) };
         colId.SortComparer = (a, b) =>
@@ -247,7 +247,7 @@ class Program
         table.Columns.Add(colId);
 
         // 2. Default String Sort for Name (no custom comparer needed)
-        table.Columns.Add(new TableColumn { Header = "Name", Width = GridLength.Star }); 
+        table.Columns.Add(new TableColumn { Header = "Name", Width = GridLength.Star });
 
         // 3. Numeric Sort for Age
         var colAge = new TableColumn { Header = "Age", Width = GridLength.Auto };
@@ -276,7 +276,7 @@ class Program
         table.AddRow("1", "Charlie", "35", CreateEditBtn("Charlie"));
         table.AddRow("20", "David", "40", new CheckBox { Content = "Active", IsChecked = true });
         table.AddRow("3", "Eve", "22", CreateEditBtn("Eve"));
-        
+
         // Add more rows for pagination testing
         table.AddRow("4", "Frank", "28", CreateEditBtn("Frank"));
         table.AddRow("5", "Grace", "31", CreateEditBtn("Grace"));
@@ -297,12 +297,12 @@ class Program
 
         // Horizontal
         scrollStack.AddChild(new TextBlock { Text = "Horizontal:" });
-        var hScroll = new ScrollBar 
-        { 
-            Orientation = Orientation.Horizontal, 
-            Width = 40, 
-            Minimum = 0, 
-            Maximum = 100, 
+        var hScroll = new ScrollBar
+        {
+            Orientation = Orientation.Horizontal,
+            Width = 40,
+            Minimum = 0,
+            Maximum = 100,
             ViewportSize = 20,
             Value = 30
         };
@@ -310,13 +310,13 @@ class Program
 
         // Vertical
         scrollStack.AddChild(new TextBlock { Text = "Vertical:" });
-        var vScroll = new ScrollBar 
-        { 
-            Orientation = Orientation.Vertical, 
-            Height = 10, 
-            Minimum = 0, 
+        var vScroll = new ScrollBar
+        {
+            Orientation = Orientation.Vertical,
+            Height = 10,
+            Minimum = 0,
             Maximum = 50,
-            ViewportSize = 10 
+            ViewportSize = 10
         };
         scrollStack.AddChild(vScroll);
 
@@ -331,14 +331,14 @@ class Program
         scrollStack.AddChild(sv);
 
         // Event Handlers
-        void UpdateLabel(object s, EventArgs e) 
+        void UpdateLabel(object s, EventArgs e)
         {
             scrollLabel.Text = $"H: {hScroll.Value}, V: {vScroll.Value}";
         }
 
         hScroll.ValueChanged += UpdateLabel;
         vScroll.ValueChanged += UpdateLabel;
-        
+
         // Initial update
         UpdateLabel(null, EventArgs.Empty);
 
@@ -442,7 +442,7 @@ public void Hello() {
         tabs.Items.Add(new TabItem { Header = "DataGrid", Content = dataGridStack });
 
         // Run App
-        
+
         System.Console.CancelKeyPress += (s, e) =>
         {
             app.Stop();

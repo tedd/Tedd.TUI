@@ -33,18 +33,18 @@ public class GridCoverageTests
         // Grid: 1*, 1*, 1*, 1*
         if (w1 == w2 && w2 == w3)
         {
-             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         }
         else
         {
-             // Grid: 1*, 2*, 3*, 4*
-             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
-             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
-             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(4, GridUnitType.Star) });
+            // Grid: 1*, 2*, 3*, 4*
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(3, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(4, GridUnitType.Star) });
         }
 
         grid.Measure(new Size(totalWidth, 100));
@@ -161,11 +161,11 @@ public class GridCoverageTests
         // Swap weights?
         if (starShare > 50)
         {
-             // Case 2 logic: We want Col 1 to be huge.
-             // Col 0: 1*. Col 1: 9*.
-             grid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
-             col1.Width = new GridLength(9, GridUnitType.Star);
-             // Nominal Col 1 = 90. Max = 50. Expected = 50.
+            // Case 2 logic: We want Col 1 to be huge.
+            // Col 0: 1*. Col 1: 9*.
+            grid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            col1.Width = new GridLength(9, GridUnitType.Star);
+            // Nominal Col 1 = 90. Max = 50. Expected = 50.
         }
 
         grid.Measure(new Size(100, 100));

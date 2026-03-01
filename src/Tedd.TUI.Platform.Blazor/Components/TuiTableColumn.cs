@@ -11,7 +11,7 @@ public class TuiTableColumn : ComponentBase, IDisposable
 
     [Parameter]
     public string Header { get; set; }
-    
+
     [Parameter]
     public string Width { get; set; } // "Auto", "*", "10", "2*"
 
@@ -47,12 +47,12 @@ public class TuiTableColumn : ComponentBase, IDisposable
         _column.Header = Header;
         _column.Width = ParseGridLength(Width);
     }
-    
+
     private GridLength ParseGridLength(string width)
     {
         if (string.IsNullOrEmpty(width)) return GridLength.Star;
         width = width.Trim().ToLowerInvariant();
-        
+
         if (width == "auto") return GridLength.Auto;
         if (width == "*") return GridLength.Star;
         if (width.EndsWith("*"))
@@ -65,7 +65,7 @@ public class TuiTableColumn : ComponentBase, IDisposable
         {
             return new GridLength(pixels, GridUnitType.Pixel);
         }
-        
+
         return GridLength.Star; // Default
     }
 

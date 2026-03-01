@@ -24,7 +24,7 @@ public class StackPanel : Panel
     protected override Size MeasureOverride(Size availableSize)
     {
         Size stackSize = new Size(0, 0);
-        
+
         foreach (var child in Children)
         {
             child.Measure(availableSize);
@@ -41,7 +41,7 @@ public class StackPanel : Panel
                 stackSize.Height = Math.Max(stackSize.Height, childSize.Height);
             }
         }
-        
+
         return stackSize;
     }
 

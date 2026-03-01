@@ -140,7 +140,10 @@ public class TreeView : UIElement
         item.Selected += OnItemSelected;
         // Recursively subscribe children if they exist?
         // Only if they are already in Items collection of the item.
-        foreach (var sub in item.Items) SubscribeItem(sub);
+        foreach (var sub in item.Items)
+        {
+            if (sub is TreeViewItem tvi) SubscribeItem(tvi);
+        }
 
         // Also need to listen to sub-items collection change?
         // Ideally yes, but TreeViewItem logic should handle notification bubbling?
@@ -153,11 +156,11 @@ public class TreeView : UIElement
         {
             lincc.CollectionChanged += (s, e) =>
             {
-                 // Re-subscribe new items
-                 if (e.NewItems != null) foreach(TreeViewItem i in e.NewItems) SubscribeItem(i);
-                 if (e.OldItems != null) foreach(TreeViewItem i in e.OldItems) UnsubscribeItem(i);
-                 // If expanded, rebuild
-                 if (item.IsExpanded) RebuildVisualTree();
+                // Re-subscribe new items
+                if (e.NewItems != null) foreach (var i in e.NewItems) { if (i is TreeViewItem tvi) SubscribeItem(tvi); }
+                if (e.OldItems != null) foreach (var i in e.OldItems) { if (i is TreeViewItem tvi) UnsubscribeItem(tvi); }
+                // If expanded, rebuild
+                if (item.IsExpanded) RebuildVisualTree();
             };
         }
     }
@@ -167,7 +170,10 @@ public class TreeView : UIElement
         item.Expanded -= OnItemExpanded;
         item.Collapsed -= OnItemCollapsed;
         item.Selected -= OnItemSelected;
-        foreach (var sub in item.Items) UnsubscribeItem(sub);
+        foreach (var sub in item.Items)
+        {
+            if (sub is TreeViewItem tvi) UnsubscribeItem(tvi);
+        }
     }
 
     private void OnItemExpanded(object? sender, EventArgs e) => RebuildVisualTree();
@@ -271,7 +277,7 @@ public class TreeView : UIElement
         {
             foreach (var sub in item.Items)
             {
-                AddVisibleItems(sub, level + 1);
+                if (sub is TreeViewItem tvi) AddVisibleItems(tvi, level + 1);
             }
         }
     }
@@ -343,7 +349,7 @@ public class TreeView : UIElement
             else if (SelectedItem.HasItems && SelectedItem.IsExpanded)
             {
                 // Go to first child
-                if (SelectedItem.Items.Count > 0) SelectedItem = SelectedItem.Items[0];
+                if (SelectedItem.Items.Count > 0 && SelectedItem.Items[0] is TreeViewItem tvi) SelectedItem = tvi;
             }
             e.Handled = true;
         }

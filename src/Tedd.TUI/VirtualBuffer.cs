@@ -62,7 +62,7 @@ public class VirtualBuffer
             int y = Math.Max(_currentClip.Y, clip.Y);
             int r = Math.Min(_currentClip.X + _currentClip.Width, clip.X + clip.Width);
             int b = Math.Min(_currentClip.Y + _currentClip.Height, clip.Y + clip.Height);
-            
+
             var newClip = new Rect(x, y, Math.Max(0, r - x), Math.Max(0, b - y));
             _clipStack.Push(newClip);
             _currentClip = newClip;

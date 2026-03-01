@@ -38,7 +38,7 @@ public class ButtonTests
         var btn = new Button { Content = "OK" };
         btn.Measure(new Size(100, 100));
         btn.Arrange(new Rect(0, 0, btn.DesiredSize.Width, btn.DesiredSize.Height));
-        
+
         // New Button: Content (2) + Border (2) = 4 width.
         // Height: Content (1) + Border (2) = 3 height.
         Assert.Equal(4, btn.DesiredSize.Width);
@@ -46,7 +46,7 @@ public class ButtonTests
 
         var buffer = new VirtualBuffer(btn.DesiredSize.Width, btn.DesiredSize.Height);
         btn.Render(buffer, 0, 0);
-        
+
         // Check Border (Unicode single-line: ┌ ─)
         // ┌──┐
         // │OK│

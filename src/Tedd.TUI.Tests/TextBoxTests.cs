@@ -47,12 +47,12 @@ public class TextBoxTests
     [Fact]
     public void OnKeyDown_LeftRightArrow_Navigation()
     {
-         var tb = new TextBox { Text = "ABC" };
-         // Cursor at 3
+        var tb = new TextBox { Text = "ABC" };
+        // Cursor at 3
 
-         tb.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.LeftArrow }); // At 2
-         tb.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.Backspace }); // Deletes 'B'
-         Assert.Equal("AC", tb.Text);
+        tb.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.LeftArrow }); // At 2
+        tb.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.Backspace }); // Deletes 'B'
+        Assert.Equal("AC", tb.Text);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class TextBoxTests
     {
         var tb = new TextBox { Text = "Pass", IsPassword = true, Width = 10 };
         tb.Measure(new Size(10, 1));
-        tb.Arrange(new Rect(0,0,10,1));
+        tb.Arrange(new Rect(0, 0, 10, 1));
 
         var buffer = new VirtualBuffer(10, 1);
         tb.Render(buffer, 0, 0);

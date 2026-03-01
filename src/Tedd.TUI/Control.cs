@@ -75,13 +75,13 @@ public class Control : UIElement
         }
         else
         {
-             if (_templateRoot != null)
-             {
-                 _templateRoot.Parent = null;
-                 _templateRoot.TemplatedParent = null;
-             }
-             _templateRoot = null;
-             Invalidate();
+            if (_templateRoot != null)
+            {
+                _templateRoot.Parent = null;
+                _templateRoot.TemplatedParent = null;
+            }
+            _templateRoot = null;
+            Invalidate();
         }
     }
 
@@ -113,11 +113,11 @@ public class Control : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-         if (_templateRoot != null)
-         {
-             int x = RenderSize.X + offsetX;
-             int y = RenderSize.Y + offsetY;
-             _templateRoot.Render(buffer, x, y);
-         }
+        if (_templateRoot != null)
+        {
+            int x = RenderSize.X + offsetX;
+            int y = RenderSize.Y + offsetY;
+            _templateRoot.Render(buffer, x, y);
+        }
     }
 }

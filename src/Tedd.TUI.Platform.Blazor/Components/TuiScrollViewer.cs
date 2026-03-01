@@ -24,7 +24,7 @@ public class TuiScrollViewer : TuiComponentBase
         // ScrollViewer has a single Content property
         if (_scrollViewer.Content != null)
         {
-             throw new InvalidOperationException("ScrollViewer can only have one child.");
+            throw new InvalidOperationException("ScrollViewer can only have one child.");
         }
         _scrollViewer.Content = child;
     }

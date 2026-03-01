@@ -12,13 +12,13 @@ public class StackPanelTests
         var stack = new StackPanel { Orientation = Orientation.Vertical };
         var t1 = new TextBlock { Text = "Hello" };
         var t2 = new TextBlock { Text = "World" };
-        
+
         stack.AddChild(t1);
         stack.AddChild(t2);
 
         // Measure
         stack.Measure(new Size(100, 100));
-        
+
         // "Hello" = 5x1, "World" = 5x1. Stack should be 5x2.
         Assert.Equal(5, stack.DesiredSize.Width);
         Assert.Equal(2, stack.DesiredSize.Height);

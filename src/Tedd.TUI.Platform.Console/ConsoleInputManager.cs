@@ -23,7 +23,7 @@ public class ConsoleInputManager
     public ConsoleInputManager(TuiWindow window)
     {
         _window = window;
-        
+
         if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
         {
             SetupWindowsConsole();
@@ -130,42 +130,42 @@ public class ConsoleInputManager
                 // dwButtonState: lowest bit is Left Button
                 bool leftDown = (record.MouseEvent.dwButtonState & 0x01) != 0;
                 bool wasLeftDown = (_lastButtonState & 0x01) != 0;
-                
+
                 _lastButtonState = record.MouseEvent.dwButtonState;
 
                 // Note: Mouse coordinates are 0-based in current console window
                 int x = record.MouseEvent.dwMousePosition.X;
                 int y = record.MouseEvent.dwMousePosition.Y;
-                
+
                 var hit = _window.InputHitTest(x, y);
                 if (hit != null)
                 {
-                     // Use Routed Events with Global Coordinates
-                     // Note: x, y are global console coordinates here?
-                     // record.MouseEvent.dwMousePosition is SCREEN buffer coordinates (Global).
-                     // InputHitTest uses them as relative to window usually?
-                     // TuiApp adjusts buffer size to window size.
-                     // Assuming x,y are Global relative to the TuiWindow Root (0,0).
-                     
-                     if (!hit.Element.IsFocused && hit.Element.Focusable && leftDown && !wasLeftDown)
-                     {
-                         _window.SetFocus(hit.Element);
-                     }
+                    // Use Routed Events with Global Coordinates
+                    // Note: x, y are global console coordinates here?
+                    // record.MouseEvent.dwMousePosition is SCREEN buffer coordinates (Global).
+                    // InputHitTest uses them as relative to window usually?
+                    // TuiApp adjusts buffer size to window size.
+                    // Assuming x,y are Global relative to the TuiWindow Root (0,0).
 
-                     var argsMove = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = x, GlobalY = y };
-                     hit.Element.RaiseEvent(argsMove);
+                    if (!hit.Element.IsFocused && hit.Element.Focusable && leftDown && !wasLeftDown)
+                    {
+                        _window.SetFocus(hit.Element);
+                    }
 
-                     if (leftDown && !wasLeftDown)
-                     {
-                         var argsDown = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
-                         hit.Element.RaiseEvent(argsDown);
-                     }
+                    var argsMove = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = x, GlobalY = y };
+                    hit.Element.RaiseEvent(argsMove);
 
-                     if (!leftDown && wasLeftDown)
-                     {
-                         var argsUp = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
-                         hit.Element.RaiseEvent(argsUp);
-                     }
+                    if (leftDown && !wasLeftDown)
+                    {
+                        var argsDown = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
+                        hit.Element.RaiseEvent(argsDown);
+                    }
+
+                    if (!leftDown && wasLeftDown)
+                    {
+                        var argsUp = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
+                        hit.Element.RaiseEvent(argsUp);
+                    }
                 }
             }
             else if (record.EventType == NativeMethods.WINDOW_BUFFER_SIZE_EVENT)
@@ -203,7 +203,7 @@ public class ConsoleInputManager
                 else
                 {
                     // Treat as normal Escape if not recognized or handle other VT keys
-                     _window.ProcessKey(ToKeyArgs(item.Key));
+                    _window.ProcessKey(ToKeyArgs(item.Key));
                 }
             }
             else
@@ -222,13 +222,13 @@ public class ConsoleInputManager
             if (NativeMethods.GetConsoleMode(iStdIn, out uint inMode))
             {
                 // Disable Blocking / QuickEdit
-                inMode &= ~NativeMethods.ENABLE_QUICK_EDIT_MODE; 
+                inMode &= ~NativeMethods.ENABLE_QUICK_EDIT_MODE;
                 inMode &= ~NativeMethods.ENABLE_LINE_INPUT;
                 inMode &= ~NativeMethods.ENABLE_ECHO_INPUT;
 
                 inMode |= NativeMethods.ENABLE_EXTENDED_FLAGS;
                 inMode |= NativeMethods.ENABLE_WINDOW_INPUT;
-                inMode |= NativeMethods.ENABLE_MOUSE_INPUT; 
+                inMode |= NativeMethods.ENABLE_MOUSE_INPUT;
                 // DISABLE VT INPUT so we get raw INPUT_RECORDs for Mouse!
                 inMode &= ~NativeMethods.ENABLE_VIRTUAL_TERMINAL_INPUT;
 
@@ -239,11 +239,11 @@ public class ConsoleInputManager
             if (NativeMethods.GetConsoleMode(iStdOut, out uint outMode))
             {
                 outMode |= NativeMethods.ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-                outMode |= NativeMethods.DISABLE_NEWLINE_AUTO_RETURN; 
+                outMode |= NativeMethods.DISABLE_NEWLINE_AUTO_RETURN;
                 NativeMethods.SetConsoleMode(iStdOut, outMode);
             }
         }
-        catch {}
+        catch { }
     }
 
     private KeyEventArgs ToKeyArgs(ConsoleKeyInfo info)
@@ -270,9 +270,9 @@ public class ConsoleInputManager
 
         while (System.Console.KeyAvailable)
         {
-             var k = System.Console.ReadKey(true);
-             sb.Append(k.KeyChar);
-             if (IsSequenceTerminator(k.KeyChar)) break;
+            var k = System.Console.ReadKey(true);
+            sb.Append(k.KeyChar);
+            if (IsSequenceTerminator(k.KeyChar)) break;
         }
         return sb.ToString();
     }
@@ -326,6 +326,6 @@ public class ConsoleInputManager
                 }
             }
         }
-        catch {}
+        catch { }
     }
 }

@@ -58,16 +58,16 @@ public class TuiApp
             {
                 // Wait for Input or Render Request
                 uint result = NativeMethods.WaitForMultipleObjects((uint)winHandles.Length, winHandles, false, NativeMethods.INFINITE);
-                
+
                 if (result == NativeMethods.WAIT_OBJECT_0) // Input
                 {
-                     _inputManager.ProcessInput();
+                    _inputManager.ProcessInput();
                 }
                 else if (result == NativeMethods.WAIT_OBJECT_0 + 1) // Render Notified
                 {
                     UpdateAndRender();
                 }
-                else 
+                else
                 {
                     // Failed
                     Thread.Sleep(16);
@@ -86,15 +86,15 @@ public class TuiApp
                 }
                 else if (result == 1) // Render
                 {
-                     UpdateAndRender();
+                    UpdateAndRender();
                 }
                 else if (result == WaitHandle.WaitTimeout)
                 {
-                     // Check for resize
-                     if (System.Console.WindowWidth != _lastWidth || System.Console.WindowHeight != _lastHeight)
-                     {
-                         UpdateAndRender();
-                     }
+                    // Check for resize
+                    if (System.Console.WindowWidth != _lastWidth || System.Console.WindowHeight != _lastHeight)
+                    {
+                        UpdateAndRender();
+                    }
                 }
             }
         }
@@ -127,7 +127,7 @@ public class TuiApp
 
         _lastWidth = w;
         _lastHeight = h;
-        
+
         // Measure & Arrange (Layout)
         _window.Measure(new Size(w, h));
         _window.Arrange(new Rect(0, 0, w, h));
@@ -150,7 +150,7 @@ public class TuiApp
     {
         _running = false;
         _renderWaitHandle.Set(); // Wake up loop
-        
+
         // Restore Console State
         System.Console.Write("\x1b[?1000l\x1b[?1006l");
         System.Console.CursorVisible = true;

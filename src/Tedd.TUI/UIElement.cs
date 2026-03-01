@@ -176,8 +176,8 @@ public abstract class UIElement : DependencyObject
     public object DataContext
     {
         get { return GetValue(DataContextProperty); }
-        set 
-        { 
+        set
+        {
             SetValue(DataContextProperty, value);
             // Notify bindings? For now, we rely on SetBinding to trigger initial update 
             // or property change notification.
@@ -205,7 +205,7 @@ public abstract class UIElement : DependencyObject
             {
                 binding.UpdateTarget();
             }
-            
+
             OnDataContextChanged(this.DataContext);
         }
 
@@ -253,9 +253,9 @@ public abstract class UIElement : DependencyObject
         }
 
         // Apply Margin etc here if we had it.
-        
+
         Size desired = MeasureOverride(availableSize);
-        
+
         // Respect Width/Height properties
         int width = Width;
         int height = Height;
@@ -266,7 +266,7 @@ public abstract class UIElement : DependencyObject
         // Clip to available size? Usually not in Measure, but we return what we want.
         // But we should probably not ask for more than available if we can help it?
         // WPF Measure: "A parent element calls this method to form a recursive layout update."
-        
+
         DesiredSize = desired;
     }
 

@@ -193,7 +193,7 @@ public class DataBindingCoverageTests
         // This will likely throw InvalidCastException or ArgumentException.
         Assert.Throws<ArgumentException>(() =>
         {
-             progressBar.SetBinding(ProgressBar.ValueProperty, new Binding(nameof(TestViewModel.Title)));
+            progressBar.SetBinding(ProgressBar.ValueProperty, new Binding(nameof(TestViewModel.Title)));
         });
     }
 }

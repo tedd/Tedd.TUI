@@ -236,22 +236,22 @@ public class DataGrid : ItemsControl
     // Override OnItemsSourceChanged to catch initial load
     protected override void OnItemsSourceChanged(System.Collections.IEnumerable? newValue)
     {
-         base.OnItemsSourceChanged(newValue);
-         // If Items are already populated by base, we can check generation
-         if (AutoGenerateColumns && Columns.Count == 0 && Items.Count > 0)
-         {
-             object? firstItem = null;
-             foreach(var item in Items)
-             {
-                 if (item != null)
-                 {
-                     firstItem = item;
-                     break;
-                 }
-             }
-             if (firstItem != null) GenerateColumns(firstItem);
-         }
-         RefreshRows();
+        base.OnItemsSourceChanged(newValue);
+        // If Items are already populated by base, we can check generation
+        if (AutoGenerateColumns && Columns.Count == 0 && Items.Count > 0)
+        {
+            object? firstItem = null;
+            foreach (var item in Items)
+            {
+                if (item != null)
+                {
+                    firstItem = item;
+                    break;
+                }
+            }
+            if (firstItem != null) GenerateColumns(firstItem);
+        }
+        RefreshRows();
     }
 
     private void GenerateColumns(object item)
@@ -290,15 +290,15 @@ public class DataGrid : ItemsControl
         if (Columns.Count > 0 && Items.Count > 0)
         {
             // Find type from first non-null item
-             object? firstItem = null;
-             foreach(var item in Items)
-             {
-                 if (item != null)
-                 {
-                     firstItem = item;
-                     break;
-                 }
-             }
+            object? firstItem = null;
+            foreach (var item in Items)
+            {
+                if (item != null)
+                {
+                    firstItem = item;
+                    break;
+                }
+            }
 
             if (firstItem != null)
             {
@@ -326,7 +326,7 @@ public class DataGrid : ItemsControl
                         }
                         else
                         {
-                             _cachedGetters.Add(obj => "");
+                            _cachedGetters.Add(obj => "");
                         }
                     }
                     else

@@ -34,7 +34,7 @@ public class TuiProgressBar : TuiComponentBase
         _progressBar.LabelMode = LabelMode;
         _progressBar.LabelText = LabelText;
         _progressBar.LabelPercentDecimals = LabelPercentDecimals;
-        
+
         _progressBar.ProgressColor = ProgressColor;
         _progressBar.EmptyColor = EmptyColor;
         _progressBar.LabelFilledColor = LabelFilledColor;

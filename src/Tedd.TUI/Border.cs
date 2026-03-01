@@ -235,7 +235,7 @@ public class Border : ScrollViewer
             _verticalScrollBar.ViewportSize = viewport;
             _verticalScrollBar.Maximum = Math.Max(0, extent - viewport);
             _verticalScrollBar.Minimum = 0;
-            
+
             // Measure ScrollBar with margins taken into account
             int vScrollHeight = Math.Max(0, availableSize.Height - borderH - VerticalScrollBarMarginTop - VerticalScrollBarMarginBottom);
             _verticalScrollBar.Measure(new Size(1, vScrollHeight));

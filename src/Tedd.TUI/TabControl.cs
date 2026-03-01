@@ -27,9 +27,9 @@ public class TabControl : Selector
     {
         if (VisualChildrenCount > 0 && index == 0)
         {
-             var selected = SelectedItem;
-             if (selected is TabItem ti && ti.Content is UIElement uie) return uie;
-             if (selected is UIElement element) return element; // Direct UIElement content
+            var selected = SelectedItem;
+            if (selected is TabItem ti && ti.Content is UIElement uie) return uie;
+            if (selected is UIElement element) return element; // Direct UIElement content
         }
         throw new ArgumentOutOfRangeException(nameof(index));
     }
@@ -144,7 +144,7 @@ public class TabControl : Selector
         }
         else if (SelectedItem is UIElement content)
         {
-             content.Measure(new Size(w, Math.Max(0, h - headerHeight)));
+            content.Measure(new Size(w, Math.Max(0, h - headerHeight)));
         }
 
         return new Size(w, h);
@@ -222,14 +222,14 @@ public class TabControl : Selector
         // Draw Selected Content
         if (SelectedIndex >= 0 && SelectedIndex < Items.Count)
         {
-             UIElement? content = null;
-             if (Items[SelectedIndex] is TabItem ti) content = ti.Content as UIElement;
-             else content = Items[SelectedIndex] as UIElement;
+            UIElement? content = null;
+            if (Items[SelectedIndex] is TabItem ti) content = ti.Content as UIElement;
+            else content = Items[SelectedIndex] as UIElement;
 
-             if (content != null)
-             {
-                 content.Render(buffer, x, y);
-             }
+            if (content != null)
+            {
+                content.Render(buffer, x, y);
+            }
         }
     }
 

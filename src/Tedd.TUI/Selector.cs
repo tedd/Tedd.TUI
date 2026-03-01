@@ -87,18 +87,18 @@ public abstract class Selector : ItemsControl
         }
         else if (_selectedIndex >= 0)
         {
-             // Re-sync if SelectedIndex points to valid item
-             if (_selectedIndex < Items.Count)
-             {
-                 _selectedItem = Items[_selectedIndex];
-                 SelectionChanged?.Invoke(this, EventArgs.Empty);
-                 Invalidate();
-             }
-             else
-             {
-                 _selectedIndex = -1;
-                 // No change event needed if both were effectively null/invalid
-             }
+            // Re-sync if SelectedIndex points to valid item
+            if (_selectedIndex < Items.Count)
+            {
+                _selectedItem = Items[_selectedIndex];
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
+                Invalidate();
+            }
+            else
+            {
+                _selectedIndex = -1;
+                // No change event needed if both were effectively null/invalid
+            }
         }
     }
 }

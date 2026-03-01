@@ -61,7 +61,7 @@ public class DependencyObject : INotifyPropertyChanged
         {
             throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
         }
-        
+
         // Null check for value types handled?
         // If property is value type and value is null, this might be invalid but standard SetValue allows null which usually resets or errors?
         // For simplicity allow null if type allows it.
@@ -70,11 +70,11 @@ public class DependencyObject : INotifyPropertyChanged
             _values[dp] = value;
         else
             _values.Remove(dp); // Treat null as "clear local value" or literal null?
-            // In WPF SetValue(null) sets local value to null. ClearValue removes it.
-            // But here I'm using dictionary. If I set null, I should store null if it's a valid value.
-            // But _values uses object.
-            // Let's store null.
-            if (value == null) _values[dp] = null!; // Force null storage
+                                // In WPF SetValue(null) sets local value to null. ClearValue removes it.
+                                // But here I'm using dictionary. If I set null, I should store null if it's a valid value.
+                                // But _values uses object.
+                                // Let's store null.
+        if (value == null) _values[dp] = null!; // Force null storage
 
         OnPropertyChanged(dp);
     }

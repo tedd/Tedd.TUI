@@ -12,7 +12,7 @@ public class PerlLanguage : ILanguage
     public Grammar GetGrammar()
     {
         var grammar = new Grammar();
-        string brackets = @"(?:\((?:[^()\\]|\\[\s\S])*\)|\{(?:[^{}\\]|\\[\s\S])*\}|\[(?:[^[\]\\]|\\[\s\S])*\]|<(?:[^<>\\]|\\[\s\S])*>)" ;
+        string brackets = @"(?:\((?:[^()\\]|\\[\s\S])*\)|\{(?:[^{}\\]|\\[\s\S])*\}|\[(?:[^[\]\\]|\\[\s\S])*\]|<(?:[^<>\\]|\\[\s\S])*>)";
 
         grammar.Add("comment", new List<Pattern>
         {

@@ -73,9 +73,9 @@ public class RustLanguage : ILanguage
         grammar.Add("operator", new Pattern(@"[-+*\/%!^]=?|=[=>]?|&[&=]?|\|[|=]?|<<?=?|>>?=?|[@?]"));
 
         // Fill recursive references
-        foreach(var kvp in grammar)
+        foreach (var kvp in grammar)
         {
-             if (!closureParamsInside.ContainsKey(kvp.Key))
+            if (!closureParamsInside.ContainsKey(kvp.Key))
                 closureParamsInside[kvp.Key] = kvp.Value;
         }
 

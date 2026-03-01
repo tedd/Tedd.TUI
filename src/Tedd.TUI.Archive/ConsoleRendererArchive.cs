@@ -101,26 +101,26 @@ public class ConsoleRendererArchive : IRenderer
 
                 if (sb.Length > 0)
                 {
-                     // We have a pending chunk.
-                     // Since we iterate sequentially, continuity is guaranteed (current x is prev x + 1).
-                     // We just need to check color.
-                     if (colorChanged)
-                     {
-                         // Flush current chunk
-                         FlushBuffer(sb, pendingX, pendingY, lastFg, lastBg);
+                    // We have a pending chunk.
+                    // Since we iterate sequentially, continuity is guaranteed (current x is prev x + 1).
+                    // We just need to check color.
+                    if (colorChanged)
+                    {
+                        // Flush current chunk
+                        FlushBuffer(sb, pendingX, pendingY, lastFg, lastBg);
 
-                         // Start new chunk
-                         pendingX = x;
-                         pendingY = y;
-                         lastFg = (int)newCell.Foreground;
-                         lastBg = (int)newCell.Background;
-                         sb.Append(newCell.Character);
-                     }
-                     else
-                     {
-                         // Append to current chunk
-                         sb.Append(newCell.Character);
-                     }
+                        // Start new chunk
+                        pendingX = x;
+                        pendingY = y;
+                        lastFg = (int)newCell.Foreground;
+                        lastBg = (int)newCell.Background;
+                        sb.Append(newCell.Character);
+                    }
+                    else
+                    {
+                        // Append to current chunk
+                        sb.Append(newCell.Character);
+                    }
                 }
                 else
                 {
@@ -150,7 +150,7 @@ public class ConsoleRendererArchive : IRenderer
         // Optimization: Only move cursor if not already there
         if (_consoleCursorX != startX || _consoleCursorY != startY)
         {
-             try
+            try
             {
                 _console.SetCursorPosition(startX, startY);
                 _consoleCursorX = startX;

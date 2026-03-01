@@ -230,7 +230,7 @@ public class ListBox : Selector
             // We need to pass local coordinates to ScrollBar.
             // ScrollBar is at (Width-1, 0).
             // So localX = e.X - (Width-1) = 0 usually.
-            
+
             var sbArgs = new MouseEventArgs
             {
                 X = e.X - (RenderSize.Width - 1),
