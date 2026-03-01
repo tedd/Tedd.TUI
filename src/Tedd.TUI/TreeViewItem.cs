@@ -10,32 +10,30 @@ public class TreeViewItem : HeaderedItemsControl
 {
     public bool HasItems => Items.Count > 0;
 
-    private bool _isExpanded;
     public bool IsExpanded
     {
-        get => _isExpanded;
+        get;
         set
         {
-            if (_isExpanded != value)
+            if (field != value)
             {
-                _isExpanded = value;
-                if (_isExpanded) Expanded?.Invoke(this, EventArgs.Empty);
+                field = value;
+                if (field) Expanded?.Invoke(this, EventArgs.Empty);
                 else Collapsed?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
         }
     }
 
-    private bool _isSelected;
     public bool IsSelected
     {
-        get => _isSelected;
+        get;
         set
         {
-            if (_isSelected != value)
+            if (field != value)
             {
-                _isSelected = value;
-                if (_isSelected) Selected?.Invoke(this, EventArgs.Empty);
+                field = value;
+                if (field) Selected?.Invoke(this, EventArgs.Empty);
                 else Unselected?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }

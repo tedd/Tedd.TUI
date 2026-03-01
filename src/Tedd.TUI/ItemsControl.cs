@@ -31,7 +31,7 @@ public abstract class ItemsControl : UIElement
 
     private IEnumerable? _currentItemsSource;
     private Dictionary<Type, PropertyInfo?> _displayMemberCache = [];
-    private System.Threading.Lock _displayMemberCacheLock = new System.Threading.Lock();
+    private System.Threading.Lock _displayMemberCacheLock = new();
     private bool _isUpdating = false;
 
     public ItemsControl()
