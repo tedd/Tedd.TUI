@@ -18,3 +18,7 @@
 
 **Observation:** Legacy list and dictionary collections were initialized explicitly using verbose constructs like `new List<UIElement>()` and `new Dictionary<string, List<Pattern>>()` in Markdown/Paragraph.cs, CodeColoring/Grammar.cs, CodeColoring/LanguageRegistry.cs, and CodeColoring/Theme.cs.
 **Strategic Action:** Enforced C# 12 collection expressions (`[]`) to reduce lexical boilerplate and object allocation overhead.
+
+## 2024-05-24 - Parameter Optimization
+**Observation:** `Table.AddRow` utilized legacy `params T[]` parameter arrays, which allocate an array on the heap for each invocation containing multiple parameters.
+**Strategic Action:** Applied C# 13 `params ReadOnlySpan<T>` feature to the parameter arrays for the identified method. This allows the compiler to allocate the parameter values on the stack or use an inline array instead of a heap-allocated array, significantly reducing GC pressure.
