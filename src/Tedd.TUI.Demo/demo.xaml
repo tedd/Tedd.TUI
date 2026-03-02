@@ -142,6 +142,16 @@
           </StackPanel>
        </TabItem>
 
+       <!-- Tab 7: Editor -->
+       <TabItem Header="Editor">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="Text Editor:"/>
+               <Border BoxStyle="Single" BorderColor="Cyan" Width="70" Height="15">
+                   <TextEditor Name="EditorBox" Width="-1" Height="-1" />
+               </Border>
+           </StackPanel>
+       </TabItem>
+
     </TabControl>
 
     <TextBlock Text="--- Log ---" Foreground="DarkGray"/>
