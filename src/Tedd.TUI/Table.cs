@@ -183,7 +183,7 @@ public class Table : UIElement
         _rows.Add(row);
     }
 
-    public void AddRow(params object[] values)
+    public void AddRow(params ReadOnlySpan<object> values)
     {
         var row = new TableRow();
         foreach (var val in values)
