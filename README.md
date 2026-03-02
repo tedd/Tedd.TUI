@@ -152,10 +152,13 @@ At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation
 
 ### Data Binding
 Tedd.TUI supports a hierarchical data binding system analogous to WPF, driven by the `DataContext` inherited dependency property.
-- **DataContext Inheritance:** The `DataContext` property is automatically inherited down the visual tree. Assigning a `DataContext` at the root (e.g., `TuiWindow`) seamlessly propagates the data model to all descendant elements, eliminating the need for redundant assignments.
-- **INotifyPropertyChanged:** Models must implement `System.ComponentModel.INotifyPropertyChanged` to trigger reactive UI updates.
-- **Binding Resolutions:** The `SetBinding` method establishes a dynamic link between a target dependency property and a source property. Bindings primarily resolve against the current `DataContext`, but the framework also supports `RelativeSource` resolutions (e.g., `Self`, `TemplatedParent`, `FindAncestor`) for complex control templates.
-- **Collections:** Utilizing `DataGrid` or derivatives of the `Selector` class (`ListBox`, `ComboBox`, `TabControl`) enables binding directly to collections via the `ItemsSource` property, complete with `DisplayMemberPath` text resolution.
+- **DataContext Inheritance:** The `DataContext` property is an inherited dependency property. `DependencyObject` systematically requests `InheritanceParent` (which resolves to `Parent` in `UIElement`) when traversing upwards. Assigning a `DataContext` at the root (e.g., `TuiWindow`) seamlessly propagates the data model to all descendant elements via `GetVisualChild` enumeration logic dynamically triggering property invalidations.
+- **INotifyPropertyChanged:** Models must implement `System.ComponentModel.INotifyPropertyChanged`. The internal `BindingExpression` autonomously hooks and unhooks to `PropertyChanged` events upon `DataContext` mutations, re-evaluating reflection paths when property names match or signify wholesale updates.
+- **Binding Resolutions:** The `SetBinding` method establishes a dynamic link between a target dependency property and a source property. While bindings default to resolving against the ambient `DataContext`, the framework exposes robust `RelativeSource` topologies:
+  - `Self`: Targets the `UIElement` itself.
+  - `TemplatedParent`: Essential for `ControlTemplate` implementations, targets the origin control instantiating the template visual tree.
+  - `FindAncestor`: Ascends the visual tree utilizing `AncestorType` and `AncestorLevel` reflection checks, useful in recursive layout bindings.
+- **Collections:** Utilizing `DataGrid` or derivatives of the `Selector` class (`ListBox`, `ComboBox`, `TabControl`) enables binding directly to collections via the `ItemsSource` property, complete with `DisplayMemberPath` reflection text resolution leveraging internal cache pools (utilizing the new `System.Threading.Lock`).
 
 ### Layout Engine
 The framework employs a robust, recursive two-pass layout system orchestrated by the abstract `Panel` class:
@@ -166,9 +169,11 @@ The framework employs a robust, recursive two-pass layout system orchestrated by
 **Hierarchical Composition:** For container controls descending from `Panel` (such as `StackPanel`, `Grid`, `DockPanel`, `WrapPanel`, and `Canvas`), the underlying `UIElementCollection` (`Children`) systematically intercepts collection modifications. Executing `Panel.Children.Add(child)` strictly enforces visual tree integrity by automatically assigning the parent node, which inherently triggers `DataContext` propagation and establishes the routing infrastructure for input events.
 
 ### Input & Interaction
-Input handling is driven by a deterministic Routed Event architecture defined within `UIElement`:
-- **Standard Input Events:** Primitive interactions (`KeyDown`, `KeyUp`, `MouseDown`, `MouseUp`, `GotFocus`, `LostFocus`) are registered as bubbling `RoutedEvent` instances. They originate at the focused element or visual leaf node and systematically traverse upwards to the visual root.
-- **Class Handlers:** `UIElement` exposes virtual methods (e.g., `OnKeyDown`, `OnMouseDown`) that function as internal class handlers, allowing derived controls to intercept and handle core inputs prior to instance-level event delegates. Furthermore, input coordinate resolution dynamically translates absolute global coordinates (`GlobalX`, `GlobalY`) into relative local spaces (`X`, `Y`) during event propagation via `InvokeHandler`.
+Input handling is orchestrated by a deterministic Routed Event architecture managed within `UIElement`:
+- **Standard Input Events:** Primitive interactions (`KeyDown`, `KeyUp`, `MouseDown`, `MouseUp`, `GotFocus`, `LostFocus`) are registered via `RoutedEvent.Register`. The core supports comprehensive `RoutingStrategy` execution topologies (`Tunnel` down to leaf, `Bubble` up to root, or `Direct` local invocations).
+- **Execution Phases:** Events originating at the active focus or visual leaf construct a routing table by walking `Parent` references. `Tunnel` events invoke sequentially from root to leaf, whereas `Bubble` events trace backwards from leaf to root. Events explicitly marked `Handled = true` halt bubbling unless a handler registered with `handledEventsToo = true` overrides the block.
+- **Coordinate Resolution:** During mouse event dispatch, `UIElement.InvokeHandler` intercepts the `RoutedEventArgs` payload. It dynamically translates absolute global screen coordinates (`GlobalX`, `GlobalY`) into the local `RenderSize` space of the invoking element (updating the `X` and `Y` properties) utilizing `PointFromScreen` prior to emitting the class handler invocation.
+- **Class vs. Instance Handlers:** The `InvokeHandler` routine prioritizes overridden virtual methods (`OnKeyDown`, `OnMouseDown`, etc.) representing implicit class handlers. Subsequentially, it dynamically invokes explicitly bound delegates from the `_eventHandlers` dictionary, isolating layout logic from subscriber callbacks.
 - **High-Level Abstractions:** Semantic control events (e.g., `Button.ClickEvent`) seamlessly integrate into the identical bubbling routing topology, ensuring uniform event interception and traversal behavior across component boundaries.
 
 ### Rendering Pipeline
