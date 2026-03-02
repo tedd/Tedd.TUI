@@ -23,6 +23,7 @@ public class DemoController
     public StackPanel ScrollStackPanel;
     public CodeDocument CodeDoc;
     public MarkdownView MdView;
+    public TextEditor EditorBox;
 
     public void Initialize(TuiApp app, TuiWindow window)
     {
@@ -151,6 +152,12 @@ public void Hello() {
         if (HScroll != null) HScroll.ValueChanged += OnScrollChanged;
         if (VScroll != null) VScroll.ValueChanged += OnScrollChanged;
         OnScrollChanged(null, null);
+
+        // Init TextEditor
+        if (EditorBox != null)
+        {
+            EditorBox.Text = "Welcome to the TextEditor!\nType here...";
+        }
     }
 
     private void AddTableRow(string id, string name, string age, bool active = false)
