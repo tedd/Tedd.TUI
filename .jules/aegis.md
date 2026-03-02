@@ -145,3 +145,7 @@ Created `ThicknessTests.cs` to test the uniform constructor, 4-parameter constru
 **Metrics:**
 - Coverage for `Thickness` increased to 100% lines and branches.
 - Added 10 tests for `Thickness`.
+
+## 2024-03-02 - Border Test Coverage Expansion
+**Observation:** The `Border` component possessed missing test coverage regarding edge-case rendering scenarios (Width/Height < 2), `GetVisualChild` bounds checks including `Title` and `StatusBar`, and layout evaluations for Title alignments and dynamically-sized ScrollBars.
+**Strategic Action:** Added `BorderCoverageTests.cs` applying standard boundary condition parameterizations. Achieved 100% line coverage for the `Border` component.
