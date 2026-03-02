@@ -4,6 +4,9 @@
 1. Fix `HeaderedItemsControl.cs` to use `DependencyProperty.Register` for `HasHeaderProperty`.
 2. `ItemsControl` (and thus `HeaderedItemsControl`) has `Items` of type `ItemCollection` which implements `IList` (of object). `TreeView` logic needs to cast objects to `TreeViewItem` when working with hierarchical items.
 
+## 2024-05-18 - UniformGrid Component Integration
+**Observation:** The TUI layout system lacked a UniformGrid panel, a standard XAML component required for symmetrical control arrangements in MS-DOS style forms.
+**Strategic Action:** Engineered the UniformGrid inheriting from Panel, mapping XAML-style Rows, Columns, and FirstColumn properties to the TUI character grid constraints.
 ## 2026-02-26 - [Input Event Infrastructure & Data Context]
 **Observation:** Standard input events (KeyDown, MouseDown) were virtual methods detached from the Routed Event system, preventing logical bubbling. Container controls used `List<UIElement>` exposing raw collections, causing failures in `Parent` assignment and DataContext inheritance when items were added manually.
 **Strategic Action:**
