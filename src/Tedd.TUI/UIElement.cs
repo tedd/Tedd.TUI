@@ -134,6 +134,15 @@ public abstract class UIElement : DependencyObject
         set { SetValue(FocusableProperty, value); }
     }
 
+    public static readonly DependencyProperty MarginProperty =
+        DependencyProperty.Register("Margin", typeof(Thickness), typeof(UIElement), new Thickness(0));
+
+    public Thickness Margin
+    {
+        get { return (Thickness)GetValue(MarginProperty); }
+        set { SetValue(MarginProperty, value); }
+    }
+
     public static readonly DependencyProperty WidthProperty =
         DependencyProperty.Register("Width", typeof(int), typeof(UIElement), -1); // -1 for Auto
 
@@ -252,9 +261,16 @@ public abstract class UIElement : DependencyObject
             return;
         }
 
-        // Apply Margin etc here if we had it.
+        Thickness margin = Margin;
+        int marginWidth = margin.Left + margin.Right;
+        int marginHeight = margin.Top + margin.Bottom;
 
-        Size desired = MeasureOverride(availableSize);
+        Size innerAvailableSize = new Size(
+            System.Math.Max(0, availableSize.Width - marginWidth),
+            System.Math.Max(0, availableSize.Height - marginHeight)
+        );
+
+        Size desired = MeasureOverride(innerAvailableSize);
 
         // Respect Width/Height properties
         int width = Width;
@@ -262,6 +278,9 @@ public abstract class UIElement : DependencyObject
 
         if (width >= 0) desired.Width = width;
         if (height >= 0) desired.Height = height;
+
+        desired.Width += marginWidth;
+        desired.Height += marginHeight;
 
         // Clip to available size? Usually not in Measure, but we return what we want.
         // But we should probably not ask for more than available if we can help it?
@@ -279,52 +298,61 @@ public abstract class UIElement : DependencyObject
     {
         if (!Visibility) return;
 
-        // Check alignment and adjust finalRect
-        Size desired = DesiredSize;
-        int width = finalRect.Width;
-        int height = finalRect.Height;
-        int x = finalRect.X;
-        int y = finalRect.Y;
+        Thickness margin = Margin;
+        int marginWidth = margin.Left + margin.Right;
+        int marginHeight = margin.Top + margin.Bottom;
+
+        // The size available for alignment and rendering is reduced by margins
+        int width = System.Math.Max(0, finalRect.Width - marginWidth);
+        int height = System.Math.Max(0, finalRect.Height - marginHeight);
+
+        // The desired size of the core element (without margins)
+        Size desiredCore = new Size(
+            System.Math.Max(0, DesiredSize.Width - marginWidth),
+            System.Math.Max(0, DesiredSize.Height - marginHeight)
+        );
+
+        int x = finalRect.X + margin.Left;
+        int y = finalRect.Y + margin.Top;
 
         // Horizontal Alignment
         if (HorizontalAlignment == HorizontalAlignment.Left)
         {
-            width = desired.Width;
+            width = desiredCore.Width;
         }
         else if (HorizontalAlignment == HorizontalAlignment.Right)
         {
-            x += width - desired.Width;
-            width = desired.Width;
+            x += width - desiredCore.Width;
+            width = desiredCore.Width;
         }
         else if (HorizontalAlignment == HorizontalAlignment.Center)
         {
-            x += (width - desired.Width) / 2;
-            width = desired.Width;
+            x += (width - desiredCore.Width) / 2;
+            width = desiredCore.Width;
         }
         // Stretch takes full width (already set)
 
         // Vertical Alignment
         if (VerticalAlignment == VerticalAlignment.Top)
         {
-            height = desired.Height;
+            height = desiredCore.Height;
         }
         else if (VerticalAlignment == VerticalAlignment.Bottom)
         {
-            y += height - desired.Height;
-            height = desired.Height;
+            y += height - desiredCore.Height;
+            height = desiredCore.Height;
         }
         else if (VerticalAlignment == VerticalAlignment.Center)
         {
-            y += (height - desired.Height) / 2;
-            height = desired.Height;
+            y += (height - desiredCore.Height) / 2;
+            height = desiredCore.Height;
         }
 
-        // Constrain to available finalRect?
         if (width < 0) width = 0;
         if (height < 0) height = 0;
 
         Rect arrangedRect = new Rect(x, y, width, height);
-        RenderSize = arrangedRect; // Storing position and size relative to parent Canvas
+        RenderSize = arrangedRect;
 
         ArrangeOverride(new Size(width, height));
     }

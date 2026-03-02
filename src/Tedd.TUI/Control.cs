@@ -97,8 +97,21 @@ public class Control : UIElement
     {
         if (_templateRoot != null)
         {
-            _templateRoot.Measure(availableSize);
-            return _templateRoot.DesiredSize;
+            Thickness padding = Padding;
+            int paddingWidth = padding.Left + padding.Right;
+            int paddingHeight = padding.Top + padding.Bottom;
+
+            Size innerAvailableSize = new Size(
+                System.Math.Max(0, availableSize.Width - paddingWidth),
+                System.Math.Max(0, availableSize.Height - paddingHeight)
+            );
+
+            _templateRoot.Measure(innerAvailableSize);
+
+            return new Size(
+                _templateRoot.DesiredSize.Width + paddingWidth,
+                _templateRoot.DesiredSize.Height + paddingHeight
+            );
         }
         return new Size(0, 0);
     }
@@ -107,7 +120,14 @@ public class Control : UIElement
     {
         if (_templateRoot != null)
         {
-            _templateRoot.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
+            Thickness padding = Padding;
+            int paddingWidth = padding.Left + padding.Right;
+            int paddingHeight = padding.Top + padding.Bottom;
+
+            int innerWidth = System.Math.Max(0, finalSize.Width - paddingWidth);
+            int innerHeight = System.Math.Max(0, finalSize.Height - paddingHeight);
+
+            _templateRoot.Arrange(new Rect(padding.Left, padding.Top, innerWidth, innerHeight));
         }
     }
 
