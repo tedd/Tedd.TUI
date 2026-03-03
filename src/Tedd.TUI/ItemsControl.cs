@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Tedd.TUI;
 
-public abstract class ItemsControl : UIElement
+public abstract class ItemsControl : Control
 {
     private readonly ItemCollection _items = [];
     public ItemCollection Items => _items;
@@ -27,6 +27,15 @@ public abstract class ItemsControl : UIElement
     {
         get { return (string)GetValue(DisplayMemberPathProperty); }
         set { SetValue(DisplayMemberPathProperty, value); }
+    }
+
+    public static readonly DependencyProperty ItemsPanelProperty =
+        DependencyProperty.Register("ItemsPanel", typeof(ItemsPanelTemplate), typeof(ItemsControl), new ItemsPanelTemplate(() => new StackPanel { Orientation = Orientation.Vertical }));
+
+    public ItemsPanelTemplate ItemsPanel
+    {
+        get { return (ItemsPanelTemplate)GetValue(ItemsPanelProperty); }
+        set { SetValue(ItemsPanelProperty, value); }
     }
 
     private IEnumerable? _currentItemsSource;
@@ -188,9 +197,42 @@ public abstract class ItemsControl : UIElement
         }
     }
 
+    internal Panel? ItemsPanelRoot { get; set; }
+    internal ItemsPresenter? ItemsPresenter { get; set; }
+
     protected virtual void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (!_isUpdating) Invalidate();
+        if (!_isUpdating)
+        {
+            if (ItemsPresenter != null)
+            {
+                ItemsPresenter.PopulatePanel(this);
+            }
+            Invalidate();
+        }
+    }
+
+    protected internal virtual bool IsItemItsOwnContainerOverride(object item)
+    {
+        return item is UIElement;
+    }
+
+    protected internal virtual UIElement GetContainerForItemOverride()
+    {
+        return new ContentPresenter();
+    }
+
+    internal UIElement GetContainerForItemCore()
+    {
+        return GetContainerForItemOverride();
+    }
+
+    protected internal virtual void PrepareContainerForItemOverride(UIElement element, object item)
+    {
+        if (element is ContentPresenter cp)
+        {
+            cp.Content = GetItemText(item);
+        }
     }
 
     public string GetItemText(object item)
