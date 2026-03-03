@@ -35,7 +35,7 @@ public class DependencyProperty
 
 public class DependencyObject : INotifyPropertyChanged
 {
-    private readonly Dictionary<DependencyProperty, object> _values = new Dictionary<DependencyProperty, object>();
+    private readonly Dictionary<DependencyProperty, object> _values = new();
 
     protected virtual DependencyObject? InheritanceParent => null;
 

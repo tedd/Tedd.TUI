@@ -23,15 +23,14 @@ public abstract class UIElement : DependencyObject
     public string Name { get; set; }
 
     // TemplatedParent for TemplateBinding
-    private DependencyObject _templatedParent;
     public DependencyObject TemplatedParent
     {
-        get => _templatedParent;
+        get => field;
         internal set
         {
-            if (_templatedParent != value)
+            if (field != value)
             {
-                _templatedParent = value;
+                field = value;
                 OnTemplatedParentChanged();
             }
         }
