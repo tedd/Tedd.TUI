@@ -43,6 +43,11 @@
 - Leveraged `List<string>` for lightweight line management to mitigate extensive text reallocations during simple keystrokes.
 - Integrated arrow key navigation, text insertion, multi-line separation (Enter), and text deletion (Backspace/Delete) along with view scrolling bounded by `RenderSize`.
 
+## 2026-03-05 - Event Routing Parity (Tunneling Phase)
+**Observation:** Standard XAML input event parity was missing the tunneling phase. While bubbling events like `KeyDownEvent` existed, their tunneling counterparts (`PreviewKeyDownEvent`) were absent, preventing parent elements from intercepting events prior to child handling.
+**Strategic Action:**
+- Registered `RoutingStrategy.Tunnel` events for `PreviewKeyDown`, `PreviewKeyUp`, `PreviewMouseDown`, `PreviewMouseUp`, and `PreviewMouseMove` in `UIElement`.
+- Implemented two-phase dispatch in `TuiWindow.ProcessKey` and `ConsoleInputManager` mouse handlers: dispatching the preview event first, and only dispatching the bubbling event if the preview event's `Handled` property remained false.
 ## 2026-03-05 - ItemsControl Class Structure and ItemsPanel Parity
 
 **Observation:** The TUI environment's `ItemsControl` class lacked parity with WPF's layout mechanism. Specifically, it inherited from `UIElement` instead of `Control`, which prevented template support. Furthermore, it lacked the standard `ItemsPanel` dependency property (and associated `ItemsPanelTemplate`), meaning its layout could not be declaratively changed as in standard XAML.
