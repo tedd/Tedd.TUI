@@ -205,7 +205,7 @@ class Program
 
             dialog.Content = dialogStack;
 
-            window.SetOverlay(dialog);
+            window.PushOverlay(dialog);
             dialog.Show();
         };
         btnPanel.AddChild(new TextBlock { Text = "  " }); // Spacer
