@@ -149,3 +149,6 @@ Created `ThicknessTests.cs` to test the uniform constructor, 4-parameter constru
 ## 2024-03-02 - Border Test Coverage Expansion
 **Observation:** The `Border` component possessed missing test coverage regarding edge-case rendering scenarios (Width/Height < 2), `GetVisualChild` bounds checks including `Title` and `StatusBar`, and layout evaluations for Title alignments and dynamically-sized ScrollBars.
 **Strategic Action:** Added `BorderCoverageTests.cs` applying standard boundary condition parameterizations. Achieved 100% line coverage for the `Border` component.
+## 2026-03-04 - TabControl and TextEditor Coverage
+**Observation:** `TabControl` and `TextEditor` lacked comprehensive testing around `OnKeyDown`, `OnMouseDown`, and `Render` logic. These are critical components handling manual array indexing logic for selections and boundaries.
+**Strategic Action:** Developed explicit keyboard boundary manipulation tests resolving scroll offsets, bounds clamping on multi-line text input, and tab switching mappings using X/Y localized coordinate clicks. Achieved ~3% structural coverage increase across `Tedd.TUI`.
