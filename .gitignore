@@ -1,3 +1,9 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
 coveragereport_detail/
 coveragereport/
 coverage.json

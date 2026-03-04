@@ -42,3 +42,7 @@
 - Implemented `TextEditor` as a `UIElement` handling multi-line state directly.
 - Leveraged `List<string>` for lightweight line management to mitigate extensive text reallocations during simple keystrokes.
 - Integrated arrow key navigation, text insertion, multi-line separation (Enter), and text deletion (Backspace/Delete) along with view scrolling bounded by `RenderSize`.
+
+## 2025-03-03 - GroupBox Integration
+**Observation:** The TUI framework lacked a native component for visual grouping with explicit title support natively mapping to the TUI (like a WPF GroupBox), although `HeaderedContentControl` and `Border` existed.
+**Strategic Action:** Developed `GroupBox` by subclassing `HeaderedContentControl` and leveraging the `ControlTemplate` engine to map the `Header` to a `Border` element's `Title`, synthesizing the visual paradigms of DOS-era environments with contemporary .NET object models.
