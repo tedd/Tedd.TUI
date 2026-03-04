@@ -229,7 +229,7 @@ public void Hello() {
 
         dialog.Content = dialogStack;
 
-        _window.SetOverlay(dialog);
+        _window.PushOverlay(dialog);
         dialog.Show();
     }
 

@@ -42,3 +42,25 @@
 - Implemented `TextEditor` as a `UIElement` handling multi-line state directly.
 - Leveraged `List<string>` for lightweight line management to mitigate extensive text reallocations during simple keystrokes.
 - Integrated arrow key navigation, text insertion, multi-line separation (Enter), and text deletion (Backspace/Delete) along with view scrolling bounded by `RenderSize`.
+
+## 2024-05-18 - Expander Control Integration
+
+**Observation:** The TUI framework lacked a native `Expander` control for progressively disclosing information or grouping settings, which is a standard structural component in modern client frameworks like WPF. The existing `HeaderedContentControl` provided a base, but no concrete implementation existed to toggle state while adhering to the TUI character-based visual constraints.
+
+**Strategic Action:** Engineered an `Expander` control inheriting from `HeaderedContentControl`. Implemented the `IsExpanded` dependency property and corresponding `Expanded`/`Collapsed` routed events (bubbling up the logical tree). Designed an internalized template using `StackPanel`, `Border`, and `ContentPresenter` to map the boolean state to layout visibility (`ContentPresenter.Visibility`), successfully translating WPF's expander paradigm into the zero-allocation recursive layout engine of the TUI framework using explicit ASCII indicators (`[+]`, `[-]`).
+## 2026-03-05 - Event Routing Parity (Tunneling Phase)
+**Observation:** Standard XAML input event parity was missing the tunneling phase. While bubbling events like `KeyDownEvent` existed, their tunneling counterparts (`PreviewKeyDownEvent`) were absent, preventing parent elements from intercepting events prior to child handling.
+**Strategic Action:**
+- Registered `RoutingStrategy.Tunnel` events for `PreviewKeyDown`, `PreviewKeyUp`, `PreviewMouseDown`, `PreviewMouseUp`, and `PreviewMouseMove` in `UIElement`.
+- Implemented two-phase dispatch in `TuiWindow.ProcessKey` and `ConsoleInputManager` mouse handlers: dispatching the preview event first, and only dispatching the bubbling event if the preview event's `Handled` property remained false.
+## 2026-03-05 - ItemsControl Class Structure and ItemsPanel Parity
+
+**Observation:** The TUI environment's `ItemsControl` class lacked parity with WPF's layout mechanism. Specifically, it inherited from `UIElement` instead of `Control`, which prevented template support. Furthermore, it lacked the standard `ItemsPanel` dependency property (and associated `ItemsPanelTemplate`), meaning its layout could not be declaratively changed as in standard XAML.
+
+**Strategic Action:**
+- Modified `ItemsControl` to inherit from `Control`, aligning its inheritance hierarchy with WPF.
+- Implemented the `ItemsPanelTemplate` class inheriting from `FrameworkTemplate` to support dynamic panel generation.
+- Added the `ItemsPanel` dependency property to `ItemsControl`, utilizing a default factory that generates a `StackPanel` with `Orientation.Vertical` to fulfill the standard default layout behavior.
+## 2025-03-03 - GroupBox Integration
+**Observation:** The TUI framework lacked a native component for visual grouping with explicit title support natively mapping to the TUI (like a WPF GroupBox), although `HeaderedContentControl` and `Border` existed.
+**Strategic Action:** Developed `GroupBox` by subclassing `HeaderedContentControl` and leveraging the `ControlTemplate` engine to map the `Header` to a `Border` element's `Title`, synthesizing the visual paradigms of DOS-era environments with contemporary .NET object models.

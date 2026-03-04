@@ -63,3 +63,4 @@ paket-files/
 **/*.userprefs
 bin/
 obj/
+coverage.json
