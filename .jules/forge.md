@@ -42,3 +42,15 @@
 - Implemented `TextEditor` as a `UIElement` handling multi-line state directly.
 - Leveraged `List<string>` for lightweight line management to mitigate extensive text reallocations during simple keystrokes.
 - Integrated arrow key navigation, text insertion, multi-line separation (Enter), and text deletion (Backspace/Delete) along with view scrolling bounded by `RenderSize`.
+
+## 2026-03-05 - ItemsControl Class Structure and ItemsPanel Parity
+
+**Observation:** The TUI environment's `ItemsControl` class lacked parity with WPF's layout mechanism. Specifically, it inherited from `UIElement` instead of `Control`, which prevented template support. Furthermore, it lacked the standard `ItemsPanel` dependency property (and associated `ItemsPanelTemplate`), meaning its layout could not be declaratively changed as in standard XAML.
+
+**Strategic Action:**
+- Modified `ItemsControl` to inherit from `Control`, aligning its inheritance hierarchy with WPF.
+- Implemented the `ItemsPanelTemplate` class inheriting from `FrameworkTemplate` to support dynamic panel generation.
+- Added the `ItemsPanel` dependency property to `ItemsControl`, utilizing a default factory that generates a `StackPanel` with `Orientation.Vertical` to fulfill the standard default layout behavior.
+## 2025-03-03 - GroupBox Integration
+**Observation:** The TUI framework lacked a native component for visual grouping with explicit title support natively mapping to the TUI (like a WPF GroupBox), although `HeaderedContentControl` and `Border` existed.
+**Strategic Action:** Developed `GroupBox` by subclassing `HeaderedContentControl` and leveraging the `ControlTemplate` engine to map the `Header` to a `Border` element's `Title`, synthesizing the visual paradigms of DOS-era environments with contemporary .NET object models.
