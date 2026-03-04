@@ -498,6 +498,12 @@ public abstract class UIElement : DependencyObject
         }
     }
 
+    public static readonly RoutedEvent PreviewKeyDownEvent = RoutedEvent.Register("PreviewKeyDown", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewKeyUpEvent = RoutedEvent.Register("PreviewKeyUp", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewMouseDownEvent = RoutedEvent.Register("PreviewMouseDown", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewMouseUpEvent = RoutedEvent.Register("PreviewMouseUp", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewMouseMoveEvent = RoutedEvent.Register("PreviewMouseMove", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+
     public static readonly RoutedEvent KeyDownEvent = RoutedEvent.Register("KeyDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent KeyUpEvent = RoutedEvent.Register("KeyUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseDownEvent = RoutedEvent.Register("MouseDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
@@ -508,7 +514,12 @@ public abstract class UIElement : DependencyObject
 
     protected virtual void OnEvent(RoutedEventArgs e)
     {
-        if (e.RoutedEvent == KeyDownEvent) OnKeyDown((KeyEventArgs)e);
+        if (e.RoutedEvent == PreviewKeyDownEvent) OnPreviewKeyDown((KeyEventArgs)e);
+        else if (e.RoutedEvent == PreviewKeyUpEvent) OnPreviewKeyUp((KeyEventArgs)e);
+        else if (e.RoutedEvent == PreviewMouseDownEvent) OnPreviewMouseDown((MouseEventArgs)e);
+        else if (e.RoutedEvent == PreviewMouseUpEvent) OnPreviewMouseUp((MouseEventArgs)e);
+        else if (e.RoutedEvent == PreviewMouseMoveEvent) OnPreviewMouseMove((MouseEventArgs)e);
+        else if (e.RoutedEvent == KeyDownEvent) OnKeyDown((KeyEventArgs)e);
         else if (e.RoutedEvent == KeyUpEvent) OnKeyUp((KeyEventArgs)e);
         else if (e.RoutedEvent == MouseDownEvent) OnMouseDown((MouseEventArgs)e);
         else if (e.RoutedEvent == MouseUpEvent) OnMouseUp((MouseEventArgs)e);
@@ -516,6 +527,12 @@ public abstract class UIElement : DependencyObject
         else if (e.RoutedEvent == GotFocusEvent) OnGotFocus();
         else if (e.RoutedEvent == LostFocusEvent) OnLostFocus();
     }
+
+    public virtual void OnPreviewKeyDown(KeyEventArgs e) { }
+    public virtual void OnPreviewKeyUp(KeyEventArgs e) { }
+    public virtual void OnPreviewMouseDown(MouseEventArgs e) { }
+    public virtual void OnPreviewMouseUp(MouseEventArgs e) { }
+    public virtual void OnPreviewMouseMove(MouseEventArgs e) { }
 
     public virtual void OnKeyDown(KeyEventArgs e) { }
     public virtual void OnKeyUp(KeyEventArgs e) { }

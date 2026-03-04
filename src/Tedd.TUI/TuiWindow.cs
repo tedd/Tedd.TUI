@@ -293,9 +293,32 @@ public class TuiWindow : UIElement
 
     public void ProcessKey(KeyEventArgs e)
     {
-        // Bubble? Tunnel?
-        // WPF uses Bubble for KeyDown.
-        _focusedElement?.RaiseEvent(e);
+        if (_focusedElement == null) return;
+
+        // Two-phase event dispatch for WPF parity: Tunneling (Preview) then Bubbling
+        RoutedEvent previewEvent = null;
+        if (e.RoutedEvent == UIElement.KeyDownEvent) previewEvent = UIElement.PreviewKeyDownEvent;
+        else if (e.RoutedEvent == UIElement.KeyUpEvent) previewEvent = UIElement.PreviewKeyUpEvent;
+
+        if (previewEvent != null)
+        {
+            var previewArgs = new KeyEventArgs(previewEvent, e.Source ?? _focusedElement)
+            {
+                Key = e.Key,
+                KeyChar = e.KeyChar,
+                Modifiers = e.Modifiers
+            };
+
+            _focusedElement.RaiseEvent(previewArgs);
+
+            if (previewArgs.Handled)
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
+        _focusedElement.RaiseEvent(e);
 
         // Tab Navigation
         if (!e.Handled && e.Key == System.ConsoleKey.Tab)

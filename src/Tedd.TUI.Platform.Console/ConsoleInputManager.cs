@@ -152,19 +152,34 @@ public class ConsoleInputManager
                         _window.SetFocus(hit.Element);
                     }
 
-                    var argsMove = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = x, GlobalY = y };
-                    hit.Element.RaiseEvent(argsMove);
+                    var previewArgsMove = new MouseEventArgs(UIElement.PreviewMouseMoveEvent) { GlobalX = x, GlobalY = y };
+                    hit.Element.RaiseEvent(previewArgsMove);
+                    if (!previewArgsMove.Handled)
+                    {
+                        var argsMove = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = x, GlobalY = y };
+                        hit.Element.RaiseEvent(argsMove);
+                    }
 
                     if (leftDown && !wasLeftDown)
                     {
-                        var argsDown = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
-                        hit.Element.RaiseEvent(argsDown);
+                        var previewArgsDown = new MouseEventArgs(UIElement.PreviewMouseDownEvent) { GlobalX = x, GlobalY = y };
+                        hit.Element.RaiseEvent(previewArgsDown);
+                        if (!previewArgsDown.Handled)
+                        {
+                            var argsDown = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
+                            hit.Element.RaiseEvent(argsDown);
+                        }
                     }
 
                     if (!leftDown && wasLeftDown)
                     {
-                        var argsUp = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
-                        hit.Element.RaiseEvent(argsUp);
+                        var previewArgsUp = new MouseEventArgs(UIElement.PreviewMouseUpEvent) { GlobalX = x, GlobalY = y };
+                        hit.Element.RaiseEvent(previewArgsUp);
+                        if (!previewArgsUp.Handled)
+                        {
+                            var argsUp = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
+                            hit.Element.RaiseEvent(argsUp);
+                        }
                     }
                 }
             }
@@ -314,13 +329,23 @@ public class ConsoleInputManager
 
                         if (isDown)
                         {
-                            var args = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
-                            result.Element.RaiseEvent(args);
+                            var previewArgs = new MouseEventArgs(UIElement.PreviewMouseDownEvent) { GlobalX = x, GlobalY = y };
+                            result.Element.RaiseEvent(previewArgs);
+                            if (!previewArgs.Handled)
+                            {
+                                var args = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
+                                result.Element.RaiseEvent(args);
+                            }
                         }
                         else
                         {
-                            var args = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
-                            result.Element.RaiseEvent(args);
+                            var previewArgs = new MouseEventArgs(UIElement.PreviewMouseUpEvent) { GlobalX = x, GlobalY = y };
+                            result.Element.RaiseEvent(previewArgs);
+                            if (!previewArgs.Handled)
+                            {
+                                var args = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
+                                result.Element.RaiseEvent(args);
+                            }
                         }
                     }
                 }
