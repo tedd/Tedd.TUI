@@ -23,6 +23,12 @@
 **Observation:** `Table.AddRow` utilized legacy `params T[]` parameter arrays, which allocate an array on the heap for each invocation containing multiple parameters.
 **Strategic Action:** Applied C# 13 `params ReadOnlySpan<T>` feature to the parameter arrays for the identified method. This allows the compiler to allocate the parameter values on the stack or use an inline array instead of a heap-allocated array, significantly reducing GC pressure.
 
+## 2025-02-19 - Syntactic Modernization: field keywords, target-typed new(), collection expressions
+**Observation:** Discovered `_templatedParent` backing field in `UIElement.cs` (.NET 5/6 legacy patterns). Detected a verbose `new Dictionary<DependencyProperty, object>()` instantiation in `DependencyObject.cs`. Located verbose array-like initialization (`new List<RowDefinition> { new RowDefinition() }`) for implicit rows/cols in `Grid.cs`.
+**Strategic Action:**
+- Applied the C# 14 `field` keyword to `TemplatedParent` property, eliminating the manual backing field.
+- Implemented C# 13 target-typed `new()` for the `_values` dictionary instantiation in `DependencyObject.cs` to eliminate redundant type declarations.
+- Utilized C# 12 collection expressions (`[]`) via the `??=` operator (`_implicitRows ??= [new RowDefinition()]`) to reduce lexical boilerplate in `Grid.cs`.
 ## 2024-03-04 - C# 13 System.Threading.Lock Modernization
 **Observation:** The codebase contained a legacy lock statement (`lock (_globalCompiledGetters)`) utilizing an arbitrary object for synchronization in `DataGrid.cs`, which is an obsolete .NET 5/6 pattern that lacks explicit thread safety semantics.
 **Strategic Action:** Transitioned the synchronization mechanism to use the C# 13 `System.Threading.Lock` type by introducing a dedicated `_globalCompiledGettersLock = new();` instance to enforce deterministic thread safety and structural clarity.

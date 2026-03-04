@@ -9,8 +9,8 @@ public class Grid : Panel
     public List<RowDefinition> RowDefinitions { get; } = new List<RowDefinition>();
     public List<ColumnDefinition> ColumnDefinitions { get; } = new List<ColumnDefinition>();
 
-    private List<RowDefinition> _implicitRows;
-    private List<ColumnDefinition> _implicitCols;
+    private List<RowDefinition>? _implicitRows;
+    private List<ColumnDefinition>? _implicitCols;
 
     // Attached Properties
     public static readonly DependencyProperty RowProperty = DependencyProperty.Register("Row", typeof(int), typeof(Grid), 0);
@@ -57,7 +57,7 @@ public class Grid : Panel
         List<RowDefinition> rows;
         if (implicitRow)
         {
-            if (_implicitRows == null) _implicitRows = new List<RowDefinition> { new RowDefinition() };
+            _implicitRows ??= [new RowDefinition()];
             rows = _implicitRows;
         }
         else
@@ -68,7 +68,7 @@ public class Grid : Panel
         List<ColumnDefinition> cols;
         if (implicitCol)
         {
-            if (_implicitCols == null) _implicitCols = new List<ColumnDefinition> { new ColumnDefinition() };
+            _implicitCols ??= [new ColumnDefinition()];
             cols = _implicitCols;
         }
         else
@@ -277,7 +277,7 @@ public class Grid : Panel
         if (implicitRow)
         {
             // Use existing implicit row list, ensuring it's initialized (though Measure should have done it)
-            if (_implicitRows == null) _implicitRows = new List<RowDefinition> { new RowDefinition { Height = GridLength.Star } };
+            _implicitRows ??= [new RowDefinition { Height = GridLength.Star }];
             rows = _implicitRows;
         }
         else
@@ -288,7 +288,7 @@ public class Grid : Panel
         List<ColumnDefinition> cols;
         if (implicitCol)
         {
-            if (_implicitCols == null) _implicitCols = new List<ColumnDefinition> { new ColumnDefinition { Width = GridLength.Star } };
+            _implicitCols ??= [new ColumnDefinition { Width = GridLength.Star }];
             cols = _implicitCols;
         }
         else
