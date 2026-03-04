@@ -37,6 +37,9 @@ public class VirtualBuffer
     public int Width { get; }
     public int Height { get; }
 
+    // Direct access to buffer for optimized rendering
+    public ReadOnlySpan<Cell> Cells => _buffer;
+
     private Stack<Rect> _clipStack = new Stack<Rect>();
     private Rect _currentClip;
     private bool _isClipped;
@@ -59,7 +62,7 @@ public class VirtualBuffer
             int y = Math.Max(_currentClip.Y, clip.Y);
             int r = Math.Min(_currentClip.X + _currentClip.Width, clip.X + clip.Width);
             int b = Math.Min(_currentClip.Y + _currentClip.Height, clip.Y + clip.Height);
-            
+
             var newClip = new Rect(x, y, Math.Max(0, r - x), Math.Max(0, b - y));
             _clipStack.Push(newClip);
             _currentClip = newClip;
@@ -134,5 +137,160 @@ public class VirtualBuffer
             return _buffer[y * Width + x];
         }
         return new Cell(' ', ConsoleColor.White, ConsoleColor.Black);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawString(int x, int y, string text, ConsoleColor fg, ConsoleColor bg)
+    {
+        DrawString(x, y, text.AsSpan(), fg, bg);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawString(int x, int y, ReadOnlySpan<char> text, ConsoleColor fg, ConsoleColor bg)
+    {
+        if ((uint)y >= (uint)Height) return;
+
+        int startX = x;
+        int endX = x + text.Length;
+
+        if (_isClipped)
+        {
+            if (y < _currentClip.Y || y >= _currentClip.Y + _currentClip.Height) return;
+
+            if (startX < _currentClip.X)
+            {
+                int diff = _currentClip.X - startX;
+                if (diff >= text.Length) return;
+                text = text.Slice(diff);
+                startX = _currentClip.X;
+            }
+
+            int clipRight = _currentClip.X + _currentClip.Width;
+            if (endX > clipRight)
+            {
+                int visibleLen = clipRight - startX;
+                if (visibleLen <= 0) return;
+                if (visibleLen < text.Length)
+                    text = text.Slice(0, visibleLen);
+            }
+        }
+        else
+        {
+            if (startX < 0)
+            {
+                int diff = -startX;
+                if (diff >= text.Length) return;
+                text = text.Slice(diff);
+                startX = 0;
+            }
+            if (startX + text.Length > Width)
+            {
+                int visibleLen = Width - startX;
+                if (visibleLen <= 0) return;
+                text = text.Slice(0, visibleLen);
+            }
+        }
+
+        int bufferIdx = y * Width + startX;
+        for (int i = 0; i < text.Length; i++)
+        {
+            _buffer[bufferIdx + i] = new Cell(text[i], fg, bg);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawHLine(int x, int y, int length, char c, ConsoleColor fg, ConsoleColor bg)
+    {
+        if ((uint)y >= (uint)Height) return;
+
+        int startX = x;
+        int endX = x + length;
+
+        if (_isClipped)
+        {
+            if (y < _currentClip.Y || y >= _currentClip.Y + _currentClip.Height) return;
+            startX = Math.Max(startX, _currentClip.X);
+            endX = Math.Min(endX, _currentClip.X + _currentClip.Width);
+        }
+        else
+        {
+            startX = Math.Max(startX, 0);
+            endX = Math.Min(endX, Width);
+        }
+
+        if (endX <= startX) return;
+
+        int len = endX - startX;
+        int bufferIdx = y * Width + startX;
+
+        _buffer.AsSpan(bufferIdx, len).Fill(new Cell(c, fg, bg));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawVLine(int x, int y, int length, char c, ConsoleColor fg, ConsoleColor bg)
+    {
+        if ((uint)x >= (uint)Width) return;
+
+        int startY = y;
+        int endY = y + length;
+
+        if (_isClipped)
+        {
+            if (x < _currentClip.X || x >= _currentClip.X + _currentClip.Width) return;
+            startY = Math.Max(startY, _currentClip.Y);
+            endY = Math.Min(endY, _currentClip.Y + _currentClip.Height);
+        }
+        else
+        {
+            startY = Math.Max(startY, 0);
+            endY = Math.Min(endY, Height);
+        }
+
+        if (endY <= startY) return;
+
+        var cell = new Cell(c, fg, bg);
+        int stride = Width;
+        int bufferIdx = startY * stride + x;
+
+        for (int i = startY; i < endY; i++)
+        {
+            _buffer[bufferIdx] = cell;
+            bufferIdx += stride;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillRect(int x, int y, int width, int height, char c, ConsoleColor fg, ConsoleColor bg)
+    {
+        int startX = x;
+        int startY = y;
+        int endX = x + width;
+        int endY = y + height;
+
+        if (_isClipped)
+        {
+            startX = Math.Max(startX, _currentClip.X);
+            startY = Math.Max(startY, _currentClip.Y);
+            endX = Math.Min(endX, _currentClip.X + _currentClip.Width);
+            endY = Math.Min(endY, _currentClip.Y + _currentClip.Height);
+        }
+        else
+        {
+            startX = Math.Max(startX, 0);
+            startY = Math.Max(startY, 0);
+            endX = Math.Min(endX, Width);
+            endY = Math.Min(endY, Height);
+        }
+
+        if (endX <= startX || endY <= startY) return;
+
+        int rowWidth = endX - startX;
+        var cell = new Cell(c, fg, bg);
+
+        for (int row = startY; row < endY; row++)
+        {
+            int idx = row * Width + startX;
+            _buffer.AsSpan(idx, rowWidth).Fill(cell);
+        }
     }
 }

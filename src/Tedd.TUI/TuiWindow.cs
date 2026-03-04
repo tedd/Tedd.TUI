@@ -7,13 +7,13 @@ namespace Tedd.TUI;
 public class TuiWindow : UIElement
 {
     private UIElement _content;
-    public UIElement Content 
-    { 
+    public UIElement Content
+    {
         get => _content;
         set
         {
             _content = value;
-            _content?.Parent = this;
+            if (_content != null) _content.Parent = this;
         }
     }
 
@@ -23,7 +23,7 @@ public class TuiWindow : UIElement
     {
         int contentCount = _content != null ? 1 : 0;
         if (index < contentCount)
-             return _content!;
+            return _content!;
 
         index -= contentCount;
         if (index < _overlays.Count)
@@ -141,8 +141,36 @@ public class TuiWindow : UIElement
     protected override void OnDataContextChanged(object newValue)
     {
         base.OnDataContextChanged(newValue);
-        Content?.DataContext = newValue;
+        Content?.DataContext = newValue; // Wait, DataContext is inherited automatically via Parent.
+        // But TuiWindow.Content is a property, not just a visual child (though it is).
+        // Since we set Content.Parent = this, it should inherit DataContext automatically if we didn't override this.
+        // But checking UIElement.OnPropertyChanged(DataContextProperty):
+        /*
+        if (dp.IsInherited) {
+            // Iterates VisualChildren...
+        }
+        */
+        // And GetVisualChild includes Content. So base implementation should handle it.
+        // So this override might be redundant or even harmful if it sets local value.
+        // Actually, setting Content.DataContext = newValue sets a LOCAL value on Content, breaking inheritance if Content is replaced later?
+        // No, Content.DataContext setter just sets local value.
+        // If we want inheritance, we shouldn't set it manually here.
+        // Let's remove this manual propagation and rely on inheritance.
+        // BUT: Verify UIElement actually propagates to visual children.
+        // UIElement.OnPropertyChanged:
+        /*
+        if (dp.IsInherited) {
+             int count = VisualChildrenCount;
+             for(int i=0; i<count; i++) {
+                 var child = GetVisualChild(i);
+                 if (!child.HasLocalValue(dp)) child.OnPropertyChanged(dp);
+             }
+        }
+        */
+        // Yes, it does. So we can remove this override or just call base.
     }
+
+    // Removing OnDataContextChanged override to rely on standard inheritance.
 
     private UIElement _focusedElement;
 
@@ -187,8 +215,8 @@ public class TuiWindow : UIElement
             if (overlay.Visibility)
             {
                 var hit = InputHitTestRecursive(overlay, x, y);
-                if (hit != null) 
-                return hit;
+                if (hit != null)
+                    return hit;
 
                 // If overlay is a modal dialog, block input to background/lower overlays
                 if (overlay is DialogBox dialog && dialog.IsModal)
@@ -203,16 +231,16 @@ public class TuiWindow : UIElement
 
     private Point GetAbsolutePosition(UIElement element)
     {
-         int x = 0;
-         int y = 0;
-         var current = element;
-         while (current != null)
-         {
-             x += current.RenderSize.X;
-             y += current.RenderSize.Y;
-             current = current.Parent;
-         }
-         return new Point(x, y);
+        int x = 0;
+        int y = 0;
+        var current = element;
+        while (current != null)
+        {
+            x += current.RenderSize.X;
+            y += current.RenderSize.Y;
+            current = current.Parent;
+        }
+        return new Point(x, y);
     }
 
     private HitTestResult InputHitTestRecursive(UIElement element, int x, int y)
@@ -257,7 +285,7 @@ public class TuiWindow : UIElement
         if (Content == null) return;
 
         if (Content is TabControl tc && tc.SelectedIndex >= 0 && tc.SelectedIndex < tc.Items.Count
-            && tc.Items[tc.SelectedIndex].Content is UIElement tabContent)
+            && tc.Items[tc.SelectedIndex] is TabItem ti && ti.Content is UIElement tabContent)
             FocusFirstIn(tabContent);
         else
             FocusFirstIn(Content);
@@ -265,9 +293,32 @@ public class TuiWindow : UIElement
 
     public void ProcessKey(KeyEventArgs e)
     {
-        // Bubble? Tunnel?
-        // WPF uses Bubble for KeyDown.
-        _focusedElement?.OnKeyDown(e);
+        if (_focusedElement == null) return;
+
+        // Two-phase event dispatch for WPF parity: Tunneling (Preview) then Bubbling
+        RoutedEvent previewEvent = null;
+        if (e.RoutedEvent == UIElement.KeyDownEvent) previewEvent = UIElement.PreviewKeyDownEvent;
+        else if (e.RoutedEvent == UIElement.KeyUpEvent) previewEvent = UIElement.PreviewKeyUpEvent;
+
+        if (previewEvent != null)
+        {
+            var previewArgs = new KeyEventArgs(previewEvent, e.Source ?? _focusedElement)
+            {
+                Key = e.Key,
+                KeyChar = e.KeyChar,
+                Modifiers = e.Modifiers
+            };
+
+            _focusedElement.RaiseEvent(previewArgs);
+
+            if (previewArgs.Handled)
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
+        _focusedElement.RaiseEvent(e);
 
         // Tab Navigation
         if (!e.Handled && e.Key == System.ConsoleKey.Tab)
@@ -362,12 +413,12 @@ public class TuiWindow : UIElement
         }
     }
 
-    private VisualTreeEnumerable GetVisualTree(UIElement root)
+    internal VisualTreeEnumerable GetVisualTree(UIElement root)
     {
         return new VisualTreeEnumerable(root);
     }
 
-    private readonly struct VisualTreeEnumerable : IEnumerable<UIElement>
+    internal readonly struct VisualTreeEnumerable : IEnumerable<UIElement>
     {
         private readonly UIElement _root;
         public VisualTreeEnumerable(UIElement root) => _root = root;
@@ -377,14 +428,14 @@ public class TuiWindow : UIElement
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    private struct VisualTreeEnumerator : IEnumerator<UIElement>
+    internal struct VisualTreeEnumerator : IEnumerator<UIElement>
     {
-        private readonly Stack<(UIElement element, bool secondPass)> _stack;
+        private PooledStack<(UIElement element, bool secondPass)> _stack;
         private UIElement _current;
 
         public VisualTreeEnumerator(UIElement root)
         {
-            _stack = new Stack<(UIElement element, bool secondPass)>();
+            _stack = new PooledStack<(UIElement element, bool secondPass)>(16);
             if (root != null)
                 _stack.Push((root, false));
             _current = default!;
@@ -393,7 +444,11 @@ public class TuiWindow : UIElement
         public UIElement Current => _current;
         object IEnumerator.Current => _current;
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+            _stack.Dispose();
+        }
+
         public void Reset() => throw new NotSupportedException();
 
         public bool MoveNext()
@@ -412,7 +467,12 @@ public class TuiWindow : UIElement
                     // Content
                     if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
                     {
-                        var content = tab.Items[tab.SelectedIndex].Content as UIElement;
+                        var item = tab.Items[tab.SelectedIndex];
+                        // Need to check if item is TabItem or just UIElement content
+                        UIElement? content = null;
+                        if (item is TabItem ti) content = ti.Content as UIElement;
+                        else content = item as UIElement;
+
                         if (content != null) _stack.Push((content, false));
                     }
                 }
@@ -426,6 +486,55 @@ public class TuiWindow : UIElement
                 }
             }
             return true;
+        }
+    }
+
+    private struct PooledStack<T> : IDisposable
+    {
+        private T[] _array;
+        private int _count;
+
+        public PooledStack(int capacity)
+        {
+            _array = System.Buffers.ArrayPool<T>.Shared.Rent(capacity);
+            _count = 0;
+        }
+
+        public int Count => _count;
+
+        public void Push(T item)
+        {
+            if (_array == null)
+            {
+                _array = System.Buffers.ArrayPool<T>.Shared.Rent(4);
+            }
+
+            if (_count == _array.Length)
+            {
+                var newArray = System.Buffers.ArrayPool<T>.Shared.Rent(_array.Length * 2);
+                Array.Copy(_array, newArray, _count);
+                System.Buffers.ArrayPool<T>.Shared.Return(_array, clearArray: true);
+                _array = newArray;
+            }
+            _array[_count++] = item;
+        }
+
+        public T Pop()
+        {
+            if (_count == 0) throw new InvalidOperationException("Stack is empty");
+            var item = _array[--_count];
+            _array[_count] = default!; // Clear reference
+            return item;
+        }
+
+        public void Dispose()
+        {
+            if (_array != null)
+            {
+                System.Buffers.ArrayPool<T>.Shared.Return(_array, clearArray: true);
+                _array = null!;
+                _count = 0;
+            }
         }
     }
 

@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
+using System.Reflection;
 
 namespace Tedd.TUI;
 
-public class ListBox : UIElement
+public class ListBox : Selector
 {
     private readonly ScrollBar _scrollBar;
 
@@ -17,6 +17,8 @@ public class ListBox : UIElement
         };
         _scrollBar.Parent = this;
         _scrollBar.ValueChanged += OnScroll;
+
+        Foreground = ConsoleColor.Gray;
     }
 
     private void OnScroll(object? sender, EventArgs e)
@@ -25,28 +27,49 @@ public class ListBox : UIElement
         Invalidate();
     }
 
-    private List<object> _items = new List<object>();
-    public List<object> Items => _items;
-
-    private int _selectedIndex = -1;
-    public int SelectedIndex
-    {
-        get => _selectedIndex;
-        set
-        {
-            if (_selectedIndex != value)
-            {
-                _selectedIndex = value;
-                Invalidate();
-            }
-        }
-    }
-
     /// <summary>
     /// When true (default), selection is visible even when unfocused.
     /// When false, selection highlighting is only shown while focused.
     /// </summary>
     public bool ShowSelection { get; set; } = true;
+
+    public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
+
+    public static readonly DependencyProperty SelectionForegroundProperty =
+        DependencyProperty.Register("SelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Black);
+
+    public ConsoleColor SelectionForeground
+    {
+        get { return (ConsoleColor)GetValue(SelectionForegroundProperty); }
+        set { SetValue(SelectionForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty SelectionBackgroundProperty =
+        DependencyProperty.Register("SelectionBackground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
+
+    public ConsoleColor SelectionBackground
+    {
+        get { return (ConsoleColor)GetValue(SelectionBackgroundProperty); }
+        set { SetValue(SelectionBackgroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedSelectionForegroundProperty =
+        DependencyProperty.Register("FocusedSelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
+
+    public ConsoleColor FocusedSelectionForeground
+    {
+        get { return (ConsoleColor)GetValue(FocusedSelectionForegroundProperty); }
+        set { SetValue(FocusedSelectionForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedSelectionBackgroundProperty =
+        DependencyProperty.Register("FocusedSelectionBackground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Blue);
+
+    public ConsoleColor FocusedSelectionBackground
+    {
+        get { return (ConsoleColor)GetValue(FocusedSelectionBackgroundProperty); }
+        set { SetValue(FocusedSelectionBackgroundProperty, value); }
+    }
 
     private int _scrollOffset = 0;
 
@@ -102,7 +125,7 @@ public class ListBox : UIElement
             int maxLen = 0;
             foreach (var item in Items)
             {
-                var s = item?.ToString();
+                var s = GetItemText(item);
                 if (!string.IsNullOrEmpty(s))
                 {
                     if (s.Length > maxLen) maxLen = s.Length;
@@ -156,25 +179,25 @@ public class ListBox : UIElement
             {
                 bool isSelected = (itemIndex == SelectedIndex);
                 var bg = Background ?? buffer.GetPixel(x, y + i).Background;
-                var fg = ConsoleColor.Gray;
+                var fg = Foreground;
                 if (isSelected)
                 {
                     if (IsFocused)
                     {
                         // Focused: selected item is blue
-                        bg = ConsoleColor.Blue;
-                        fg = ConsoleColor.White;
+                        bg = FocusedSelectionBackground;
+                        fg = FocusedSelectionForeground;
                     }
                     else if (ShowSelection)
                     {
                         // Not focused but ShowSelection enabled: inverted black/white
-                        bg = ConsoleColor.White;
-                        fg = ConsoleColor.Black;
+                        bg = SelectionBackground;
+                        fg = SelectionForeground;
                     }
                     // else: ShowSelection is false and not focused, use default colors
                 }
 
-                string content = Items[itemIndex]?.ToString() ?? "";
+                string content = GetItemText(Items[itemIndex]);
                 if (content.Length > effectiveW) content = content.Substring(0, effectiveW);
 
                 for (int dx = 0; dx < content.Length; dx++)
@@ -207,7 +230,7 @@ public class ListBox : UIElement
             // We need to pass local coordinates to ScrollBar.
             // ScrollBar is at (Width-1, 0).
             // So localX = e.X - (Width-1) = 0 usually.
-            
+
             var sbArgs = new MouseEventArgs
             {
                 X = e.X - (RenderSize.Width - 1),
@@ -225,12 +248,10 @@ public class ListBox : UIElement
         if (itemIndex >= 0 && itemIndex < Items.Count)
         {
             SelectedIndex = itemIndex;
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            // SelectionChanged is raised by base.SelectedIndex setter
         }
         e.Handled = true;
     }
-
-    public event EventHandler SelectionChanged;
 
     public override void OnKeyDown(KeyEventArgs e)
     {
@@ -255,7 +276,7 @@ public class ListBox : UIElement
         }
         else if (e.Key == ConsoleKey.Enter || e.Key == ConsoleKey.Spacebar)
         {
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            OnSelectionChanged();
             e.Handled = true;
         }
     }

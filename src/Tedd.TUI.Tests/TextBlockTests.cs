@@ -19,7 +19,7 @@ public class TextBlockTests
     {
         var tb = new TextBlock { Text = "Test", Foreground = ConsoleColor.Red };
         tb.Measure(new Size(10, 1));
-        tb.Arrange(new Rect(0,0,10,1));
+        tb.Arrange(new Rect(0, 0, 10, 1));
 
         var buffer = new VirtualBuffer(10, 1);
         tb.Render(buffer, 0, 0);

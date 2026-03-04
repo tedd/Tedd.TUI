@@ -31,6 +31,8 @@ public class SystemConsoleWrapper : IConsole
 
     public void Write(char value) => System.Console.Write(value);
 
+    public void Write(ReadOnlySpan<char> value) => System.Console.Out.Write(value);
+
     public ConsoleColor ForegroundColor
     {
         set => System.Console.ForegroundColor = value;

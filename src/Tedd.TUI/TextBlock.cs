@@ -13,14 +13,7 @@ public class TextBlock : UIElement
         set { SetValue(TextProperty, value); }
     }
 
-    public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(TextBlock), ConsoleColor.White);
-
-    public ConsoleColor Foreground
-    {
-        get { return (ConsoleColor)GetValue(ForegroundProperty); }
-        set { SetValue(ForegroundProperty, value); }
-    }
+    public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -38,16 +31,16 @@ public class TextBlock : UIElement
 
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
-        
+
         for (int i = 0; i < text.Length; i++)
         {
             // Clip to bounds
             if (i < RenderSize.Width && RenderSize.Height > 0)
-            if (i < RenderSize.Width && RenderSize.Height > 0)
-            {
-                var bg = Background ?? buffer.GetPixel(x + i, y).Background;
-                buffer.SetPixel(x + i, y, text[i], Foreground, bg);
-            }
+                if (i < RenderSize.Width && RenderSize.Height > 0)
+                {
+                    var bg = Background ?? buffer.GetPixel(x + i, y).Background;
+                    buffer.SetPixel(x + i, y, text[i], Foreground, bg);
+                }
         }
     }
 }

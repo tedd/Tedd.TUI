@@ -2,17 +2,16 @@ namespace Tedd.TUI;
 
 public class MenuItem : UIElement
 {
-    private UIElement _header;
     public UIElement Header
     {
-        get => _header;
+        get;
         set
         {
-            if (_header != value)
+            if (field != value)
             {
-                if (_header != null) _header.Parent = null;
-                _header = value;
-                if (_header != null) _header.Parent = this;
+                if (field != null) field.Parent = null;
+                field = value;
+                if (field != null) field.Parent = this;
                 Invalidate();
             }
         }
@@ -30,29 +29,29 @@ public class MenuItem : UIElement
         Focusable = true;
     }
 
-    public override int VisualChildrenCount => _header != null ? 1 : 0;
+    public override int VisualChildrenCount => Header != null ? 1 : 0;
 
     public override UIElement GetVisualChild(int index)
     {
-        if (index == 0 && _header != null) return _header;
+        if (index == 0 && Header != null) return Header;
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        if (_header != null)
+        if (Header != null)
         {
-            _header.Measure(availableSize);
-            return _header.DesiredSize;
+            Header.Measure(availableSize);
+            return Header.DesiredSize;
         }
         return new Size(0, 0);
     }
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        if (_header != null)
+        if (Header != null)
         {
-            _header.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
+            Header.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
         }
     }
 
@@ -87,15 +86,15 @@ public class MenuItem : UIElement
         }
 
         // Update Header color if it's a TextBlock
-        if (_header is TextBlock tb)
+        if (Header is TextBlock tb)
         {
             tb.Foreground = fg;
             tb.Background = bg; // Ensure text block background matches item background
         }
 
-        if (_header != null)
+        if (Header != null)
         {
-            _header.Render(buffer, x, y);
+            Header.Render(buffer, x, y);
         }
 
         // Draw sub-menu arrow indicator if needed

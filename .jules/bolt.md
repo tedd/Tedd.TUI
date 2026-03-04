@@ -1,3 +1,9 @@
-## 2026-02-22 - Table Pagination Optimization
-**Observation:** `Table.GetPaginationString` was allocating a `string` on every render (or cache miss) to display pagination. Benchmark showed ~48B alloc per call for short strings and ~153ns latency. This allocation pressure, although small per call, accumulates in the rendering loop.
-**Strategic Action:** Refactored `GetPaginationString` to use `stackalloc char[256]` and return `int` (chars written). Updated `RenderPagination` and `HandlePaginationClick` to use this zero-allocation method. Result: 0 bytes allocated and ~18-98ns latency (38-70% reduction).
+## 2024-05-18 - ConsoleRenderer Render Loop Bottleneck
+**Observation:** `ConsoleRenderer.Render` loops W*H times doing `IsSame` checks and manually pushing to a `_charBuffer` char by char. IsSame can be optimized using Unsafe.As/SIMD if struct is aligned, or just refactoring the chunking to be span-based.
+**Strategic Action:** We need to refactor `ConsoleRenderer.Render` to process `VirtualBuffer.Cells` in a more streamlined way.
+## 2024-05-18 - ConsoleRenderer Loop Vectorization
+**Observation:** By refactoring the inner loop of `ConsoleRenderer.Render` to use `ref` variables, `Unsafe.Add`, and inline struct field comparison, we dropped execution time from ~21.45us to ~12.94us (40% reduction) and eliminated the remaining 104B allocations.
+**Strategic Action:** Commit this optimization using contemporary .NET ref and Unsafe paradigms to improve terminal redraw speed drastically.
+## 2024-05-20 - Grid Layout Suboptimal Iterations
+**Observation:** During `Grid` measurement and arrangement passes, `foreach` enumeration over generic `List<T>` collections (`RowDefinitions` and `ColumnDefinitions`) incurs hidden bounds-checking overhead and possible enumerator allocations.
+**Strategic Action:** Replace all list enumeration in tight rendering/layout loops with `System.Runtime.InteropServices.CollectionsMarshal.AsSpan` and `ref var` local iteration to elide bounds checks and guarantee zero-allocation.

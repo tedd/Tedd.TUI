@@ -32,7 +32,7 @@ public class TuiListBox : TuiComponentBase
     protected override void ApplyProperties()
     {
         base.ApplyProperties();
-        
+
         // Sync Items
         // This is a bit inefficient for large lists or frequent updates, but fine for demo.
         // We clear and re-add if the list object changes or count differs?
@@ -40,17 +40,17 @@ public class TuiListBox : TuiComponentBase
         _listBox.Items.Clear();
         if (Items != null)
         {
-             foreach (var item in Items)
-             {
-                 _listBox.Items.Add(item);
-             }
+            foreach (var item in Items)
+            {
+                _listBox.Items.Add(item);
+            }
         }
 
         if (_listBox.SelectedIndex != SelectedIndex)
         {
             _listBox.SelectedIndex = SelectedIndex;
         }
-        
+
         _listBox.ShowSelection = ShowSelection;
     }
 }

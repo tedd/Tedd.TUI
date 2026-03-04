@@ -75,6 +75,27 @@ public class VisualTreeBenchmark
         }
     }
 
+    [Benchmark]
+    public void CurrentImplementation()
+    {
+        // This invokes the actual code in TuiWindow we just exposed
+        // Note: TuiWindow is an instance, but GetVisualTree is an instance method.
+        // We need a TuiWindow instance or make it static if possible.
+        // GetVisualTree in TuiWindow is an instance method but doesn't use `this`.
+        // However, I can't call it directly from here because I don't have a TuiWindow instance in _root setup.
+        // But wait, GetVisualTree is inside TuiWindow.
+        // Let's instantiate a dummy window to access the method, or rely on the fact that
+        // the method is internal and I can just create an instance of TuiWindow
+        // or make the method static in TuiWindow since it only takes `root`.
+        // Let's assume for now I'll create a dummy window.
+
+        var window = new TuiWindow();
+        foreach (var item in window.GetVisualTree(_root))
+        {
+            if (item == null) { }
+        }
+    }
+
     // Original Recursive Implementation (from user snippet)
     private void FlattenTree(UIElement parent, List<UIElement> list)
     {
@@ -82,7 +103,7 @@ public class VisualTreeBenchmark
 
         if (parent is StackPanel stack)
         {
-            foreach(var child in stack.Children) FlattenTree(child, list);
+            foreach (var child in stack.Children) FlattenTree(child, list);
         }
         else if (parent is Border border && border.Child != null)
         {
@@ -139,7 +160,11 @@ public class VisualTreeBenchmark
                     // Content
                     if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
                     {
-                        var content = tab.Items[tab.SelectedIndex].Content as UIElement;
+                        var item = tab.Items[tab.SelectedIndex];
+                        UIElement? content = null;
+                        if (item is TabItem ti) content = ti.Content as UIElement;
+                        else content = item as UIElement;
+
                         if (content != null) stack.Push((content, false));
                     }
                 }
@@ -196,7 +221,11 @@ public class VisualTreeBenchmark
                     _stack.Push((current, true));
                     if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
                     {
-                        var content = tab.Items[tab.SelectedIndex].Content as UIElement;
+                        var item = tab.Items[tab.SelectedIndex];
+                        UIElement? content = null;
+                        if (item is TabItem ti) content = ti.Content as UIElement;
+                        else content = item as UIElement;
+
                         if (content != null) _stack.Push((content, false));
                     }
                 }

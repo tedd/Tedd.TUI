@@ -22,8 +22,49 @@ public abstract class UIElement : DependencyObject
 {
     public string Name { get; set; }
 
-    public UIElement Parent { get; internal set; }
+    // TemplatedParent for TemplateBinding
+    public DependencyObject TemplatedParent
+    {
+        get => field;
+        internal set
+        {
+            if (field != value)
+            {
+                field = value;
+                OnTemplatedParentChanged();
+            }
+        }
+    }
+
+    protected virtual void OnTemplatedParentChanged()
+    {
+        // Update bindings that might rely on TemplatedParent
+        foreach (var binding in _bindings)
+        {
+            binding.UpdateTarget();
+        }
+    }
+
+    private UIElement _parent;
+    public UIElement Parent
+    {
+        get => field;
+        internal set
+        {
+            if (field != value)
+            {
+                field = value;
+                OnParentChanged();
+            }
+        }
+    }
     protected override DependencyObject InheritanceParent => Parent;
+
+    protected virtual void OnParentChanged()
+    {
+        // Notify that inherited DataContext might have changed
+        OnPropertyChanged(DataContextProperty);
+    }
 
     public virtual UIElement FindName(string name)
     {
@@ -45,6 +86,15 @@ public abstract class UIElement : DependencyObject
     {
         get { return (ConsoleColor?)GetValue(BackgroundProperty); }
         set { SetValue(BackgroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty ForegroundProperty =
+        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(UIElement), ConsoleColor.White, isInherited: true);
+
+    public ConsoleColor Foreground
+    {
+        get { return (ConsoleColor)GetValue(ForegroundProperty); }
+        set { SetValue(ForegroundProperty, value); }
     }
 
     public static readonly DependencyProperty IsFocusedProperty =
@@ -81,6 +131,15 @@ public abstract class UIElement : DependencyObject
     {
         get { return (bool)GetValue(FocusableProperty); }
         set { SetValue(FocusableProperty, value); }
+    }
+
+    public static readonly DependencyProperty MarginProperty =
+        DependencyProperty.Register("Margin", typeof(Thickness), typeof(UIElement), new Thickness(0));
+
+    public Thickness Margin
+    {
+        get { return (Thickness)GetValue(MarginProperty); }
+        set { SetValue(MarginProperty, value); }
     }
 
     public static readonly DependencyProperty WidthProperty =
@@ -125,8 +184,8 @@ public abstract class UIElement : DependencyObject
     public object DataContext
     {
         get { return GetValue(DataContextProperty); }
-        set 
-        { 
+        set
+        {
             SetValue(DataContextProperty, value);
             // Notify bindings? For now, we rely on SetBinding to trigger initial update 
             // or property change notification.
@@ -135,7 +194,7 @@ public abstract class UIElement : DependencyObject
         }
     }
 
-    private readonly List<BindingExpression> _bindings = new List<BindingExpression>();
+    private readonly List<BindingExpression> _bindings = [];
 
     public void SetBinding(DependencyProperty dp, Binding binding)
     {
@@ -154,7 +213,7 @@ public abstract class UIElement : DependencyObject
             {
                 binding.UpdateTarget();
             }
-            
+
             OnDataContextChanged(this.DataContext);
         }
 
@@ -164,7 +223,7 @@ public abstract class UIElement : DependencyObject
             for (int i = 0; i < count; i++)
             {
                 var child = GetVisualChild(i);
-                if (!child.HasLocalValue(dp))
+                if (child != null && !child.HasLocalValue(dp))
                 {
                     child.OnPropertyChanged(dp);
                 }
@@ -201,10 +260,17 @@ public abstract class UIElement : DependencyObject
             return;
         }
 
-        // Apply Margin etc here if we had it.
-        
-        Size desired = MeasureOverride(availableSize);
-        
+        Thickness margin = Margin;
+        int marginWidth = margin.Left + margin.Right;
+        int marginHeight = margin.Top + margin.Bottom;
+
+        Size innerAvailableSize = new Size(
+            System.Math.Max(0, availableSize.Width - marginWidth),
+            System.Math.Max(0, availableSize.Height - marginHeight)
+        );
+
+        Size desired = MeasureOverride(innerAvailableSize);
+
         // Respect Width/Height properties
         int width = Width;
         int height = Height;
@@ -212,10 +278,13 @@ public abstract class UIElement : DependencyObject
         if (width >= 0) desired.Width = width;
         if (height >= 0) desired.Height = height;
 
+        desired.Width += marginWidth;
+        desired.Height += marginHeight;
+
         // Clip to available size? Usually not in Measure, but we return what we want.
         // But we should probably not ask for more than available if we can help it?
         // WPF Measure: "A parent element calls this method to form a recursive layout update."
-        
+
         DesiredSize = desired;
     }
 
@@ -228,52 +297,61 @@ public abstract class UIElement : DependencyObject
     {
         if (!Visibility) return;
 
-        // Check alignment and adjust finalRect
-        Size desired = DesiredSize;
-        int width = finalRect.Width;
-        int height = finalRect.Height;
-        int x = finalRect.X;
-        int y = finalRect.Y;
+        Thickness margin = Margin;
+        int marginWidth = margin.Left + margin.Right;
+        int marginHeight = margin.Top + margin.Bottom;
+
+        // The size available for alignment and rendering is reduced by margins
+        int width = System.Math.Max(0, finalRect.Width - marginWidth);
+        int height = System.Math.Max(0, finalRect.Height - marginHeight);
+
+        // The desired size of the core element (without margins)
+        Size desiredCore = new Size(
+            System.Math.Max(0, DesiredSize.Width - marginWidth),
+            System.Math.Max(0, DesiredSize.Height - marginHeight)
+        );
+
+        int x = finalRect.X + margin.Left;
+        int y = finalRect.Y + margin.Top;
 
         // Horizontal Alignment
         if (HorizontalAlignment == HorizontalAlignment.Left)
         {
-            width = desired.Width;
+            width = desiredCore.Width;
         }
         else if (HorizontalAlignment == HorizontalAlignment.Right)
         {
-            x += width - desired.Width;
-            width = desired.Width;
+            x += width - desiredCore.Width;
+            width = desiredCore.Width;
         }
         else if (HorizontalAlignment == HorizontalAlignment.Center)
         {
-            x += (width - desired.Width) / 2;
-            width = desired.Width;
+            x += (width - desiredCore.Width) / 2;
+            width = desiredCore.Width;
         }
         // Stretch takes full width (already set)
 
         // Vertical Alignment
         if (VerticalAlignment == VerticalAlignment.Top)
         {
-            height = desired.Height;
+            height = desiredCore.Height;
         }
         else if (VerticalAlignment == VerticalAlignment.Bottom)
         {
-            y += height - desired.Height;
-            height = desired.Height;
+            y += height - desiredCore.Height;
+            height = desiredCore.Height;
         }
         else if (VerticalAlignment == VerticalAlignment.Center)
         {
-            y += (height - desired.Height) / 2;
-            height = desired.Height;
+            y += (height - desiredCore.Height) / 2;
+            height = desiredCore.Height;
         }
 
-        // Constrain to available finalRect?
         if (width < 0) width = 0;
         if (height < 0) height = 0;
 
         Rect arrangedRect = new Rect(x, y, width, height);
-        RenderSize = arrangedRect; // Storing position and size relative to parent Canvas
+        RenderSize = arrangedRect;
 
         ArrangeOverride(new Size(width, height));
     }
@@ -385,6 +463,14 @@ public abstract class UIElement : DependencyObject
 
     private void InvokeHandler(RoutedEventArgs e)
     {
+        // Update Local Coordinates for MouseEvents
+        if (e is MouseEventArgs me)
+        {
+            var local = this.PointFromScreen(new Point(me.GlobalX, me.GlobalY));
+            me.X = local.X;
+            me.Y = local.Y;
+        }
+
         // 1. Class Handler (virtual method)
         OnEvent(e);
 
@@ -411,10 +497,41 @@ public abstract class UIElement : DependencyObject
         }
     }
 
+    public static readonly RoutedEvent PreviewKeyDownEvent = RoutedEvent.Register("PreviewKeyDown", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewKeyUpEvent = RoutedEvent.Register("PreviewKeyUp", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewMouseDownEvent = RoutedEvent.Register("PreviewMouseDown", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewMouseUpEvent = RoutedEvent.Register("PreviewMouseUp", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewMouseMoveEvent = RoutedEvent.Register("PreviewMouseMove", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+
+    public static readonly RoutedEvent KeyDownEvent = RoutedEvent.Register("KeyDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent KeyUpEvent = RoutedEvent.Register("KeyUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseDownEvent = RoutedEvent.Register("MouseDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseUpEvent = RoutedEvent.Register("MouseUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseMoveEvent = RoutedEvent.Register("MouseMove", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent GotFocusEvent = RoutedEvent.Register("GotFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent LostFocusEvent = RoutedEvent.Register("LostFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+
     protected virtual void OnEvent(RoutedEventArgs e)
     {
-        // Base implementation does nothing
+        if (e.RoutedEvent == PreviewKeyDownEvent) OnPreviewKeyDown((KeyEventArgs)e);
+        else if (e.RoutedEvent == PreviewKeyUpEvent) OnPreviewKeyUp((KeyEventArgs)e);
+        else if (e.RoutedEvent == PreviewMouseDownEvent) OnPreviewMouseDown((MouseEventArgs)e);
+        else if (e.RoutedEvent == PreviewMouseUpEvent) OnPreviewMouseUp((MouseEventArgs)e);
+        else if (e.RoutedEvent == PreviewMouseMoveEvent) OnPreviewMouseMove((MouseEventArgs)e);
+        else if (e.RoutedEvent == KeyDownEvent) OnKeyDown((KeyEventArgs)e);
+        else if (e.RoutedEvent == KeyUpEvent) OnKeyUp((KeyEventArgs)e);
+        else if (e.RoutedEvent == MouseDownEvent) OnMouseDown((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseUpEvent) OnMouseUp((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseMoveEvent) OnMouseMove((MouseEventArgs)e);
+        else if (e.RoutedEvent == GotFocusEvent) OnGotFocus();
+        else if (e.RoutedEvent == LostFocusEvent) OnLostFocus();
     }
+
+    public virtual void OnPreviewKeyDown(KeyEventArgs e) { }
+    public virtual void OnPreviewKeyUp(KeyEventArgs e) { }
+    public virtual void OnPreviewMouseDown(MouseEventArgs e) { }
+    public virtual void OnPreviewMouseUp(MouseEventArgs e) { }
+    public virtual void OnPreviewMouseMove(MouseEventArgs e) { }
 
     public virtual void OnKeyDown(KeyEventArgs e) { }
     public virtual void OnKeyUp(KeyEventArgs e) { }
@@ -473,22 +590,78 @@ public abstract class UIElement : DependencyObject
         }
         return null;
     }
+
+    public Point PointToScreen(Point point)
+    {
+        int x = point.X;
+        int y = point.Y;
+        var current = this;
+        while (current != null)
+        {
+            x += current.RenderSize.X;
+            y += current.RenderSize.Y;
+            current = current.Parent;
+        }
+        return new Point(x, y);
+    }
+
+    public Point PointFromScreen(Point point)
+    {
+        int x = point.X;
+        int y = point.Y;
+        var current = this;
+        // This is tricky because we need to subtract parent's offsets.
+        // Or we just calculate this.PointToScreen(0,0) and subtract it from point.
+        var screenPos = PointToScreen(new Point(0, 0));
+        return new Point(x - screenPos.X, y - screenPos.Y);
+    }
 }
 
-public class KeyEventArgs
+public class KeyEventArgs : RoutedEventArgs
 {
     public ConsoleKey Key { get; set; }
     public char KeyChar { get; set; }
     public ConsoleModifiers Modifiers { get; set; }
-    public bool Handled { get; set; }
+
+    public KeyEventArgs(RoutedEvent routedEvent, object source) : base(routedEvent, source)
+    {
+    }
+
+    public KeyEventArgs(RoutedEvent routedEvent) : base(routedEvent)
+    {
+    }
+
+    public KeyEventArgs() : base(UIElement.KeyDownEvent)
+    {
+    }
 }
 
-public class MouseEventArgs
+public class MouseEventArgs : RoutedEventArgs
 {
     public int X { get; set; }
     public int Y { get; set; }
-    public bool Handled { get; set; }
-    // Add Buttons state etc if needed
+
+    // Global Coordinates (Screen/Console space)
+    public int GlobalX { get; set; }
+    public int GlobalY { get; set; }
+
+    public MouseEventArgs(RoutedEvent routedEvent, object source) : base(routedEvent, source)
+    {
+    }
+
+    public MouseEventArgs(RoutedEvent routedEvent) : base(routedEvent)
+    {
+    }
+
+    public MouseEventArgs() : base(UIElement.MouseDownEvent)
+    {
+    }
+
+    public Point GetPosition(UIElement relativeTo)
+    {
+        if (relativeTo == null) return new Point(GlobalX, GlobalY);
+        return relativeTo.PointFromScreen(new Point(GlobalX, GlobalY));
+    }
 }
 
 public class HitTestResult

@@ -1,15 +1,13 @@
-using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using System.Reflection;
 
-namespace Tedd.TUI.Benchmarks;
-
-public class Program
+namespace Tedd.TUI.Benchmarks
 {
-    public static void Main(string[] args)
+    public class Program
     {
-        BenchmarkRunner.Run<PaginationBenchmark>();
-        BenchmarkRunner.Run<MarkdownBenchmark>();
-        BenchmarkRunner.Run<VisualTreeBenchmark>();
-        BenchmarkRunner.Run<VirtualBufferBenchmark>();
+        public static void Main(string[] args)
+        {
+            BenchmarkRunner.Run<ConsoleRendererBenchmarks>();
+        }
     }
 }

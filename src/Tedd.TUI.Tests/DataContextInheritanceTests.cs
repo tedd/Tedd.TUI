@@ -16,12 +16,12 @@ public class DataContextInheritanceTests
         var stack = new StackPanel();
         var tb = new TextBlock();
         stack.AddChild(tb);
-        
+
         var vm = new ViewModel();
         stack.DataContext = vm;
-        
+
         Assert.Same(vm, tb.DataContext);
-        
+
         tb.SetBinding(TextBlock.TextProperty, new Binding("Text"));
         Assert.Equal("Inherited", tb.Text);
     }
@@ -32,10 +32,10 @@ public class DataContextInheritanceTests
         var border = new Border();
         var tb = new TextBlock();
         border.Child = tb;
-        
+
         var vm = new ViewModel();
         border.DataContext = vm;
-        
+
         Assert.Same(vm, tb.DataContext);
     }
 }

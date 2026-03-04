@@ -15,6 +15,7 @@ public interface IConsole
     void SetCursorPosition(int left, int top);
     void Write(string value);
     void Write(char value);
+    void Write(ReadOnlySpan<char> value) => Write(value.ToString());
 
     ConsoleColor ForegroundColor { set; }
     ConsoleColor BackgroundColor { set; }

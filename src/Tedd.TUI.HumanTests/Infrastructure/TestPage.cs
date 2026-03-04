@@ -35,7 +35,7 @@ public abstract class TestPage
 
     protected void AddScenario(string header, UIElement content)
     {
-        _tabs.AddItem(new TabItem { Header = header, Content = content });
+        _tabs.Items.Add(new TabItem { Header = header, Content = content });
     }
 
     // Helper to create standard scenarios

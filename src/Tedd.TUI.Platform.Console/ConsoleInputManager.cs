@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Threading;
+using System.Collections.Concurrent;
 using Tedd.TUI;
 
 namespace Tedd.TUI.Platform.Console;
@@ -9,11 +10,20 @@ public class ConsoleInputManager
 {
     private readonly TuiWindow _window;
     private uint _lastButtonState;
+    private readonly ConcurrentQueue<InputEvent> _inputQueue = new();
+    private readonly AutoResetEvent _inputWaitHandle = new AutoResetEvent(false);
+    private bool _running;
+
+    private struct InputEvent
+    {
+        public ConsoleKeyInfo Key;
+        public string Sequence;
+    }
 
     public ConsoleInputManager(TuiWindow window)
     {
         _window = window;
-        
+
         if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
         {
             SetupWindowsConsole();
@@ -27,6 +37,50 @@ public class ConsoleInputManager
     }
 
     public IntPtr InputHandle { get; private set; }
+    public WaitHandle InputWaitHandle => _inputWaitHandle;
+
+    public void Start()
+    {
+        if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            _running = true;
+            var t = new Thread(UnixInputLoop) { IsBackground = true, Name = "UnixInputReader" };
+            t.Start();
+        }
+    }
+
+    private void UnixInputLoop()
+    {
+        while (_running)
+        {
+            try
+            {
+                if (System.Console.IsInputRedirected)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+
+                // Blocking read
+                var key = System.Console.ReadKey(true);
+
+                string seq = null;
+                // Check for Escape Sequence
+                if (key.Key == ConsoleKey.Escape && System.Console.KeyAvailable)
+                {
+                    seq = ReadSequence();
+                }
+
+                _inputQueue.Enqueue(new InputEvent { Key = key, Sequence = seq });
+                _inputWaitHandle.Set();
+            }
+            catch
+            {
+                // In case of error (e.g. strict environment), wait a bit to avoid hot loop
+                Thread.Sleep(100);
+            }
+        }
+    }
 
     public void ProcessInput()
     {
@@ -61,7 +115,7 @@ public class ConsoleInputManager
                 if (record.KeyEvent.bKeyDown != 0) // bKeyDown is int (BOOL)
                 {
                     // Map to KeyEventArgs
-                    var args = new KeyEventArgs
+                    var args = new KeyEventArgs(UIElement.KeyDownEvent)
                     {
                         Key = (ConsoleKey)record.KeyEvent.wVirtualKeyCode,
                         KeyChar = record.KeyEvent.UnicodeChar,
@@ -76,61 +130,57 @@ public class ConsoleInputManager
                 // dwButtonState: lowest bit is Left Button
                 bool leftDown = (record.MouseEvent.dwButtonState & 0x01) != 0;
                 bool wasLeftDown = (_lastButtonState & 0x01) != 0;
-                
+
                 _lastButtonState = record.MouseEvent.dwButtonState;
 
                 // Note: Mouse coordinates are 0-based in current console window
                 int x = record.MouseEvent.dwMousePosition.X;
                 int y = record.MouseEvent.dwMousePosition.Y;
-                
+
                 var hit = _window.InputHitTest(x, y);
                 if (hit != null)
                 {
-                     var argsMove = new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY };
-                     var argsDown = (leftDown && !wasLeftDown) ? new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY } : null;
-                     var argsUp = (!leftDown && wasLeftDown) ? new MouseEventArgs { X = hit.LocalX, Y = hit.LocalY } : null;
-                     
-                     var current = hit.Element;
-                     while (current != null)
-                     {
-                         // Dispatch Move
-                         if (!argsMove.Handled) current.OnMouseMove(argsMove);
+                    // Use Routed Events with Global Coordinates
+                    // Note: x, y are global console coordinates here?
+                    // record.MouseEvent.dwMousePosition is SCREEN buffer coordinates (Global).
+                    // InputHitTest uses them as relative to window usually?
+                    // TuiApp adjusts buffer size to window size.
+                    // Assuming x,y are Global relative to the TuiWindow Root (0,0).
 
-                         // Dispatch Down
-                         if (argsDown != null && !argsDown.Handled)
-                         {
-                             // Focus logic (Leaf only)
-                             if (current == hit.Element && current.Focusable) 
-                             {
-                                 _window.SetFocus(current);
-                             }
-                             current.OnMouseDown(argsDown);
-                         }
+                    if (!hit.Element.IsFocused && hit.Element.Focusable && leftDown && !wasLeftDown)
+                    {
+                        _window.SetFocus(hit.Element);
+                    }
 
-                         // Dispatch Up
-                         if (argsUp != null && !argsUp.Handled)
-                         {
-                             current.OnMouseUp(argsUp);
-                         }
-                         
-                         // Optimization: Stop if all active events are handled
-                         if (argsMove.Handled && 
-                             (argsDown == null || argsDown.Handled) && 
-                             (argsUp == null || argsUp.Handled))
-                         {
-                             break;
-                         }
+                    var previewArgsMove = new MouseEventArgs(UIElement.PreviewMouseMoveEvent) { GlobalX = x, GlobalY = y };
+                    hit.Element.RaiseEvent(previewArgsMove);
+                    if (!previewArgsMove.Handled)
+                    {
+                        var argsMove = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = x, GlobalY = y };
+                        hit.Element.RaiseEvent(argsMove);
+                    }
 
-                         // Transform coordinates to parent space
-                         int ox = current.RenderSize.X;
-                         int oy = current.RenderSize.Y;
-                         
-                         argsMove.X += ox; argsMove.Y += oy;
-                         if (argsDown != null) { argsDown.X += ox; argsDown.Y += oy; }
-                         if (argsUp != null) { argsUp.X += ox; argsUp.Y += oy; }
-                         
-                         current = current.Parent;
-                     }
+                    if (leftDown && !wasLeftDown)
+                    {
+                        var previewArgsDown = new MouseEventArgs(UIElement.PreviewMouseDownEvent) { GlobalX = x, GlobalY = y };
+                        hit.Element.RaiseEvent(previewArgsDown);
+                        if (!previewArgsDown.Handled)
+                        {
+                            var argsDown = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
+                            hit.Element.RaiseEvent(argsDown);
+                        }
+                    }
+
+                    if (!leftDown && wasLeftDown)
+                    {
+                        var previewArgsUp = new MouseEventArgs(UIElement.PreviewMouseUpEvent) { GlobalX = x, GlobalY = y };
+                        hit.Element.RaiseEvent(previewArgsUp);
+                        if (!previewArgsUp.Handled)
+                        {
+                            var argsUp = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
+                            hit.Element.RaiseEvent(argsUp);
+                        }
+                    }
                 }
             }
             else if (record.EventType == NativeMethods.WINDOW_BUFFER_SIZE_EVENT)
@@ -157,29 +207,23 @@ public class ConsoleInputManager
 
     private void ProcessUnixInput()
     {
-        while (System.Console.KeyAvailable)
+        while (_inputQueue.TryDequeue(out var item))
         {
-            // Read first key
-            var keyInfo = System.Console.ReadKey(true);
-
-            // Check for Escape Sequence
-            if (keyInfo.Key == ConsoleKey.Escape && System.Console.KeyAvailable)
+            if (item.Sequence != null)
             {
-                // Likely a sequence
-                var seq = ReadSequence();
-                if (seq.StartsWith("[<"))
+                if (item.Sequence.StartsWith("[<"))
                 {
-                    ParseMouseSGR(seq);
+                    ParseMouseSGR(item.Sequence);
                 }
                 else
                 {
                     // Treat as normal Escape if not recognized or handle other VT keys
-                     _window.ProcessKey(ToKeyArgs(keyInfo));
+                    _window.ProcessKey(ToKeyArgs(item.Key));
                 }
             }
             else
             {
-                _window.ProcessKey(ToKeyArgs(keyInfo));
+                _window.ProcessKey(ToKeyArgs(item.Key));
             }
         }
     }
@@ -193,13 +237,13 @@ public class ConsoleInputManager
             if (NativeMethods.GetConsoleMode(iStdIn, out uint inMode))
             {
                 // Disable Blocking / QuickEdit
-                inMode &= ~NativeMethods.ENABLE_QUICK_EDIT_MODE; 
+                inMode &= ~NativeMethods.ENABLE_QUICK_EDIT_MODE;
                 inMode &= ~NativeMethods.ENABLE_LINE_INPUT;
                 inMode &= ~NativeMethods.ENABLE_ECHO_INPUT;
 
                 inMode |= NativeMethods.ENABLE_EXTENDED_FLAGS;
                 inMode |= NativeMethods.ENABLE_WINDOW_INPUT;
-                inMode |= NativeMethods.ENABLE_MOUSE_INPUT; 
+                inMode |= NativeMethods.ENABLE_MOUSE_INPUT;
                 // DISABLE VT INPUT so we get raw INPUT_RECORDs for Mouse!
                 inMode &= ~NativeMethods.ENABLE_VIRTUAL_TERMINAL_INPUT;
 
@@ -210,16 +254,16 @@ public class ConsoleInputManager
             if (NativeMethods.GetConsoleMode(iStdOut, out uint outMode))
             {
                 outMode |= NativeMethods.ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-                outMode |= NativeMethods.DISABLE_NEWLINE_AUTO_RETURN; 
+                outMode |= NativeMethods.DISABLE_NEWLINE_AUTO_RETURN;
                 NativeMethods.SetConsoleMode(iStdOut, outMode);
             }
         }
-        catch {}
+        catch { }
     }
 
     private KeyEventArgs ToKeyArgs(ConsoleKeyInfo info)
     {
-        return new KeyEventArgs
+        return new KeyEventArgs(UIElement.KeyDownEvent)
         {
             Key = info.Key,
             KeyChar = info.KeyChar,
@@ -241,9 +285,9 @@ public class ConsoleInputManager
 
         while (System.Console.KeyAvailable)
         {
-             var k = System.Console.ReadKey(true);
-             sb.Append(k.KeyChar);
-             if (IsSequenceTerminator(k.KeyChar)) break;
+            var k = System.Console.ReadKey(true);
+            sb.Append(k.KeyChar);
+            if (IsSequenceTerminator(k.KeyChar)) break;
         }
         return sb.ToString();
     }
@@ -278,36 +322,35 @@ public class ConsoleInputManager
                 // Simple Left Click logic
                 if (btn == 0)
                 {
-                    // HitTest returns result with local coordinates now
-                    // HitTest returns result with local coordinates now
                     var result = _window.InputHitTest(x, y);
                     if (result != null)
                     {
-                        var args = new MouseEventArgs { X = result.LocalX, Y = result.LocalY };
-                        var current = result.Element;
+                        if (isDown && result.Element.Focusable) _window.SetFocus(result.Element);
 
-                        while (current != null)
+                        if (isDown)
                         {
-                            if (isDown) 
+                            var previewArgs = new MouseEventArgs(UIElement.PreviewMouseDownEvent) { GlobalX = x, GlobalY = y };
+                            result.Element.RaiseEvent(previewArgs);
+                            if (!previewArgs.Handled)
                             {
-                                if (current == result.Element && current.Focusable) _window.SetFocus(current);
-                                current.OnMouseDown(args);
+                                var args = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
+                                result.Element.RaiseEvent(args);
                             }
-                            else 
+                        }
+                        else
+                        {
+                            var previewArgs = new MouseEventArgs(UIElement.PreviewMouseUpEvent) { GlobalX = x, GlobalY = y };
+                            result.Element.RaiseEvent(previewArgs);
+                            if (!previewArgs.Handled)
                             {
-                                current.OnMouseUp(args);
+                                var args = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
+                                result.Element.RaiseEvent(args);
                             }
-
-                            if (args.Handled) break;
-
-                            args.X += current.RenderSize.X;
-                            args.Y += current.RenderSize.Y;
-                            current = current.Parent;
                         }
                     }
                 }
             }
         }
-        catch {}
+        catch { }
     }
 }

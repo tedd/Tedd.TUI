@@ -24,7 +24,7 @@ class Program
         }
         else if (args.Contains("--xaml"))
         {
-             useXaml = true;
+            useXaml = true;
         }
 
         if (useXaml)
@@ -205,7 +205,7 @@ class Program
 
             dialog.Content = dialogStack;
 
-            window.SetOverlay(dialog);
+            window.PushOverlay(dialog);
             dialog.Show();
         };
         btnPanel.AddChild(new TextBlock { Text = "  " }); // Spacer
@@ -213,7 +213,7 @@ class Program
 
         formStack.AddChild(btnPanel);
 
-        tabs.AddItem(new TabItem { Header = "Form", Content = formStack });
+        tabs.Items.Add(new TabItem { Header = "Form", Content = formStack });
 
         // --- Tab 2: Lists & Progress ---
         var listStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -228,14 +228,14 @@ class Program
         for (int i = 1; i <= 20; i++) listBoxList.Items.Add($"Item {i}");
         listStack.AddChild(listBoxList);
 
-        tabs.AddItem(new TabItem { Header = "Lists", Content = listStack });
+        tabs.Items.Add(new TabItem { Header = "Lists", Content = listStack });
 
         // --- Tab 3: Table ---
         var tableStack = new StackPanel { Orientation = Orientation.Vertical };
         tableStack.AddChild(new TextBlock { Text = "Table Control:" });
-        
+
         var table = new Table { Width = 60, Height = 10, ShowHeader = true, PageSize = 5 }; // Enable Pagination
-        
+
         // 1. Numeric Sort for ID
         var colId = new TableColumn { Header = "ID", Width = GridLength.Pixel(5) };
         colId.SortComparer = (a, b) =>
@@ -247,7 +247,7 @@ class Program
         table.Columns.Add(colId);
 
         // 2. Default String Sort for Name (no custom comparer needed)
-        table.Columns.Add(new TableColumn { Header = "Name", Width = GridLength.Star }); 
+        table.Columns.Add(new TableColumn { Header = "Name", Width = GridLength.Star });
 
         // 3. Numeric Sort for Age
         var colAge = new TableColumn { Header = "Age", Width = GridLength.Auto };
@@ -276,7 +276,7 @@ class Program
         table.AddRow("1", "Charlie", "35", CreateEditBtn("Charlie"));
         table.AddRow("20", "David", "40", new CheckBox { Content = "Active", IsChecked = true });
         table.AddRow("3", "Eve", "22", CreateEditBtn("Eve"));
-        
+
         // Add more rows for pagination testing
         table.AddRow("4", "Frank", "28", CreateEditBtn("Frank"));
         table.AddRow("5", "Grace", "31", CreateEditBtn("Grace"));
@@ -286,7 +286,7 @@ class Program
         table.AddRow("9", "Mallory", "29", CreateEditBtn("Mallory"));
 
         tableStack.AddChild(table);
-        tabs.AddItem(new TabItem { Header = "Table", Content = tableStack });
+        tabs.Items.Add(new TabItem { Header = "Table", Content = tableStack });
 
         // --- Tab 4: ScrollBar & ScrollViewer ---
         var scrollStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -297,12 +297,12 @@ class Program
 
         // Horizontal
         scrollStack.AddChild(new TextBlock { Text = "Horizontal:" });
-        var hScroll = new ScrollBar 
-        { 
-            Orientation = Orientation.Horizontal, 
-            Width = 40, 
-            Minimum = 0, 
-            Maximum = 100, 
+        var hScroll = new ScrollBar
+        {
+            Orientation = Orientation.Horizontal,
+            Width = 40,
+            Minimum = 0,
+            Maximum = 100,
             ViewportSize = 20,
             Value = 30
         };
@@ -310,13 +310,13 @@ class Program
 
         // Vertical
         scrollStack.AddChild(new TextBlock { Text = "Vertical:" });
-        var vScroll = new ScrollBar 
-        { 
-            Orientation = Orientation.Vertical, 
-            Height = 10, 
-            Minimum = 0, 
+        var vScroll = new ScrollBar
+        {
+            Orientation = Orientation.Vertical,
+            Height = 10,
+            Minimum = 0,
             Maximum = 50,
-            ViewportSize = 10 
+            ViewportSize = 10
         };
         scrollStack.AddChild(vScroll);
 
@@ -331,18 +331,18 @@ class Program
         scrollStack.AddChild(sv);
 
         // Event Handlers
-        void UpdateLabel(object s, EventArgs e) 
+        void UpdateLabel(object s, EventArgs e)
         {
             scrollLabel.Text = $"H: {hScroll.Value}, V: {vScroll.Value}";
         }
 
         hScroll.ValueChanged += UpdateLabel;
         vScroll.ValueChanged += UpdateLabel;
-        
+
         // Initial update
         UpdateLabel(null, EventArgs.Empty);
 
-        tabs.AddItem(new TabItem { Header = "Scroll", Content = scrollStack });
+        tabs.Items.Add(new TabItem { Header = "Scroll", Content = scrollStack });
 
         // --- Tab 5: Code Coloring ---
         var codeStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -370,7 +370,7 @@ public class Test
 
         codeStack.AddChild(scrollCode);
 
-        tabs.AddItem(new TabItem { Header = "Code", Content = codeStack });
+        tabs.Items.Add(new TabItem { Header = "Code", Content = codeStack });
 
         // --- Tab 6: Markdown ---
         var mdStack = new StackPanel { Orientation = Orientation.Vertical };
@@ -410,10 +410,39 @@ public void Hello() {
         mdScrollViewer.Content = mdView;
         mdStack.AddChild(mdScrollViewer);
 
-        tabs.AddItem(new TabItem { Header = "Markdown", Content = mdStack });
+        tabs.Items.Add(new TabItem { Header = "Markdown", Content = mdStack });
+
+        // --- Tab 7: DataGrid ---
+        var dataGridStack = new StackPanel { Orientation = Orientation.Vertical };
+        dataGridStack.AddChild(new TextBlock { Text = "DataGrid (Auto Generated Columns):" });
+
+        var dataGrid = new DataGrid
+        {
+            Width = 60,
+            Height = 10,
+            ShowHeader = true,
+            PageSize = 5,
+            AutoGenerateColumns = true,
+            ShowBorder = true,
+            BorderStyle = BoxStyle.Single
+        };
+
+        var people = new List<Person>
+        {
+            new Person { Id = 1, Name = "Alice", Age = 30, Role = "Dev" },
+            new Person { Id = 2, Name = "Bob", Age = 25, Role = "QA" },
+            new Person { Id = 3, Name = "Charlie", Age = 35, Role = "Manager" },
+            new Person { Id = 4, Name = "Dave", Age = 40, Role = "Dev" },
+            new Person { Id = 5, Name = "Eve", Age = 22, Role = "Intern" },
+            new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
+        };
+        dataGrid.ItemsSource = people;
+        dataGridStack.AddChild(dataGrid);
+
+        tabs.Items.Add(new TabItem { Header = "DataGrid", Content = dataGridStack });
 
         // Run App
-        
+
         System.Console.CancelKeyPress += (s, e) =>
         {
             app.Stop();
@@ -429,4 +458,12 @@ public void Hello() {
             app.Stop();
         }
     }
+}
+
+public class Person
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Age { get; set; }
+    public string Role { get; set; }
 }

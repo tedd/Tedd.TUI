@@ -32,7 +32,7 @@ public class TuiDialogBox : TuiComponentBase
         // DialogBox only supports one child (Content)
         if (_dialogBox.Content != null)
         {
-             throw new InvalidOperationException("DialogBox can only have one child.");
+            throw new InvalidOperationException("DialogBox can only have one child.");
         }
         _dialogBox.Content = child;
     }

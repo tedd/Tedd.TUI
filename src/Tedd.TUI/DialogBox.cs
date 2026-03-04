@@ -8,29 +8,27 @@ namespace Tedd.TUI;
 /// </summary>
 public class DialogBox : UIElement
 {
-    private UIElement _content;
-
     /// <summary>
     /// Gets or sets the content element displayed inside the dialog.
     /// </summary>
     public UIElement Content
     {
-        get => _content;
+        get;
         set
         {
-            _content = value;
-            if (_content != null)
+            field = value;
+            if (field != null)
             {
-                _content.Parent = this;
-                _content.DataContext = this.DataContext;
+                field.Parent = this;
+                field.DataContext = this.DataContext;
             }
         }
     }
-    public override int VisualChildrenCount => _content != null ? 1 : 0;
+    public override int VisualChildrenCount => Content != null ? 1 : 0;
 
     public override UIElement GetVisualChild(int index)
     {
-        if (_content != null && index == 0) return _content;
+        if (Content != null && index == 0) return Content;
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
@@ -257,7 +255,7 @@ public class DialogBox : UIElement
             if (y < 0) y = 0;
 
             Arrange(new Rect(x, y, DesiredSize.Width, DesiredSize.Height));
-            
+
             // Set focus to the first element in the dialog
             root.FocusFirstIn(this);
         }

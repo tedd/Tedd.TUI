@@ -1,22 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Tedd.TUI;
 
-public class Grid : UIElement
+public class Grid : Panel
 {
     public List<RowDefinition> RowDefinitions { get; } = new List<RowDefinition>();
     public List<ColumnDefinition> ColumnDefinitions { get; } = new List<ColumnDefinition>();
 
-    private readonly List<UIElement> _children = new List<UIElement>();
-    public IList<UIElement> Children => _children;
-
-    public void AddChild(UIElement child)
-    {
-        _children.Add(child);
-        child.Parent = this;
-    }
+    private List<RowDefinition>? _implicitRows;
+    private List<ColumnDefinition>? _implicitCols;
 
     // Attached Properties
     public static readonly DependencyProperty RowProperty = DependencyProperty.Register("Row", typeof(int), typeof(Grid), 0);
@@ -36,18 +30,10 @@ public class Grid : UIElement
     public static void SetColumnSpan(UIElement element, int value) => element.SetValue(ColumnSpanProperty, value);
     public static int GetColumnSpan(UIElement element) => (int)element.GetValue(ColumnSpanProperty);
 
-    public override int VisualChildrenCount => _children.Count;
-
-    public override UIElement GetVisualChild(int index)
-    {
-        if (index < 0 || index >= _children.Count) throw new ArgumentOutOfRangeException(nameof(index));
-        return _children[index];
-    }
-
     protected override void OnDataContextChanged(object newValue)
     {
         base.OnDataContextChanged(newValue);
-        foreach (var child in _children)
+        foreach (var child in Children)
         {
             // If child doesn't have a local DataContext, it inherits.
             // The base UIElement implementation usually handles this if we implement VisualChildrenCount correctly.
@@ -68,16 +54,38 @@ public class Grid : UIElement
         bool implicitRow = RowDefinitions.Count == 0;
         bool implicitCol = ColumnDefinitions.Count == 0;
 
-        var rows = implicitRow ? new List<RowDefinition> { new RowDefinition() } : RowDefinitions;
-        var cols = implicitCol ? new List<ColumnDefinition> { new ColumnDefinition() } : ColumnDefinitions;
+        List<RowDefinition> rows;
+        if (implicitRow)
+        {
+            _implicitRows ??= [new RowDefinition()];
+            rows = _implicitRows;
+        }
+        else
+        {
+            rows = RowDefinitions;
+        }
+
+        List<ColumnDefinition> cols;
+        if (implicitCol)
+        {
+            _implicitCols ??= [new ColumnDefinition()];
+            cols = _implicitCols;
+        }
+        else
+        {
+            cols = ColumnDefinitions;
+        }
+
+        var rowsSpan = CollectionsMarshal.AsSpan(rows);
+        var colsSpan = CollectionsMarshal.AsSpan(cols);
 
         // Reset actual sizes
-        foreach (var r in rows) r.ActualHeight = 0;
-        foreach (var c in cols) c.ActualWidth = 0;
+        foreach (ref var r in rowsSpan) r.ActualHeight = 0;
+        foreach (ref var c in colsSpan) c.ActualWidth = 0;
 
         // 2. Calculate Column Widths
         // 2a. Fixed Pixels
-        foreach (var c in cols)
+        foreach (ref var c in colsSpan)
         {
             if (c.Width.GridUnitType == GridUnitType.Pixel)
                 c.ActualWidth = (int)c.Width.Value;
@@ -85,15 +93,17 @@ public class Grid : UIElement
 
         // 2b. Auto
         // Filter children that are in Auto columns
-        foreach (var child in _children)
+        int childrenCount = Children.Count;
+        for (int i = 0; i < childrenCount; i++)
         {
-            int colIdx = Math.Min(GetColumn(child), cols.Count - 1);
-            int colSpan = Math.Min(GetColumnSpan(child), cols.Count - colIdx);
+            var child = Children[i];
+            int colIdx = Math.Min(GetColumn(child), colsSpan.Length - 1);
+            int colSpan = Math.Min(GetColumnSpan(child), colsSpan.Length - colIdx);
 
             // Only consider span=1 for Auto sizing simplicity for now
             if (colSpan == 1)
             {
-                var col = cols[colIdx];
+                var col = colsSpan[colIdx];
                 if (col.Width.GridUnitType == GridUnitType.Auto)
                 {
                     // Measure with infinite width to get desired width
@@ -104,22 +114,33 @@ public class Grid : UIElement
         }
 
         // Apply Min/Max constraints for Auto/Pixel
-        foreach (var c in cols)
+        foreach (ref var c in colsSpan)
         {
             if (c.Width.GridUnitType != GridUnitType.Star)
             {
-                 c.ActualWidth = Math.Max(c.MinWidth, Math.Min(c.MaxWidth, c.ActualWidth));
+                c.ActualWidth = Math.Max(c.MinWidth, Math.Min(c.MaxWidth, c.ActualWidth));
             }
         }
 
         // 2c. Star
-        int usedWidth = cols.Sum(c => c.ActualWidth);
+        // Optimization: Replaced LINQ Sum() with manual loop to avoid allocation.
+        // O(C) where C is column count.
+        int usedWidth = 0;
+        foreach (ref var c in colsSpan) usedWidth += c.ActualWidth;
+
         int remainingWidth = Math.Max(0, availableSize.Width - usedWidth);
-        double totalStarsX = cols.Where(c => c.Width.GridUnitType == GridUnitType.Star).Sum(c => c.Width.Value);
+
+        // Optimization: Replaced LINQ Where().Sum() with manual loop.
+        double totalStarsX = 0;
+        foreach (ref var c in colsSpan)
+        {
+            if (c.Width.GridUnitType == GridUnitType.Star)
+                totalStarsX += c.Width.Value;
+        }
 
         if (totalStarsX > 0)
         {
-            foreach (var c in cols)
+            foreach (ref var c in colsSpan)
             {
                 if (c.Width.GridUnitType == GridUnitType.Star)
                 {
@@ -132,35 +153,36 @@ public class Grid : UIElement
 
         // Calculate Offsets
         int currentX = 0;
-        foreach(var c in cols) { c.Offset = currentX; currentX += c.ActualWidth; }
+        foreach (ref var c in colsSpan) { c.Offset = currentX; currentX += c.ActualWidth; }
 
 
         // 3. Calculate Row Heights
         // 3a. Fixed Pixels
-        foreach (var r in rows)
+        foreach (ref var r in rowsSpan)
         {
             if (r.Height.GridUnitType == GridUnitType.Pixel)
                 r.ActualHeight = (int)r.Height.Value;
         }
 
         // 3b. Auto
-        foreach (var child in _children)
+        for (int i = 0; i < childrenCount; i++)
         {
-            int rowIdx = Math.Min(GetRow(child), rows.Count - 1);
-            int rowSpan = Math.Min(GetRowSpan(child), rows.Count - rowIdx);
+            var child = Children[i];
+            int rowIdx = Math.Min(GetRow(child), rowsSpan.Length - 1);
+            int rowSpan = Math.Min(GetRowSpan(child), rowsSpan.Length - rowIdx);
 
             // Only consider span=1
             if (rowSpan == 1)
             {
-                var row = rows[rowIdx];
+                var row = rowsSpan[rowIdx];
                 if (row.Height.GridUnitType == GridUnitType.Auto)
                 {
                     // Determine constrained width for this child
-                    int colIdx = Math.Min(GetColumn(child), cols.Count - 1);
-                    int colSpan = Math.Min(GetColumnSpan(child), cols.Count - colIdx);
+                    int colIdx = Math.Min(GetColumn(child), colsSpan.Length - 1);
+                    int colSpan = Math.Min(GetColumnSpan(child), colsSpan.Length - colIdx);
 
                     int childAvailableWidth = 0;
-                    for(int k=0; k<colSpan; k++) childAvailableWidth += cols[colIdx + k].ActualWidth;
+                    for (int k = 0; k < colSpan; k++) childAvailableWidth += colsSpan[colIdx + k].ActualWidth;
 
                     child.Measure(new Size(childAvailableWidth, int.MaxValue));
                     row.ActualHeight = Math.Max(row.ActualHeight, child.DesiredSize.Height);
@@ -169,22 +191,32 @@ public class Grid : UIElement
         }
 
         // Apply Min/Max
-        foreach (var r in rows)
+        foreach (ref var r in rowsSpan)
         {
             if (r.Height.GridUnitType != GridUnitType.Star)
             {
-                 r.ActualHeight = Math.Max(r.MinHeight, Math.Min(r.MaxHeight, r.ActualHeight));
+                r.ActualHeight = Math.Max(r.MinHeight, Math.Min(r.MaxHeight, r.ActualHeight));
             }
         }
 
         // 3c. Star
-        int usedHeight = rows.Sum(r => r.ActualHeight);
+        // Optimization: Replaced LINQ Sum() with manual loop.
+        int usedHeight = 0;
+        foreach (ref var r in rowsSpan) usedHeight += r.ActualHeight;
+
         int remainingHeight = Math.Max(0, availableSize.Height - usedHeight);
-        double totalStarsY = rows.Where(r => r.Height.GridUnitType == GridUnitType.Star).Sum(r => r.Height.Value);
+
+        // Optimization: Replaced LINQ Where().Sum() with manual loop.
+        double totalStarsY = 0;
+        foreach (ref var r in rowsSpan)
+        {
+            if (r.Height.GridUnitType == GridUnitType.Star)
+                totalStarsY += r.Height.Value;
+        }
 
         if (totalStarsY > 0)
         {
-            foreach (var r in rows)
+            foreach (ref var r in rowsSpan)
             {
                 if (r.Height.GridUnitType == GridUnitType.Star)
                 {
@@ -197,27 +229,32 @@ public class Grid : UIElement
 
         // Calculate Offsets
         int currentY = 0;
-        foreach(var r in rows) { r.Offset = currentY; currentY += r.ActualHeight; }
+        foreach (ref var r in rowsSpan) { r.Offset = currentY; currentY += r.ActualHeight; }
 
         // 4. Final Measure for all children (to ensure correct DesiredSize based on final grid slots)
-        foreach (var child in _children)
+        for (int i = 0; i < childrenCount; i++)
         {
-             int colIdx = Math.Min(GetColumn(child), cols.Count - 1);
-             int colSpan = Math.Min(GetColumnSpan(child), cols.Count - colIdx);
-             int rowIdx = Math.Min(GetRow(child), rows.Count - 1);
-             int rowSpan = Math.Min(GetRowSpan(child), rows.Count - rowIdx);
+            var child = Children[i];
+            int colIdx = Math.Min(GetColumn(child), colsSpan.Length - 1);
+            int colSpan = Math.Min(GetColumnSpan(child), colsSpan.Length - colIdx);
+            int rowIdx = Math.Min(GetRow(child), rowsSpan.Length - 1);
+            int rowSpan = Math.Min(GetRowSpan(child), rowsSpan.Length - rowIdx);
 
-             int finalW = 0;
-             for(int k=0; k<colSpan; k++) finalW += cols[colIdx+k].ActualWidth;
+            int finalW = 0;
+            for (int k = 0; k < colSpan; k++) finalW += colsSpan[colIdx + k].ActualWidth;
 
-             int finalH = 0;
-             for(int k=0; k<rowSpan; k++) finalH += rows[rowIdx+k].ActualHeight;
+            int finalH = 0;
+            for (int k = 0; k < rowSpan; k++) finalH += rowsSpan[rowIdx + k].ActualHeight;
 
-             child.Measure(new Size(finalW, finalH));
+            child.Measure(new Size(finalW, finalH));
         }
 
-        int totalW = cols.Sum(c => c.ActualWidth);
-        int totalH = rows.Sum(r => r.ActualHeight);
+        // Optimization: Replaced LINQ Sum() with manual loop.
+        int totalW = 0;
+        foreach (ref var c in colsSpan) totalW += c.ActualWidth;
+
+        int totalH = 0;
+        foreach (ref var r in rowsSpan) totalH += r.ActualHeight;
 
         return new Size(totalW, totalH);
     }
@@ -236,106 +273,125 @@ public class Grid : UIElement
         bool implicitRow = RowDefinitions.Count == 0;
         bool implicitCol = ColumnDefinitions.Count == 0;
 
-        var rows = implicitRow ? new List<RowDefinition> { new RowDefinition { Height = GridLength.Star } } : RowDefinitions;
-        var cols = implicitCol ? new List<ColumnDefinition> { new ColumnDefinition { Width = GridLength.Star } } : ColumnDefinitions;
+        List<RowDefinition> rows;
+        if (implicitRow)
+        {
+            // Use existing implicit row list, ensuring it's initialized (though Measure should have done it)
+            _implicitRows ??= [new RowDefinition { Height = GridLength.Star }];
+            rows = _implicitRows;
+        }
+        else
+        {
+            rows = RowDefinitions;
+        }
+
+        List<ColumnDefinition> cols;
+        if (implicitCol)
+        {
+            _implicitCols ??= [new ColumnDefinition { Width = GridLength.Star }];
+            cols = _implicitCols;
+        }
+        else
+        {
+            cols = ColumnDefinitions;
+        }
 
         // Recalculate stars if size changed
         // ... Optimization: Skip if size matches DesiredSize
 
+        var rowsSpan = CollectionsMarshal.AsSpan(rows);
+        var colsSpan = CollectionsMarshal.AsSpan(cols);
+
         // For MVP, let's just stick to what we calculated in Measure or do a quick re-calc for Stars.
         // To be safe and correct (e.g. window resize), let's re-distribute extra space to stars.
 
-        int currentTotalW = cols.Sum(c => c.ActualWidth);
+        // Optimization: Replaced LINQ Sum() with manual loop.
+        int currentTotalW = 0;
+        foreach (ref var c in colsSpan) currentTotalW += c.ActualWidth;
+
         int extraW = finalSize.Width - currentTotalW;
         if (extraW != 0)
         {
-            double totalStarsX = cols.Where(c => c.Width.GridUnitType == GridUnitType.Star).Sum(c => c.Width.Value);
+            // Optimization: Replaced LINQ Where().Sum() with manual loop.
+            double totalStarsX = 0;
+            foreach (ref var c in colsSpan)
+            {
+                if (c.Width.GridUnitType == GridUnitType.Star)
+                    totalStarsX += c.Width.Value;
+            }
+
             if (totalStarsX > 0)
             {
-                 int usedW = 0;
-                 foreach(var c in cols)
-                 {
-                     if (c.Width.GridUnitType == GridUnitType.Star)
-                     {
-                         double share = c.Width.Value / totalStarsX;
-                         // Add proportionate share of EXTRA space (can be negative if we shrank)
-                         // But we calculated based on availableSize in Measure.
-                         // Actually, we should recalculate from scratch based on finalSize but keep Auto/Pixel same.
-                         // Simpler: Just add extra to stars.
-                         c.ActualWidth += (int)(extraW * share);
-                         c.ActualWidth = Math.Max(c.MinWidth, Math.Min(c.MaxWidth, c.ActualWidth));
-                     }
-                     usedW += c.ActualWidth;
-                 }
+                int usedW = 0;
+                foreach (ref var c in colsSpan)
+                {
+                    if (c.Width.GridUnitType == GridUnitType.Star)
+                    {
+                        double share = c.Width.Value / totalStarsX;
+                        // Add proportionate share of EXTRA space (can be negative if we shrank)
+                        // But we calculated based on availableSize in Measure.
+                        // Actually, we should recalculate from scratch based on finalSize but keep Auto/Pixel same.
+                        // Simpler: Just add extra to stars.
+                        c.ActualWidth += (int)(extraW * share);
+                        c.ActualWidth = Math.Max(c.MinWidth, Math.Min(c.MaxWidth, c.ActualWidth));
+                    }
+                    usedW += c.ActualWidth;
+                }
             }
         }
 
-        int currentTotalH = rows.Sum(r => r.ActualHeight);
+        // Optimization: Replaced LINQ Sum() with manual loop.
+        int currentTotalH = 0;
+        foreach (ref var r in rowsSpan) currentTotalH += r.ActualHeight;
+
         int extraH = finalSize.Height - currentTotalH;
         if (extraH != 0)
         {
-             double totalStarsY = rows.Where(r => r.Height.GridUnitType == GridUnitType.Star).Sum(r => r.Height.Value);
-             if (totalStarsY > 0)
-             {
-                 foreach(var r in rows)
-                 {
-                     if (r.Height.GridUnitType == GridUnitType.Star)
-                     {
-                         double share = r.Height.Value / totalStarsY;
-                         r.ActualHeight += (int)(extraH * share);
-                         r.ActualHeight = Math.Max(r.MinHeight, Math.Min(r.MaxHeight, r.ActualHeight));
-                     }
-                 }
-             }
+            // Optimization: Replaced LINQ Where().Sum() with manual loop.
+            double totalStarsY = 0;
+            foreach (ref var r in rowsSpan)
+            {
+                if (r.Height.GridUnitType == GridUnitType.Star)
+                    totalStarsY += r.Height.Value;
+            }
+
+            if (totalStarsY > 0)
+            {
+                foreach (ref var r in rowsSpan)
+                {
+                    if (r.Height.GridUnitType == GridUnitType.Star)
+                    {
+                        double share = r.Height.Value / totalStarsY;
+                        r.ActualHeight += (int)(extraH * share);
+                        r.ActualHeight = Math.Max(r.MinHeight, Math.Min(r.MaxHeight, r.ActualHeight));
+                    }
+                }
+            }
         }
 
         // Recalculate offsets
-        int offX = 0; foreach(var c in cols) { c.Offset = offX; offX += c.ActualWidth; }
-        int offY = 0; foreach(var r in rows) { r.Offset = offY; offY += r.ActualHeight; }
+        int offX = 0; foreach (ref var c in colsSpan) { c.Offset = offX; offX += c.ActualWidth; }
+        int offY = 0; foreach (ref var r in rowsSpan) { r.Offset = offY; offY += r.ActualHeight; }
 
-        foreach (var child in _children)
+        int childrenCount = Children.Count;
+        for (int i = 0; i < childrenCount; i++)
         {
-             int colIdx = Math.Min(GetColumn(child), cols.Count - 1);
-             int colSpan = Math.Min(GetColumnSpan(child), cols.Count - colIdx);
-             int rowIdx = Math.Min(GetRow(child), rows.Count - 1);
-             int rowSpan = Math.Min(GetRowSpan(child), rows.Count - rowIdx);
+            var child = Children[i];
+            int colIdx = Math.Min(GetColumn(child), colsSpan.Length - 1);
+            int colSpan = Math.Min(GetColumnSpan(child), colsSpan.Length - colIdx);
+            int rowIdx = Math.Min(GetRow(child), rowsSpan.Length - 1);
+            int rowSpan = Math.Min(GetRowSpan(child), rowsSpan.Length - rowIdx);
 
-             int x = cols[colIdx].Offset;
-             int y = rows[rowIdx].Offset;
+            int x = colsSpan[colIdx].Offset;
+            int y = rowsSpan[rowIdx].Offset;
 
-             int w = 0;
-             for(int k=0; k<colSpan; k++) w += cols[colIdx+k].ActualWidth;
+            int w = 0;
+            for (int k = 0; k < colSpan; k++) w += colsSpan[colIdx + k].ActualWidth;
 
-             int h = 0;
-             for(int k=0; k<rowSpan; k++) h += rows[rowIdx+k].ActualHeight;
+            int h = 0;
+            for (int k = 0; k < rowSpan; k++) h += rowsSpan[rowIdx + k].ActualHeight;
 
-             child.Arrange(new Rect(x, y, w, h));
-        }
-    }
-
-    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
-    {
-        int x = RenderSize.X + offsetX;
-        int y = RenderSize.Y + offsetY;
-        Rect clip = buffer.GetClip();
-
-        foreach (var child in _children)
-        {
-            // Calculate child's absolute bounding box
-            int childX = x + child.RenderSize.X;
-            int childY = y + child.RenderSize.Y;
-            int childW = child.RenderSize.Width;
-            int childH = child.RenderSize.Height;
-
-            // Clip check
-            bool overlapsClip =
-                childX < clip.X + clip.Width && childX + childW > clip.X &&
-                childY < clip.Y + clip.Height && childY + childH > clip.Y;
-
-            if (overlapsClip)
-            {
-                child.Render(buffer, x, y);
-            }
+            child.Arrange(new Rect(x, y, w, h));
         }
     }
 }

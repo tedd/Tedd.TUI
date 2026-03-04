@@ -10,11 +10,11 @@ public class TableColumn
 {
     public string Header { get; set; }
     public GridLength Width { get; set; } = GridLength.Star;
-    
+
     // Sorting
     public Func<object, object, int>? SortComparer { get; set; }
     public Func<TableRow, object>? SortKeySelector { get; set; }
-    
+
     // Internal usage for layout
     internal int ActualWidth { get; set; }
 }
@@ -49,10 +49,10 @@ public class TableRow : UIElement
         int maxHeight = 0;
         foreach (var cell in _cells)
         {
-             cell.Measure(new Size(int.MaxValue, availableSize.Height));
-             maxHeight = Math.Max(maxHeight, cell.DesiredSize.Height);
+            cell.Measure(new Size(int.MaxValue, availableSize.Height));
+            maxHeight = Math.Max(maxHeight, cell.DesiredSize.Height);
         }
-        return new Size(0, maxHeight > 0 ? maxHeight : 1); 
+        return new Size(0, maxHeight > 0 ? maxHeight : 1);
     }
 
     protected override void ArrangeOverride(Size finalSize)
@@ -95,10 +95,7 @@ public class TableRow : UIElement
             for (int i = 0; i < table.Columns.Count - 1; i++)
             {
                 cx += table.Columns[i].ActualWidth;
-                for(int dy=0; dy < RenderSize.Height; dy++)
-                {
-                    buffer.SetPixel(x + cx, y + dy, vChar, ConsoleColor.Gray, ConsoleColor.Black);
-                }
+                buffer.DrawVLine(x + cx, y, RenderSize.Height, vChar, ConsoleColor.Gray, ConsoleColor.Black);
                 cx++;
             }
         }
@@ -108,7 +105,7 @@ public class TableRow : UIElement
 public class Table : UIElement
 {
     public List<TableColumn> Columns { get; } = new List<TableColumn>();
-    
+
     private ObservableCollection<TableRow> _rows;
     public IList<TableRow> Rows => _rows;
 
@@ -122,43 +119,41 @@ public class Table : UIElement
     public bool ShowHeader { get; set; } = true;
     public ConsoleColor HeaderForeground { get; set; } = ConsoleColor.Yellow;
     public ConsoleColor HeaderBackground { get; set; } = ConsoleColor.DarkGray;
-    
+
     // Style Properties
     public bool ShowBorder { get; set; } = false;
     public bool ShowVerticalLines { get; set; } = true;
 
-    private bool _showHorizontalLines = false;
     public bool ShowHorizontalLines
     {
-        get => _showHorizontalLines;
+        get;
         set
         {
-            if (_showHorizontalLines != value)
+            if (field != value)
             {
-                _showHorizontalLines = value;
+                field = value;
                 _rowsDirty = true;
                 Invalidate();
             }
         }
-    }
+    } = false;
 
     public BoxStyle BorderStyle { get; set; } = BoxStyle.Heavy; // Default to Heavy per user request
 
     // Selection
-    private int _selectedIndex = -1;
     public int SelectedIndex
     {
-        get => _selectedIndex;
+        get;
         set
         {
-            if (_selectedIndex != value)
+            if (field != value)
             {
-                _selectedIndex = value;
+                field = value;
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
         }
-    }
+    } = -1;
     public event EventHandler SelectionChanged;
 
     public Table()
@@ -168,11 +163,11 @@ public class Table : UIElement
 
         Focusable = true;
         _rowStack = new StackPanel { Orientation = Orientation.Vertical };
-        _scrollViewer = new ScrollViewer 
-        { 
+        _scrollViewer = new ScrollViewer
+        {
             Content = _rowStack,
             VerticalScrollBarVisibility = true,
-            HorizontalScrollBarVisibility = true 
+            HorizontalScrollBarVisibility = true
         };
         _scrollViewer.Parent = this;
     }
@@ -187,8 +182,8 @@ public class Table : UIElement
     {
         _rows.Add(row);
     }
-    
-    public void AddRow(params object[] values)
+
+    public void AddRow(params ReadOnlySpan<object> values)
     {
         var row = new TableRow();
         foreach (var val in values)
@@ -200,7 +195,7 @@ public class Table : UIElement
     }
 
     public override int VisualChildrenCount => 1;
-    public override UIElement GetVisualChild(int index) 
+    public override UIElement GetVisualChild(int index)
     {
         if (index == 0) return _scrollViewer;
         throw new ArgumentOutOfRangeException(nameof(index));
@@ -236,15 +231,15 @@ public class Table : UIElement
 
         int startIdx = 0;
         int count = _rows.Count;
-        
+
         if (IsInternalPaging)
         {
-             startIdx = CurrentPage * PageSize;
-             count = Math.Min(PageSize, _rows.Count - startIdx);
+            startIdx = CurrentPage * PageSize;
+            count = Math.Min(PageSize, _rows.Count - startIdx);
         }
         else if (PageSize > 0)
         {
-             count = Math.Min(PageSize, _rows.Count);
+            count = Math.Min(PageSize, _rows.Count);
         }
 
         for (int i = 0; i < count; i++)
@@ -291,16 +286,16 @@ public class Table : UIElement
         {
             if (child is TableRow row)
             {
-                 child.Measure(new Size(availableWidthForCols, availableSize.Height));
+                child.Measure(new Size(availableWidthForCols, availableSize.Height));
 
-                 for (int j = 0; j < Columns.Count && j < row.Cells.Count; j++)
-                 {
-                     var col = Columns[j];
-                     if (col.Width.GridUnitType == GridUnitType.Auto)
-                     {
-                         col.ActualWidth = Math.Max(col.ActualWidth, row.Cells[j].DesiredSize.Width);
-                     }
-                 }
+                for (int j = 0; j < Columns.Count && j < row.Cells.Count; j++)
+                {
+                    var col = Columns[j];
+                    if (col.Width.GridUnitType == GridUnitType.Auto)
+                    {
+                        col.ActualWidth = Math.Max(col.ActualWidth, row.Cells[j].DesiredSize.Width);
+                    }
+                }
             }
         }
 
@@ -318,10 +313,10 @@ public class Table : UIElement
                 totalStars += col.Width.Value;
             }
         }
-        
+
         int separators = Math.Max(0, Columns.Count - 1);
         usedWidth += separators;
-        
+
         int remainingWidth = Math.Max(0, availableWidthForCols - usedWidth);
 
         if (totalStars > 0 && remainingWidth > 0)
@@ -340,7 +335,7 @@ public class Table : UIElement
         int headerBlockHeight = ShowHeader ? 2 : 0;
         int footerHeight = PageSize > 0 ? 1 : 0;
         int verticalPadding = ShowBorder ? 2 : 0;
-        
+
         int bodyHeight = Math.Max(0, availableSize.Height - headerBlockHeight - footerHeight - verticalPadding);
         int svWidth = Math.Max(0, availableSize.Width - 2 * padding);
 
@@ -370,94 +365,88 @@ public class Table : UIElement
         public char BodySepTLeft, BodySepTRight;
         public char HeaderSepH;
         public char HeaderInnerV;
-        
+
         public static TableBoxChars Get(BoxStyle style)
         {
-             TableBoxChars c = new TableBoxChars();
-             var b = BoxDrawingChars.Get(style);
-             c.TL = b.TopLeft; c.TR = b.TopRight; c.BL = b.BottomLeft; c.BR = b.BottomRight;
-             c.H = b.Horizontal; c.V = b.Vertical;
-             c.HeaderInnerV = b.Vertical;
-             c.HeaderSepH = b.Horizontal;
+            TableBoxChars c = new TableBoxChars();
+            var b = BoxDrawingChars.Get(style);
+            c.TL = b.TopLeft; c.TR = b.TopRight; c.BL = b.BottomLeft; c.BR = b.BottomRight;
+            c.H = b.Horizontal; c.V = b.Vertical;
+            c.HeaderInnerV = b.Vertical;
+            c.HeaderSepH = b.Horizontal;
 
-             switch(style)
-             {
-                 case BoxStyle.Heavy:
-                     c.TDown = '\u2533';
-                     c.TUp = '\u2537';   // ┷ (Heavy Horz, Light Up)
-                     c.TLeft = '\u2523';
-                     c.TRight = '\u252B';
-                     c.HeaderCross = '\u254B';
-                     c.BodySepTLeft = '\u2520';
-                     c.BodySepTRight = '\u2528';
-                     break;
-                 case BoxStyle.Double:
-                     c.TDown = '\u2566';
-                     c.TUp = '\u2569';   // ╧ (Double Horz, Single Up)
-                     c.TLeft = '\u2560';
-                     c.TRight = '\u2563';
-                     c.HeaderCross = '\u256C';
-                     c.BodySepTLeft = '\u255F'; // ╟ (Double Vert, Single Right)
-                     c.BodySepTRight = '\u2562'; // ╢ (Double Vert, Single Left)
-                     break;
-                 default:
-                     c.TDown = '\u252C';
-                     c.TUp = '\u2534';
-                     c.TLeft = '\u251C';
-                     c.TRight = '\u2524';
-                     c.HeaderCross = '\u253C';
-                     c.BodySepTLeft = '\u251C';
-                     c.BodySepTRight = '\u2524';
-                     break;
-             }
-             return c;
+            switch (style)
+            {
+                case BoxStyle.Heavy:
+                    c.TDown = '\u2533';
+                    c.TUp = '\u2537';   // ┷ (Heavy Horz, Light Up)
+                    c.TLeft = '\u2523';
+                    c.TRight = '\u252B';
+                    c.HeaderCross = '\u254B';
+                    c.BodySepTLeft = '\u2520';
+                    c.BodySepTRight = '\u2528';
+                    break;
+                case BoxStyle.Double:
+                    c.TDown = '\u2566';
+                    c.TUp = '\u2569';   // ╧ (Double Horz, Single Up)
+                    c.TLeft = '\u2560';
+                    c.TRight = '\u2563';
+                    c.HeaderCross = '\u256C';
+                    c.BodySepTLeft = '\u255F'; // ╟ (Double Vert, Single Right)
+                    c.BodySepTRight = '\u2562'; // ╢ (Double Vert, Single Left)
+                    break;
+                default:
+                    c.TDown = '\u252C';
+                    c.TUp = '\u2534';
+                    c.TLeft = '\u251C';
+                    c.TRight = '\u2524';
+                    c.HeaderCross = '\u253C';
+                    c.BodySepTLeft = '\u251C';
+                    c.BodySepTRight = '\u2524';
+                    break;
+            }
+            return c;
         }
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-         int x = RenderSize.X + offsetX;
-         int y = RenderSize.Y + offsetY;
-         int w = RenderSize.Width;
-         int h = RenderSize.Height;
+        int x = RenderSize.X + offsetX;
+        int y = RenderSize.Y + offsetY;
+        int w = RenderSize.Width;
+        int h = RenderSize.Height;
 
-         TableBoxChars chars = TableBoxChars.Get(BorderStyle);
+        TableBoxChars chars = TableBoxChars.Get(BorderStyle);
 
-         // 1. Draw Outer Border
-         if (ShowBorder)
-         {
-             buffer.SetPixel(x, y, chars.TL, HeaderForeground, HeaderBackground);
-             buffer.SetPixel(x + w - 1, y, chars.TR, HeaderForeground, HeaderBackground);
-             buffer.SetPixel(x, y + h - 1, chars.BL, HeaderForeground, HeaderBackground);
-             buffer.SetPixel(x + w - 1, y + h - 1, chars.BR, HeaderForeground, HeaderBackground);
+        // 1. Draw Outer Border
+        if (ShowBorder)
+        {
+            buffer.SetPixel(x, y, chars.TL, HeaderForeground, HeaderBackground);
+            buffer.SetPixel(x + w - 1, y, chars.TR, HeaderForeground, HeaderBackground);
+            buffer.SetPixel(x, y + h - 1, chars.BL, HeaderForeground, HeaderBackground);
+            buffer.SetPixel(x + w - 1, y + h - 1, chars.BR, HeaderForeground, HeaderBackground);
 
-             for(int i=1; i<w-1; i++)
-             {
-                 buffer.SetPixel(x + i, y, chars.H, HeaderForeground, HeaderBackground);
-                 buffer.SetPixel(x + i, y + h - 1, chars.H, HeaderForeground, HeaderBackground);
-             }
+            buffer.DrawHLine(x + 1, y, w - 2, chars.H, HeaderForeground, HeaderBackground);
+            buffer.DrawHLine(x + 1, y + h - 1, w - 2, chars.H, HeaderForeground, HeaderBackground);
 
-             for(int i=1; i<h-1; i++)
-             {
-                 buffer.SetPixel(x, y + i, chars.V, HeaderForeground, HeaderBackground);
-                 buffer.SetPixel(x + w - 1, y + i, chars.V, HeaderForeground, HeaderBackground);
-             }
+            buffer.DrawVLine(x, y + 1, h - 2, chars.V, HeaderForeground, HeaderBackground);
+            buffer.DrawVLine(x + w - 1, y + 1, h - 2, chars.V, HeaderForeground, HeaderBackground);
 
-             if (ShowVerticalLines)
-             {
-                 int cx = 1;
-                 for(int i=0; i<Columns.Count - 1; i++)
-                 {
-                     cx += Columns[i].ActualWidth;
-                     buffer.SetPixel(x + cx, y, chars.TDown, HeaderForeground, HeaderBackground);
-                     cx++;
-                 }
-             }
-         }
+            if (ShowVerticalLines)
+            {
+                int cx = 1;
+                for (int i = 0; i < Columns.Count - 1; i++)
+                {
+                    cx += Columns[i].ActualWidth;
+                    buffer.SetPixel(x + cx, y, chars.TDown, HeaderForeground, HeaderBackground);
+                    cx++;
+                }
+            }
+        }
 
-         // 2. Draw Header
-         if (ShowHeader)
-         {
+        // 2. Draw Header
+        if (ShowHeader)
+        {
             int headerY = y + (ShowBorder ? 1 : 0);
             int startX = x + (ShowBorder ? 1 : 0);
 
@@ -465,22 +454,19 @@ public class Table : UIElement
             for (int i = 0; i < Columns.Count; i++)
             {
                 var col = Columns[i];
-                string hdr = col.Header ?? "";
-                if (hdr.Length > col.ActualWidth) hdr = hdr.Substring(0, col.ActualWidth);
-                
-                for(int dx=0; dx<col.ActualWidth; dx++)
-                    buffer.SetPixel(colX + dx, headerY, ' ', HeaderForeground, HeaderBackground);
-                
-                for(int dx=0; dx<hdr.Length; dx++)
-                    buffer.SetPixel(colX + dx, headerY, hdr[dx], HeaderForeground, HeaderBackground);
-                
+                var span = (col.Header ?? "").AsSpan();
+                if (span.Length > col.ActualWidth) span = span.Slice(0, col.ActualWidth);
+
+                buffer.DrawHLine(colX, headerY, col.ActualWidth, ' ', HeaderForeground, HeaderBackground);
+                buffer.DrawString(colX, headerY, span, HeaderForeground, HeaderBackground);
+
                 colX += col.ActualWidth;
-                
+
                 if (i < Columns.Count - 1)
                 {
-                   if (ShowVerticalLines)
+                    if (ShowVerticalLines)
                         buffer.SetPixel(colX, headerY, chars.HeaderInnerV, HeaderForeground, HeaderBackground);
-                   colX++;
+                    colX++;
                 }
             }
 
@@ -488,8 +474,7 @@ public class Table : UIElement
             if (colX < x + w - (ShowBorder ? 1 : 0))
             {
                 int endX = x + w - (ShowBorder ? 1 : 0);
-                for (int k = colX; k < endX; k++)
-                    buffer.SetPixel(k, headerY, ' ', HeaderForeground, HeaderBackground);
+                buffer.DrawHLine(colX, headerY, endX - colX, ' ', HeaderForeground, HeaderBackground);
             }
 
             int sepY = headerY + 1;
@@ -501,75 +486,73 @@ public class Table : UIElement
             }
 
             int lineX = startX;
-            for(int i=0; i<Columns.Count; i++)
+            for (int i = 0; i < Columns.Count; i++)
             {
-                 int cw = Columns[i].ActualWidth;
-                 for(int k=0; k<cw; k++)
-                    buffer.SetPixel(lineX + k, sepY, chars.HeaderSepH, HeaderForeground, HeaderBackground);
-                 lineX += cw;
+                int cw = Columns[i].ActualWidth;
+                buffer.DrawHLine(lineX, sepY, cw, chars.HeaderSepH, HeaderForeground, HeaderBackground);
+                lineX += cw;
 
-                 if (i < Columns.Count - 1)
-                 {
-                     if (ShowVerticalLines)
+                if (i < Columns.Count - 1)
+                {
+                    if (ShowVerticalLines)
                         buffer.SetPixel(lineX, sepY, chars.HeaderCross, HeaderForeground, HeaderBackground);
-                     lineX++;
-                 }
+                    lineX++;
+                }
             }
 
             // Fill remaining separator line
             if (lineX < x + w - (ShowBorder ? 1 : 0))
             {
                 int endX = x + w - (ShowBorder ? 1 : 0);
-                for (int k = lineX; k < endX; k++)
-                    buffer.SetPixel(k, sepY, chars.HeaderSepH, HeaderForeground, HeaderBackground);
+                buffer.DrawHLine(lineX, sepY, endX - lineX, chars.HeaderSepH, HeaderForeground, HeaderBackground);
             }
-         }
+        }
 
-         // 3. Render Body
-         _scrollViewer.Render(buffer, x, y);
+        // 3. Render Body
+        _scrollViewer.Render(buffer, x, y);
 
-         // 4. Render Border Junctions
-         int vOffset = _scrollViewer.VerticalOffset;
-         int bodyScreenY = y + (ShowBorder ? 1 : 0) + (ShowHeader ? 2 : 0);
+        // 4. Render Border Junctions
+        int vOffset = _scrollViewer.VerticalOffset;
+        int bodyScreenY = y + (ShowBorder ? 1 : 0) + (ShowHeader ? 2 : 0);
 
-         int currentY = 0;
-         foreach(var child in _rowStack.Children)
-         {
-             int hChild = child.RenderSize.Height;
-             int screenY = bodyScreenY + currentY - vOffset;
+        int currentY = 0;
+        foreach (var child in _rowStack.Children)
+        {
+            int hChild = child.RenderSize.Height;
+            int screenY = bodyScreenY + currentY - vOffset;
 
-             if (child is TableSeparator && ShowHorizontalLines && ShowBorder)
-             {
-                 if (screenY >= bodyScreenY && screenY < bodyScreenY + _scrollViewer.RenderSize.Height)
-                 {
-                      buffer.SetPixel(x, screenY, chars.BodySepTLeft, HeaderForeground, HeaderBackground);
-                      buffer.SetPixel(x + w - 1, screenY, chars.BodySepTRight, HeaderForeground, HeaderBackground);
-                 }
-             }
+            if (child is TableSeparator && ShowHorizontalLines && ShowBorder)
+            {
+                if (screenY >= bodyScreenY && screenY < bodyScreenY + _scrollViewer.RenderSize.Height)
+                {
+                    buffer.SetPixel(x, screenY, chars.BodySepTLeft, HeaderForeground, HeaderBackground);
+                    buffer.SetPixel(x + w - 1, screenY, chars.BodySepTRight, HeaderForeground, HeaderBackground);
+                }
+            }
 
-             currentY += hChild;
-             if (currentY - vOffset > h) break;
-         }
+            currentY += hChild;
+            if (currentY - vOffset > h) break;
+        }
 
-         // 5. Draw Bottom Border Junctions
-         if (ShowBorder && ShowVerticalLines)
-         {
-             int cx = 1;
-             int by = y + h - 1;
-             for(int i=0; i<Columns.Count - 1; i++)
-             {
-                 cx += Columns[i].ActualWidth;
-                 buffer.SetPixel(x + cx, by, chars.TUp, HeaderForeground, HeaderBackground);
-                 cx++;
-             }
-         }
+        // 5. Draw Bottom Border Junctions
+        if (ShowBorder && ShowVerticalLines)
+        {
+            int cx = 1;
+            int by = y + h - 1;
+            for (int i = 0; i < Columns.Count - 1; i++)
+            {
+                cx += Columns[i].ActualWidth;
+                buffer.SetPixel(x + cx, by, chars.TUp, HeaderForeground, HeaderBackground);
+                cx++;
+            }
+        }
 
-         if (PageSize > 0)
-         {
-             RenderPagination(buffer, offsetX, offsetY);
-         }
+        if (PageSize > 0)
+        {
+            RenderPagination(buffer, offsetX, offsetY);
+        }
     }
-    
+
     public override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
@@ -607,7 +590,7 @@ public class Table : UIElement
             Invalidate();
         }
     }
-    
+
     public TableColumn? SortedColumn { get; private set; }
     public bool IsSortDescending { get; private set; }
 
@@ -634,7 +617,7 @@ public class Table : UIElement
         list.Sort((a, b) =>
         {
             if (a == b) return 0;
-            
+
             int result = 0;
             if (column.SortComparer != null)
             {
@@ -692,7 +675,7 @@ public class Table : UIElement
         if (ShowHeader && e.Y >= borderOffset && e.Y < borderOffset + 1)
         {
             int x = borderOffset;
-            for(int i=0; i<Columns.Count; i++)
+            for (int i = 0; i < Columns.Count; i++)
             {
                 var col = Columns[i];
                 if (e.X >= x && e.X < x + col.ActualWidth)
@@ -715,94 +698,91 @@ public class Table : UIElement
 
         int bodyStartY = borderOffset + headerHeight;
         int y = e.Y - bodyStartY + _scrollViewer.VerticalOffset;
-        
+
         if (y >= 0)
         {
-             int currentY = 0;
-             foreach(var child in _rowStack.Children)
-             {
-                 int h = child.RenderSize.Height > 0 ? child.RenderSize.Height : 1;
-                 if (y >= currentY && y < currentY + h)
-                 {
-                     if (child is TableRow row)
-                     {
-                         int rowIdx = _rows.IndexOf(row);
-                         if (rowIdx >= 0)
-                         {
-                             SelectedIndex = rowIdx;
-                             SelectionChanged?.Invoke(this, EventArgs.Empty);
-                         }
-                     }
-                     break;
-                 }
-                 currentY += h;
-             }
+            int currentY = 0;
+            foreach (var child in _rowStack.Children)
+            {
+                int h = child.RenderSize.Height > 0 ? child.RenderSize.Height : 1;
+                if (y >= currentY && y < currentY + h)
+                {
+                    if (child is TableRow row)
+                    {
+                        int rowIdx = _rows.IndexOf(row);
+                        if (rowIdx >= 0)
+                        {
+                            SelectedIndex = rowIdx;
+                            SelectionChanged?.Invoke(this, EventArgs.Empty);
+                        }
+                    }
+                    break;
+                }
+                currentY += h;
+            }
         }
         e.Handled = true;
     }
 
-    private int _pageSize = 0;
     public int PageSize
     {
-        get => _pageSize;
+        get;
         set
         {
-            if (_pageSize != value)
+            if (field != value)
             {
-                _pageSize = value;
+                field = value;
                 _rowsDirty = true;
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
-    private int _currentPage = 0;
     public int CurrentPage
     {
-        get => _currentPage;
+        get;
         set
         {
             if (value < 0) value = 0;
             int max = TotalPages > 0 ? TotalPages - 1 : 0;
             if (value > max) value = max;
 
-            if (_currentPage != value)
+            if (field != value)
             {
-                _currentPage = value;
+                field = value;
                 PageChanged?.Invoke(this, EventArgs.Empty);
                 _rowsDirty = true;
                 Invalidate();
             }
         }
-    }
+    } = 0;
 
-    private int _totalRows = -1;
     public int TotalRows
     {
-        get => _totalRows;
+        get;
         set
         {
-            if (_totalRows != value)
+            if (field != value)
             {
-                _totalRows = value;
+                field = value;
                 _rowsDirty = true;
                 Invalidate();
             }
         }
-    }
+    } = -1;
 
     public event EventHandler? PageChanged;
 
-    private bool IsInternalPaging => PageSize > 0 && (_totalRows < 0 || _totalRows <= _rows.Count) && _rows.Count > PageSize;
-    private int EffectiveTotalRows => _totalRows >= 0 ? _totalRows : _rows.Count;
+    private bool IsInternalPaging => PageSize > 0 && (TotalRows < 0 || TotalRows <= _rows.Count) && _rows.Count > PageSize;
+    private int EffectiveTotalRows => TotalRows >= 0 ? TotalRows : _rows.Count;
     public int TotalPages
     {
         get
         {
-             if (PageSize <= 0) return 1;
-             int total = EffectiveTotalRows;
-             if (total == 0) return 0;
-             return (int)Math.Ceiling((double)total / PageSize);
+            if (PageSize <= 0) return 1;
+            int total = EffectiveTotalRows;
+            if (total == 0) return 0;
+            return (int)Math.Ceiling((double)total / PageSize);
         }
     }
 
@@ -820,7 +800,7 @@ public class Table : UIElement
         if (localX < startX || localX >= startX + len) return;
 
         int charIdx = localX - startX;
-        
+
         // Check for <
         int lessThanIdx = text.IndexOf('<');
         if (lessThanIdx >= 0 && lessThanIdx == charIdx)
@@ -841,7 +821,7 @@ public class Table : UIElement
         // Find token boundaries around charIdx
         int tokenStart = text.Slice(0, charIdx).LastIndexOf(' ');
         if (tokenStart == -1) tokenStart = 0; else tokenStart++;
-        
+
         int tokenEnd = text.Slice(charIdx).IndexOf(' ');
         if (tokenEnd == -1) tokenEnd = len; else tokenEnd += charIdx;
 
@@ -870,49 +850,49 @@ public class Table : UIElement
 
         if (statusLen > availableWidth)
         {
-             // "< >"
-             if (destination.Length < 3) return 0;
-             destination[0] = '<'; destination[1] = ' '; destination[2] = '>';
-             return 3;
+            // "< >"
+            if (destination.Length < 3) return 0;
+            destination[0] = '<'; destination[1] = ' '; destination[2] = '>';
+            return 3;
         }
 
         // detailed check
         if (availableWidth > 30)
         {
-             // Try generate detailed string
-             int pos = 0;
+            // Try generate detailed string
+            int pos = 0;
 
-             // Ensure destination is big enough?
-             // We assume caller passes 256 which is enough for logic.
-             // But we should be safe.
-             if (destination.Length < 256) return 0; // Should not happen with stackalloc 256
+            // Ensure destination is big enough?
+            // We assume caller passes 256 which is enough for logic.
+            // But we should be safe.
+            if (destination.Length < 256) return 0; // Should not happen with stackalloc 256
 
-             destination[pos++] = '<';
+            destination[pos++] = '<';
 
-             // Page 1
-             AppendPage(destination, ref pos, 1, cp);
+            // Page 1
+            AppendPage(destination, ref pos, 1, cp);
 
-             int start = Math.Max(2, cp - 2);
-             int end = Math.Min(totalPages - 1, cp + 2);
+            int start = Math.Max(2, cp - 2);
+            int end = Math.Min(totalPages - 1, cp + 2);
 
-             if (start > 2) AppendDots(destination, ref pos);
+            if (start > 2) AppendDots(destination, ref pos);
 
-             for(int i = start; i <= end; i++)
-             {
-                 AppendPage(destination, ref pos, i, cp);
-             }
+            for (int i = start; i <= end; i++)
+            {
+                AppendPage(destination, ref pos, i, cp);
+            }
 
-             if (end < totalPages - 1) AppendDots(destination, ref pos);
+            if (end < totalPages - 1) AppendDots(destination, ref pos);
 
-             if (totalPages > 1) AppendPage(destination, ref pos, totalPages, cp);
+            if (totalPages > 1) AppendPage(destination, ref pos, totalPages, cp);
 
-             destination[pos++] = ' ';
-             destination[pos++] = '>';
+            destination[pos++] = ' ';
+            destination[pos++] = '>';
 
-             if (pos <= availableWidth)
-             {
-                 return pos;
-             }
+            if (pos <= availableWidth)
+            {
+                return pos;
+            }
         }
 
         // Fallback to status string
@@ -923,18 +903,18 @@ public class Table : UIElement
     {
         if (p == cp)
         {
-             // " [{p}]"
-             span[pos++] = ' '; span[pos++] = '[';
-             p.TryFormat(span.Slice(pos), out int chars);
-             pos += chars;
-             span[pos++] = ']';
+            // " [{p}]"
+            span[pos++] = ' '; span[pos++] = '[';
+            p.TryFormat(span.Slice(pos), out int chars);
+            pos += chars;
+            span[pos++] = ']';
         }
         else
         {
-             // " {p}"
-             span[pos++] = ' ';
-             p.TryFormat(span.Slice(pos), out int chars);
-             pos += chars;
+            // " {p}"
+            span[pos++] = ' ';
+            p.TryFormat(span.Slice(pos), out int chars);
+            pos += chars;
         }
     }
 
@@ -975,28 +955,24 @@ public class Table : UIElement
 
     private void RenderPagination(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-       if (PageSize <= 0) return;
-       int totalPages = TotalPages;
-       if (totalPages <= 1) return;
-       
-       int w = RenderSize.Width;
-       int y = RenderSize.Height - 1;
-       
-       for(int i=0; i<w; i++) buffer.SetPixel(RenderSize.X + offsetX + i, RenderSize.Y + offsetY + y, ' ', ConsoleColor.Gray, ConsoleColor.Black);
-       
-       Span<char> textBuffer = stackalloc char[256];
-       int len = GetPaginationString(textBuffer, w, totalPages, CurrentPage);
-       var text = textBuffer.Slice(0, len);
-       
-       int startX = (w - len) / 2;
-       int absX = RenderSize.X + offsetX + startX;
-       int absY = RenderSize.Y + offsetY + y;
-       
-       for(int i=0; i<len; i++)
-       {
-           char c = text[i];
-           buffer.SetPixel(absX + i, absY, c, ConsoleColor.Gray, ConsoleColor.Black);
-       }
+        if (PageSize <= 0) return;
+        int totalPages = TotalPages;
+        if (totalPages <= 1) return;
+
+        int w = RenderSize.Width;
+        int y = RenderSize.Height - 1;
+
+        buffer.DrawHLine(RenderSize.X + offsetX, RenderSize.Y + offsetY + y, w, ' ', ConsoleColor.Gray, ConsoleColor.Black);
+
+        Span<char> textBuffer = stackalloc char[256];
+        int len = GetPaginationString(textBuffer, w, totalPages, CurrentPage);
+        var text = textBuffer.Slice(0, len);
+
+        int startX = (w - len) / 2;
+        int absX = RenderSize.X + offsetX + startX;
+        int absY = RenderSize.Y + offsetY + y;
+
+        buffer.DrawString(absX, absY, text, ConsoleColor.Gray, ConsoleColor.Black);
     }
 }
 
@@ -1015,7 +991,7 @@ internal class TableSeparator : UIElement
     {
         return new Size(availableSize.Width, 1);
     }
-    
+
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
         var table = FindAncestor<Table>();
@@ -1023,7 +999,7 @@ internal class TableSeparator : UIElement
 
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
-        
+
         // Ensure that width is capped by what the Table actually measures,
         // rather than the infinite horizontal scroll space given by ScrollViewer.
         int width = Math.Min(RenderSize.Width, table.RenderSize.Width);
@@ -1031,13 +1007,12 @@ internal class TableSeparator : UIElement
         char hChar = '\u2500';
         char crossChar = '\u253C';
 
-        for(int i=0; i<width; i++)
-            buffer.SetPixel(x + i, y, hChar, ConsoleColor.Gray, ConsoleColor.Black);
+        buffer.DrawHLine(x, y, width, hChar, ConsoleColor.Gray, ConsoleColor.Black);
 
         if (table.ShowVerticalLines)
         {
             int cx = 0;
-            for(int i=0; i<table.Columns.Count - 1; i++)
+            for (int i = 0; i < table.Columns.Count - 1; i++)
             {
                 cx += table.Columns[i].ActualWidth;
                 buffer.SetPixel(x + cx, y, crossChar, ConsoleColor.Gray, ConsoleColor.Black);

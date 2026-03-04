@@ -1,0 +1,450 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Reflection;
+
+namespace Tedd.TUI;
+
+public class DataGridColumn : DependencyObject
+{
+    public string Header { get; set; }
+    public GridLength Width { get; set; } = GridLength.Star;
+    public string BindingPath { get; set; }
+    public string Format { get; set; }
+
+    // Internal mapping to TableColumn
+    internal TableColumn _tableColumn;
+}
+
+public class DataGrid : ItemsControl
+{
+    private readonly Table _table;
+    public ObservableCollection<DataGridColumn> Columns { get; } = new ObservableCollection<DataGridColumn>();
+
+    public bool AutoGenerateColumns { get; set; } = true;
+
+    // Delegate Table properties
+    public bool ShowHeader
+    {
+        get => _table.ShowHeader;
+        set => _table.ShowHeader = value;
+    }
+
+    public bool ShowBorder
+    {
+        get => _table.ShowBorder;
+        set => _table.ShowBorder = value;
+    }
+
+    public BoxStyle BorderStyle
+    {
+        get => _table.BorderStyle;
+        set => _table.BorderStyle = value;
+    }
+
+    public int PageSize
+    {
+        get => _table.PageSize;
+        set => _table.PageSize = value;
+    }
+
+    public int SelectedIndex
+    {
+        get => _table.SelectedIndex;
+        set => _table.SelectedIndex = value;
+    }
+
+    public object SelectedItem
+    {
+        get;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                // Sync to Table
+                if (!_isUpdatingSelection)
+                {
+                    _isUpdatingSelection = true;
+                    try
+                    {
+                        if (field != null)
+                        {
+                            foreach (var row in _table.Rows)
+                            {
+                                if (row.Tag == field)
+                                {
+                                    _table.SelectedIndex = _table.Rows.IndexOf(row);
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            _table.SelectedIndex = -1;
+                        }
+                    }
+                    finally
+                    {
+                        _isUpdatingSelection = false;
+                    }
+                }
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
+
+    public event EventHandler SelectionChanged;
+
+    private List<Func<object, string>> _cachedGetters;
+    private bool _isGeneratingColumns;
+
+    private static readonly Dictionary<PropertyInfo, Func<object, object>> _globalCompiledGetters = new();
+    private static readonly System.Threading.Lock _globalCompiledGettersLock = new();
+
+    public DataGrid()
+    {
+        _table = new Table();
+        // Forward Table events
+        _table.SelectionChanged += OnTableSelectionChanged;
+
+        _table.Parent = this;
+
+        Columns.CollectionChanged += OnColumnsCollectionChanged;
+    }
+
+    private bool _isUpdatingSelection = false;
+
+    private void OnTableSelectionChanged(object? sender, EventArgs e)
+    {
+        if (_isUpdatingSelection) return;
+        _isUpdatingSelection = true;
+        try
+        {
+            if (_table.SelectedIndex >= 0 && _table.SelectedIndex < _table.Rows.Count)
+            {
+                var row = _table.Rows[_table.SelectedIndex];
+                if (row.Tag != null && SelectedItem != row.Tag)
+                {
+                    SelectedItem = row.Tag;
+                }
+            }
+            else
+            {
+                SelectedItem = null;
+            }
+        }
+        finally
+        {
+            _isUpdatingSelection = false;
+        }
+    }
+
+    private void OnColumnsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        // Rebuild Table Columns
+        RebuildTableColumns();
+
+        if (_isGeneratingColumns) return;
+
+        // Clear cache and rebuild rows
+        _cachedGetters = null;
+        RefreshRows();
+    }
+
+    private void RebuildTableColumns()
+    {
+        _table.Columns.Clear();
+        foreach (var col in Columns)
+        {
+            var tc = new TableColumn
+            {
+                Header = col.Header,
+                Width = col.Width
+            };
+            _table.Columns.Add(tc);
+            col._tableColumn = tc;
+        }
+    }
+
+    protected override void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        base.OnItemsCollectionChanged(sender, e);
+
+        bool columnsGenerated = false;
+
+        // If AutoGenerateColumns is true and we have no columns, try to generate them from new items
+        if (AutoGenerateColumns && Columns.Count == 0 && Items.Count > 0)
+        {
+            object? firstItem = null;
+            foreach (var item in Items)
+            {
+                if (item != null)
+                {
+                    firstItem = item;
+                    break;
+                }
+            }
+            if (firstItem != null)
+            {
+                GenerateColumns(firstItem);
+                columnsGenerated = true;
+            }
+        }
+
+        if (columnsGenerated) return;
+
+        switch (e.Action)
+        {
+            case NotifyCollectionChangedAction.Add:
+                // Only incremental update if we have getters ready (meaning columns exist)
+                // If columns are empty (and not autogenerated), getters will be empty, effectively adding empty rows or rows with ToString.
+                // We should ensure getters are built.
+                _cachedGetters = null; // Invalidate cache in case type changed? No, assume schema stable.
+                // Actually, if we add items, schema shouldn't change.
+                EnsureGetters();
+
+                if (e.NewItems != null)
+                {
+                    foreach (var item in e.NewItems)
+                    {
+                        AddRowForItem(item);
+                    }
+                }
+                _table.TotalRows = Items.Count;
+                break;
+            case NotifyCollectionChangedAction.Remove:
+                if (e.OldItems != null)
+                {
+                    foreach (var item in e.OldItems)
+                    {
+                        var row = _table.Rows.FirstOrDefault(r => r.Tag == item);
+                        if (row != null) _table.Rows.Remove(row);
+                    }
+                }
+                _table.TotalRows = Items.Count;
+                break;
+            case NotifyCollectionChangedAction.Reset:
+                RefreshRows();
+                break;
+            default:
+                RefreshRows(); // Move/Replace: simplest is rebuild
+                break;
+        }
+    }
+
+    // Override OnItemsSourceChanged to catch initial load
+    protected override void OnItemsSourceChanged(System.Collections.IEnumerable? newValue)
+    {
+        base.OnItemsSourceChanged(newValue);
+        // If Items are already populated by base, we can check generation
+        if (AutoGenerateColumns && Columns.Count == 0 && Items.Count > 0)
+        {
+            object? firstItem = null;
+            foreach (var item in Items)
+            {
+                if (item != null)
+                {
+                    firstItem = item;
+                    break;
+                }
+            }
+            if (firstItem != null) GenerateColumns(firstItem);
+        }
+        RefreshRows();
+    }
+
+    private void GenerateColumns(object item)
+    {
+        if (item == null) return;
+        _isGeneratingColumns = true;
+        try
+        {
+            var type = item.GetType();
+            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var prop in props)
+            {
+                Columns.Add(new DataGridColumn
+                {
+                    Header = prop.Name,
+                    BindingPath = prop.Name,
+                    Width = GridLength.Auto
+                });
+            }
+        }
+        finally
+        {
+            _isGeneratingColumns = false;
+            // Now force refresh once
+            _cachedGetters = null;
+            RefreshRows();
+        }
+    }
+
+    private void EnsureGetters()
+    {
+        if (_cachedGetters != null) return;
+        _cachedGetters = new List<Func<object, string>>();
+
+        if (Columns.Count > 0 && Items.Count > 0)
+        {
+            // Find type from first non-null item
+            object? firstItem = null;
+            foreach (var item in Items)
+            {
+                if (item != null)
+                {
+                    firstItem = item;
+                    break;
+                }
+            }
+
+            if (firstItem != null)
+            {
+                var type = firstItem.GetType();
+                foreach (var col in Columns)
+                {
+                    if (!string.IsNullOrEmpty(col.BindingPath))
+                    {
+                        var prop = type.GetProperty(col.BindingPath);
+                        if (prop != null)
+                        {
+                            try
+                            {
+                                Func<object, object>? getter = null;
+                                lock (_globalCompiledGettersLock)
+                                {
+                                    if (!_globalCompiledGetters.TryGetValue(prop, out getter))
+                                    {
+                                        var param = System.Linq.Expressions.Expression.Parameter(typeof(object), "obj");
+                                        var castObj = System.Linq.Expressions.Expression.Convert(param, type);
+                                        var propAccess = System.Linq.Expressions.Expression.Property(castObj, prop);
+                                        var castResult = System.Linq.Expressions.Expression.Convert(propAccess, typeof(object));
+                                        var lambda = System.Linq.Expressions.Expression.Lambda<Func<object, object>>(castResult, param);
+                                        getter = lambda.Compile();
+                                        _globalCompiledGetters[prop] = getter;
+                                    }
+                                }
+
+                                _cachedGetters.Add(obj =>
+                                {
+                                    if (obj == null) return "";
+                                    try
+                                    {
+                                        var val = getter(obj);
+                                        return val?.ToString() ?? "";
+                                    }
+                                    catch
+                                    {
+                                        return "";
+                                    }
+                                });
+                            }
+                            catch
+                            {
+                                // Fallback to reflection if expression compilation fails
+                                _cachedGetters.Add(obj =>
+                                {
+                                    if (obj == null) return "";
+                                    try
+                                    {
+                                        var val = prop.GetValue(obj);
+                                        return val?.ToString() ?? "";
+                                    }
+                                    catch
+                                    {
+                                        return "";
+                                    }
+                                });
+                            }
+                        }
+                        else
+                        {
+                            _cachedGetters.Add(obj => "");
+                        }
+                    }
+                    else
+                    {
+                        _cachedGetters.Add(obj => "");
+                    }
+                }
+            }
+        }
+    }
+
+    private void RefreshRows()
+    {
+        _table.Rows.Clear();
+        _cachedGetters = null; // Force rebuild getters
+        EnsureGetters();
+
+        foreach (var item in Items)
+        {
+            AddRowForItem(item);
+        }
+
+        _table.TotalRows = Items.Count;
+    }
+
+    private void AddRowForItem(object item)
+    {
+        if (item == null) return;
+
+        var row = new TableRow { Tag = item };
+        if (_cachedGetters != null && _cachedGetters.Count > 0)
+        {
+            foreach (var getter in _cachedGetters)
+            {
+                row.AddCell(getter(item));
+            }
+        }
+        else
+        {
+            row.AddCell(item.ToString() ?? "");
+        }
+        _table.AddRow(row);
+    }
+
+    public override int VisualChildrenCount => 1;
+
+    public override UIElement GetVisualChild(int index)
+    {
+        if (index == 0) return _table;
+        throw new ArgumentOutOfRangeException(nameof(index));
+    }
+
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        _table.Measure(availableSize);
+        return _table.DesiredSize;
+    }
+
+    protected override void ArrangeOverride(Size finalSize)
+    {
+        _table.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
+    }
+
+    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
+    {
+        _table.Render(buffer, offsetX, offsetY);
+    }
+
+    // Input
+    public override void OnKeyDown(KeyEventArgs e)
+    {
+        _table.OnKeyDown(e);
+        if (e.Handled) return;
+        base.OnKeyDown(e);
+    }
+
+    public override void OnMouseDown(MouseEventArgs e)
+    {
+        _table.OnMouseDown(e);
+        if (e.Handled) return;
+        base.OnMouseDown(e);
+    }
+}

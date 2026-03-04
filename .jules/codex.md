@@ -1,15 +1,18 @@
-# Codex: Documentation Intelligence
+## 2024-05-24 - Documentation Synchronization of Architectural Mechanics
 
-## 2025-05-24 - Documentation Synchronization Protocol
-**Observation:**
-- **Framework Target:** The current `README.md` specifies `.NET 8.0 SDK` as a prerequisite, whereas the `Tedd.TUI.csproj` explicitly targets `.NET 10.0`.
-- **Architectural Drift:** The "Usage Example" demonstrates a manual `Measure`/`Arrange`/`Render` loop, failing to reflect the modern `TuiApp` abstraction used in `Tedd.TUI.Demo`.
-- **Feature Omission:** The `README.md` omits critical components such as the Routed Event System (Bubble/Tunnel strategies), `Table` control pagination/sorting features, and `MarkdownView`.
-- **Performance Articulation:** The documentation lacks explicit mention of the "Zero-allocation" rendering architecture and `VirtualBuffer` diffing mechanism, which are key selling points.
+**Observation:** The README.md exhibited documentation drift regarding the integration of `DockPanel` and lacked precise articulation of core framework mechanisms. The layout system description omitted the `Panel` base class and its `UIElementCollection` (`Children`) implementation. Data binding documentation was missing an explicit explanation of automatic `DataContext` inheritance. Additionally, the event routing section lacked specifics about `UIElement` class handlers (`OnKeyDown`, etc.) and the automatic translation of global coordinates to local space during the `InvokeHandler` execution.
 
-**Strategic Action:**
-- Update `README.md` to explicitly require `.NET 10.0 SDK`.
-- Replace the legacy usage example with a concise `TuiApp` implementation.
-- Articulate the Routed Event System and Layout Engine mechanics in a dedicated "Architecture" section.
-- Expand the "Features" list to include `Table`, `Grid`, `MarkdownView`, and performance characteristics.
-- Delineate "XAML Support" as foundational/experimental versus established capabilities.
+**Strategic Action:** Executed a comprehensive revision of the README.md to synthesize these architectural paradigms. Integrated `DockPanel` into the Control Suite. Re-architected the Layout Engine section to detail the `Panel` structure and `Render` clipping optimization. Refined the Data Binding explanation to cover inheritance and `RelativeSource` resolutions. Enhanced the Input section to document standard event bubbling, class handlers, and coordinate resolution mapping. This procedural adjustment ensures that the epistemological interface maintains parity with the current TUI implementation reality.
+## 2024-11-09 - Documentation Synchronization and Architectural Articulation
+**Observation:** The Data Binding and Input/Interaction sections of the `README.md` were abstract and lacked precise mechanical descriptions of DataContext inheritance, BindingExpression lifecycle, RelativeSource capabilities, and RoutedEvent topology. They relied on speculative abstractions rather than empirical functional descriptions.
+**Strategic Action:** Restructured the Data Binding section to detail the role of `InheritanceParent`, event hooking in `BindingExpression`, and specific `RelativeSource` enumerations. Enhanced the Input & Interaction section to delineate the `RoutingStrategy` topologies (Tunnel, Bubble, Direct), the `InvokeHandler` coordinate resolution mechanics, and the distinction between class and instance handlers.
+## 2024-11-09 - Documentation Synchronization of Rich Control Suite and Overlay System
+
+**Observation:** The README.md exhibited documentation drift regarding the newly integrated controls (`TextEditor`, `TreeView`, `TreeViewItem`, `GroupBox`, `UniformGrid`, `HeaderedItemsControl`). Additionally, the architectural description lacked precise articulation of the `TuiWindow` stacking overlay system (`PushOverlay`, `RemoveOverlay`), which supersedes the obsolete `SetOverlay` method and implements reverse-topological hit-testing and sequential Z-index rendering.
+
+**Strategic Action:** Executed a comprehensive revision of the README.md to synthesize these architectural paradigms. Updated the 'Rich Control Suite' and 'Hierarchical Composition' sections to encompass the new control mechanisms. Authored a dedicated 'Overlay System' subsection under 'Architecture' detailing the topological stack management, Z-index rendering parity, and intercept optimization during `InputHitTest` operations.
+## 2026-03-03 - Component and Optimization Documentation Parity
+
+**Observation:** The README.md exhibited documentation drift regarding newly introduced UI components (`UniformGrid`, `Canvas`, `WrapPanel`, `DockPanel`, `TextEditor`, `TreeView`, `ScrollViewer`, `ScrollBar`, `DialogBox`). The Data Binding section was missing the recent optimizations leveraging C# 13 `System.Threading.Lock` and `System.Linq.Expressions` getter compilation. Furthermore, the Input & Interaction section omitted the explicit documentation of the overlay stacking API (`PushOverlay`).
+
+**Strategic Action:** Synchronized the documentation by appending the missing controls and layout panels to their respective sections. Clarified the use of `System.Threading.Lock` and `System.Linq.Expressions` for optimization within the Collections binding subsection. Detailed the `PushOverlay` implementation to define the current modal interaction and z-index paradigms accurately.

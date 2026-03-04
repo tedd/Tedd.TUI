@@ -29,16 +29,23 @@ public class TuiApp
     {
         // Initial setup
         System.Console.Clear();
+        _inputManager.Start();
 
         // Use array for WaitHandle? No, WaitForMultipleObjects takes IntPtr array.
         // We have:
         // 1. Console Input Handle (Windows)
         // 2. Render Wait Handle (Event)
 
-        IntPtr[] handles = null;
+        IntPtr[] winHandles = null;
+        WaitHandle[] unixHandles = null;
+
         if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
         {
-            handles = new IntPtr[] { _inputManager.InputHandle, _renderWaitHandle.SafeWaitHandle.DangerousGetHandle() };
+            winHandles = new IntPtr[] { _inputManager.InputHandle, _renderWaitHandle.SafeWaitHandle.DangerousGetHandle() };
+        }
+        else
+        {
+            unixHandles = new WaitHandle[] { _inputManager.InputWaitHandle, _renderWaitHandle };
         }
 
         // Initial Layout & Render
@@ -47,28 +54,20 @@ public class TuiApp
         // Main Loop
         while (_running)
         {
-            if (handles != null)
+            if (winHandles != null)
             {
                 // Wait for Input or Render Request
-                uint result = NativeMethods.WaitForMultipleObjects((uint)handles.Length, handles, false, 100);
-                
+                uint result = NativeMethods.WaitForMultipleObjects((uint)winHandles.Length, winHandles, false, NativeMethods.INFINITE);
+
                 if (result == NativeMethods.WAIT_OBJECT_0) // Input
                 {
-                     _inputManager.ProcessInput();
+                    _inputManager.ProcessInput();
                 }
                 else if (result == NativeMethods.WAIT_OBJECT_0 + 1) // Render Notified
                 {
                     UpdateAndRender();
                 }
-                else if (result == NativeMethods.WAIT_TIMEOUT)
-                {
-                    // Poll for resize as backup
-                    if (System.Console.WindowWidth != _lastWidth || System.Console.WindowHeight != _lastHeight)
-                    {
-                        UpdateAndRender();
-                    }
-                }
-                else 
+                else
                 {
                     // Failed
                     Thread.Sleep(16);
@@ -76,28 +75,26 @@ public class TuiApp
             }
             else
             {
-                // Non-Windows fallback: Polling with sleep
-                if (System.Console.KeyAvailable)
+                // Non-Windows fallback: Blocking Wait
+                // 0 = Input, 1 = Render
+                // Timeout 500ms to poll for resize
+                int result = WaitHandle.WaitAny(unixHandles, 500);
+
+                if (result == 0) // Input
                 {
                     _inputManager.ProcessInput();
                 }
-                else
+                else if (result == 1) // Render
                 {
-                     // Check for resize
-                     if (System.Console.WindowWidth != _lastWidth || System.Console.WindowHeight != _lastHeight)
-                     {
-                         UpdateAndRender();
-                     }
-                     // If we are not on windows, we can't easily wait on handles.
-                     // We can check if _renderWaitHandle is set?
-                     else if (_renderWaitHandle.WaitOne(0))
-                     {
-                         UpdateAndRender();
-                     }
-                     else
-                     {
-                         Thread.Sleep(16);
-                     }
+                    UpdateAndRender();
+                }
+                else if (result == WaitHandle.WaitTimeout)
+                {
+                    // Check for resize
+                    if (System.Console.WindowWidth != _lastWidth || System.Console.WindowHeight != _lastHeight)
+                    {
+                        UpdateAndRender();
+                    }
                 }
             }
         }
@@ -130,7 +127,7 @@ public class TuiApp
 
         _lastWidth = w;
         _lastHeight = h;
-        
+
         // Measure & Arrange (Layout)
         _window.Measure(new Size(w, h));
         _window.Arrange(new Rect(0, 0, w, h));
@@ -153,7 +150,7 @@ public class TuiApp
     {
         _running = false;
         _renderWaitHandle.Set(); // Wake up loop
-        
+
         // Restore Console State
         System.Console.Write("\x1b[?1000l\x1b[?1006l");
         System.Console.CursorVisible = true;

@@ -1,42 +1,94 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Tedd.TUI;
 
-public class ComboBox : UIElement
+public class ComboBox : Selector
 {
     private ListBox _popupListBox;
     private Border? _popupBorder;
     private bool _isDroppedDown = false;
-    private object _selectedItem;
     private bool _arrowFocused = false; // True when focus is on the dropdown arrow
 
-    public List<object> Items { get; } = new List<object>();
+    public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
-    public event EventHandler? SelectionChanged;
+    public static readonly DependencyProperty FocusedForegroundProperty =
+        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
 
-    public object SelectedItem
+    public ConsoleColor FocusedForeground
     {
-        get { return _selectedItem; }
-        set
-        {
-            if (_selectedItem != value)
-            {
-                _selectedItem = value;
-                if (_popupListBox != null)
-                {
-                    _popupListBox.SelectedIndex = Items.IndexOf(value);
-                }
-                SelectionChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
+        get { return (ConsoleColor)GetValue(FocusedForegroundProperty); }
+        set { SetValue(FocusedForegroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedTextBackgroundColorProperty =
+        DependencyProperty.Register("FocusedTextBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
+
+    public ConsoleColor FocusedTextBackgroundColor
+    {
+        get { return (ConsoleColor)GetValue(FocusedTextBackgroundColorProperty); }
+        set { SetValue(FocusedTextBackgroundColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty ArrowColorProperty =
+        DependencyProperty.Register("ArrowColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
+
+    public ConsoleColor ArrowColor
+    {
+        get { return (ConsoleColor)GetValue(ArrowColorProperty); }
+        set { SetValue(ArrowColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty ArrowBackgroundColorProperty =
+        DependencyProperty.Register("ArrowBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Gray);
+
+    public ConsoleColor ArrowBackgroundColor
+    {
+        get { return (ConsoleColor)GetValue(ArrowBackgroundColorProperty); }
+        set { SetValue(ArrowBackgroundColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedArrowColorProperty =
+        DependencyProperty.Register("FocusedArrowColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
+
+    public ConsoleColor FocusedArrowColor
+    {
+        get { return (ConsoleColor)GetValue(FocusedArrowColorProperty); }
+        set { SetValue(FocusedArrowColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty FocusedArrowBackgroundColorProperty =
+        DependencyProperty.Register("FocusedArrowBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
+
+    public ConsoleColor FocusedArrowBackgroundColor
+    {
+        get { return (ConsoleColor)GetValue(FocusedArrowBackgroundColorProperty); }
+        set { SetValue(FocusedArrowBackgroundColorProperty, value); }
+    }
+
+    public static readonly DependencyProperty PopupBackgroundProperty =
+        DependencyProperty.Register("PopupBackground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
+
+    public ConsoleColor PopupBackground
+    {
+        get { return (ConsoleColor)GetValue(PopupBackgroundProperty); }
+        set { SetValue(PopupBackgroundProperty, value); }
+    }
+
+    public static readonly DependencyProperty PopupBorderColorProperty =
+        DependencyProperty.Register("PopupBorderColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.White);
+
+    public ConsoleColor PopupBorderColor
+    {
+        get { return (ConsoleColor)GetValue(PopupBorderColorProperty); }
+        set { SetValue(PopupBorderColorProperty, value); }
     }
 
     public ComboBox()
     {
         Focusable = true;
         _popupListBox = new ListBox();
-        _popupListBox.Items.AddRange(Items); // Sync logic needed
     }
 
     protected override Size MeasureOverride(Size availableSize)
@@ -51,10 +103,10 @@ public class ComboBox : UIElement
         int w = RenderSize.Width;
 
         // Draw text area
-        var textBg = IsFocused && !_arrowFocused ? ConsoleColor.DarkGray : ConsoleColor.Black;
-        var textFg = IsFocused && !_arrowFocused ? ConsoleColor.Yellow : ConsoleColor.White;
+        var textBg = IsFocused && !_arrowFocused ? FocusedTextBackgroundColor : (Background ?? ConsoleColor.Black);
+        var textFg = IsFocused && !_arrowFocused ? FocusedForeground : Foreground;
 
-        string text = SelectedItem?.ToString() ?? "";
+        string text = GetItemText(SelectedItem);
         if (text.Length > w - 2) text = text.Substring(0, w - 2);
 
         // Draw content
@@ -65,8 +117,8 @@ public class ComboBox : UIElement
         }
 
         // Draw Arrow with focus indication
-        var arrowBg = IsFocused && _arrowFocused ? ConsoleColor.DarkGray : ConsoleColor.Gray;
-        var arrowFg = IsFocused && _arrowFocused ? ConsoleColor.Yellow : ConsoleColor.Black;
+        var arrowBg = IsFocused && _arrowFocused ? FocusedArrowBackgroundColor : ArrowBackgroundColor;
+        var arrowFg = IsFocused && _arrowFocused ? FocusedArrowColor : ArrowColor;
         buffer.SetPixel(x + w - 1, y, 'v', arrowFg, arrowBg);
     }
 
@@ -95,7 +147,7 @@ public class ComboBox : UIElement
     public override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        
+
         // Handle Tab for internal focus navigation (text area <-> arrow)
         if (e.Key == ConsoleKey.Tab)
         {
@@ -122,7 +174,7 @@ public class ComboBox : UIElement
                 // else: on text area, don't handle - let focus move to previous control
             }
         }
-        
+
         // Space, Enter, or Arrow keys open dropdown
         if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter
             || e.Key == ConsoleKey.DownArrow || e.Key == ConsoleKey.UpArrow)
@@ -169,20 +221,21 @@ public class ComboBox : UIElement
         int maxContentHeight = Math.Max(0, spaceBelow - 2);
 
         // Setup ListBox
-        _popupListBox.Items.Clear();
-        _popupListBox.Items.AddRange(Items);
+        _popupListBox.ItemsSource = this.Items;
+        _popupListBox.DisplayMemberPath = this.DisplayMemberPath;
+        _popupListBox.SelectedIndex = this.SelectedIndex;
 
         // Popup width matches ComboBox width, adjusted for border
-        int contentWidth = Math.Max(0, RenderSize.Width - 2); 
+        int contentWidth = Math.Max(0, RenderSize.Width - 2);
         _popupListBox.Width = contentWidth;
 
         // Dynamic height based on items, clamped to available space
         int desiredHeight = Items.Count;
         if (desiredHeight == 0) desiredHeight = 1;
         _popupListBox.Height = Math.Min(desiredHeight, maxContentHeight);
-        
+
         // Ensure ListBox is opaque
-        _popupListBox.Background = ConsoleColor.Black;
+        _popupListBox.Background = PopupBackground;
 
         // Create a Border for the popup
         _popupBorder = new Border
@@ -190,7 +243,7 @@ public class ComboBox : UIElement
             Width = RenderSize.Width,
             Height = _popupListBox.Height + 2,
             Child = _popupListBox,
-            BorderColor = ConsoleColor.White,
+            BorderColor = PopupBorderColor,
             BoxStyle = BoxStyle.Single
         };
 
@@ -226,7 +279,7 @@ public class ComboBox : UIElement
             // Sync selection back
             if (_popupListBox.SelectedIndex >= 0 && _popupListBox.SelectedIndex < Items.Count)
             {
-                SelectedItem = Items[_popupListBox.SelectedIndex];
+                SelectedIndex = _popupListBox.SelectedIndex;
             }
         }
         _isDroppedDown = false;

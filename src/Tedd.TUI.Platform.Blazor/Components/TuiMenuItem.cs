@@ -21,8 +21,8 @@ public class TuiMenuItem : TuiComponentBase
         }
         else if (_menuItem.Header == null && !string.IsNullOrEmpty(Text))
         {
-            _menuItem.Header = new TextBlock 
-            { 
+            _menuItem.Header = new TextBlock
+            {
                 Text = Text,
                 Foreground = ConsoleColor.Black // Default for menu items usually
             };
@@ -30,9 +30,9 @@ public class TuiMenuItem : TuiComponentBase
 
         if (OnClick.HasDelegate)
         {
-            _menuItem.Command = () => 
+            _menuItem.Command = () =>
             {
-                 InvokeAsync(OnClick.InvokeAsync);
+                InvokeAsync(OnClick.InvokeAsync);
             };
         }
     }

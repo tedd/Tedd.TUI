@@ -7,8 +7,8 @@ namespace Tedd.TUI.CodeColoring;
 public class Grammar : IDictionary<string, List<Pattern>>
 {
     // Use List for order and Dictionary for lookup
-    private readonly List<string> _keys = new List<string>();
-    private readonly Dictionary<string, List<Pattern>> _dictionary = new Dictionary<string, List<Pattern>>();
+    private readonly List<string> _keys = [];
+    private readonly Dictionary<string, List<Pattern>> _dictionary = [];
 
     public Grammar() { }
 
