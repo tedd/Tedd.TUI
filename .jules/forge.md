@@ -51,3 +51,6 @@
 - Modified `ItemsControl` to inherit from `Control`, aligning its inheritance hierarchy with WPF.
 - Implemented the `ItemsPanelTemplate` class inheriting from `FrameworkTemplate` to support dynamic panel generation.
 - Added the `ItemsPanel` dependency property to `ItemsControl`, utilizing a default factory that generates a `StackPanel` with `Orientation.Vertical` to fulfill the standard default layout behavior.
+## 2025-03-03 - GroupBox Integration
+**Observation:** The TUI framework lacked a native component for visual grouping with explicit title support natively mapping to the TUI (like a WPF GroupBox), although `HeaderedContentControl` and `Border` existed.
+**Strategic Action:** Developed `GroupBox` by subclassing `HeaderedContentControl` and leveraging the `ControlTemplate` engine to map the `Header` to a `Border` element's `Title`, synthesizing the visual paradigms of DOS-era environments with contemporary .NET object models.
