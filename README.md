@@ -7,13 +7,17 @@
 - **WPF-Inspired Core:** Built on a `UIElement` base with a lightweight `DependencyProperty` system and hierarchical Visual Tree.
 - **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol.
   - **Grid:** Supports `RowDefinition`, `ColumnDefinition`, `Star` (*) sizing, and `Auto` sizing.
+  - **UniformGrid:** Symmetrical grid layouts via `Rows` and `Columns` dependency properties.
   - **StackPanel:** Vertical and horizontal stacking.
+  - **WrapPanel:** Sequential layout with line/column wrapping.
+  - **DockPanel:** Edge-docking arrangements using the `Dock` attached property.
+  - **Canvas:** Absolute positioning via `Canvas.Left` and `Canvas.Top` attached properties.
   - **Border:** Decorative borders with box-drawing characters.
 - **Rich Control Suite:**
   - **DataGrid:** Supports `ItemsSource` binding, `AutoGenerateColumns`, selection, and pagination.
   - **Table:** Manual row management with sorting, pagination, and header customization.
   - **MarkdownView:** Renders Markdown content with theming support.
-  - **Standard Controls:** `Button`, `TextBox`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `DockPanel`.
+  - **Standard Controls:** `Button`, `TextBox`, `TextEditor`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `TreeView`, `ScrollViewer`, `ScrollBar`, `DialogBox`.
 - **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
 - **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
 - **Cross-Platform:** Decoupled rendering pipeline supporting Console (Windows/Linux/Mac).
@@ -158,7 +162,7 @@ Tedd.TUI supports a hierarchical data binding system analogous to WPF, driven by
   - `Self`: Targets the `UIElement` itself.
   - `TemplatedParent`: Essential for `ControlTemplate` implementations, targets the origin control instantiating the template visual tree.
   - `FindAncestor`: Ascends the visual tree utilizing `AncestorType` and `AncestorLevel` reflection checks, useful in recursive layout bindings.
-- **Collections:** Utilizing `DataGrid` or derivatives of the `Selector` class (`ListBox`, `ComboBox`, `TabControl`) enables binding directly to collections via the `ItemsSource` property, complete with `DisplayMemberPath` reflection text resolution leveraging internal cache pools (utilizing the new `System.Threading.Lock`).
+- **Collections:** Utilizing `DataGrid` or derivatives of the `Selector` class (`ListBox`, `ComboBox`, `TabControl`) enables binding directly to collections via the `ItemsSource` property, complete with `DisplayMemberPath` reflection text resolution leveraging internal cache pools (utilizing the C# 13 `System.Threading.Lock`). `DataGrid` further optimizes bound property access performance by utilizing `System.Linq.Expressions` to compile getter delegates (`Func<object, object>`), which are cached globally for reuse across instances.
 
 ### Layout Engine
 The framework employs a robust, recursive two-pass layout system orchestrated by the abstract `Panel` class:
@@ -170,6 +174,7 @@ The framework employs a robust, recursive two-pass layout system orchestrated by
 
 ### Input & Interaction
 Input handling is orchestrated by a deterministic Routed Event architecture managed within `UIElement`:
+- **Overlay Management:** `TuiWindow` provides a stacking overlay system via `PushOverlay` and `RemoveOverlay` methods. Overlays are rendered last (on top) and hit-tested first, providing a robust architecture for modal dialogs and popup menus.
 - **Standard Input Events:** Primitive interactions (`KeyDown`, `KeyUp`, `MouseDown`, `MouseUp`, `GotFocus`, `LostFocus`) are registered via `RoutedEvent.Register`. The core supports comprehensive `RoutingStrategy` execution topologies (`Tunnel` down to leaf, `Bubble` up to root, or `Direct` local invocations).
 - **Execution Phases:** Events originating at the active focus or visual leaf construct a routing table by walking `Parent` references. `Tunnel` events invoke sequentially from root to leaf, whereas `Bubble` events trace backwards from leaf to root. Events explicitly marked `Handled = true` halt bubbling unless a handler registered with `handledEventsToo = true` overrides the block.
 - **Coordinate Resolution:** During mouse event dispatch, `UIElement.InvokeHandler` intercepts the `RoutedEventArgs` payload. It dynamically translates absolute global screen coordinates (`GlobalX`, `GlobalY`) into the local `RenderSize` space of the invoking element (updating the `X` and `Y` properties) utilizing `PointFromScreen` prior to emitting the class handler invocation.
