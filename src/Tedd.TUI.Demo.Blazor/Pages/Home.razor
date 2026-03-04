@@ -218,7 +218,7 @@
         dialog.Content = dialogStack;
 
         // Use the window instance to set overlay
-        window.SetOverlay(dialog);
+        window.PushOverlay(dialog);
         dialog.Show();
         StateHasChanged();
     }
