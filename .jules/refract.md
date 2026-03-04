@@ -22,3 +22,7 @@
 ## 2024-05-24 - Parameter Optimization
 **Observation:** `Table.AddRow` utilized legacy `params T[]` parameter arrays, which allocate an array on the heap for each invocation containing multiple parameters.
 **Strategic Action:** Applied C# 13 `params ReadOnlySpan<T>` feature to the parameter arrays for the identified method. This allows the compiler to allocate the parameter values on the stack or use an inline array instead of a heap-allocated array, significantly reducing GC pressure.
+
+## 2024-03-04 - C# 13 System.Threading.Lock Modernization
+**Observation:** The codebase contained a legacy lock statement (`lock (_globalCompiledGetters)`) utilizing an arbitrary object for synchronization in `DataGrid.cs`, which is an obsolete .NET 5/6 pattern that lacks explicit thread safety semantics.
+**Strategic Action:** Transitioned the synchronization mechanism to use the C# 13 `System.Threading.Lock` type by introducing a dedicated `_globalCompiledGettersLock = new();` instance to enforce deterministic thread safety and structural clarity.

@@ -103,6 +103,7 @@ public class DataGrid : ItemsControl
     private bool _isGeneratingColumns;
 
     private static readonly Dictionary<PropertyInfo, Func<object, object>> _globalCompiledGetters = new();
+    private static readonly System.Threading.Lock _globalCompiledGettersLock = new();
 
     public DataGrid()
     {
@@ -315,7 +316,7 @@ public class DataGrid : ItemsControl
                             try
                             {
                                 Func<object, object>? getter = null;
-                                lock (_globalCompiledGetters)
+                                lock (_globalCompiledGettersLock)
                                 {
                                     if (!_globalCompiledGetters.TryGetValue(prop, out getter))
                                     {
