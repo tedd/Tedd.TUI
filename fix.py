@@ -1,9 +1,14 @@
-with open(".jules/forge.md", "r") as f:
+with open("src/Tedd.TUI.Tests/TextEditorTests.cs", "r") as f:
     text = f.read()
 
-text = text.replace("<<<<<<< HEAD\n- Refactored", "1. Fix `HeaderedItemsControl.cs` to use `DependencyProperty.Register` for `HasHeaderProperty`.\n2. `ItemsControl` (and thus `HeaderedItemsControl`) has `Items` of type `ItemCollection` which implements `IList` (of object). `TreeView` logic needs to cast objects to `TreeViewItem` when working with hierarchical items.\n\n## 2026-02-26 - [Input Event Infrastructure & Data Context]\n**Observation:** Standard input events (KeyDown, MouseDown) were virtual methods detached from the Routed Event system, preventing logical bubbling. Container controls used `List<UIElement>` exposing raw collections, causing failures in `Parent` assignment and DataContext inheritance when items were added manually.\n**Strategic Action:**\n- Refactored")
+# Home setup
+# "WABY||ZVC"
+# Cursor at Line 1, Col 2? The test says expected "AWBY||HZCV" which was replaced from "WABY||HZVC".
+# If starting is "WABY||ZVC" and we press Home, cursor goes to Line 1 Col 0.
+# Then 'H' makes it "WABY||HZVC".
+# So the expected text should be "WABY||HZVC", but my previous regex replaced it. Let's fix.
+text = text.replace('"AWBY||HZCV"', '"WABY||HZVC"')
+text = text.replace('"AWBY||HZCVE"', '"WABY||HZVCE"')
 
-text = text.replace("bounded by `RenderSize`.\n=======\n1. Fix `HeaderedItemsControl.cs` to use `DependencyProperty.Register` for `HasHeaderProperty`.\n2. `ItemsControl` (and thus `HeaderedItemsControl`) has `Items` of type `ItemCollection` which implements `IList` (of object). `TreeView` logic needs to cast objects to `TreeViewItem` when working with hierarchical items.\n>>>>>>> origin/main\n", "bounded by `RenderSize`.\n")
-
-with open(".jules/forge.md", "w") as f:
+with open("src/Tedd.TUI.Tests/TextEditorTests.cs", "w") as f:
     f.write(text)
