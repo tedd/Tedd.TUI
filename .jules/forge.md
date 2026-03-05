@@ -64,3 +64,7 @@
 ## 2025-03-03 - GroupBox Integration
 **Observation:** The TUI framework lacked a native component for visual grouping with explicit title support natively mapping to the TUI (like a WPF GroupBox), although `HeaderedContentControl` and `Border` existed.
 **Strategic Action:** Developed `GroupBox` by subclassing `HeaderedContentControl` and leveraging the `ControlTemplate` engine to map the `Header` to a `Border` element's `Title`, synthesizing the visual paradigms of DOS-era environments with contemporary .NET object models.
+
+## 2025-03-05 - DependencyProperty Value Precedence
+**Observation:** Discovered a parity deficit in the Dependency Property system where local value removal was not correctly mapped to WPF paradigms. Previously, `SetValue(null)` was attempting to clear values or act as a pseudo-clear, violating standard declarative property workflows. The system lacked `DependencyObject.ClearValue()`, preventing fallback to default or inherited values.
+**Strategic Action:** Implemented `ClearValue(DependencyProperty)` on `DependencyObject` to support WPF-isomorphic property resolution, correctly allowing fallback to default values upon local value removal, and modified `SetValue` to deterministically store `null` when provided instead of deleting the entry.

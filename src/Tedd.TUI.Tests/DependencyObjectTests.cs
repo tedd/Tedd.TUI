@@ -31,4 +31,15 @@ public class DependencyObjectTests
         obj.Test = 100;
         Assert.Equal(100, obj.Test);
     }
+
+    [Fact]
+    public void TestClearValue()
+    {
+        var obj = new MyObject();
+        obj.Test = 100;
+        Assert.Equal(100, obj.Test);
+
+        obj.ClearValue(MyObject.TestProperty);
+        Assert.Equal(42, obj.Test); // Should fall back to default value
+    }
 }
