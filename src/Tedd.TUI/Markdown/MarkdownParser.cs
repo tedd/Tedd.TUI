@@ -23,7 +23,12 @@ public class MarkdownParser
         var doc = new FlowDocument();
         if (string.IsNullOrEmpty(markdown)) return doc;
 
-        var lines = markdown.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).ToList();
+        // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
+        var lines = new List<string>();
+        foreach (var line in markdown.AsSpan().EnumerateLines())
+        {
+            lines.Add(line.ToString());
+        }
         var blocks = ParseBlocks(lines);
 
         foreach (var block in blocks)
@@ -172,11 +177,28 @@ public class MarkdownParser
                 // If I add one big TextBlock, it won't wrap.
                 // So I MUST split by space here.
 
-                var words = tt.Text.Split(' ');
-                for (int i = 0; i < words.Length; i++)
+                // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
+                ReadOnlySpan<char> span = tt.Text.AsSpan();
+                int start = 0;
+                while (start < span.Length)
                 {
-                    var word = words[i];
-                    if (string.IsNullOrEmpty(word) && i < words.Length - 1)
+                    int end = span.Slice(start).IndexOf(' ');
+                    string word;
+                    bool isLast = false;
+
+                    if (end == -1)
+                    {
+                        word = span.Slice(start).ToString();
+                        isLast = true;
+                        start = span.Length;
+                    }
+                    else
+                    {
+                        word = span.Slice(start, end).ToString();
+                        start += end + 1;
+                    }
+
+                    if (string.IsNullOrEmpty(word) && !isLast)
                     {
                         // Multiple spaces? Or split caused empty entry.
                         // Render space.
@@ -190,7 +212,7 @@ public class MarkdownParser
 
                     var tb = new TextBlock
                     {
-                        Text = word + (i < words.Length - 1 ? " " : ""), // Add space back except last
+                        Text = word + (isLast ? "" : " "), // Add space back except last
                         Foreground = fg,
                         Background = bg
                     };
@@ -357,12 +379,22 @@ public class MarkdownParser
     private List<string> ParseTableLine(string line)
     {
         // Split by | but ignore escaped? Simple split for now.
-        var parts = line.Split('|');
-        // First and last might be empty if line starts/ends with |
+        // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
+        ReadOnlySpan<char> span = line.AsSpan();
         var result = new List<string>();
-        foreach (var p in parts)
+        int start = 0;
+        while (start < span.Length)
         {
-            if (!string.IsNullOrWhiteSpace(p)) result.Add(p.Trim());
+            int end = span.Slice(start).IndexOf('|');
+            if (end == -1)
+            {
+                var p = span.Slice(start);
+                if (!p.IsWhiteSpace()) result.Add(p.Trim().ToString());
+                break;
+            }
+            var p2 = span.Slice(start, end);
+            if (!p2.IsWhiteSpace()) result.Add(p2.Trim().ToString());
+            start += end + 1;
         }
         return result;
     }

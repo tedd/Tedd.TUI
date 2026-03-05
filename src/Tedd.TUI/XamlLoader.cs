@@ -276,11 +276,13 @@ public static class XamlLoader
     private static void SetAttachedProperty(object instance, string name, string value)
     {
         // Format: Grid.Row="1"
-        var parts = name.Split('.');
-        if (parts.Length != 2) return;
+        // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
+        ReadOnlySpan<char> nameSpan = name.AsSpan();
+        int dotIdx = nameSpan.IndexOf('.');
+        if (dotIdx == -1 || nameSpan.Slice(dotIdx + 1).IndexOf('.') != -1) return; // Ensure exactly one dot
 
-        string ownerType = parts[0];
-        string propName = parts[1];
+        string ownerType = nameSpan.Slice(0, dotIdx).ToString();
+        string propName = nameSpan.Slice(dotIdx + 1).ToString();
 
         // Find owner type
         Type? type = ResolveType(ownerType);
