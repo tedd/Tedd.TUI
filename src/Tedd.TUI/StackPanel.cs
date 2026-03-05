@@ -17,8 +17,8 @@ public class StackPanel : Panel
 
     public Orientation Orientation
     {
-        get { return (Orientation)GetValue(OrientationProperty); }
-        set { SetValue(OrientationProperty, value); }
+        get => (Orientation)GetValue(OrientationProperty);
+        set => SetValue(OrientationProperty, value);
     }
 
     protected override Size MeasureOverride(Size availableSize)

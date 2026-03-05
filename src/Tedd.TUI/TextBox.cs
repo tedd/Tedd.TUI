@@ -16,8 +16,8 @@ public class TextBox : UIElement
 
     public string Text
     {
-        get { return (string)GetValue(TextProperty); }
-        set { SetValue(TextProperty, value); }
+        get => (string)GetValue(TextProperty);
+        set => SetValue(TextProperty, value);
     }
 
     public static readonly DependencyProperty IsPasswordProperty =
@@ -25,8 +25,8 @@ public class TextBox : UIElement
 
     public bool IsPassword
     {
-        get { return (bool)GetValue(IsPasswordProperty); }
-        set { SetValue(IsPasswordProperty, value); }
+        get => (bool)GetValue(IsPasswordProperty);
+        set => SetValue(IsPasswordProperty, value);
     }
 
     protected override void OnPropertyChanged(DependencyProperty dp)

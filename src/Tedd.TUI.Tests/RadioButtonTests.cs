@@ -116,4 +116,64 @@ public class RadioButtonTests
         Console.WriteLine($"Benchmark completed in {sw.ElapsedMilliseconds}ms for {iterations} iterations with {rbCount} items.");
         Assert.True(true);
     }
+
+    [Fact]
+    public void IsChecked_Changes_RaisesRoutedEvents()
+    {
+        var rb = new RadioButton();
+        bool checkedRaised = false;
+        bool uncheckedRaised = false;
+
+        rb.Checked += (s, e) => checkedRaised = true;
+        rb.Unchecked += (s, e) => uncheckedRaised = true;
+
+        rb.IsChecked = true;
+        Assert.True(checkedRaised);
+        Assert.False(uncheckedRaised);
+
+        checkedRaised = false; // reset
+        rb.IsChecked = false;
+        Assert.True(uncheckedRaised);
+        Assert.False(checkedRaised);
+    }
+
+    [Fact]
+    public void CheckedEvent_BubblesUpLogicalTree()
+    {
+        var panel = new StackPanel();
+        var rb = new RadioButton { GroupName = "G1" };
+        panel.AddChild(rb);
+
+        bool panelCheckedRaised = false;
+        panel.AddHandler(RadioButton.CheckedEvent, new RoutedEventHandler((s, e) => panelCheckedRaised = true));
+
+        rb.IsChecked = true;
+        Assert.True(panelCheckedRaised);
+    }
+
+    [Fact]
+    public void Group_Update_UnchecksAndRaisesEvent()
+    {
+        var panel = new StackPanel();
+        var rb1 = new RadioButton { GroupName = "G1" };
+        var rb2 = new RadioButton { GroupName = "G1" };
+        panel.AddChild(rb1);
+        panel.AddChild(rb2);
+
+        rb1.IsChecked = true;
+
+        bool rb1UncheckedRaised = false;
+        bool rb2CheckedRaised = false;
+
+        rb1.Unchecked += (s, e) => rb1UncheckedRaised = true;
+        rb2.Checked += (s, e) => rb2CheckedRaised = true;
+
+        // Checking rb2 should uncheck rb1 and raise events for both
+        rb2.IsChecked = true;
+
+        Assert.True(rb2CheckedRaised);
+        Assert.True(rb1UncheckedRaised);
+        Assert.False(rb1.IsChecked);
+        Assert.True(rb2.IsChecked);
+    }
 }

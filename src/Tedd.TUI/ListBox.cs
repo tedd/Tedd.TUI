@@ -40,8 +40,8 @@ public class ListBox : Selector
 
     public ConsoleColor SelectionForeground
     {
-        get { return (ConsoleColor)GetValue(SelectionForegroundProperty); }
-        set { SetValue(SelectionForegroundProperty, value); }
+        get => (ConsoleColor)GetValue(SelectionForegroundProperty);
+        set => SetValue(SelectionForegroundProperty, value);
     }
 
     public static readonly DependencyProperty SelectionBackgroundProperty =
@@ -49,8 +49,8 @@ public class ListBox : Selector
 
     public ConsoleColor SelectionBackground
     {
-        get { return (ConsoleColor)GetValue(SelectionBackgroundProperty); }
-        set { SetValue(SelectionBackgroundProperty, value); }
+        get => (ConsoleColor)GetValue(SelectionBackgroundProperty);
+        set => SetValue(SelectionBackgroundProperty, value);
     }
 
     public static readonly DependencyProperty FocusedSelectionForegroundProperty =
@@ -58,8 +58,8 @@ public class ListBox : Selector
 
     public ConsoleColor FocusedSelectionForeground
     {
-        get { return (ConsoleColor)GetValue(FocusedSelectionForegroundProperty); }
-        set { SetValue(FocusedSelectionForegroundProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedSelectionForegroundProperty);
+        set => SetValue(FocusedSelectionForegroundProperty, value);
     }
 
     public static readonly DependencyProperty FocusedSelectionBackgroundProperty =
@@ -67,8 +67,8 @@ public class ListBox : Selector
 
     public ConsoleColor FocusedSelectionBackground
     {
-        get { return (ConsoleColor)GetValue(FocusedSelectionBackgroundProperty); }
-        set { SetValue(FocusedSelectionBackgroundProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedSelectionBackgroundProperty);
+        set => SetValue(FocusedSelectionBackgroundProperty, value);
     }
 
     private int _scrollOffset = 0;

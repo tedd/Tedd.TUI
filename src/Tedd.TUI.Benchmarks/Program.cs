@@ -1,5 +1,4 @@
 using BenchmarkDotNet.Running;
-using System.Reflection;
 
 namespace Tedd.TUI.Benchmarks
 {
@@ -7,7 +6,7 @@ namespace Tedd.TUI.Benchmarks
     {
         public static void Main(string[] args)
         {
-            BenchmarkRunner.Run<ConsoleRendererBenchmarks>();
+            BenchmarkRunner.Run<SplitBenchmark>();
         }
     }
 }

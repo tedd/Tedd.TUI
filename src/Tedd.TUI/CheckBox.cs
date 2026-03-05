@@ -13,8 +13,42 @@ public class CheckBox : UIElement
 
     public bool IsChecked
     {
-        get { return (bool)GetValue(IsCheckedProperty); }
-        set { SetValue(IsCheckedProperty, value); }
+        get => (bool)GetValue(IsCheckedProperty);
+        set => SetValue(IsCheckedProperty, value);
+    }
+
+    public static readonly RoutedEvent CheckedEvent =
+        RoutedEvent.Register("Checked", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(CheckBox));
+
+    public event RoutedEventHandler Checked
+    {
+        add { AddHandler(CheckedEvent, value); }
+        remove { RemoveHandler(CheckedEvent, value); }
+    }
+
+    public static readonly RoutedEvent UncheckedEvent =
+        RoutedEvent.Register("Unchecked", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(CheckBox));
+
+    public event RoutedEventHandler Unchecked
+    {
+        add { AddHandler(UncheckedEvent, value); }
+        remove { RemoveHandler(UncheckedEvent, value); }
+    }
+
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        base.OnPropertyChanged(dp);
+        if (dp == IsCheckedProperty)
+        {
+            if (IsChecked)
+            {
+                RaiseEvent(new RoutedEventArgs(CheckedEvent, this));
+            }
+            else
+            {
+                RaiseEvent(new RoutedEventArgs(UncheckedEvent, this));
+            }
+        }
     }
 
     public static readonly DependencyProperty ContentProperty =
@@ -22,8 +56,8 @@ public class CheckBox : UIElement
 
     public string Content
     {
-        get { return (string)GetValue(ContentProperty); }
-        set { SetValue(ContentProperty, value); }
+        get => (string)GetValue(ContentProperty);
+        set => SetValue(ContentProperty, value);
     }
 
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
@@ -33,8 +67,8 @@ public class CheckBox : UIElement
 
     public ConsoleColor FocusedForeground
     {
-        get { return (ConsoleColor)GetValue(FocusedForegroundProperty); }
-        set { SetValue(FocusedForegroundProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedForegroundProperty);
+        set => SetValue(FocusedForegroundProperty, value);
     }
 
     public static readonly DependencyProperty CheckColorProperty =
@@ -42,8 +76,8 @@ public class CheckBox : UIElement
 
     public ConsoleColor CheckColor
     {
-        get { return (ConsoleColor)GetValue(CheckColorProperty); }
-        set { SetValue(CheckColorProperty, value); }
+        get => (ConsoleColor)GetValue(CheckColorProperty);
+        set => SetValue(CheckColorProperty, value);
     }
 
     public static readonly DependencyProperty BracketColorProperty =
@@ -51,8 +85,8 @@ public class CheckBox : UIElement
 
     public ConsoleColor BracketColor
     {
-        get { return (ConsoleColor)GetValue(BracketColorProperty); }
-        set { SetValue(BracketColorProperty, value); }
+        get => (ConsoleColor)GetValue(BracketColorProperty);
+        set => SetValue(BracketColorProperty, value);
     }
 
     public static readonly DependencyProperty CheckedCharProperty =
@@ -60,8 +94,8 @@ public class CheckBox : UIElement
 
     public char CheckedChar
     {
-        get { return (char)GetValue(CheckedCharProperty); }
-        set { SetValue(CheckedCharProperty, value); }
+        get => (char)GetValue(CheckedCharProperty);
+        set => SetValue(CheckedCharProperty, value);
     }
 
     public static readonly DependencyProperty UncheckedCharProperty =
@@ -69,8 +103,8 @@ public class CheckBox : UIElement
 
     public char UncheckedChar
     {
-        get { return (char)GetValue(UncheckedCharProperty); }
-        set { SetValue(UncheckedCharProperty, value); }
+        get => (char)GetValue(UncheckedCharProperty);
+        set => SetValue(UncheckedCharProperty, value);
     }
 
     protected override Size MeasureOverride(Size availableSize)

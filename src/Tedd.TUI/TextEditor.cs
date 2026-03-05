@@ -22,8 +22,8 @@ public class TextEditor : UIElement
 
     public string Text
     {
-        get { return (string)GetValue(TextProperty); }
-        set { SetValue(TextProperty, value); }
+        get => (string)GetValue(TextProperty);
+        set => SetValue(TextProperty, value);
     }
 
     protected override void OnPropertyChanged(DependencyProperty dp)
@@ -33,7 +33,22 @@ public class TextEditor : UIElement
         if (dp == TextProperty && !_isUserInput)
         {
             var text = Text ?? "";
-            _lines = new List<string>(text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None));
+
+            // Optimization: Replace string.Split with span-based line enumeration to eliminate array allocations O(1) allocation instead of O(n)
+            _lines = new List<string>();
+            var span = text.AsSpan();
+            foreach (var line in span.EnumerateLines())
+            {
+                _lines.Add(line.ToString());
+            }
+
+            // EnumerateLines swallows trailing newlines, so we must add an empty line explicitly
+            // if the text ends with \n or \r\n to match string.Split(..., StringSplitOptions.None)
+            if (span.Length > 0 && (span[^1] == '\n' || span[^1] == '\r'))
+            {
+                _lines.Add("");
+            }
+
             if (_lines.Count == 0) _lines.Add("");
 
             _cursorRow = _lines.Count - 1;

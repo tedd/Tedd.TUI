@@ -91,7 +91,8 @@ public class InputRoutingTests
 
         // Tunneling (Preview) goes from Root to Child
         root.AddHandler(UIElement.PreviewKeyDownEvent, new RoutedEventHandler((s, e) => events.Add("Preview Root")));
-        parent.AddHandler(UIElement.PreviewKeyDownEvent, new RoutedEventHandler((s, e) => {
+        parent.AddHandler(UIElement.PreviewKeyDownEvent, new RoutedEventHandler((s, e) =>
+        {
             events.Add("Preview Parent");
             e.Handled = true; // Stop tunneling and bubbling!
         }));
@@ -172,7 +173,8 @@ public class InputRoutingTests
 
         // Tunneling
         root.AddHandler(UIElement.PreviewMouseDownEvent, new RoutedEventHandler((s, e) => events.Add("Preview Root")));
-        parent.AddHandler(UIElement.PreviewMouseDownEvent, new RoutedEventHandler((s, e) => {
+        parent.AddHandler(UIElement.PreviewMouseDownEvent, new RoutedEventHandler((s, e) =>
+        {
             events.Add("Preview Parent");
             e.Handled = true; // Stop tunneling and bubbling!
         }));
