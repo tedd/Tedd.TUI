@@ -9,8 +9,8 @@ public class Image : UIElement
 
     public string Source
     {
-        get { return (string)GetValue(SourceProperty); }
-        set { SetValue(SourceProperty, value); }
+        get => (string)GetValue(SourceProperty);
+        set => SetValue(SourceProperty, value);
     }
 
     public static readonly DependencyProperty AltTextProperty =
@@ -18,8 +18,8 @@ public class Image : UIElement
 
     public string AltText
     {
-        get { return (string)GetValue(AltTextProperty); }
-        set { SetValue(AltTextProperty, value); }
+        get => (string)GetValue(AltTextProperty);
+        set => SetValue(AltTextProperty, value);
     }
 
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;

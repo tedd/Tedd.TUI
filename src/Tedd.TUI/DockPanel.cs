@@ -18,8 +18,8 @@ public class DockPanel : Panel
 
     public bool LastChildFill
     {
-        get { return (bool)GetValue(LastChildFillProperty); }
-        set { SetValue(LastChildFillProperty, value); }
+        get => (bool)GetValue(LastChildFillProperty);
+        set => SetValue(LastChildFillProperty, value);
     }
 
     public static readonly DependencyProperty DockProperty =

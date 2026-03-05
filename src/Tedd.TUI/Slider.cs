@@ -14,8 +14,8 @@ public class Slider : UIElement
 
     public int Minimum
     {
-        get { return (int)GetValue(MinimumProperty); }
-        set { SetValue(MinimumProperty, value); }
+        get => (int)GetValue(MinimumProperty);
+        set => SetValue(MinimumProperty, value);
     }
 
     public static readonly DependencyProperty MaximumProperty =
@@ -23,8 +23,8 @@ public class Slider : UIElement
 
     public int Maximum
     {
-        get { return (int)GetValue(MaximumProperty); }
-        set { SetValue(MaximumProperty, value); }
+        get => (int)GetValue(MaximumProperty);
+        set => SetValue(MaximumProperty, value);
     }
 
     public static readonly DependencyProperty ValueProperty =
@@ -32,7 +32,7 @@ public class Slider : UIElement
 
     public int Value
     {
-        get { return (int)GetValue(ValueProperty); }
+        get => (int)GetValue(ValueProperty);
         set
         {
             // Clamp value
@@ -49,8 +49,8 @@ public class Slider : UIElement
 
     public Orientation Orientation
     {
-        get { return (Orientation)GetValue(OrientationProperty); }
-        set { SetValue(OrientationProperty, value); }
+        get => (Orientation)GetValue(OrientationProperty);
+        set => SetValue(OrientationProperty, value);
     }
 
     public static readonly DependencyProperty SmallChangeProperty =
@@ -58,8 +58,8 @@ public class Slider : UIElement
 
     public int SmallChange
     {
-        get { return (int)GetValue(SmallChangeProperty); }
-        set { SetValue(SmallChangeProperty, value); }
+        get => (int)GetValue(SmallChangeProperty);
+        set => SetValue(SmallChangeProperty, value);
     }
 
     public static readonly DependencyProperty LargeChangeProperty =
@@ -67,8 +67,8 @@ public class Slider : UIElement
 
     public int LargeChange
     {
-        get { return (int)GetValue(LargeChangeProperty); }
-        set { SetValue(LargeChangeProperty, value); }
+        get => (int)GetValue(LargeChangeProperty);
+        set => SetValue(LargeChangeProperty, value);
     }
 
     public static readonly DependencyProperty TrackColorProperty =
@@ -76,8 +76,8 @@ public class Slider : UIElement
 
     public ConsoleColor TrackColor
     {
-        get { return (ConsoleColor)GetValue(TrackColorProperty); }
-        set { SetValue(TrackColorProperty, value); }
+        get => (ConsoleColor)GetValue(TrackColorProperty);
+        set => SetValue(TrackColorProperty, value);
     }
 
     public static readonly DependencyProperty ThumbColorProperty =
@@ -85,8 +85,8 @@ public class Slider : UIElement
 
     public ConsoleColor ThumbColor
     {
-        get { return (ConsoleColor)GetValue(ThumbColorProperty); }
-        set { SetValue(ThumbColorProperty, value); }
+        get => (ConsoleColor)GetValue(ThumbColorProperty);
+        set => SetValue(ThumbColorProperty, value);
     }
 
     public static readonly DependencyProperty FocusedThumbColorProperty =
@@ -94,8 +94,8 @@ public class Slider : UIElement
 
     public ConsoleColor FocusedThumbColor
     {
-        get { return (ConsoleColor)GetValue(FocusedThumbColorProperty); }
-        set { SetValue(FocusedThumbColorProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedThumbColorProperty);
+        set => SetValue(FocusedThumbColorProperty, value);
     }
 
     protected override Size MeasureOverride(Size availableSize)

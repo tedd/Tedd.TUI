@@ -17,8 +17,8 @@ public class TabControl : Selector
 
     public BoxStyle BoxStyle
     {
-        get { return (BoxStyle)GetValue(BoxStyleProperty); }
-        set { SetValue(BoxStyleProperty, value); }
+        get => (BoxStyle)GetValue(BoxStyleProperty);
+        set => SetValue(BoxStyleProperty, value);
     }
 
     public override int VisualChildrenCount => (SelectedIndex >= 0 && SelectedIndex < Items.Count) ? 1 : 0;

@@ -18,8 +18,8 @@ public class ComboBox : Selector
 
     public ConsoleColor FocusedForeground
     {
-        get { return (ConsoleColor)GetValue(FocusedForegroundProperty); }
-        set { SetValue(FocusedForegroundProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedForegroundProperty);
+        set => SetValue(FocusedForegroundProperty, value);
     }
 
     public static readonly DependencyProperty FocusedTextBackgroundColorProperty =
@@ -27,8 +27,8 @@ public class ComboBox : Selector
 
     public ConsoleColor FocusedTextBackgroundColor
     {
-        get { return (ConsoleColor)GetValue(FocusedTextBackgroundColorProperty); }
-        set { SetValue(FocusedTextBackgroundColorProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedTextBackgroundColorProperty);
+        set => SetValue(FocusedTextBackgroundColorProperty, value);
     }
 
     public static readonly DependencyProperty ArrowColorProperty =
@@ -36,8 +36,8 @@ public class ComboBox : Selector
 
     public ConsoleColor ArrowColor
     {
-        get { return (ConsoleColor)GetValue(ArrowColorProperty); }
-        set { SetValue(ArrowColorProperty, value); }
+        get => (ConsoleColor)GetValue(ArrowColorProperty);
+        set => SetValue(ArrowColorProperty, value);
     }
 
     public static readonly DependencyProperty ArrowBackgroundColorProperty =
@@ -45,8 +45,8 @@ public class ComboBox : Selector
 
     public ConsoleColor ArrowBackgroundColor
     {
-        get { return (ConsoleColor)GetValue(ArrowBackgroundColorProperty); }
-        set { SetValue(ArrowBackgroundColorProperty, value); }
+        get => (ConsoleColor)GetValue(ArrowBackgroundColorProperty);
+        set => SetValue(ArrowBackgroundColorProperty, value);
     }
 
     public static readonly DependencyProperty FocusedArrowColorProperty =
@@ -54,8 +54,8 @@ public class ComboBox : Selector
 
     public ConsoleColor FocusedArrowColor
     {
-        get { return (ConsoleColor)GetValue(FocusedArrowColorProperty); }
-        set { SetValue(FocusedArrowColorProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedArrowColorProperty);
+        set => SetValue(FocusedArrowColorProperty, value);
     }
 
     public static readonly DependencyProperty FocusedArrowBackgroundColorProperty =
@@ -63,8 +63,8 @@ public class ComboBox : Selector
 
     public ConsoleColor FocusedArrowBackgroundColor
     {
-        get { return (ConsoleColor)GetValue(FocusedArrowBackgroundColorProperty); }
-        set { SetValue(FocusedArrowBackgroundColorProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedArrowBackgroundColorProperty);
+        set => SetValue(FocusedArrowBackgroundColorProperty, value);
     }
 
     public static readonly DependencyProperty PopupBackgroundProperty =
@@ -72,8 +72,8 @@ public class ComboBox : Selector
 
     public ConsoleColor PopupBackground
     {
-        get { return (ConsoleColor)GetValue(PopupBackgroundProperty); }
-        set { SetValue(PopupBackgroundProperty, value); }
+        get => (ConsoleColor)GetValue(PopupBackgroundProperty);
+        set => SetValue(PopupBackgroundProperty, value);
     }
 
     public static readonly DependencyProperty PopupBorderColorProperty =
@@ -81,8 +81,8 @@ public class ComboBox : Selector
 
     public ConsoleColor PopupBorderColor
     {
-        get { return (ConsoleColor)GetValue(PopupBorderColorProperty); }
-        set { SetValue(PopupBorderColorProperty, value); }
+        get => (ConsoleColor)GetValue(PopupBorderColorProperty);
+        set => SetValue(PopupBorderColorProperty, value);
     }
 
     public ComboBox()

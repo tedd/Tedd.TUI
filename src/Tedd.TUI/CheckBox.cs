@@ -13,8 +13,8 @@ public class CheckBox : UIElement
 
     public bool IsChecked
     {
-        get { return (bool)GetValue(IsCheckedProperty); }
-        set { SetValue(IsCheckedProperty, value); }
+        get => (bool)GetValue(IsCheckedProperty);
+        set => SetValue(IsCheckedProperty, value);
     }
 
     public static readonly RoutedEvent CheckedEvent =
@@ -56,8 +56,8 @@ public class CheckBox : UIElement
 
     public string Content
     {
-        get { return (string)GetValue(ContentProperty); }
-        set { SetValue(ContentProperty, value); }
+        get => (string)GetValue(ContentProperty);
+        set => SetValue(ContentProperty, value);
     }
 
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
@@ -67,8 +67,8 @@ public class CheckBox : UIElement
 
     public ConsoleColor FocusedForeground
     {
-        get { return (ConsoleColor)GetValue(FocusedForegroundProperty); }
-        set { SetValue(FocusedForegroundProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedForegroundProperty);
+        set => SetValue(FocusedForegroundProperty, value);
     }
 
     public static readonly DependencyProperty CheckColorProperty =
@@ -76,8 +76,8 @@ public class CheckBox : UIElement
 
     public ConsoleColor CheckColor
     {
-        get { return (ConsoleColor)GetValue(CheckColorProperty); }
-        set { SetValue(CheckColorProperty, value); }
+        get => (ConsoleColor)GetValue(CheckColorProperty);
+        set => SetValue(CheckColorProperty, value);
     }
 
     public static readonly DependencyProperty BracketColorProperty =
@@ -85,8 +85,8 @@ public class CheckBox : UIElement
 
     public ConsoleColor BracketColor
     {
-        get { return (ConsoleColor)GetValue(BracketColorProperty); }
-        set { SetValue(BracketColorProperty, value); }
+        get => (ConsoleColor)GetValue(BracketColorProperty);
+        set => SetValue(BracketColorProperty, value);
     }
 
     public static readonly DependencyProperty CheckedCharProperty =
@@ -94,8 +94,8 @@ public class CheckBox : UIElement
 
     public char CheckedChar
     {
-        get { return (char)GetValue(CheckedCharProperty); }
-        set { SetValue(CheckedCharProperty, value); }
+        get => (char)GetValue(CheckedCharProperty);
+        set => SetValue(CheckedCharProperty, value);
     }
 
     public static readonly DependencyProperty UncheckedCharProperty =
@@ -103,8 +103,8 @@ public class CheckBox : UIElement
 
     public char UncheckedChar
     {
-        get { return (char)GetValue(UncheckedCharProperty); }
-        set { SetValue(UncheckedCharProperty, value); }
+        get => (char)GetValue(UncheckedCharProperty);
+        set => SetValue(UncheckedCharProperty, value);
     }
 
     protected override Size MeasureOverride(Size availableSize)

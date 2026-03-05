@@ -40,8 +40,8 @@ public class DialogBox : UIElement
 
     public string Title
     {
-        get { return (string)GetValue(TitleProperty); }
-        set { SetValue(TitleProperty, value); }
+        get => (string)GetValue(TitleProperty);
+        set => SetValue(TitleProperty, value);
     }
 
     /// <summary>
@@ -52,8 +52,8 @@ public class DialogBox : UIElement
 
     public ConsoleColor BorderColor
     {
-        get { return (ConsoleColor)GetValue(BorderColorProperty); }
-        set { SetValue(BorderColorProperty, value); }
+        get => (ConsoleColor)GetValue(BorderColorProperty);
+        set => SetValue(BorderColorProperty, value);
     }
 
     /// <summary>
@@ -64,8 +64,8 @@ public class DialogBox : UIElement
 
     public ConsoleColor TitleColor
     {
-        get { return (ConsoleColor)GetValue(TitleColorProperty); }
-        set { SetValue(TitleColorProperty, value); }
+        get => (ConsoleColor)GetValue(TitleColorProperty);
+        set => SetValue(TitleColorProperty, value);
     }
 
     /// <summary>
@@ -76,8 +76,8 @@ public class DialogBox : UIElement
 
     public ConsoleColor BackgroundColor
     {
-        get { return (ConsoleColor)GetValue(BackgroundColorProperty); }
-        set { SetValue(BackgroundColorProperty, value); }
+        get => (ConsoleColor)GetValue(BackgroundColorProperty);
+        set => SetValue(BackgroundColorProperty, value);
     }
 
     /// <summary>
@@ -88,8 +88,8 @@ public class DialogBox : UIElement
 
     public BoxStyle BoxStyle
     {
-        get { return (BoxStyle)GetValue(BoxStyleProperty); }
-        set { SetValue(BoxStyleProperty, value); }
+        get => (BoxStyle)GetValue(BoxStyleProperty);
+        set => SetValue(BoxStyleProperty, value);
     }
 
     protected override void OnDataContextChanged(object newValue)
