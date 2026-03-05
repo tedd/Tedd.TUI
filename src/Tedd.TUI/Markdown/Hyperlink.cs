@@ -9,8 +9,8 @@ public class Hyperlink : UIElement
 
     public string Text
     {
-        get { return (string)GetValue(TextProperty); }
-        set { SetValue(TextProperty, value); }
+        get => (string)GetValue(TextProperty);
+        set => SetValue(TextProperty, value);
     }
 
     public static readonly DependencyProperty UrlProperty =
@@ -18,8 +18,8 @@ public class Hyperlink : UIElement
 
     public string Url
     {
-        get { return (string)GetValue(UrlProperty); }
-        set { SetValue(UrlProperty, value); }
+        get => (string)GetValue(UrlProperty);
+        set => SetValue(UrlProperty, value);
     }
 
     public event EventHandler? Click;

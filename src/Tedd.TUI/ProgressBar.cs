@@ -9,8 +9,8 @@ public class ProgressBar : UIElement
 
     public int Minimum
     {
-        get { return (int)GetValue(MinimumProperty); }
-        set { SetValue(MinimumProperty, value); }
+        get => (int)GetValue(MinimumProperty);
+        set => SetValue(MinimumProperty, value);
     }
 
     public static readonly DependencyProperty MaximumProperty =
@@ -18,8 +18,8 @@ public class ProgressBar : UIElement
 
     public int Maximum
     {
-        get { return (int)GetValue(MaximumProperty); }
-        set { SetValue(MaximumProperty, value); }
+        get => (int)GetValue(MaximumProperty);
+        set => SetValue(MaximumProperty, value);
     }
 
     public static readonly DependencyProperty ValueProperty =
@@ -27,8 +27,8 @@ public class ProgressBar : UIElement
 
     public int Value
     {
-        get { return (int)GetValue(ValueProperty); }
-        set { SetValue(ValueProperty, value); }
+        get => (int)GetValue(ValueProperty);
+        set => SetValue(ValueProperty, value);
     }
 
     public static readonly DependencyProperty LabelModeProperty =
@@ -36,8 +36,8 @@ public class ProgressBar : UIElement
 
     public ProgressBarLabelMode LabelMode
     {
-        get { return (ProgressBarLabelMode)GetValue(LabelModeProperty); }
-        set { SetValue(LabelModeProperty, value); }
+        get => (ProgressBarLabelMode)GetValue(LabelModeProperty);
+        set => SetValue(LabelModeProperty, value);
     }
 
     public static readonly DependencyProperty LabelTextProperty =
@@ -45,8 +45,8 @@ public class ProgressBar : UIElement
 
     public string LabelText
     {
-        get { return (string)GetValue(LabelTextProperty); }
-        set { SetValue(LabelTextProperty, value); }
+        get => (string)GetValue(LabelTextProperty);
+        set => SetValue(LabelTextProperty, value);
     }
 
     public static readonly DependencyProperty LabelPercentDecimalsProperty =
@@ -54,8 +54,8 @@ public class ProgressBar : UIElement
 
     public int LabelPercentDecimals
     {
-        get { return (int)GetValue(LabelPercentDecimalsProperty); }
-        set { SetValue(LabelPercentDecimalsProperty, value); }
+        get => (int)GetValue(LabelPercentDecimalsProperty);
+        set => SetValue(LabelPercentDecimalsProperty, value);
     }
 
     public static readonly DependencyProperty ProgressColorProperty =
@@ -63,8 +63,8 @@ public class ProgressBar : UIElement
 
     public ConsoleColor ProgressColor
     {
-        get { return (ConsoleColor)GetValue(ProgressColorProperty); }
-        set { SetValue(ProgressColorProperty, value); }
+        get => (ConsoleColor)GetValue(ProgressColorProperty);
+        set => SetValue(ProgressColorProperty, value);
     }
 
     public static readonly DependencyProperty EmptyColorProperty =
@@ -72,8 +72,8 @@ public class ProgressBar : UIElement
 
     public ConsoleColor EmptyColor
     {
-        get { return (ConsoleColor)GetValue(EmptyColorProperty); }
-        set { SetValue(EmptyColorProperty, value); }
+        get => (ConsoleColor)GetValue(EmptyColorProperty);
+        set => SetValue(EmptyColorProperty, value);
     }
 
     public static readonly DependencyProperty LabelFilledColorProperty =
@@ -81,8 +81,8 @@ public class ProgressBar : UIElement
 
     public ConsoleColor LabelFilledColor
     {
-        get { return (ConsoleColor)GetValue(LabelFilledColorProperty); }
-        set { SetValue(LabelFilledColorProperty, value); }
+        get => (ConsoleColor)GetValue(LabelFilledColorProperty);
+        set => SetValue(LabelFilledColorProperty, value);
     }
 
     public static readonly DependencyProperty LabelFilledBackgroundProperty =
@@ -90,8 +90,8 @@ public class ProgressBar : UIElement
 
     public ConsoleColor? LabelFilledBackground
     {
-        get { return (ConsoleColor?)GetValue(LabelFilledBackgroundProperty); }
-        set { SetValue(LabelFilledBackgroundProperty, value); }
+        get => (ConsoleColor?)GetValue(LabelFilledBackgroundProperty);
+        set => SetValue(LabelFilledBackgroundProperty, value);
     }
 
     public static readonly DependencyProperty LabelEmptyColorProperty =
@@ -99,8 +99,8 @@ public class ProgressBar : UIElement
 
     public ConsoleColor LabelEmptyColor
     {
-        get { return (ConsoleColor)GetValue(LabelEmptyColorProperty); }
-        set { SetValue(LabelEmptyColorProperty, value); }
+        get => (ConsoleColor)GetValue(LabelEmptyColorProperty);
+        set => SetValue(LabelEmptyColorProperty, value);
     }
 
     public static readonly DependencyProperty LabelEmptyBackgroundProperty =
@@ -108,8 +108,8 @@ public class ProgressBar : UIElement
 
     public ConsoleColor? LabelEmptyBackground
     {
-        get { return (ConsoleColor?)GetValue(LabelEmptyBackgroundProperty); }
-        set { SetValue(LabelEmptyBackgroundProperty, value); }
+        get => (ConsoleColor?)GetValue(LabelEmptyBackgroundProperty);
+        set => SetValue(LabelEmptyBackgroundProperty, value);
     }
 
     protected override Size MeasureOverride(Size availableSize)

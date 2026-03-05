@@ -16,8 +16,8 @@ public abstract class ItemsControl : Control
 
     public IEnumerable ItemsSource
     {
-        get { return (IEnumerable)GetValue(ItemsSourceProperty); }
-        set { SetValue(ItemsSourceProperty, value); }
+        get => (IEnumerable)GetValue(ItemsSourceProperty);
+        set => SetValue(ItemsSourceProperty, value);
     }
 
     public static readonly DependencyProperty DisplayMemberPathProperty =
@@ -25,8 +25,8 @@ public abstract class ItemsControl : Control
 
     public string DisplayMemberPath
     {
-        get { return (string)GetValue(DisplayMemberPathProperty); }
-        set { SetValue(DisplayMemberPathProperty, value); }
+        get => (string)GetValue(DisplayMemberPathProperty);
+        set => SetValue(DisplayMemberPathProperty, value);
     }
 
     public static readonly DependencyProperty ItemsPanelProperty =
@@ -34,8 +34,8 @@ public abstract class ItemsControl : Control
 
     public ItemsPanelTemplate ItemsPanel
     {
-        get { return (ItemsPanelTemplate)GetValue(ItemsPanelProperty); }
-        set { SetValue(ItemsPanelProperty, value); }
+        get => (ItemsPanelTemplate)GetValue(ItemsPanelProperty);
+        set => SetValue(ItemsPanelProperty, value);
     }
 
     private IEnumerable? _currentItemsSource;

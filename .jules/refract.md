@@ -32,3 +32,7 @@
 ## 2024-03-04 - C# 13 System.Threading.Lock Modernization
 **Observation:** The codebase contained a legacy lock statement (`lock (_globalCompiledGetters)`) utilizing an arbitrary object for synchronization in `DataGrid.cs`, which is an obsolete .NET 5/6 pattern that lacks explicit thread safety semantics.
 **Strategic Action:** Transitioned the synchronization mechanism to use the C# 13 `System.Threading.Lock` type by introducing a dedicated `_globalCompiledGettersLock = new();` instance to enforce deterministic thread safety and structural clarity.
+
+## 2025-03-04 - Syntactic Modernization: Expression-Bodied Members for Properties
+**Observation:** Legacy .NET 5-8 property getter/setter block structures (`get { return (Type)GetValue(Property); }`) and (`set { SetValue(Property, value); }`) were extensively utilized across numerous UI controls (e.g., `DialogBox.cs`, `ComboBox.cs`, `UIElement.cs`, `MarkdownView.cs`) for Dependency Property accessors, creating unnecessary lexical boilerplate.
+**Strategic Action:** Applied C# expression-bodied members (`=>`) to all identified `get` and `set` accessors for Dependency Properties to eliminate lexical boilerplate and enforce structural conciseness according to modern C# syntax standards.

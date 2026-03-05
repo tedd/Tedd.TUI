@@ -84,8 +84,8 @@ public abstract class UIElement : DependencyObject
 
     public ConsoleColor? Background
     {
-        get { return (ConsoleColor?)GetValue(BackgroundProperty); }
-        set { SetValue(BackgroundProperty, value); }
+        get => (ConsoleColor?)GetValue(BackgroundProperty);
+        set => SetValue(BackgroundProperty, value);
     }
 
     public static readonly DependencyProperty ForegroundProperty =
@@ -93,8 +93,8 @@ public abstract class UIElement : DependencyObject
 
     public ConsoleColor Foreground
     {
-        get { return (ConsoleColor)GetValue(ForegroundProperty); }
-        set { SetValue(ForegroundProperty, value); }
+        get => (ConsoleColor)GetValue(ForegroundProperty);
+        set => SetValue(ForegroundProperty, value);
     }
 
     public static readonly DependencyProperty IsFocusedProperty =
@@ -102,8 +102,8 @@ public abstract class UIElement : DependencyObject
 
     public bool IsFocused
     {
-        get { return (bool)GetValue(IsFocusedProperty); }
-        set { SetValue(IsFocusedProperty, value); }
+        get => (bool)GetValue(IsFocusedProperty);
+        set => SetValue(IsFocusedProperty, value);
     }
 
     public static readonly DependencyProperty IsEnabledProperty =
@@ -111,8 +111,8 @@ public abstract class UIElement : DependencyObject
 
     public bool IsEnabled
     {
-        get { return (bool)GetValue(IsEnabledProperty); }
-        set { SetValue(IsEnabledProperty, value); }
+        get => (bool)GetValue(IsEnabledProperty);
+        set => SetValue(IsEnabledProperty, value);
     }
 
     public static readonly DependencyProperty VisibilityProperty =
@@ -120,8 +120,8 @@ public abstract class UIElement : DependencyObject
 
     public bool Visibility
     {
-        get { return (bool)GetValue(VisibilityProperty); }
-        set { SetValue(VisibilityProperty, value); }
+        get => (bool)GetValue(VisibilityProperty);
+        set => SetValue(VisibilityProperty, value);
     }
 
     public static readonly DependencyProperty FocusableProperty =
@@ -129,8 +129,8 @@ public abstract class UIElement : DependencyObject
 
     public bool Focusable
     {
-        get { return (bool)GetValue(FocusableProperty); }
-        set { SetValue(FocusableProperty, value); }
+        get => (bool)GetValue(FocusableProperty);
+        set => SetValue(FocusableProperty, value);
     }
 
     public static readonly DependencyProperty MarginProperty =
@@ -138,8 +138,8 @@ public abstract class UIElement : DependencyObject
 
     public Thickness Margin
     {
-        get { return (Thickness)GetValue(MarginProperty); }
-        set { SetValue(MarginProperty, value); }
+        get => (Thickness)GetValue(MarginProperty);
+        set => SetValue(MarginProperty, value);
     }
 
     public static readonly DependencyProperty WidthProperty =
@@ -147,8 +147,8 @@ public abstract class UIElement : DependencyObject
 
     public int Width
     {
-        get { return (int)GetValue(WidthProperty); }
-        set { SetValue(WidthProperty, value); }
+        get => (int)GetValue(WidthProperty);
+        set => SetValue(WidthProperty, value);
     }
 
     public static readonly DependencyProperty HeightProperty =
@@ -156,8 +156,8 @@ public abstract class UIElement : DependencyObject
 
     public int Height
     {
-        get { return (int)GetValue(HeightProperty); }
-        set { SetValue(HeightProperty, value); }
+        get => (int)GetValue(HeightProperty);
+        set => SetValue(HeightProperty, value);
     }
 
     public static readonly DependencyProperty HorizontalAlignmentProperty =
@@ -165,8 +165,8 @@ public abstract class UIElement : DependencyObject
 
     public HorizontalAlignment HorizontalAlignment
     {
-        get { return (HorizontalAlignment)GetValue(HorizontalAlignmentProperty); }
-        set { SetValue(HorizontalAlignmentProperty, value); }
+        get => (HorizontalAlignment)GetValue(HorizontalAlignmentProperty);
+        set => SetValue(HorizontalAlignmentProperty, value);
     }
 
     public static readonly DependencyProperty VerticalAlignmentProperty =
@@ -174,8 +174,8 @@ public abstract class UIElement : DependencyObject
 
     public VerticalAlignment VerticalAlignment
     {
-        get { return (VerticalAlignment)GetValue(VerticalAlignmentProperty); }
-        set { SetValue(VerticalAlignmentProperty, value); }
+        get => (VerticalAlignment)GetValue(VerticalAlignmentProperty);
+        set => SetValue(VerticalAlignmentProperty, value);
     }
 
     public static readonly DependencyProperty DataContextProperty =
@@ -183,7 +183,7 @@ public abstract class UIElement : DependencyObject
 
     public object DataContext
     {
-        get { return GetValue(DataContextProperty); }
+        get => GetValue(DataContextProperty);
         set
         {
             SetValue(DataContextProperty, value);

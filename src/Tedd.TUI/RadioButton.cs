@@ -13,8 +13,8 @@ public class RadioButton : UIElement
 
     public bool IsChecked
     {
-        get { return (bool)GetValue(IsCheckedProperty); }
-        set { SetValue(IsCheckedProperty, value); }
+        get => (bool)GetValue(IsCheckedProperty);
+        set => SetValue(IsCheckedProperty, value);
     }
 
     public static readonly DependencyProperty ContentProperty =
@@ -22,8 +22,8 @@ public class RadioButton : UIElement
 
     public string Content
     {
-        get { return (string)GetValue(ContentProperty); }
-        set { SetValue(ContentProperty, value); }
+        get => (string)GetValue(ContentProperty);
+        set => SetValue(ContentProperty, value);
     }
 
     public static readonly DependencyProperty GroupNameProperty =
@@ -31,8 +31,8 @@ public class RadioButton : UIElement
 
     public string GroupName
     {
-        get { return (string)GetValue(GroupNameProperty); }
-        set { SetValue(GroupNameProperty, value); }
+        get => (string)GetValue(GroupNameProperty);
+        set => SetValue(GroupNameProperty, value);
     }
 
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
@@ -42,8 +42,8 @@ public class RadioButton : UIElement
 
     public ConsoleColor FocusedForeground
     {
-        get { return (ConsoleColor)GetValue(FocusedForegroundProperty); }
-        set { SetValue(FocusedForegroundProperty, value); }
+        get => (ConsoleColor)GetValue(FocusedForegroundProperty);
+        set => SetValue(FocusedForegroundProperty, value);
     }
 
     public static readonly DependencyProperty CheckColorProperty =
@@ -51,8 +51,8 @@ public class RadioButton : UIElement
 
     public ConsoleColor CheckColor
     {
-        get { return (ConsoleColor)GetValue(CheckColorProperty); }
-        set { SetValue(CheckColorProperty, value); }
+        get => (ConsoleColor)GetValue(CheckColorProperty);
+        set => SetValue(CheckColorProperty, value);
     }
 
     public static readonly DependencyProperty BracketColorProperty =
@@ -60,8 +60,8 @@ public class RadioButton : UIElement
 
     public ConsoleColor BracketColor
     {
-        get { return (ConsoleColor)GetValue(BracketColorProperty); }
-        set { SetValue(BracketColorProperty, value); }
+        get => (ConsoleColor)GetValue(BracketColorProperty);
+        set => SetValue(BracketColorProperty, value);
     }
 
     public static readonly DependencyProperty CheckedCharProperty =
@@ -69,8 +69,8 @@ public class RadioButton : UIElement
 
     public char CheckedChar
     {
-        get { return (char)GetValue(CheckedCharProperty); }
-        set { SetValue(CheckedCharProperty, value); }
+        get => (char)GetValue(CheckedCharProperty);
+        set => SetValue(CheckedCharProperty, value);
     }
 
     public static readonly DependencyProperty UncheckedCharProperty =
@@ -78,8 +78,8 @@ public class RadioButton : UIElement
 
     public char UncheckedChar
     {
-        get { return (char)GetValue(UncheckedCharProperty); }
-        set { SetValue(UncheckedCharProperty, value); }
+        get => (char)GetValue(UncheckedCharProperty);
+        set => SetValue(UncheckedCharProperty, value);
     }
 
     protected override Size MeasureOverride(Size availableSize)

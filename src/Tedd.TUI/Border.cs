@@ -59,8 +59,8 @@ public class Border : ScrollViewer
 
     public ConsoleColor BorderColor
     {
-        get { return (ConsoleColor)GetValue(BorderColorProperty); }
-        set { SetValue(BorderColorProperty, value); }
+        get => (ConsoleColor)GetValue(BorderColorProperty);
+        set => SetValue(BorderColorProperty, value);
     }
 
     public static readonly DependencyProperty BoxStyleProperty =
@@ -68,8 +68,8 @@ public class Border : ScrollViewer
 
     public BoxStyle BoxStyle
     {
-        get { return (BoxStyle)GetValue(BoxStyleProperty); }
-        set { SetValue(BoxStyleProperty, value); }
+        get => (BoxStyle)GetValue(BoxStyleProperty);
+        set => SetValue(BoxStyleProperty, value);
     }
 
     public int VerticalScrollBarMarginTop

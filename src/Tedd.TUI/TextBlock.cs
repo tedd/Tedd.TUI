@@ -9,8 +9,8 @@ public class TextBlock : UIElement
 
     public string Text
     {
-        get { return (string)GetValue(TextProperty); }
-        set { SetValue(TextProperty, value); }
+        get => (string)GetValue(TextProperty);
+        set => SetValue(TextProperty, value);
     }
 
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
