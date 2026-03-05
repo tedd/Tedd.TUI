@@ -99,4 +99,38 @@ public class CheckBoxTests
         cb.OnKeyDown(new KeyEventArgs { Key = key });
         Assert.False(cb.IsChecked);
     }
+
+    [Fact]
+    public void IsChecked_Changes_RaisesRoutedEvents()
+    {
+        var cb = new CheckBox();
+        bool checkedRaised = false;
+        bool uncheckedRaised = false;
+
+        cb.Checked += (s, e) => checkedRaised = true;
+        cb.Unchecked += (s, e) => uncheckedRaised = true;
+
+        cb.IsChecked = true;
+        Assert.True(checkedRaised);
+        Assert.False(uncheckedRaised);
+
+        checkedRaised = false; // reset
+        cb.IsChecked = false;
+        Assert.True(uncheckedRaised);
+        Assert.False(checkedRaised);
+    }
+
+    [Fact]
+    public void CheckedEvent_BubblesUpLogicalTree()
+    {
+        var panel = new StackPanel();
+        var cb = new CheckBox();
+        panel.AddChild(cb);
+
+        bool panelCheckedRaised = false;
+        panel.AddHandler(CheckBox.CheckedEvent, new RoutedEventHandler((s, e) => panelCheckedRaised = true));
+
+        cb.IsChecked = true;
+        Assert.True(panelCheckedRaised);
+    }
 }
