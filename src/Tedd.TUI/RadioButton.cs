@@ -17,6 +17,41 @@ public class RadioButton : UIElement
         set { SetValue(IsCheckedProperty, value); }
     }
 
+    public static readonly RoutedEvent CheckedEvent =
+        RoutedEvent.Register("Checked", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(RadioButton));
+
+    public event RoutedEventHandler Checked
+    {
+        add { AddHandler(CheckedEvent, value); }
+        remove { RemoveHandler(CheckedEvent, value); }
+    }
+
+    public static readonly RoutedEvent UncheckedEvent =
+        RoutedEvent.Register("Unchecked", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(RadioButton));
+
+    public event RoutedEventHandler Unchecked
+    {
+        add { AddHandler(UncheckedEvent, value); }
+        remove { RemoveHandler(UncheckedEvent, value); }
+    }
+
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        base.OnPropertyChanged(dp);
+        if (dp == IsCheckedProperty)
+        {
+            if (IsChecked)
+            {
+                UpdateGroup();
+                RaiseEvent(new RoutedEventArgs(CheckedEvent, this));
+            }
+            else
+            {
+                RaiseEvent(new RoutedEventArgs(UncheckedEvent, this));
+            }
+        }
+    }
+
     public static readonly DependencyProperty ContentProperty =
         DependencyProperty.Register("Content", typeof(string), typeof(RadioButton), string.Empty);
 
@@ -212,7 +247,7 @@ public class RadioButton : UIElement
     private void SetChecked()
     {
         IsChecked = true;
-        UpdateGroup();
+        // UpdateGroup is now called in OnPropertyChanged
     }
 
     private void UpdateGroup()

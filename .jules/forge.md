@@ -64,3 +64,6 @@
 ## 2025-03-03 - GroupBox Integration
 **Observation:** The TUI framework lacked a native component for visual grouping with explicit title support natively mapping to the TUI (like a WPF GroupBox), although `HeaderedContentControl` and `Border` existed.
 **Strategic Action:** Developed `GroupBox` by subclassing `HeaderedContentControl` and leveraging the `ControlTemplate` engine to map the `Header` to a `Border` element's `Title`, synthesizing the visual paradigms of DOS-era environments with contemporary .NET object models.
+## 2026-03-05 - Toggle Control Event Routing Integration
+**Observation:** The TUI framework lacked standard `Checked` and `Unchecked` routed events for `CheckBox` and `RadioButton` controls. This prevented structural parity with established UI frameworks like WPF where state changes on toggle controls bubble up the logical tree for parent container interception.
+**Strategic Action:** Registered `Checked` and `Unchecked` bubbling routed events (`RoutingStrategy.Bubble`) in both `CheckBox` and `RadioButton`. Overrode `OnPropertyChanged` for `IsCheckedProperty` to dispatch the appropriate event upon state change. Adjusted `RadioButton` logic to trigger group updates before dispatching the `Checked` event, ensuring synchronous propagation of the corresponding `Unchecked` events on sibling controls.
