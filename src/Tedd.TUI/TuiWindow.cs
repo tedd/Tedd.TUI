@@ -6,24 +6,23 @@ namespace Tedd.TUI;
 
 public class TuiWindow : UIElement
 {
-    private UIElement _content;
     public UIElement Content
     {
-        get => _content;
+        get => field;
         set
         {
-            _content = value;
-            if (_content != null) _content.Parent = this;
+            field = value;
+            if (field != null) field.Parent = this;
         }
     }
 
-    public override int VisualChildrenCount => (_content != null ? 1 : 0) + _overlays.Count;
+    public override int VisualChildrenCount => (Content != null ? 1 : 0) + _overlays.Count;
 
     public override UIElement GetVisualChild(int index)
     {
-        int contentCount = _content != null ? 1 : 0;
+        int contentCount = Content != null ? 1 : 0;
         if (index < contentCount)
-            return _content!;
+            return Content!;
 
         index -= contentCount;
         if (index < _overlays.Count)
