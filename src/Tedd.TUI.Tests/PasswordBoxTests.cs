@@ -1,0 +1,125 @@
+using System;
+using Xunit;
+using Tedd.TUI;
+
+namespace Tedd.TUI.Tests;
+
+public class PasswordBoxTests
+{
+    [Fact]
+    public void Properties_DefaultValues()
+    {
+        var pb = new PasswordBox();
+        Assert.Equal(string.Empty, pb.Password);
+        Assert.Equal('*', pb.PasswordChar);
+    }
+
+    [Fact]
+    public void Password_Change_UpdatesInternalTextBox()
+    {
+        var pb = new PasswordBox();
+        // Force template to expand by measuring
+        pb.Measure(new Size(10, 1));
+
+        Assert.NotNull(pb._internalTextBox);
+
+        pb.Password = "Secret";
+        Assert.Equal("Secret", pb._internalTextBox.Text);
+    }
+
+    [Fact]
+    public void OnKeyDown_AddsTextAndSyncsPassword()
+    {
+        var pb = new PasswordBox();
+        pb.Measure(new Size(10, 1));
+
+        pb.OnKeyDown(new KeyEventArgs { KeyChar = 'S' });
+        Assert.Equal("S", pb.Password);
+        Assert.Equal("S", pb._internalTextBox!.Text);
+
+        pb.OnKeyDown(new KeyEventArgs { KeyChar = 'E' });
+        Assert.Equal("SE", pb.Password);
+        Assert.Equal("SE", pb._internalTextBox!.Text);
+    }
+
+    [Fact]
+    public void OnKeyDown_Backspace_SyncsPassword()
+    {
+        var pb = new PasswordBox();
+        pb.Measure(new Size(10, 1));
+        pb.Password = "ABC";
+
+        // Internal cursor should be at end because Password property set updates TextProperty which updates cursor
+        pb.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.Backspace });
+        Assert.Equal("AB", pb.Password);
+        Assert.Equal("AB", pb._internalTextBox!.Text);
+    }
+
+    [Fact]
+    public void Rendering_MasksInput()
+    {
+        var pb = new PasswordBox();
+        pb.Password = "Test";
+
+        pb.Measure(new Size(10, 1));
+        pb.Arrange(new Rect(0, 0, 10, 1));
+
+        var buffer = new VirtualBuffer(10, 1);
+        pb.Render(buffer, 0, 0);
+
+        // First 4 characters should be *
+        Assert.Equal('*', buffer.GetPixel(0, 0).Character);
+        Assert.Equal('*', buffer.GetPixel(1, 0).Character);
+        Assert.Equal('*', buffer.GetPixel(2, 0).Character);
+        Assert.Equal('*', buffer.GetPixel(3, 0).Character);
+
+        // Next character should be space
+        Assert.Equal(' ', buffer.GetPixel(4, 0).Character);
+    }
+
+    [Fact]
+    public void Rendering_MasksInput_CustomChar()
+    {
+        var pb = new PasswordBox();
+        pb.Password = "Test";
+        pb.PasswordChar = '#';
+
+        pb.Measure(new Size(10, 1));
+        pb.Arrange(new Rect(0, 0, 10, 1));
+
+        var buffer = new VirtualBuffer(10, 1);
+        pb.Render(buffer, 0, 0);
+
+        // First 4 characters should be #
+        Assert.Equal('#', buffer.GetPixel(0, 0).Character);
+        Assert.Equal('#', buffer.GetPixel(1, 0).Character);
+        Assert.Equal('#', buffer.GetPixel(2, 0).Character);
+        Assert.Equal('#', buffer.GetPixel(3, 0).Character);
+    }
+
+    [Fact]
+    public void OnKeyDown_UnhandledKey_DoesNotSwallow()
+    {
+        var pb = new PasswordBox();
+        pb.Measure(new Size(10, 1));
+
+        var args = new KeyEventArgs { Key = ConsoleKey.Tab };
+        pb.OnKeyDown(args);
+
+        // TextBox doesn't handle Tab, so e.Handled should remain false
+        Assert.False(args.Handled);
+    }
+
+    [Fact]
+    public void OnKeyDown_HandledKey_SetsHandled()
+    {
+        var pb = new PasswordBox();
+        pb.Measure(new Size(10, 1));
+
+        var args = new KeyEventArgs { KeyChar = 'A' };
+        pb.OnKeyDown(args);
+
+        // TextBox handles normal characters, so e.Handled should be true
+        Assert.True(args.Handled);
+    }
+}
