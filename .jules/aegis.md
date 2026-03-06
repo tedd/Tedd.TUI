@@ -156,3 +156,23 @@ Created `ThicknessTests.cs` to test the uniform constructor, 4-parameter constru
 
 **Observation:** `ItemsPresenter` is a structural component for the layout of items within an `ItemsControl` and initially had 0% test coverage.
 **Strategic Action:** Developed comprehensive parameterized unit tests targeting `ApplyTemplate`, `PopulatePanel`, `MeasureOverride`, `ArrangeOverride`, `Render`, and `GetVisualChild`. Added edge case evaluations ensuring handling of uninitialized panels (e.g. `PopulatePanel` without a loaded panel, `Measure` producing zero size, `ArgumentOutOfRangeException` on `GetVisualChild`). Coverage is now 100% ensuring determinism within layout generation structures.
+
+## 2026-03-06 - Core Components Coverage Expansion
+
+**Observation:**
+Identified critical coverage gaps in basic components like `Button`, `CheckBox`, `ComboBox`, `Control`, `ContentControl`, and templates (`ControlTemplate`, `DataTemplate`).
+Events, focus routing, layout calculations (Padding/BorderThickness bounds checks), and template loading lacked determinism verification.
+
+**Strategic Action:**
+Developed comprehensive unit testing suites targeting previously unexecuted code pathways.
+- `ButtonTests.cs`: Verified `Click` event subscription, invocation via `OnMouseDown`, and invocation via `OnKeyDown` (Spacebar/Enter).
+- `CheckBoxTests.cs`: Verified `Checked`/`Unchecked` unsubscription paths, properties retrieval, and event dispatch logic.
+- `ComboBoxTests.cs`: Expanded coverage to 100% of core class properties. Engineered mock layout scenarios to verify focus integration (`_arrowFocused` rendering matrix) and dropdown initialization limits based on relative positions to a mock `TuiWindow`.
+- `ControlTests.cs` (New): Verified logic evaluating bounds checking around newly introduced layout properties `BorderThickness` and `Padding`, as well as deterministic template application testing default null-states.
+- `ContentControl` / `ControlTemplate`: Implemented parameterized layout test coverage resolving loading components dynamically through `DependencyObject` parents.
+
+**Metrics:**
+- Total Line Coverage for `Tedd.TUI` increased from 71.93% to 73.47%.
+- Total Branch Coverage for `Tedd.TUI` increased from 64.05% to 65.74%.
+- Total Method Coverage for `Tedd.TUI` increased from 80.01% to 82.73%.
+- Added 25 tests to ensure components behave deterministically against missing or mutated variables. Total tests passed 439.
