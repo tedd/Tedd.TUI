@@ -24,11 +24,36 @@ public class DemoController
     public CodeDocument CodeDoc;
     public MarkdownView MdView;
     public TextEditor EditorBox;
+    public TreeView NavTree;
+    public TabControl MainTabs;
+
 
     public void Initialize(TuiApp app, TuiWindow window)
     {
         _app = app;
         _window = window;
+
+
+        // Init Navigation Tree logic
+        if (NavTree != null && MainTabs != null)
+        {
+            NavTree.SelectionChanged += (s, e) =>
+            {
+                if (NavTree.SelectedItem is TreeViewItem tvi && tvi.Header is string header)
+                {
+                    switch (header)
+                    {
+                        case "Form": MainTabs.SelectedIndex = 0; break;
+                        case "Lists": MainTabs.SelectedIndex = 1; break;
+                        case "Table": MainTabs.SelectedIndex = 2; break;
+                        case "Scroll": MainTabs.SelectedIndex = 3; break;
+                        case "Code": MainTabs.SelectedIndex = 4; break;
+                        case "Markdown": MainTabs.SelectedIndex = 5; break;
+                        case "Editor": MainTabs.SelectedIndex = 6; break;
+                    }
+                }
+            };
+        }
 
         // Init Country Combo
         if (CountryCombo != null)

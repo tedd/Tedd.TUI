@@ -115,9 +115,57 @@ class Program
             BoxStyle = BoxStyle.Double
         });
 
-        // Tab Control
+
+        // --- Bifurcated Architecture ---
+        var dockPanel = new DockPanel { LastChildFill = true };
+        mainStack.AddChild(dockPanel);
+
+        // Navigation Pane (Left)
+        var navExpander = new Expander { Header = "Navigation", IsExpanded = true, Width = 20 };
+        DockPanel.SetDock(navExpander, Dock.Left);
+
+        var navTree = new TreeView();
+
+        var rootNode = new TreeViewItem { Header = "Controls", IsExpanded = true };
+
+        var nodeForm = new TreeViewItem { Header = "Form", IsSelected = true };
+        var nodeLists = new TreeViewItem { Header = "Lists" };
+        var nodeTable = new TreeViewItem { Header = "Table" };
+        var nodeScroll = new TreeViewItem { Header = "Scroll" };
+        var nodeCode = new TreeViewItem { Header = "Code" };
+        var nodeMarkdown = new TreeViewItem { Header = "Markdown" };
+        var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
+
+        rootNode.Items.Add(nodeForm);
+        rootNode.Items.Add(nodeLists);
+        rootNode.Items.Add(nodeTable);
+        rootNode.Items.Add(nodeScroll);
+        rootNode.Items.Add(nodeCode);
+        rootNode.Items.Add(nodeMarkdown);
+        rootNode.Items.Add(nodeDataGrid);
+
+        navTree.Items.Add(rootNode);
+        navExpander.Content = navTree;
+        dockPanel.Children.Add(navExpander);
+
+        // Content Matrix (Center)
         var tabs = new TabControl { Height = 20 };
-        mainStack.AddChild(tabs);
+        // We do not add tabs to mainStack, we add it to dockPanel
+        dockPanel.Children.Add(tabs);
+
+        // Wire navigation
+        navTree.SelectionChanged += (s, e) =>
+        {
+            var sel = navTree.SelectedItem as TreeViewItem;
+            if (sel == nodeForm) tabs.SelectedIndex = 0;
+            else if (sel == nodeLists) tabs.SelectedIndex = 1;
+            else if (sel == nodeTable) tabs.SelectedIndex = 2;
+            else if (sel == nodeScroll) tabs.SelectedIndex = 3;
+            else if (sel == nodeCode) tabs.SelectedIndex = 4;
+            else if (sel == nodeMarkdown) tabs.SelectedIndex = 5;
+            else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
+        };
+
 
         // --- Tab 1: Form Controls ---
         var formStack = new StackPanel { Orientation = Orientation.Vertical };

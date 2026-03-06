@@ -48,7 +48,26 @@
         </TuiStackPanel>
 
         <!-- Main Tab Control -->
-        <TuiTabControl Height="20">
+
+        <!-- Bifurcated Architecture -->
+        <TuiDockPanel LastChildFill="true">
+            <!-- Navigation Pane (Left) -->
+            <TuiExpander Dock="Dock.Left" Header="Navigation" IsExpanded="true">
+                <TuiTreeView SelectedItemChanged="OnNavSelected">
+                    <TuiTreeViewItem Header="Controls" IsExpanded="true">                        <TuiTreeViewItem Header="Form" IsSelected="true" />
+                        <TuiTreeViewItem Header="Lists" />
+                        <TuiTreeViewItem Header="Table" />
+                        <TuiTreeViewItem Header="Scroll" />
+                        <TuiTreeViewItem Header="Code" />
+                        <TuiTreeViewItem Header="Markdown" />
+                        <TuiTreeViewItem Header="DataGrid" />
+                    </TuiTreeViewItem>
+                </TuiTreeView>
+            </TuiExpander>
+
+            <!-- Content Matrix (Center) -->
+            <TuiTabControl Height="20" @bind-SelectedIndex="selectedTabIndex">
+
             
             <!-- Tab 1: Form -->
             <TuiTabItem Header="Form">
@@ -132,6 +151,7 @@
             </TuiTabItem>
 
         </TuiTabControl>
+        </TuiDockPanel>
 
     </TuiStackPanel>
 </TuiView>
@@ -140,6 +160,26 @@
     private TuiWindow window = new TuiWindow();
     private TuiRenderMode currentMode = TuiRenderMode.Canvas;
     
+
+    private int selectedTabIndex = 0;
+
+    private void OnNavSelected(object? selectedItem)
+    {
+        if (selectedItem is TreeViewItem tvi && tvi.Header is string header)
+        {            switch (header)
+            {
+                case "Form": selectedTabIndex = 0; break;
+                case "Lists": selectedTabIndex = 1; break;
+                case "Table": selectedTabIndex = 2; break;
+                case "Scroll": selectedTabIndex = 3; break;
+                case "Code": selectedTabIndex = 4; break;
+                case "Markdown": selectedTabIndex = 5; break;
+                case "DataGrid": selectedTabIndex = 6; break;
+            }
+            StateHasChanged();
+        }
+    }
+
     // Render Mode Logic
     private List<string> renderModes = new List<string> { "Canvas", "DOM" };
     private string? selectedRenderModeString
