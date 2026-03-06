@@ -15,6 +15,7 @@ public abstract class TuiComponentBase : ComponentBase, ITuiContainer, IDisposab
     [Parameter] public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Stretch;
     [Parameter] public ConsoleColor? Background { get; set; }
     [Parameter] public bool Visible { get; set; } = true;
+    [Parameter] public Dock? Dock { get; set; }
 
     public abstract UIElement Element { get; }
 
@@ -42,6 +43,7 @@ public abstract class TuiComponentBase : ComponentBase, ITuiContainer, IDisposab
         Element.VerticalAlignment = VerticalAlignment;
         Element.Background = Background;
         Element.Visibility = Visible;
+        if (Dock.HasValue) DockPanel.SetDock(Element, Dock.Value);
     }
 
     public virtual void AddChild(UIElement child)

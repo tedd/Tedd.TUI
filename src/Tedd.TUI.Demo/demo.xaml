@@ -47,7 +47,27 @@
     </Border>
 
     <!-- Tabs -->
-    <TabControl Height="20">
+
+    <!-- Bifurcated Architecture -->
+    <DockPanel LastChildFill="True">
+        <!-- Navigation Pane (Left) -->
+        <Expander Dock="Left" Header="Navigation" IsExpanded="True" Width="20">
+            <TreeView Name="NavTree">
+                <TreeViewItem Header="Controls" IsExpanded="True">
+                    <TreeViewItem Header="Form" IsSelected="True" />
+                    <TreeViewItem Header="Lists" />
+                    <TreeViewItem Header="Table" />
+                    <TreeViewItem Header="Scroll" />
+                    <TreeViewItem Header="Code" />
+                    <TreeViewItem Header="Markdown" />
+                    <TreeViewItem Header="Editor" />
+                </TreeViewItem>
+            </TreeView>
+        </Expander>
+
+        <!-- Content Matrix (Center) -->
+        <TabControl Name="MainTabs" Height="20">
+
 
        <!-- Tab 1: Form -->
        <TabItem Header="Form">
@@ -153,6 +173,7 @@
        </TabItem>
 
     </TabControl>
+    </DockPanel>
 
     <TextBlock Text="--- Log ---" Foreground="DarkGray"/>
     <ListBox Name="LogBox" Width="80" Height="5"/>

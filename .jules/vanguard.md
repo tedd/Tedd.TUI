@@ -1,0 +1,4 @@
+
+## 2025-02-17 - Bifurcated Navigation Parity
+**Observation:** Demonstration code across `Tedd.TUI.Demo` and `Tedd.TUI.Demo.Blazor` utilized varied implementations of layout flow, relying heavily on standard stacked tab navigation. Structural divergence was imminent without a unifying cross-platform containment pattern linking declarative layouts (XAML/Razor) to imperative implementations.
+**Strategic Action:** Deployed a synchronized dual-pane architecture leveraging a single `DockPanel` containing an `Expander` + `TreeView` bounded to the left axis, dictating the execution context (SelectedIndex) of a central `TabControl`. In Blazor, introduced generic `TuiComponentBase` attribute cascading to dynamically inject the `Dock` parameter onto abstract components, unifying syntax and eliminating `ITuiContainer` constraints for specialized panels.

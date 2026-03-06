@@ -10,6 +10,22 @@ public class TuiTabControl : TuiComponentBase
     private TabControl _tabControl = new TabControl();
     public override UIElement Element => _tabControl;
 
+    [Parameter] public int SelectedIndex { get; set; }
+    [Parameter] public EventCallback<int> SelectedIndexChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _tabControl.SelectionChanged += (s, e) => SelectedIndexChanged.InvokeAsync(_tabControl.SelectedIndex);
+    }
+
+    protected override void ApplyProperties()
+    {
+        base.ApplyProperties();
+        if (_tabControl.SelectedIndex != SelectedIndex && SelectedIndex >= 0 && SelectedIndex < _tabControl.Items.Count)
+            _tabControl.SelectedIndex = SelectedIndex;
+    }
+
     public void AddTab(TabItem item)
     {
         _tabControl.Items.Add(item);
