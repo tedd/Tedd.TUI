@@ -104,20 +104,46 @@ public class CheckBoxTests
     public void IsChecked_Changes_RaisesRoutedEvents()
     {
         var cb = new CheckBox();
-        bool checkedRaised = false;
-        bool uncheckedRaised = false;
+        int checkedCount = 0;
+        int uncheckedCount = 0;
 
-        cb.Checked += (s, e) => checkedRaised = true;
-        cb.Unchecked += (s, e) => uncheckedRaised = true;
+        RoutedEventHandler checkedHandler = (s, e) => checkedCount++;
+        RoutedEventHandler uncheckedHandler = (s, e) => uncheckedCount++;
+
+        cb.Checked += checkedHandler;
+        cb.Unchecked += uncheckedHandler;
 
         cb.IsChecked = true;
-        Assert.True(checkedRaised);
-        Assert.False(uncheckedRaised);
+        Assert.Equal(1, checkedCount);
+        Assert.Equal(0, uncheckedCount);
 
-        checkedRaised = false; // reset
         cb.IsChecked = false;
-        Assert.True(uncheckedRaised);
-        Assert.False(checkedRaised);
+        Assert.Equal(1, checkedCount);
+        Assert.Equal(1, uncheckedCount);
+
+        cb.Checked -= checkedHandler;
+        cb.Unchecked -= uncheckedHandler;
+
+        cb.IsChecked = true;
+        Assert.Equal(1, checkedCount); // No change
+
+        cb.IsChecked = false;
+        Assert.Equal(1, uncheckedCount); // No change
+    }
+
+    [Fact]
+    public void Properties_SetAndGet()
+    {
+        var cb = new CheckBox();
+
+        cb.FocusedForeground = ConsoleColor.Red;
+        Assert.Equal(ConsoleColor.Red, cb.FocusedForeground);
+
+        cb.BracketColor = ConsoleColor.Blue;
+        Assert.Equal(ConsoleColor.Blue, cb.BracketColor);
+
+        cb.UncheckedChar = '-';
+        Assert.Equal('-', cb.UncheckedChar);
     }
 
     [Fact]

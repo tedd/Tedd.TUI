@@ -99,4 +99,46 @@ public class ButtonTests
         // `DependencyObject` needs to implement `INotifyPropertyChanged` for Binding to work!
         // This is critical.
     }
+
+    [Fact]
+    public void ClickEvent_AddRemoveHandler()
+    {
+        var btn = new Button();
+        int clickCount = 0;
+        RoutedEventHandler handler = (s, e) => clickCount++;
+
+        btn.Click += handler;
+        btn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, btn));
+        Assert.Equal(1, clickCount);
+
+        btn.Click -= handler;
+        btn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, btn));
+        Assert.Equal(1, clickCount);
+    }
+
+    [Theory]
+    [InlineData(ConsoleKey.Spacebar)]
+    [InlineData(ConsoleKey.Enter)]
+    public void OnKeyDown_TriggersClickEvent(ConsoleKey key)
+    {
+        var btn = new Button();
+        bool clicked = false;
+        btn.Click += (s, e) => clicked = true;
+        btn.OnKeyDown(new KeyEventArgs { Key = key });
+        Assert.True(clicked);
+    }
+
+    [Fact]
+    public void OnMouseDown_TriggersClickEvent()
+    {
+        var btn = new Button();
+        var window = new TuiWindow { Content = btn };
+        bool clicked = false;
+        btn.Click += (s, e) => clicked = true;
+        btn.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.True(clicked);
+
+        btn.Focus();
+        Assert.True(btn.IsFocused);
+    }
 }
