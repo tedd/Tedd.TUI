@@ -21,3 +21,8 @@
 **Observation:** The README.md example code failed to reflect contemporary C# 14 syntactical capabilities, specifically the `field` keyword for simplified property backing fields. Additionally, the Advanced Layout Engine section omitted robust articulation of `ScrollViewer` and `ScrollBar`. Documentation regarding the use of C# 13 `System.Threading.Lock` and compiled getter expressions was structurally sound but required syntactic validation.
 
 **Strategic Action:** Executed a full modernization pass on embedded code examples, replacing boilerplate `INotifyPropertyChanged` backing fields with the C# 14 `field` keyword. Synchronized the 'Advanced Layout Engine' and 'Rich Control Suite' to include `ScrollViewer` and `ScrollBar`. Validated that the `System.Threading.Lock` references accurately describe thread-safe getter compilation for DataGrid caching.
+## 2026-03-06 - Documentation Synchronization of Expander and Two-Phase Routing
+
+**Observation:** The README.md exhibited documentation drift regarding the newly integrated `Expander` control, omitting its hierarchical inheritance and progressive disclosure mechanics. Furthermore, it lacked explicit articulation of the two-phase input event routing (Preview tunneling vs. bubbling) within `UIElement`.
+
+**Strategic Action:** Synchronized the 'Rich Control Suite' section to precisely articulate the `Expander` component. Expanded the 'Input & Interaction' section to detail the two-phase routing architecture, explicitly defining how 'Preview' events intercept subsequent bubbling phases.
