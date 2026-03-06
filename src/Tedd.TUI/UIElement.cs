@@ -45,7 +45,6 @@ public abstract class UIElement : DependencyObject
         }
     }
 
-    private UIElement _parent;
     public UIElement Parent
     {
         get => field;

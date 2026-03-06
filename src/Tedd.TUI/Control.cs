@@ -4,8 +4,7 @@ namespace Tedd.TUI;
 
 public class Control : UIElement
 {
-    private UIElement _templateRoot;
-    protected UIElement TemplateRoot => _templateRoot;
+    protected UIElement? TemplateRoot { get; private set; }
 
     public static readonly DependencyProperty TemplateProperty =
         DependencyProperty.Register("Template", typeof(ControlTemplate), typeof(Control), null);
@@ -58,44 +57,44 @@ public class Control : UIElement
         if (template != null)
         {
             // Remove old template root parent
-            if (_templateRoot != null)
+            if (TemplateRoot != null)
             {
-                _templateRoot.Parent = null;
-                _templateRoot.TemplatedParent = null;
+                TemplateRoot.Parent = null;
+                TemplateRoot.TemplatedParent = null;
             }
 
-            _templateRoot = template.LoadContent(this);
+            TemplateRoot = template.LoadContent(this);
 
-            if (_templateRoot != null)
+            if (TemplateRoot != null)
             {
-                _templateRoot.TemplatedParent = this;
-                _templateRoot.Parent = this; // Set logical/visual parent
+                TemplateRoot.TemplatedParent = this;
+                TemplateRoot.Parent = this; // Set logical/visual parent
                 Invalidate();
             }
         }
         else
         {
-            if (_templateRoot != null)
+            if (TemplateRoot != null)
             {
-                _templateRoot.Parent = null;
-                _templateRoot.TemplatedParent = null;
+                TemplateRoot.Parent = null;
+                TemplateRoot.TemplatedParent = null;
             }
-            _templateRoot = null;
+            TemplateRoot = null;
             Invalidate();
         }
     }
 
-    public override int VisualChildrenCount => _templateRoot != null ? 1 : 0;
+    public override int VisualChildrenCount => TemplateRoot != null ? 1 : 0;
 
     public override UIElement GetVisualChild(int index)
     {
-        if (_templateRoot != null && index == 0) return _templateRoot;
+        if (TemplateRoot != null && index == 0) return TemplateRoot;
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        if (_templateRoot != null)
+        if (TemplateRoot != null)
         {
             Thickness padding = Padding;
             int paddingWidth = padding.Left + padding.Right;
@@ -106,11 +105,11 @@ public class Control : UIElement
                 System.Math.Max(0, availableSize.Height - paddingHeight)
             );
 
-            _templateRoot.Measure(innerAvailableSize);
+            TemplateRoot.Measure(innerAvailableSize);
 
             return new Size(
-                _templateRoot.DesiredSize.Width + paddingWidth,
-                _templateRoot.DesiredSize.Height + paddingHeight
+                TemplateRoot.DesiredSize.Width + paddingWidth,
+                TemplateRoot.DesiredSize.Height + paddingHeight
             );
         }
         return new Size(0, 0);
@@ -118,7 +117,7 @@ public class Control : UIElement
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        if (_templateRoot != null)
+        if (TemplateRoot != null)
         {
             Thickness padding = Padding;
             int paddingWidth = padding.Left + padding.Right;
@@ -127,17 +126,17 @@ public class Control : UIElement
             int innerWidth = System.Math.Max(0, finalSize.Width - paddingWidth);
             int innerHeight = System.Math.Max(0, finalSize.Height - paddingHeight);
 
-            _templateRoot.Arrange(new Rect(padding.Left, padding.Top, innerWidth, innerHeight));
+            TemplateRoot.Arrange(new Rect(padding.Left, padding.Top, innerWidth, innerHeight));
         }
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-        if (_templateRoot != null)
+        if (TemplateRoot != null)
         {
             int x = RenderSize.X + offsetX;
             int y = RenderSize.Y + offsetY;
-            _templateRoot.Render(buffer, x, y);
+            TemplateRoot.Render(buffer, x, y);
         }
     }
 }

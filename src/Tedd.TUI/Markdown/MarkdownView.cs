@@ -17,13 +17,12 @@ public class MarkdownView : UIElement
         set => SetValue(TextProperty, value);
     }
 
-    private MarkdownTheme _theme;
     public MarkdownTheme Theme
     {
-        get => _theme ?? (_theme = new MarkdownTheme());
+        get => field ??= new MarkdownTheme();
         set
         {
-            _theme = value;
+            field = value;
             Refresh();
         }
     }
