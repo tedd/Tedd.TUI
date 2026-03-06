@@ -29,6 +29,15 @@ public class TextBox : UIElement
         set => SetValue(IsPasswordProperty, value);
     }
 
+    public static readonly DependencyProperty PasswordCharProperty =
+        DependencyProperty.Register("PasswordChar", typeof(char), typeof(TextBox), '*');
+
+    public char PasswordChar
+    {
+        get => (char)GetValue(PasswordCharProperty);
+        set => SetValue(PasswordCharProperty, value);
+    }
+
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
         base.OnPropertyChanged(dp);
@@ -61,7 +70,7 @@ public class TextBox : UIElement
         var bg = effectiveBg;
 
         string text = Text ?? "";
-        string display = IsPassword ? new string('*', text.Length) : text;
+        string display = IsPassword ? new string(PasswordChar, text.Length) : text;
 
         // Simple scrolling if text is longer than width
         int start = 0;
