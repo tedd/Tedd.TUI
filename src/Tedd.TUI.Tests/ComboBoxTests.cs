@@ -322,6 +322,7 @@ public class ComboBoxTests
         var overlay = window.GetVisualChild(1) as Border;
         Assert.NotNull(overlay);
         var popupListBox = overlay.Child as ListBox;
+        Assert.NotNull(popupListBox);
 
         // ComboBox takes up the whole window height because it's the root content.
         // `MeasureOverride` returns (15, 1), but `Arrange` on TuiWindow expands to fill available size (80, 24).
