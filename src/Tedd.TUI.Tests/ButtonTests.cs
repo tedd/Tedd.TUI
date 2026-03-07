@@ -125,6 +125,7 @@ public class ButtonTests
         bool clicked = false;
         btn.Click += (s, e) => clicked = true;
         btn.OnKeyDown(new KeyEventArgs { Key = key });
+        btn.OnKeyUp(new KeyEventArgs { Key = key });
         Assert.True(clicked);
     }
 
@@ -136,6 +137,7 @@ public class ButtonTests
         bool clicked = false;
         btn.Click += (s, e) => clicked = true;
         btn.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        btn.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
         Assert.True(clicked);
 
         btn.Focus();

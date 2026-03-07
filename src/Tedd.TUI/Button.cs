@@ -2,7 +2,7 @@ using System;
 
 namespace Tedd.TUI;
 
-public class Button : ContentControl
+public class Button : ButtonBase
 {
     public Button()
     {
@@ -106,15 +106,6 @@ public class Button : ContentControl
         set => SetValue(FocusedBorderColorProperty, value);
     }
 
-    public static readonly RoutedEvent ClickEvent =
-        RoutedEvent.Register("Click", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Button));
-
-    public event RoutedEventHandler Click
-    {
-        add { AddHandler(ClickEvent, value); }
-        remove { RemoveHandler(ClickEvent, value); }
-    }
-
     // Internal "Effective" properties for Template Binding
 
     public static readonly DependencyProperty EffectiveBorderColorProperty =
@@ -159,24 +150,6 @@ public class Button : ContentControl
         {
             EffectiveBorderColor = BorderColor;
             EffectiveForeground = Foreground;
-        }
-    }
-
-    public override void OnMouseDown(MouseEventArgs e)
-    {
-        base.OnMouseDown(e);
-        Focus();
-        RaiseEvent(new RoutedEventArgs(ClickEvent, this));
-        e.Handled = true;
-    }
-
-    public override void OnKeyDown(KeyEventArgs e)
-    {
-        base.OnKeyDown(e);
-        if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter)
-        {
-            RaiseEvent(new RoutedEventArgs(ClickEvent, this));
-            e.Handled = true;
         }
     }
 }
