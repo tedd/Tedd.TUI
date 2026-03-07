@@ -427,36 +427,58 @@ public abstract class UIElement : DependencyObject
         e.Source = this;
         if (e.OriginalSource == null) e.OriginalSource = this;
 
-        // Build Route
-        var route = new List<UIElement>();
+        // Optimization: Zero-allocation Route Building
+        // Time Complexity: O(h) where h is the depth of the visual tree from this node to root.
+        // Space Complexity: O(1) allocation overhead utilizing System.Buffers.ArrayPool.
+        // Calculate depth
+        int depth = 0;
         var current = this;
         while (current != null)
         {
-            route.Add(current);
+            depth++;
             current = current.Parent;
         }
 
-        // Tunnel Phase (Root -> Source)
-        if (e.RoutedEvent.RoutingStrategy == RoutingStrategy.Tunnel)
+        // Rent array
+        UIElement[] array = System.Buffers.ArrayPool<UIElement>.Shared.Rent(depth);
+        try
         {
-            for (int i = route.Count - 1; i >= 0; i--)
+            // Populate array
+            current = this;
+            int idx = 0;
+            while (current != null)
             {
-                route[i].InvokeHandler(e);
+                array[idx++] = current;
+                current = current.Parent;
             }
-        }
 
-        // Bubble Phase (Source -> Root)
-        else if (e.RoutedEvent.RoutingStrategy == RoutingStrategy.Bubble)
-        {
-            for (int i = 0; i < route.Count; i++)
+            var route = array.AsSpan(0, depth);
+
+            // Tunnel Phase (Root -> Source)
+            if (e.RoutedEvent.RoutingStrategy == RoutingStrategy.Tunnel)
             {
-                route[i].InvokeHandler(e);
-                // Continue bubbling even if handled, so parents can see handled events if they subscribed with handledEventsToo
+                for (int i = route.Length - 1; i >= 0; i--)
+                {
+                    route[i].InvokeHandler(e);
+                }
+            }
+            // Bubble Phase (Source -> Root)
+            else if (e.RoutedEvent.RoutingStrategy == RoutingStrategy.Bubble)
+            {
+                for (int i = 0; i < route.Length; i++)
+                {
+                    route[i].InvokeHandler(e);
+                    // Continue bubbling even if handled, so parents can see handled events if they subscribed with handledEventsToo
+                }
+            }
+            else // Direct
+            {
+                InvokeHandler(e);
             }
         }
-        else // Direct
+        finally
         {
-            InvokeHandler(e);
+            System.Buffers.ArrayPool<UIElement>.Shared.Return(array, clearArray: true);
         }
     }
 
