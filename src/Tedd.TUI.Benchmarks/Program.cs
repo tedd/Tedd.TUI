@@ -1,12 +1,11 @@
 using BenchmarkDotNet.Running;
 
-namespace Tedd.TUI.Benchmarks
+namespace Tedd.TUI.Benchmarks;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
-        {
-            BenchmarkRunner.Run<SplitBenchmark>();
-        }
+        BenchmarkRunner.Run<RaiseEventBenchmark2>();
     }
 }
