@@ -11,7 +11,7 @@ public class CheckBoxTests
     {
         var cb = new CheckBox();
         Assert.False(cb.IsChecked);
-        Assert.Equal(string.Empty, cb.Content);
+        Assert.Null(cb.Content);
         Assert.True(cb.Focusable);
     }
 
@@ -79,9 +79,11 @@ public class CheckBoxTests
         Assert.False(cb.IsChecked);
 
         cb.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        cb.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
         Assert.True(cb.IsChecked);
 
         cb.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        cb.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
         Assert.False(cb.IsChecked);
     }
 
@@ -94,9 +96,11 @@ public class CheckBoxTests
         Assert.False(cb.IsChecked);
 
         cb.OnKeyDown(new KeyEventArgs { Key = key });
+        cb.OnKeyUp(new KeyEventArgs { Key = key });
         Assert.True(cb.IsChecked);
 
         cb.OnKeyDown(new KeyEventArgs { Key = key });
+        cb.OnKeyUp(new KeyEventArgs { Key = key });
         Assert.False(cb.IsChecked);
     }
 

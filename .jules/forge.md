@@ -74,3 +74,9 @@
 ## 2026-03-05 - PasswordBox Component Integration
 **Observation:** The TUI framework lacked a native `PasswordBox` component for masking secure text inputs, a fundamental requirement for credential forms in advanced UI frameworks like WPF/Avalonia. The underlying `TextBox` possessed an `IsPassword` property, but exposing an explicit control that correctly masks input and provides a unified `Password` property bridges a significant input component parity gap.
 **Strategic Action:** Engineered the `PasswordBox` component inheriting from `Control`. Leveraged the internal `ControlTemplate` engine to host a `TextBox` configured for secure character masking (`IsPassword = true`). Implemented manual keystroke synchronization (`OnKeyDown`) to reliably push internal text updates to the exposed `Password` dependency property, sidestepping TUI framework limitations with `TwoWay` dependency property binding resolution.
+## 2026-03-05 - ButtonBase and ToggleButton Integration
+**Observation:** The TUI framework lacked common structural abstraction for button controls (`Button`, `CheckBox`, `RadioButton`). This missing hierarchy prevents parity with WPF where routing for `ClickEvent`, `ClickMode` (Release, Press, Hover), and toggle states (`IsChecked`, `IsThreeState`) are managed centrally.
+**Strategic Action:**
+- Implemented `ButtonBase` inheriting from `ContentControl` to govern `ClickMode` and `IsPressed` state logic, acting as the foundation for button components.
+- Implemented `ToggleButton` inheriting from `ButtonBase` to natively support `IsChecked` (`bool?`), `IsThreeState`, and unified `Checked`/`Unchecked`/`Indeterminate` routed events.
+- Refactored `Button` to inherit from `ButtonBase` and `CheckBox`/`RadioButton` to inherit from `ToggleButton`, eliminating property duplication and manually routed events while achieving structural isomorphism with WPF.

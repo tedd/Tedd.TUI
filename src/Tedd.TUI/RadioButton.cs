@@ -2,37 +2,10 @@ using System;
 
 namespace Tedd.TUI;
 
-public class RadioButton : UIElement
+public class RadioButton : ToggleButton
 {
     public RadioButton()
     {
-        Focusable = true;
-    }
-    public static readonly DependencyProperty IsCheckedProperty =
-        DependencyProperty.Register("IsChecked", typeof(bool), typeof(RadioButton), false);
-
-    public bool IsChecked
-    {
-        get => (bool)GetValue(IsCheckedProperty);
-        set => SetValue(IsCheckedProperty, value);
-    }
-
-    public static readonly RoutedEvent CheckedEvent =
-        RoutedEvent.Register("Checked", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(RadioButton));
-
-    public event RoutedEventHandler Checked
-    {
-        add { AddHandler(CheckedEvent, value); }
-        remove { RemoveHandler(CheckedEvent, value); }
-    }
-
-    public static readonly RoutedEvent UncheckedEvent =
-        RoutedEvent.Register("Unchecked", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(RadioButton));
-
-    public event RoutedEventHandler Unchecked
-    {
-        add { AddHandler(UncheckedEvent, value); }
-        remove { RemoveHandler(UncheckedEvent, value); }
     }
 
     protected override void OnPropertyChanged(DependencyProperty dp)
@@ -40,25 +13,19 @@ public class RadioButton : UIElement
         base.OnPropertyChanged(dp);
         if (dp == IsCheckedProperty)
         {
-            if (IsChecked)
+            if (IsChecked == true)
             {
                 UpdateGroup();
-                RaiseEvent(new RoutedEventArgs(CheckedEvent, this));
-            }
-            else
-            {
-                RaiseEvent(new RoutedEventArgs(UncheckedEvent, this));
             }
         }
     }
 
-    public static readonly DependencyProperty ContentProperty =
-        DependencyProperty.Register("Content", typeof(string), typeof(RadioButton), string.Empty);
-
-    public string Content
+    protected override void OnToggle()
     {
-        get => (string)GetValue(ContentProperty);
-        set => SetValue(ContentProperty, value);
+        if (IsChecked != true)
+        {
+            IsChecked = true;
+        }
     }
 
     public static readonly DependencyProperty GroupNameProperty =
@@ -119,7 +86,7 @@ public class RadioButton : UIElement
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        string text = Content;
+        string text = Content as string ?? string.Empty;
         // (o) Text
         return new Size(4 + text.Length, 1);
     }
@@ -133,38 +100,22 @@ public class RadioButton : UIElement
         var bg = Background ?? buffer.GetPixel(x, y).Background;
 
         buffer.SetPixel(x, y, '(', BracketColor, bg);
-        buffer.SetPixel(x + 1, y, IsChecked ? CheckedChar : UncheckedChar, CheckColor, bg);
+        buffer.SetPixel(x + 1, y, IsChecked == true ? CheckedChar : UncheckedChar, CheckColor, bg);
         buffer.SetPixel(x + 2, y, ')', BracketColor, bg);
 
-        string text = Content;
+        string text = Content as string ?? string.Empty;
         for (int i = 0; i < text.Length; i++)
         {
             buffer.SetPixel(x + 4 + i, y, text[i], fg, bg);
         }
     }
 
-    public override void OnMouseDown(MouseEventArgs e)
-    {
-        base.OnMouseDown(e);
-        Focus();
-        if (!IsChecked)
-        {
-            SetChecked();
-        }
-        e.Handled = true;
-    }
-
     public override void OnKeyDown(KeyEventArgs e)
     {
-        if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter)
-        {
-            if (!IsChecked)
-            {
-                SetChecked();
-            }
-            e.Handled = true;
-        }
-        else if (e.Key == ConsoleKey.UpArrow || e.Key == ConsoleKey.LeftArrow)
+        base.OnKeyDown(e);
+        if (e.Handled) return;
+
+        if (e.Key == ConsoleKey.UpArrow || e.Key == ConsoleKey.LeftArrow)
         {
             NavigateToSibling(-1);
             e.Handled = true;
@@ -173,10 +124,6 @@ public class RadioButton : UIElement
         {
             NavigateToSibling(1);
             e.Handled = true;
-        }
-        else
-        {
-            base.OnKeyDown(e);
         }
     }
 
@@ -199,7 +146,7 @@ public class RadioButton : UIElement
             var child = children[i];
             if (child is RadioButton rb && rb.GroupName == this.GroupName)
             {
-                if (rb.IsChecked)
+                if (rb.IsChecked == true)
                 {
                     checkedIndex = i;
                     break;
@@ -235,19 +182,13 @@ public class RadioButton : UIElement
             if (child is RadioButton rb && rb.GroupName == this.GroupName)
             {
                 rb.Focus();
-                if (!rb.IsChecked)
+                if (rb.IsChecked != true)
                 {
-                    rb.SetChecked();
+                    rb.IsChecked = true;
                 }
                 return;
             }
         }
-    }
-
-    private void SetChecked()
-    {
-        IsChecked = true;
-        // UpdateGroup is now called in OnPropertyChanged
     }
 
     private void UpdateGroup()
