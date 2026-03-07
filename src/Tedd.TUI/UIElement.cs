@@ -478,7 +478,14 @@ public abstract class UIElement : DependencyObject
         }
         finally
         {
-            System.Buffers.ArrayPool<UIElement>.Shared.Return(array, clearArray: true);
+            // Clear only the used segment to avoid O(n) clearing of the full rented buffer.
+            int limit = depth < array.Length ? depth : array.Length;
+            for (int i = 0; i < limit; i++)
+            {
+                array[i] = null!;
+            }
+
+            System.Buffers.ArrayPool<UIElement>.Shared.Return(array, clearArray: false);
         }
     }
 
