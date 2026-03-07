@@ -76,15 +76,15 @@ public class CheckBoxTests
     public void OnMouseDown_TogglesState()
     {
         var cb = new CheckBox();
-        Assert.False(cb.IsChecked);
+        Assert.Equal(false, cb.IsChecked);
 
         cb.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
         cb.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
-        Assert.True(cb.IsChecked);
+        Assert.Equal(true, cb.IsChecked);
 
         cb.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
         cb.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
-        Assert.False(cb.IsChecked);
+        Assert.Equal(false, cb.IsChecked);
     }
 
     [Theory]
@@ -93,15 +93,15 @@ public class CheckBoxTests
     public void OnKeyDown_TogglesState(ConsoleKey key)
     {
         var cb = new CheckBox();
-        Assert.False(cb.IsChecked);
+        Assert.Equal(false, cb.IsChecked);
 
         cb.OnKeyDown(new KeyEventArgs { Key = key });
         cb.OnKeyUp(new KeyEventArgs { Key = key });
-        Assert.True(cb.IsChecked);
+        Assert.Equal(true, cb.IsChecked);
 
         cb.OnKeyDown(new KeyEventArgs { Key = key });
         cb.OnKeyUp(new KeyEventArgs { Key = key });
-        Assert.False(cb.IsChecked);
+        Assert.Equal(false, cb.IsChecked);
     }
 
     [Fact]
