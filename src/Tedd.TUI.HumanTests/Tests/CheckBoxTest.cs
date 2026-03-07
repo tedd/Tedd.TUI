@@ -24,7 +24,7 @@ public class CheckBoxTest : TestPage
         var btnCheck = new Button { Content = "Check Status" };
         btnCheck.Click += (s, e) =>
         {
-            output.Text = $"Result: {(cb.IsChecked ? "Checked" : "Unchecked")}";
+            output.Text = $"Result: {(cb.IsChecked == true ? "Checked" : "Unchecked")}";
         };
 
         funcPanel.AddChild(cb);

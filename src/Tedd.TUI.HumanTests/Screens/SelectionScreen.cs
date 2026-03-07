@@ -77,7 +77,7 @@ public class SelectionScreen : StackPanel
     private void StartSelected()
     {
         var selected = _checkBoxes
-            .Where(c => c.IsChecked)
+            .Where(c => c.IsChecked == true)
             .Select(c => _testMap[c])
             .ToList();
 

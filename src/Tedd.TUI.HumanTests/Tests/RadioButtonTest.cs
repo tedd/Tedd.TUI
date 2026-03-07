@@ -23,9 +23,9 @@ public class RadioButtonTest : TestPage
         var btnCheck = new Button { Content = "Check Selection" };
         btnCheck.Click += (s, e) =>
         {
-            if (rb1.IsChecked) output.Text = "Selected: Option 1";
-            else if (rb2.IsChecked) output.Text = "Selected: Option 2";
-            else if (rb3.IsChecked) output.Text = "Selected: Option 3";
+            if (rb1.IsChecked == true) output.Text = "Selected: Option 1";
+            else if (rb2.IsChecked == true) output.Text = "Selected: Option 2";
+            else if (rb3.IsChecked == true) output.Text = "Selected: Option 3";
         };
 
         funcPanel.AddChild(rb1);
