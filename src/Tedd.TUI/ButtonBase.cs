@@ -69,22 +69,21 @@ public abstract class ButtonBase : ContentControl
         }
     }
 
-    private bool _isHovering;
-
-    public override void OnMouseMove(MouseEventArgs e)
+    public override void OnMouseEnter(MouseEventArgs e)
     {
-        base.OnMouseMove(e);
-        if (ClickMode == ClickMode.Hover && !_isHovering)
+        base.OnMouseEnter(e);
+        if (ClickMode == ClickMode.Hover)
         {
-            _isHovering = true;
             OnClick();
             e.Handled = true;
         }
     }
 
-    // TUI doesn't have OnMouseLeave/OnMouseEnter yet,
-    // but when _isHovering is true, we need a way to reset it.
-    // For now, WPF ClickMode.Hover triggers on MouseEnter. We will simulate it with MouseMove.
+    public override void OnMouseLeave(MouseEventArgs e)
+    {
+        base.OnMouseLeave(e);
+        IsPressed = false;
+    }
 
     public override void OnKeyDown(KeyEventArgs e)
     {

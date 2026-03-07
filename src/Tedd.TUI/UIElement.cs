@@ -507,6 +507,8 @@ public abstract class UIElement : DependencyObject
     public static readonly RoutedEvent MouseDownEvent = RoutedEvent.Register("MouseDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseUpEvent = RoutedEvent.Register("MouseUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseMoveEvent = RoutedEvent.Register("MouseMove", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseEnterEvent = RoutedEvent.Register("MouseEnter", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseLeaveEvent = RoutedEvent.Register("MouseLeave", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent GotFocusEvent = RoutedEvent.Register("GotFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent LostFocusEvent = RoutedEvent.Register("LostFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
 
@@ -522,6 +524,8 @@ public abstract class UIElement : DependencyObject
         else if (e.RoutedEvent == MouseDownEvent) OnMouseDown((MouseEventArgs)e);
         else if (e.RoutedEvent == MouseUpEvent) OnMouseUp((MouseEventArgs)e);
         else if (e.RoutedEvent == MouseMoveEvent) OnMouseMove((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseEnterEvent) OnMouseEnter((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseLeaveEvent) OnMouseLeave((MouseEventArgs)e);
         else if (e.RoutedEvent == GotFocusEvent) OnGotFocus();
         else if (e.RoutedEvent == LostFocusEvent) OnLostFocus();
     }
@@ -537,6 +541,8 @@ public abstract class UIElement : DependencyObject
     public virtual void OnMouseDown(MouseEventArgs e) { }
     public virtual void OnMouseUp(MouseEventArgs e) { }
     public virtual void OnMouseMove(MouseEventArgs e) { }
+    public virtual void OnMouseEnter(MouseEventArgs e) { }
+    public virtual void OnMouseLeave(MouseEventArgs e) { }
 
     public virtual void OnGotFocus()
     {

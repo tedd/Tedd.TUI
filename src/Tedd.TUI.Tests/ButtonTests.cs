@@ -143,4 +143,58 @@ public class ButtonTests
         btn.Focus();
         Assert.True(btn.IsFocused);
     }
+
+    [Fact]
+    public void ClickMode_Hover_FiresOnMouseEnter()
+    {
+        var btn = new Button { ClickMode = ClickMode.Hover };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        btn.OnMouseEnter(new MouseEventArgs { X = 0, Y = 0 });
+
+        Assert.Equal(1, clickCount);
+    }
+
+    [Fact]
+    public void ClickMode_Hover_FiresAgainAfterMouseLeave()
+    {
+        var btn = new Button { ClickMode = ClickMode.Hover };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        btn.OnMouseEnter(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.Equal(1, clickCount);
+
+        // Simulate mouse leaving and re-entering
+        btn.OnMouseLeave(new MouseEventArgs { X = 0, Y = 0 });
+        btn.OnMouseEnter(new MouseEventArgs { X = 0, Y = 0 });
+
+        Assert.Equal(2, clickCount);
+    }
+
+    [Fact]
+    public void ClickMode_Hover_DoesNotFireOnMouseMove()
+    {
+        var btn = new Button { ClickMode = ClickMode.Hover };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        btn.OnMouseMove(new MouseEventArgs { X = 0, Y = 0 });
+        btn.OnMouseMove(new MouseEventArgs { X = 1, Y = 0 });
+
+        Assert.Equal(0, clickCount);
+    }
+
+    [Fact]
+    public void ClickMode_Release_DoesNotFireOnMouseEnter()
+    {
+        var btn = new Button { ClickMode = ClickMode.Release };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        btn.OnMouseEnter(new MouseEventArgs { X = 0, Y = 0 });
+
+        Assert.Equal(0, clickCount);
+    }
 }
