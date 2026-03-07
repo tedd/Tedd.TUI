@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Tedd.TUI\Tedd.TUI.csproj" />
     <ProjectReference Include="..\Tedd.TUI.Archive\Tedd.TUI.Archive.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Platform.Console\Tedd.TUI.Platform.Console.csproj" />
   </ItemGroup>
 
 </Project>
