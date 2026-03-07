@@ -10,6 +10,9 @@ public class ConsoleInputManager
 {
     private readonly TuiWindow _window;
     private uint _lastButtonState;
+    private UIElement _lastHitElement;
+    private int _lastMouseX;
+    private int _lastMouseY;
     private readonly ConcurrentQueue<InputEvent> _inputQueue = new();
     private readonly AutoResetEvent _inputWaitHandle = new AutoResetEvent(false);
     private bool _running;
@@ -138,6 +141,7 @@ public class ConsoleInputManager
                 int y = record.MouseEvent.dwMousePosition.Y;
 
                 var hit = _window.InputHitTest(x, y);
+                UpdateHoverElement(hit?.Element, x, y);
                 if (hit != null)
                 {
                     // Use Routed Events with Global Coordinates
@@ -297,6 +301,28 @@ public class ConsoleInputManager
         return (c >= 64 && c <= 126); // @ to ~ are standard final bytes
     }
 
+    private void UpdateHoverElement(UIElement newElement, int globalX, int globalY)
+    {
+        if (newElement == _lastHitElement)
+        {
+            _lastMouseX = globalX;
+            _lastMouseY = globalY;
+            return;
+        }
+
+        if (_lastHitElement != null)
+        {
+            _lastHitElement.RaiseEvent(new MouseEventArgs(UIElement.MouseLeaveEvent) { GlobalX = _lastMouseX, GlobalY = _lastMouseY });
+        }
+        _lastHitElement = newElement;
+        _lastMouseX = globalX;
+        _lastMouseY = globalY;
+        if (_lastHitElement != null)
+        {
+            _lastHitElement.RaiseEvent(new MouseEventArgs(UIElement.MouseEnterEvent) { GlobalX = globalX, GlobalY = globalY });
+        }
+    }
+
     private void ParseMouseSGR(string seq)
     {
         // Format: [<0;x;yM  or [<0;x;ym
@@ -323,6 +349,7 @@ public class ConsoleInputManager
                 if (btn == 0)
                 {
                     var result = _window.InputHitTest(x, y);
+                    UpdateHoverElement(result?.Element, x, y);
                     if (result != null)
                     {
                         if (isDown && result.Element.Focusable) _window.SetFocus(result.Element);
