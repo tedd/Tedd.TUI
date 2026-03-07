@@ -47,6 +47,9 @@ public abstract class ButtonBase : ContentControl
         Focus();
         IsPressed = true;
 
+        var root = GetRoot() as TuiWindow;
+        root?.CaptureMouse(this);
+
         if (ClickMode == ClickMode.Press)
         {
             OnClick();
@@ -58,14 +61,28 @@ public abstract class ButtonBase : ContentControl
     public override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
+
         if (IsPressed)
         {
             IsPressed = false;
+            var root = GetRoot() as TuiWindow;
+            root?.ReleaseMouseCapture();
             if (ClickMode == ClickMode.Release)
             {
                 OnClick();
             }
             e.Handled = true;
+        }
+    }
+
+    public override void OnLostFocus()
+    {
+        base.OnLostFocus();
+        if (IsPressed)
+        {
+            IsPressed = false;
+            var root = GetRoot() as TuiWindow;
+            root?.ReleaseMouseCapture();
         }
     }
 

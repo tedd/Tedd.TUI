@@ -143,4 +143,48 @@ public class ButtonTests
         btn.Focus();
         Assert.True(btn.IsFocused);
     }
+
+    [Fact]
+    public void OnMouseDown_CapturesMouse()
+    {
+        var btn = new Button();
+        var window = new TuiWindow { Content = btn };
+
+        btn.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+
+        Assert.True(btn.IsPressed);
+        Assert.Equal(btn, window.CapturedElement);
+    }
+
+    [Fact]
+    public void OnMouseUp_ReleasesMouseCapture()
+    {
+        var btn = new Button();
+        var window = new TuiWindow { Content = btn };
+
+        btn.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.Equal(btn, window.CapturedElement);
+
+        btn.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
+
+        Assert.False(btn.IsPressed);
+        Assert.Null(window.CapturedElement);
+    }
+
+    [Fact]
+    public void OnLostFocus_ResetsIsPressedAndReleasesCapture()
+    {
+        var btn = new Button();
+        var window = new TuiWindow { Content = btn };
+
+        btn.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.True(btn.IsPressed);
+        Assert.Equal(btn, window.CapturedElement);
+
+        // Simulate losing focus without a mouse up (e.g. pointer moved to another window)
+        btn.OnLostFocus();
+
+        Assert.False(btn.IsPressed);
+        Assert.Null(window.CapturedElement);
+    }
 }
