@@ -342,8 +342,8 @@ public class DialogBoxCoverageTests
         Assert.Equal(40, dialog.RenderSize.Width);
         Assert.Equal(20, dialog.RenderSize.Height);
 
-        // Assert Focus - Since TuiWindow's focus property is not publicly exposed as FocusedElement in tests, we rely on the integration completing successfully
-        // without throwing exceptions.
+        // Assert Focus - DialogBox.Show should focus the first focusable element in the dialog
+        Assert.True(focusableElement.IsFocused);
     }
 
     [Fact]
