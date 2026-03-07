@@ -6,6 +6,7 @@ public class CheckBox : ToggleButton
 {
     public CheckBox()
     {
+        Template = null;
     }
 
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
