@@ -56,10 +56,14 @@ public class DependencyObject : INotifyPropertyChanged
 
     public void SetValue(DependencyProperty dp, object? value)
     {
-        // Basic type validation
+        // Basic type validation: accept T when DP is registered as Nullable<T>
         if (value != null && !dp.PropertyType.IsInstanceOfType(value))
         {
-            throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
+            var underlyingType = Nullable.GetUnderlyingType(dp.PropertyType);
+            if (underlyingType == null || !underlyingType.IsInstanceOfType(value))
+            {
+                throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
+            }
         }
 
         _values[dp] = value ?? null!;
