@@ -64,6 +64,8 @@ public abstract class ButtonBase : ContentControl
             {
                 OnClick();
             }
+
+            e.Handled = true;
         }
     }
 
