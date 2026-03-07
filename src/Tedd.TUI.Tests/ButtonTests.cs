@@ -143,4 +143,128 @@ public class ButtonTests
         btn.Focus();
         Assert.True(btn.IsFocused);
     }
+
+    // ClickMode.Release tests
+
+    [Fact]
+    public void ClickMode_Release_Mouse_FiresOnUpNotOnDown()
+    {
+        var btn = new Button { ClickMode = ClickMode.Release };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        btn.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.Equal(0, clickCount); // No click yet on down
+
+        btn.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.Equal(1, clickCount); // Fires on up
+    }
+
+    [Theory]
+    [InlineData(ConsoleKey.Spacebar)]
+    [InlineData(ConsoleKey.Enter)]
+    public void ClickMode_Release_Key_FiresOnUpNotOnDown(ConsoleKey key)
+    {
+        var btn = new Button { ClickMode = ClickMode.Release };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        btn.OnKeyDown(new KeyEventArgs { Key = key });
+        Assert.Equal(0, clickCount); // No click yet on down
+
+        btn.OnKeyUp(new KeyEventArgs { Key = key });
+        Assert.Equal(1, clickCount); // Fires on up
+    }
+
+    // ClickMode.Press tests
+
+    [Fact]
+    public void ClickMode_Press_Mouse_FiresOnDown()
+    {
+        var btn = new Button { ClickMode = ClickMode.Press };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        btn.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.Equal(1, clickCount); // Fires immediately on down
+
+        btn.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.Equal(1, clickCount); // No additional click on up
+    }
+
+    [Theory]
+    [InlineData(ConsoleKey.Spacebar)]
+    [InlineData(ConsoleKey.Enter)]
+    public void ClickMode_Press_Key_FiresOnDown(ConsoleKey key)
+    {
+        var btn = new Button { ClickMode = ClickMode.Press };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        btn.OnKeyDown(new KeyEventArgs { Key = key });
+        Assert.Equal(1, clickCount); // Fires immediately on down
+
+        btn.OnKeyUp(new KeyEventArgs { Key = key });
+        Assert.Equal(1, clickCount); // No additional click on up
+    }
+
+    // IsPressed transition tests
+
+    [Fact]
+    public void IsPressed_Mouse_TransitionsTrueOnDownFalseOnUp()
+    {
+        var btn = new Button();
+
+        Assert.False(btn.IsPressed); // Initially false
+
+        btn.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.True(btn.IsPressed); // True after down
+
+        btn.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.False(btn.IsPressed); // False after up
+    }
+
+    [Theory]
+    [InlineData(ConsoleKey.Spacebar)]
+    [InlineData(ConsoleKey.Enter)]
+    public void IsPressed_Key_TransitionsTrueOnDownFalseOnUp(ConsoleKey key)
+    {
+        var btn = new Button();
+
+        Assert.False(btn.IsPressed); // Initially false
+
+        btn.OnKeyDown(new KeyEventArgs { Key = key });
+        Assert.True(btn.IsPressed); // True after down
+
+        btn.OnKeyUp(new KeyEventArgs { Key = key });
+        Assert.False(btn.IsPressed); // False after up
+    }
+
+    [Fact]
+    public void IsPressed_MouseUp_WithoutPriorDown_DoesNotFire()
+    {
+        var btn = new Button { ClickMode = ClickMode.Release };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        // MouseUp without a prior MouseDown: IsPressed is false, so nothing fires
+        btn.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
+        Assert.Equal(0, clickCount);
+        Assert.False(btn.IsPressed);
+    }
+
+    [Theory]
+    [InlineData(ConsoleKey.Spacebar)]
+    [InlineData(ConsoleKey.Enter)]
+    public void IsPressed_KeyUp_WithoutPriorDown_DoesNotFire(ConsoleKey key)
+    {
+        var btn = new Button { ClickMode = ClickMode.Release };
+        int clickCount = 0;
+        btn.Click += (s, e) => clickCount++;
+
+        // KeyUp without a prior KeyDown: IsPressed is false, so nothing fires
+        btn.OnKeyUp(new KeyEventArgs { Key = key });
+        Assert.Equal(0, clickCount);
+        Assert.False(btn.IsPressed);
+    }
 }
