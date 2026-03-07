@@ -41,12 +41,12 @@ public abstract class ButtonBase : ContentControl
         base.OnMouseDown(e);
         Focus();
 
+        IsPressed = true;
+
         if (ClickMode == ClickMode.Press)
         {
             OnClick();
         }
-
-        IsPressed = true;
         e.Handled = true;
     }
 
