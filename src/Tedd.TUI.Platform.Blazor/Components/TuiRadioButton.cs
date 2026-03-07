@@ -15,7 +15,7 @@ public class TuiRadioButton : TuiComponentBase
             base.OnPropertyChanged(dp);
             if (dp == IsCheckedProperty)
             {
-                _owner.OnInternalCheckChanged(IsChecked);
+                _owner.OnInternalCheckChanged(IsChecked == true);
             }
         }
     }
