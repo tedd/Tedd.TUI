@@ -18,8 +18,10 @@
   - **DataGrid:** Supports `ItemsSource` binding, `AutoGenerateColumns`, selection, and pagination.
   - **Table:** Manual row management with sorting, pagination, and header customization.
   - **MarkdownView:** Renders Markdown content with theming support.
-  - **Standard Controls:** `Button`, `TextBox`, `TextEditor`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `GroupBox`, `TreeView`, `TreeViewItem`, `HeaderedItemsControl`, `Expander`, `DialogBox`, `ScrollViewer`, `ScrollBar`.
+  - **Standard Controls:** `Button`, `TextBox`, `PasswordBox`, `TextEditor`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `GroupBox`, `TreeView`, `TreeViewItem`, `HeaderedItemsControl`, `Expander`, `DialogBox`, `ScrollViewer`, `ScrollBar`.
   - **Expander:** Inherits from `HeaderedContentControl`, utilizing the `IsExpanded` dependency property and `Expanded`/`Collapsed` bubbling routed events to toggle `ContentPresenter.Visibility` for progressive disclosure.
+  - **GroupBox:** Subclasses `HeaderedContentControl` and leverages the `ControlTemplate` engine to map its `Header` and `Content` into a visual `Border`, establishing structural parity with standard WPF grouping conventions.
+  - **PasswordBox:** Inherits from `Control` and employs a `ControlTemplate` housing a `TextBox` with `IsPassword = true`, bridging a crucial parity gap for secure input masking by intercepting `OnKeyDown` events to synchronize an exposed `Password` property.
 - **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
 - **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
 - **Cross-Platform:** Decoupled rendering pipeline supporting Console (Windows/Linux/Mac).
@@ -153,7 +155,7 @@ class Program
 ### Core System
 At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation for:
 - **Visual Tree:** A hierarchical structure of elements allowing for complex composition.
-- **Dependency Properties:** A property system that supports value inheritance, change notification, and memory conservation.
+- **Dependency Properties:** A property system that supports value inheritance, change notification, and memory conservation. `DependencyObject` implements `ClearValue` to deterministically remove local property overrides (allowing fallback to default or inherited values), while `SetValue(null)` explicitly stores a null value rather than deleting the entry, maintaining strict WPF isomorphism.
 
 ### Data Binding
 Tedd.TUI supports a hierarchical data binding system analogous to WPF, driven by the `DataContext` inherited dependency property.
@@ -167,21 +169,22 @@ Tedd.TUI supports a hierarchical data binding system analogous to WPF, driven by
 
 ### Layout Engine
 The framework employs a robust, recursive two-pass layout system orchestrated by the abstract `Panel` class:
-1.  **Measure Pass:** Container elements recursively query their children, invoking `Measure(Size availableSize)` to compute their `DesiredSize` based on layout constraints.
-2.  **Arrange Pass:** Parents position and size their children within the computed physical bounds by invoking `Arrange(Rect finalRect)`.
+1.  **Measure Pass:** Container elements recursively query their children, invoking `Measure(Size availableSize)` to compute their `DesiredSize` based on layout constraints. The `UIElement` explicitly calculates requested bounds factoring in the `Margin` dependency property (`Thickness`).
+2.  **Arrange Pass:** Parents position and size their children within the computed physical bounds by invoking `Arrange(Rect finalRect)`, which applies structural offsets for `Margin`. Container controls inheriting from `Control` further apply `Padding` during layout overrides to reduce inner available space for their visual templates.
 3.  **Render Pass:** The actual rendering to the `VirtualBuffer` is heavily optimized. Containers executing the `Render` method utilize clipping rects to skip elements that are fully clipped or lie completely outside the current clip rectangle, drastically reducing CPU cycles in complex visual trees.
 
 **Hierarchical Composition:** For container controls descending from `Panel` (such as `StackPanel`, `Grid`, `DockPanel`, `WrapPanel`, `Canvas`, and `UniformGrid`), the underlying `UIElementCollection` (`Children`) systematically intercepts collection modifications. Executing `Panel.Children.Add(child)` strictly enforces visual tree integrity by automatically assigning the parent node, which inherently triggers `DataContext` propagation and establishes the routing infrastructure for input events.
 
 ### Overlay System
 Tedd.TUI implements a robust stacking overlay system orchestrated by `TuiWindow`. This architecture is designed to bypass standard document-flow layout passes for modal or transient visual elements (such as `DialogBox` and context menus).
-- **Stacking Mechanics:** Overlays are managed via `PushOverlay` and `RemoveOverlay`. New overlays are structurally appended to a dedicated rendering collection rather than the standard `Content` visual tree.
+- **Stacking Mechanics:** Overlays are managed via `PushOverlay` and `RemoveOverlay`. New overlays are structurally appended to a dedicated rendering collection rather than the standard `Content` visual tree. Internally, the stacking system optimizes topological checks utilizing a `HashSet<UIElement>` to provide $O(1)$ presence verification, preventing redundant stack allocations and enabling an early-exit if the requested overlay is already at the apex.
 - **Rendering & Hit-Testing Priority:** To achieve absolute visual supremacy, the `Render` pipeline processes the overlay collection iteratively *after* the primary `Content`. Conversely, the deterministic input routing system evaluates the overlay stack in reverse topological order (top-to-bottom) during `InputHitTestRecursive`, ensuring the active overlay intercepts global input coordinates before underlying standard components.
 
 ### Input & Interaction
 Input handling is orchestrated by a deterministic Routed Event architecture managed within `UIElement`:
 - **Overlay Management:** `TuiWindow` provides a stacking overlay system via `PushOverlay` and `RemoveOverlay` methods (the legacy `SetOverlay` is obsolete). Overlays are managed chronologically, rendered sequentially (Z-index parity on top of the visual tree), and are evaluated via reverse-topological hit-testing first, providing a robust architecture for modal dialogs and transient components.
 - **Standard Input Events:** Primitive interactions (`KeyDown`, `KeyUp`, `MouseDown`, `MouseUp`, `GotFocus`, `LostFocus`) are registered via `RoutedEvent.Register`. The core supports comprehensive `RoutingStrategy` execution topologies (`Tunnel` down to leaf, `Bubble` up to root, or `Direct` local invocations).
+- **Control State Events:** Interactive toggle controls (`CheckBox`, `RadioButton`) implement `Checked` and `Unchecked` bubbling routed events, dispatching dynamically from their `OnPropertyChanged` overrides when `IsCheckedProperty` mutates, guaranteeing robust parent container interception. `RadioButton` explicitly performs global synchronous group updates prior to dispatching `Checked` to enforce uniform topological flow.
 - **Execution Phases:** `UIElement` implements two-phase input event routing. Events originating at the active focus or visual leaf construct a routing table by walking `Parent` references. Tunneling events prefixed with 'Preview' (e.g., `PreviewKeyDownEvent`) are dispatched first, sequentially from root to leaf; marking them as `Handled` intercepts and prevents the subsequent standard bubbling event from firing. Subsequently, `Bubble` events trace backwards from leaf to root. Events explicitly marked `Handled = true` halt bubbling unless a handler registered with `handledEventsToo = true` overrides the block.
 - **Coordinate Resolution:** During mouse event dispatch, `UIElement.InvokeHandler` intercepts the `RoutedEventArgs` payload. It dynamically translates absolute global screen coordinates (`GlobalX`, `GlobalY`) into the local `RenderSize` space of the invoking element (updating the `X` and `Y` properties) utilizing `PointFromScreen` prior to emitting the class handler invocation.
 - **Class vs. Instance Handlers:** The `InvokeHandler` routine prioritizes overridden virtual methods (`OnKeyDown`, `OnMouseDown`, etc.) representing implicit class handlers. Subsequentially, it dynamically invokes explicitly bound delegates from the `_eventHandlers` dictionary, isolating layout logic from subscriber callbacks.
