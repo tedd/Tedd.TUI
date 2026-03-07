@@ -217,8 +217,11 @@ public class DialogBoxCoverageTests
         dialog.Arrange(new Rect(0, 0, width, height));
 
         var buffer = new VirtualBuffer(10, 10);
-        // It shouldn't crash or write out of bounds
+        // It shouldn't crash or write out of bounds, and should not modify the buffer
         dialog.Render(buffer, 0, 0);
+
+        // Check buffer is unchanged (empty)
+        Assert.Equal(' ', buffer.GetPixel(0, 0).Character);
     }
 
     [Fact]
