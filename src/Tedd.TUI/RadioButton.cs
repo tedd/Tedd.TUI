@@ -65,14 +65,12 @@ public class RadioButton : ToggleButton
 
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
-        base.OnPropertyChanged(dp);
-        if (dp == IsCheckedProperty)
+        if (dp == IsCheckedProperty && IsChecked == true)
         {
-            if (IsChecked == true)
-            {
-                UpdateGroup();
-            }
+            UpdateGroup();
         }
+
+        base.OnPropertyChanged(dp);
     }
 
     protected override void OnToggle()
