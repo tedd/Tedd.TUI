@@ -217,6 +217,6 @@ public class ItemsControlTests
 
     private class TestItem
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }
