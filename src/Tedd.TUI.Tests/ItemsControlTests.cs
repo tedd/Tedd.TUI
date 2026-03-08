@@ -162,12 +162,6 @@ public class ItemsControlTests
         };
         control.ItemsSource = items;
 
-        // Force creation of visual tree
-        var presenter = new ItemsPresenter();
-        presenter.TemplatedParent = control;
-        // ItemsControl creates template automatically when measured/arranged?
-        // Wait, ItemsControl is a Control, so it has a Template.
-        // Let's manually trigger the generation.
         control.Template = new ControlTemplate(parent =>
         {
             var ip = new ItemsPresenter();
