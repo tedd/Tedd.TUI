@@ -78,6 +78,12 @@
 ## 2024-05-19 - ButtonBase and ToggleButton Hierarchy
 **Observation:** Standard WPF UI components `Button`, `CheckBox`, and `RadioButton` implement specialized behavior via inheritance (`ButtonBase` handling basic click logic, `ToggleButton` handling checked states). Prior framework implementation instantiated these components directly under `UIElement` or `ContentControl`, breaking WPF structural isomorphism and duplicating event handling code.
 **Strategic Action:** Introduced `ButtonBase` and `ToggleButton` abstract classes derived from `ContentControl`. Refactored `Button`, `CheckBox`, and `RadioButton` to properly subclass these foundational classes, unifying `Click`, `Checked`, and `Unchecked` routed events and implementing WPF `ClickMode` and `IsThreeState` logic.
+## 2026-03-05 - ItemsControl ItemTemplate Data Binding Propagation
+**Observation:** The TUI framework lacked standard `ItemTemplate` support on `ItemsControl`. Consequently, elements generated using an implicit template mechanism (i.e. via `ContentPresenter`) were passing only string representations (`GetItemText`) of data items instead of raw data objects, crippling hierarchical and complex layout data bindings for standard collection visualizations.
+**Strategic Action:**
+- Added the `ItemTemplate` DependencyProperty to `ItemsControl`.
+- Modified `PrepareContainerForItemOverride` in `ItemsControl` to set the generated `ContentPresenter`'s `Content` strictly to the underlying item when an `ItemTemplate` is provided.
+- Successfully propagated raw item instances and corresponding `ContentTemplate`s, mirroring structural WPF/XAML items presentation behavior while remaining backward compatible with scalar text fallbacks.
 
 ## 2024-03-08 - Panel ZIndex Parity Integration
 **Observation:** The core `Panel` layout framework lacked the `ZIndex` attached dependency property found in WPF, leading to the inability to deterministically control the visual stacking order of sibling children during rendering and hit testing without altering their logical collection order.

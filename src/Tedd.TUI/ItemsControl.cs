@@ -38,6 +38,15 @@ public abstract class ItemsControl : Control
         set => SetValue(ItemsPanelProperty, value);
     }
 
+    public static readonly DependencyProperty ItemTemplateProperty =
+        DependencyProperty.Register("ItemTemplate", typeof(DataTemplate), typeof(ItemsControl), null);
+
+    public DataTemplate ItemTemplate
+    {
+        get => (DataTemplate)GetValue(ItemTemplateProperty);
+        set => SetValue(ItemTemplateProperty, value);
+    }
+
     private IEnumerable? _currentItemsSource;
     private Dictionary<Type, PropertyInfo?> _displayMemberCache = [];
     private System.Threading.Lock _displayMemberCacheLock = new();
@@ -231,7 +240,15 @@ public abstract class ItemsControl : Control
     {
         if (element is ContentPresenter cp)
         {
-            cp.Content = GetItemText(item);
+            if (ItemTemplate != null)
+            {
+                cp.ContentTemplate = ItemTemplate;
+                cp.Content = item;
+            }
+            else
+            {
+                cp.Content = GetItemText(item);
+            }
         }
     }
 
