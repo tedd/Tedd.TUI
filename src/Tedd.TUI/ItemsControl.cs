@@ -242,8 +242,8 @@ public abstract class ItemsControl : Control
         {
             if (ItemTemplate != null)
             {
-                cp.Content = item;
                 cp.ContentTemplate = ItemTemplate;
+                cp.Content = item;
             }
             else
             {
