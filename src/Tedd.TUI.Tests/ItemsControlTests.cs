@@ -140,4 +140,83 @@ public class ItemsControlTests
         text = control.GetItemText(item);
         Assert.Equal(item.ToString(), text);
     }
+
+    [Fact]
+    public void ItemsControl_Uses_ItemTemplate_When_Provided()
+    {
+        var control = new TestItemsControl();
+
+        var template = new DataTemplate(() =>
+        {
+            var textBlock = new TextBlock();
+            textBlock.SetBinding(TextBlock.TextProperty, new Binding("Name"));
+            return textBlock;
+        });
+
+        control.ItemTemplate = template;
+
+        var items = new ObservableCollection<TestItem>
+        {
+            new TestItem { Name = "First" },
+            new TestItem { Name = "Second" }
+        };
+        control.ItemsSource = items;
+
+        // Force creation of visual tree
+        var presenter = new ItemsPresenter();
+        presenter.TemplatedParent = control;
+        // ItemsControl creates template automatically when measured/arranged?
+        // Wait, ItemsControl is a Control, so it has a Template.
+        // Let's manually trigger the generation.
+        control.Template = new ControlTemplate(parent =>
+        {
+            var ip = new ItemsPresenter();
+            ip.TemplatedParent = parent;
+            return ip;
+        });
+        control.ApplyTemplate();
+
+        var root = control.GetVisualChild(0) as ItemsPresenter;
+        Assert.NotNull(root);
+
+        // Measure to trigger panel generation
+        root.Measure(new Size(100, 100));
+
+        var panel = root.GetVisualChild(0) as StackPanel;
+        Assert.NotNull(panel);
+
+        Assert.Equal(2, panel.VisualChildrenCount);
+
+        var cp1 = panel.GetVisualChild(0) as ContentPresenter;
+        var cp2 = panel.GetVisualChild(1) as ContentPresenter;
+
+        Assert.NotNull(cp1);
+        Assert.NotNull(cp2);
+
+        // ContentPresenter should contain the raw item
+        Assert.Equal(items[0], cp1.Content);
+        Assert.Equal(items[1], cp2.Content);
+
+        // ContentPresenter should have the ItemTemplate
+        Assert.Equal(template, cp1.ContentTemplate);
+        Assert.Equal(template, cp2.ContentTemplate);
+
+        // Trigger ContentPresenter visual update
+        cp1.Measure(new Size(100, 100));
+        cp2.Measure(new Size(100, 100));
+
+        var tb1 = cp1.GetVisualChild(0) as TextBlock;
+        var tb2 = cp2.GetVisualChild(0) as TextBlock;
+
+        Assert.NotNull(tb1);
+        Assert.NotNull(tb2);
+
+        Assert.Equal("First", tb1.Text);
+        Assert.Equal("Second", tb2.Text);
+    }
+
+    private class TestItem
+    {
+        public string Name { get; set; }
+    }
 }
