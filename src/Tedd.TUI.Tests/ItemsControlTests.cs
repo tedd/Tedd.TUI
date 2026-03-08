@@ -215,8 +215,54 @@ public class ItemsControlTests
         Assert.Equal("Second", tb2.Text);
     }
 
+    [Fact]
+    public void ItemTemplate_Change_Repopulates_ItemsPresenter()
+    {
+        var control = new TestItemsControl();
+
+        var items = new[] { new TestItem { Name = "A" }, new TestItem { Name = "B" } };
+        control.ItemsSource = items;
+
+        control.Template = new ControlTemplate(parent =>
+        {
+            var ip = new ItemsPresenter();
+            ip.TemplatedParent = parent;
+            return ip;
+        });
+        control.ApplyTemplate();
+
+        var root = control.GetVisualChild(0) as ItemsPresenter;
+        Assert.NotNull(root);
+
+        root.Measure(new Size(100, 100));
+
+        var panel = root.GetVisualChild(0) as StackPanel;
+        Assert.NotNull(panel);
+
+        // Initially no template: fallback to GetItemText
+        Assert.Equal(2, panel.VisualChildrenCount);
+        var cp1Before = panel.GetVisualChild(0) as ContentPresenter;
+        Assert.NotNull(cp1Before);
+        Assert.Null(cp1Before.ContentTemplate);
+
+        // Now set an ItemTemplate
+        var template = new DataTemplate(() =>
+        {
+            var tb = new TextBlock();
+            tb.SetBinding(TextBlock.TextProperty, new Binding("Name"));
+            return tb;
+        });
+        control.ItemTemplate = template;
+
+        // After setting ItemTemplate, panel should be repopulated with containers using the template
+        Assert.Equal(2, panel.VisualChildrenCount);
+        var cp1After = panel.GetVisualChild(0) as ContentPresenter;
+        Assert.NotNull(cp1After);
+        Assert.Equal(template, cp1After.ContentTemplate);
+    }
+
     private class TestItem
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

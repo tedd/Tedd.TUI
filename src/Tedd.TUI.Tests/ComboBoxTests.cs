@@ -357,4 +357,31 @@ public class ComboBoxTests
         // Height + 2 for border -> overlay height = 2
         Assert.Equal(2, overlay.Height);
     }
+
+    [Fact]
+    public void OpenDropdown_PropagatesItemTemplate_ToPopupListBox()
+    {
+        var window = new TuiWindow();
+        var cb = new ComboBox();
+        cb.Items.Add(new { Name = "Item 1" });
+        cb.Items.Add(new { Name = "Item 2" });
+
+        var template = new DataTemplate(() => new TextBlock());
+        cb.ItemTemplate = template;
+
+        window.Content = cb;
+        window.Measure(new Size(80, 24));
+        window.Arrange(new Rect(0, 0, 80, 24));
+
+        // Open dropdown
+        var method = typeof(ComboBox).GetMethod("OpenDropdown", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(method);
+        method.Invoke(cb, new object[] { window });
+
+        var field = typeof(ComboBox).GetField("_popupListBox", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(field);
+        var popupListBox = (ListBox)field.GetValue(cb)!;
+
+        Assert.Equal(template, popupListBox.ItemTemplate);
+    }
 }
