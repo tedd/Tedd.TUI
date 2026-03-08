@@ -176,3 +176,18 @@ Developed comprehensive unit testing suites targeting previously unexecuted code
 - Total Branch Coverage for `Tedd.TUI` increased from 64.05% to 65.74%.
 - Total Method Coverage for `Tedd.TUI` increased from 80.01% to 82.73%.
 - Added 25 tests to ensure components behave deterministically against missing or mutated variables. Total tests passed 439.
+## 2026-03-08 - TreeView and TreeViewItem Coverage Expansion
+
+**Observation:**
+Identified severe coverage deficits in the `TreeView` and `TreeViewItem` components. Initial metrics showed `TreeView` at 62.4% and `TreeViewItem` at 36%. Missing areas specifically involved bounds checking for multi-level hierarchical array navigation during keyboard events (`OnKeyDown`), layout rendering edge-case mapping between Visual `StackPanel` and abstract component states, explicit verification of `InheritanceParent` logically propagating `DataContext` rather than structurally, and caching property updates via `ItemsSource`.
+
+**Strategic Action:**
+Developed comprehensive parameterized tests using `src/Tedd.TUI.Tests/TreeViewCoverageTests.cs`.
+Targeted boundary conditions for expanding logic via explicit keystroke maps (`LeftArrow`, `RightArrow`, `UpArrow`, `DownArrow`, `Enter`).
+Tested `ScrollViewer` injection ensuring out-of-bounds scrolling dynamically calculates Y-axis offsets utilizing `GetVisualChild`.
+Implemented coverage expanding into dynamic memory allocations ensuring observable `INotifyCollectionChanged` subscriptions add and clear internal visual collections appropriately.
+
+**Metrics:**
+- Increased `Tedd.TUI.TreeView` coverage from 62.4% to 96.1%.
+- Increased `Tedd.TUI.TreeViewItem` coverage from 36.0% to 95.3%.
+- Expanded overall total structural coverage within Tedd.TUI to 76.33%. Total tests executing now 491.

@@ -205,6 +205,11 @@ public abstract class UIElement : DependencyObject
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
         base.OnPropertyChanged(dp);
+
+        if (dp == Panel.ZIndexProperty && Parent is Panel p)
+        {
+            p.InvalidateZState();
+        }
         if (dp == DataContextProperty)
         {
             // Update local bindings

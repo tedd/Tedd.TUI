@@ -84,3 +84,7 @@
 - Added the `ItemTemplate` DependencyProperty to `ItemsControl`.
 - Modified `PrepareContainerForItemOverride` in `ItemsControl` to set the generated `ContentPresenter`'s `Content` strictly to the underlying item when an `ItemTemplate` is provided.
 - Successfully propagated raw item instances and corresponding `ContentTemplate`s, mirroring structural WPF/XAML items presentation behavior while remaining backward compatible with scalar text fallbacks.
+
+## 2024-03-08 - Panel ZIndex Parity Integration
+**Observation:** The core `Panel` layout framework lacked the `ZIndex` attached dependency property found in WPF, leading to the inability to deterministically control the visual stacking order of sibling children during rendering and hit testing without altering their logical collection order.
+**Strategic Action:** Implemented `Panel.ZIndexProperty`. Upgraded `Panel` to intercept visual child access via `GetVisualChild`, intercepting access with a cached, lazily-evaluated array sorted stably by `ZIndex` to ensure declaration order is respected for ties. Hooked into `UIElement.OnPropertyChanged` and `UIElementCollection` mutations to accurately invalidate the Z-state cache (`InvalidateZState()`), strictly aligning layout behavior with WPF paradigms.
