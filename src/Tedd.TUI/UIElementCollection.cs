@@ -17,6 +17,7 @@ public class UIElementCollection : Collection<UIElement>
         if (item == null) throw new ArgumentNullException(nameof(item));
         base.InsertItem(index, item);
         item.Parent = _owner;
+        if (_owner is Panel panel) panel.InvalidateZState();
     }
 
     protected override void RemoveItem(int index)
@@ -27,6 +28,7 @@ public class UIElementCollection : Collection<UIElement>
         {
             item.Parent = null;
         }
+        if (_owner is Panel panel) panel.InvalidateZState();
     }
 
     protected override void SetItem(int index, UIElement item)
@@ -40,6 +42,7 @@ public class UIElementCollection : Collection<UIElement>
             oldItem.Parent = null;
         }
         item.Parent = _owner;
+        if (_owner is Panel panel) panel.InvalidateZState();
     }
 
     protected override void ClearItems()
@@ -52,5 +55,6 @@ public class UIElementCollection : Collection<UIElement>
             }
         }
         base.ClearItems();
+        if (_owner is Panel panel) panel.InvalidateZState();
     }
 }

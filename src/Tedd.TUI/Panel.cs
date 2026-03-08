@@ -8,6 +8,22 @@ public abstract class Panel : UIElement
     private readonly UIElementCollection _children;
     public UIElementCollection Children => _children;
 
+
+    public static readonly DependencyProperty ZIndexProperty =
+        DependencyProperty.RegisterAttached("ZIndex", typeof(int), typeof(Panel), 0);
+
+    public static void SetZIndex(UIElement element, int value)
+    {
+        if (element == null) throw new ArgumentNullException(nameof(element));
+        element.SetValue(ZIndexProperty, value);
+    }
+
+    public static int GetZIndex(UIElement element)
+    {
+        if (element == null) throw new ArgumentNullException(nameof(element));
+        return (int)element.GetValue(ZIndexProperty);
+    }
+
     protected Panel()
     {
         _children = new UIElementCollection(this);
@@ -18,12 +34,37 @@ public abstract class Panel : UIElement
         _children.Add(child);
     }
 
+    private UIElement[]? _zSortedChildren;
+
+    internal void InvalidateZState()
+    {
+        _zSortedChildren = null;
+        Invalidate();
+    }
+
+    private void EnsureZSorted()
+    {
+        if (_zSortedChildren != null) return;
+
+        int count = _children.Count;
+        if (count == 0)
+        {
+            _zSortedChildren = Array.Empty<UIElement>();
+            return;
+        }
+
+        // We use GetZIndex(c) to sort.
+        // We need a stable sort. LINQ OrderBy is stable.
+        _zSortedChildren = System.Linq.Enumerable.OrderBy(_children, c => GetZIndex(c)).ToArray();
+    }
+
     public override int VisualChildrenCount => _children.Count;
 
     public override UIElement GetVisualChild(int index)
     {
         if (index < 0 || index >= _children.Count) throw new ArgumentOutOfRangeException(nameof(index));
-        return _children[index];
+        EnsureZSorted();
+        return _zSortedChildren![index];
     }
 
     // Intent: Optimize Render by skipping fully clipped children
@@ -37,10 +78,10 @@ public abstract class Panel : UIElement
 
         Rect clip = buffer.GetClip();
 
-        int count = _children.Count;
+        int count = VisualChildrenCount;
         for (int i = 0; i < count; i++)
         {
-            var child = _children[i];
+            var child = GetVisualChild(i);
 
             // Calculate child's absolute bounding box
             int childX = x + child.RenderSize.X;
