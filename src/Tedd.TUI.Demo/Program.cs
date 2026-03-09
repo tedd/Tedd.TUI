@@ -135,6 +135,7 @@ class Program
         var nodeCode = new TreeViewItem { Header = "Code" };
         var nodeMarkdown = new TreeViewItem { Header = "Markdown" };
         var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
+        var nodeEditor = new TreeViewItem { Header = "Editor" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -143,6 +144,7 @@ class Program
         rootNode.Items.Add(nodeCode);
         rootNode.Items.Add(nodeMarkdown);
         rootNode.Items.Add(nodeDataGrid);
+        rootNode.Items.Add(nodeEditor);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -164,6 +166,7 @@ class Program
             else if (sel == nodeCode) tabs.SelectedIndex = 4;
             else if (sel == nodeMarkdown) tabs.SelectedIndex = 5;
             else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
+            else if (sel == nodeEditor) tabs.SelectedIndex = 7;
         };
 
 
@@ -488,6 +491,17 @@ public void Hello() {
         dataGridStack.AddChild(dataGrid);
 
         tabs.Items.Add(new TabItem { Header = "DataGrid", Content = dataGridStack });
+
+        // --- Tab 8: Editor ---
+        var editorStack = new StackPanel { Orientation = Orientation.Vertical };
+        editorStack.AddChild(new TextBlock { Text = "Text Editor:" });
+
+        var editorBorder = new Border { BoxStyle = BoxStyle.Single, BorderColor = ConsoleColor.Cyan, Width = 70, Height = 15 };
+        var editorBox = new TextEditor { Width = -1, Height = -1 };
+        editorBorder.Child = editorBox;
+
+        editorStack.AddChild(editorBorder);
+        tabs.Items.Add(new TabItem { Header = "Editor", Content = editorStack });
 
         // Run App
 
