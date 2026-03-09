@@ -51,6 +51,9 @@ public class Control : UIElement
     private System.Collections.Generic.List<(DependencyObject, DependencyProperty)>? _propertiesToRevert;
     private System.Collections.Generic.HashSet<TriggerBase>? _activeTriggers;
 
+    // Set of dependency properties watched by at least one trigger in the current template; null when empty
+    private System.Collections.Generic.HashSet<DependencyProperty>? _watchedTriggerProperties;
+
     private bool _isEvaluatingTriggers;
 
     protected override void OnPropertyChanged(DependencyProperty dp)
@@ -60,9 +63,37 @@ public class Control : UIElement
         if (dp == TemplateProperty)
         {
             ApplyTemplate();
+            RebuildWatchedTriggerProperties();
+            EvaluateTriggers();
+            return;
         }
 
+        // Short-circuit: skip evaluation when dp is not watched by any trigger condition
+        if (_watchedTriggerProperties == null || !_watchedTriggerProperties.Contains(dp))
+            return;
+
         EvaluateTriggers();
+    }
+
+    private void RebuildWatchedTriggerProperties()
+    {
+        var template = Template;
+        if (template == null || template.Triggers.Count == 0)
+        {
+            _watchedTriggerProperties = null;
+            return;
+        }
+
+        if (_watchedTriggerProperties == null)
+            _watchedTriggerProperties = new();
+        else
+            _watchedTriggerProperties.Clear();
+
+        foreach (var triggerBase in template.Triggers)
+        {
+            if (triggerBase is Trigger trigger && trigger.Property != null)
+                _watchedTriggerProperties.Add(trigger.Property);
+        }
     }
 
     private void EvaluateTriggers()
