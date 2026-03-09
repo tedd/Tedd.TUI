@@ -133,6 +133,8 @@ public abstract class Panel : UIElement
         }
         finally
         {
+            // Clear the used segment to avoid retaining references in the pooled array.
+            Array.Clear(temp, 0, count);
             System.Buffers.ArrayPool<UIElement>.Shared.Return(temp);
         }
     }
