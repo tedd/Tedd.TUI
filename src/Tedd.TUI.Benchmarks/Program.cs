@@ -1,7 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using System;
-using System.Collections.Generic;
 using Tedd.TUI;
 using Tedd.TUI.Archive;
 
