@@ -63,7 +63,7 @@ namespace Tedd.TUI.Benchmarks
     {
         static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<PanelZIndexBenchmark>();
+            var summary = BenchmarkRunner.Run<PanelZIndexBenchmark>(args);
         }
     }
 }
