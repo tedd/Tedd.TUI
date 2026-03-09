@@ -19,8 +19,8 @@ namespace Tedd.TUI.Benchmarks
     [MemoryDiagnoser]
     public class PanelZIndexBenchmark
     {
-        private TestPanel _panel;
-        private TestLegacyPanel _legacyPanel;
+        private TestPanel _panel = null!;
+        private TestLegacyPanel _legacyPanel = null!;
 
         [Params(10, 50, 100)]
         public int ChildCount { get; set; }
