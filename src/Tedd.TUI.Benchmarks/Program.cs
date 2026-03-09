@@ -44,17 +44,17 @@ namespace Tedd.TUI.Benchmarks
         }
 
         [Benchmark(Baseline = true)]
-        public void EnsureZSorted_Legacy()
+        public object EnsureZSorted_Legacy()
         {
             _legacyPanel.InvalidateZState();
-            _legacyPanel.EnsureZSorted();
+            return _legacyPanel.GetVisualChild(0);
         }
 
         [Benchmark]
-        public void EnsureZSorted_Optimized()
+        public object EnsureZSorted_Optimized()
         {
             _panel.InvalidateZState();
-            var c = _panel.GetVisualChild(0);
+            return _panel.GetVisualChild(0);
         }
     }
 
