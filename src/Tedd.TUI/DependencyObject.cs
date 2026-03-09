@@ -77,7 +77,7 @@ public class DependencyObject : INotifyPropertyChanged
         }
     }
 
-    protected bool HasLocalValue(DependencyProperty dp)
+    public bool HasLocalValue(DependencyProperty dp)
     {
         return _values.ContainsKey(dp);
     }

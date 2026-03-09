@@ -136,7 +136,7 @@ public class TriggerTests
     public void Trigger_ResolvesTargetName()
     {
         var control = new TestControl();
-        var border = new Border { Name = "MyBorder" };
+        var border = new Control { Name = "MyBorder" };
         var template = new ControlTemplate((c) => border);
 
         var trigger = new Trigger
@@ -144,7 +144,7 @@ public class TriggerTests
             Property = TestControl.IsHoveredProperty,
             Value = true
         };
-        trigger.Setters.Add(new Setter(Border.BorderBrushProperty, ConsoleColor.Red) { TargetName = "MyBorder" });
+        trigger.Setters.Add(new Setter(Control.BorderBrushProperty, ConsoleColor.Red) { TargetName = "MyBorder" });
 
         template.Triggers.Add(trigger);
         control.Template = template;
