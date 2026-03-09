@@ -53,9 +53,43 @@ public abstract class Panel : UIElement
             return;
         }
 
-        // We use GetZIndex(c) to sort.
-        // We need a stable sort. LINQ OrderBy is stable.
-        _zSortedChildren = System.Linq.Enumerable.OrderBy(_children, c => GetZIndex(c)).ToArray();
+        // Fast path: if all children use the default ZIndex (0), just copy in insertion order.
+        bool needsSort = false;
+        for (int i = 0; i < count; i++)
+        {
+            if (GetZIndex(_children[i]) != 0)
+            {
+                needsSort = true;
+                break;
+            }
+        }
+
+        var arr = new UIElement[count];
+
+        if (!needsSort)
+        {
+            for (int i = 0; i < count; i++)
+                arr[i] = _children[i];
+        }
+        else
+        {
+            // Stable sort: build (zIndex, originalIndex) key pairs in a single pass,
+            // caching the ZIndex so GetZIndex is not called again during Array.Sort.
+            var keys = new (int Z, int Idx)[count];
+            for (int i = 0; i < count; i++)
+            {
+                arr[i] = _children[i];
+                keys[i] = (GetZIndex(_children[i]), i);
+            }
+
+            Array.Sort(keys, arr, Comparer<(int Z, int Idx)>.Create((a, b) =>
+            {
+                int c = a.Z.CompareTo(b.Z);
+                return c != 0 ? c : a.Idx.CompareTo(b.Idx);
+            }));
+        }
+
+        _zSortedChildren = arr;
     }
 
     public override int VisualChildrenCount => _children.Count;
