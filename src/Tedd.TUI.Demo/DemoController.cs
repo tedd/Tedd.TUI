@@ -23,6 +23,7 @@ public class DemoController
     public StackPanel ScrollStackPanel;
     public CodeDocument CodeDoc;
     public MarkdownView MdView;
+    public DataGrid DemoDataGrid;
     public TextEditor EditorBox;
     public TreeView NavTree;
     public TabControl MainTabs;
@@ -49,7 +50,8 @@ public class DemoController
                         case "Scroll": MainTabs.SelectedIndex = 3; break;
                         case "Code": MainTabs.SelectedIndex = 4; break;
                         case "Markdown": MainTabs.SelectedIndex = 5; break;
-                        case "Editor": MainTabs.SelectedIndex = 6; break;
+                        case "DataGrid": MainTabs.SelectedIndex = 6; break;
+                        case "Editor": MainTabs.SelectedIndex = 7; break;
                     }
                 }
             };
@@ -171,6 +173,21 @@ public void Hello() {
 > This is a quote.
 ";
             MdView.Text = mdText;
+        }
+
+        // Init DataGrid
+        if (DemoDataGrid != null)
+        {
+            var people = new List<Person>
+            {
+                new Person { Id = 1, Name = "Alice", Age = 30, Role = "Dev" },
+                new Person { Id = 2, Name = "Bob", Age = 25, Role = "QA" },
+                new Person { Id = 3, Name = "Charlie", Age = 35, Role = "Manager" },
+                new Person { Id = 4, Name = "Dave", Age = 40, Role = "Dev" },
+                new Person { Id = 5, Name = "Eve", Age = 22, Role = "Intern" },
+                new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
+            };
+            DemoDataGrid.ItemsSource = people;
         }
 
         // Init Scroll Events

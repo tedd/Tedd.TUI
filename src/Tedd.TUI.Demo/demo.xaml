@@ -60,6 +60,7 @@
                     <TreeViewItem Header="Scroll" />
                     <TreeViewItem Header="Code" />
                     <TreeViewItem Header="Markdown" />
+                    <TreeViewItem Header="DataGrid" />
                     <TreeViewItem Header="Editor" />
                 </TreeViewItem>
             </TreeView>
@@ -162,7 +163,15 @@
           </StackPanel>
        </TabItem>
 
-       <!-- Tab 7: Editor -->
+       <!-- Tab 7: DataGrid -->
+       <TabItem Header="DataGrid">
+          <StackPanel Orientation="Vertical">
+              <TextBlock Text="DataGrid (Auto Generated Columns):"/>
+              <DataGrid Name="DemoDataGrid" Width="60" Height="10" ShowHeader="True" PageSize="5" AutoGenerateColumns="True" ShowBorder="True" BorderStyle="Single"/>
+          </StackPanel>
+       </TabItem>
+
+       <!-- Tab 8: Editor -->
        <TabItem Header="Editor">
            <StackPanel Orientation="Vertical">
                <TextBlock Text="Text Editor:"/>

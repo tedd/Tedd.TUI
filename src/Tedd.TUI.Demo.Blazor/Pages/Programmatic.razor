@@ -99,6 +99,7 @@
         var nodeCode = new TreeViewItem { Header = "Code" };
         var nodeMarkdown = new TreeViewItem { Header = "Markdown" };
         var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
+        var nodeEditor = new TreeViewItem { Header = "Editor" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -107,6 +108,7 @@
         rootNode.Items.Add(nodeCode);
         rootNode.Items.Add(nodeMarkdown);
         rootNode.Items.Add(nodeDataGrid);
+        rootNode.Items.Add(nodeEditor);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -127,6 +129,7 @@
             else if (sel == nodeCode) tabs.SelectedIndex = 4;
             else if (sel == nodeMarkdown) tabs.SelectedIndex = 5;
             else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
+            else if (sel == nodeEditor) tabs.SelectedIndex = 7;
             StateHasChanged();
         };
 
@@ -317,5 +320,178 @@
 
         tableStack.AddChild(table);
         tabs.Items.Add(new TabItem { Header = "Table", Content = tableStack });
+
+        // --- Tab 4: ScrollBar & ScrollViewer ---
+        var scrollStack = new StackPanel { Orientation = Orientation.Vertical };
+        scrollStack.AddChild(new TextBlock { Text = "ScrollBars Demo" });
+
+        var scrollLabel = new TextBlock { Text = "H: 0, V: 0" };
+        scrollStack.AddChild(scrollLabel);
+
+        // Horizontal
+        scrollStack.AddChild(new TextBlock { Text = "Horizontal:" });
+        var hScroll = new ScrollBar
+        {
+            Orientation = Orientation.Horizontal,
+            Width = 40,
+            Minimum = 0,
+            Maximum = 100,
+            ViewportSize = 20,
+            Value = 30
+        };
+        scrollStack.AddChild(hScroll);
+
+        // Vertical
+        scrollStack.AddChild(new TextBlock { Text = "Vertical:" });
+        var vScroll = new ScrollBar
+        {
+            Orientation = Orientation.Vertical,
+            Height = 10,
+            Minimum = 0,
+            Maximum = 50,
+            ViewportSize = 10
+        };
+        scrollStack.AddChild(vScroll);
+
+        scrollStack.AddChild(new TextBlock { Text = "ScrollViewer:" });
+        var sv = new ScrollViewer { Width = 40, Height = 10, HorizontalScrollBarVisibility = true, VerticalScrollBarVisibility = true };
+        var largeStack = new StackPanel { Orientation = Orientation.Vertical };
+        for (int i = 0; i < 20; i++)
+        {
+            largeStack.AddChild(new Button { Content = $"Button {i} (Wide Content for Scroll)" });
+        }
+        sv.Content = largeStack;
+        scrollStack.AddChild(sv);
+
+        // Event Handlers
+        void UpdateLabel(object? s, EventArgs e)
+        {
+            scrollLabel.Text = $"H: {hScroll.Value}, V: {vScroll.Value}";
+            StateHasChanged();
+        }
+
+        hScroll.ValueChanged += UpdateLabel;
+        vScroll.ValueChanged += UpdateLabel;
+
+        // Initial update
+        UpdateLabel(null, EventArgs.Empty);
+
+        tabs.Items.Add(new TabItem { Header = "Scroll", Content = scrollStack });
+
+        // --- Tab 5: Code Coloring ---
+        var codeStack = new StackPanel { Orientation = Orientation.Vertical };
+        codeStack.AddChild(new TextBlock { Text = "Code Coloring Demo (C#)" });
+
+        var codeDoc = new Tedd.TUI.CodeColoring.CodeDocument();
+        string sampleCode = @"using System;
+
+public class Test
+{
+    public void Method()
+    {
+        Console.WriteLine(""Hello World"");
+        int x = 10;
+        if (x > 5)
+        {
+            return;
+        }
+    }
+}";
+        codeDoc.SetCode(sampleCode, "csharp");
+
+        var scrollCode = new ScrollViewer { Width = 70, Height = 15, VerticalScrollBarVisibility = true, HorizontalScrollBarVisibility = true };
+        scrollCode.Content = codeDoc;
+
+        codeStack.AddChild(scrollCode);
+
+        tabs.Items.Add(new TabItem { Header = "Code", Content = codeStack });
+
+        // --- Tab 6: Markdown ---
+        var mdStack = new StackPanel { Orientation = Orientation.Vertical };
+        mdStack.AddChild(new TextBlock { Text = "Markdown View:" });
+
+        var mdScrollViewer = new ScrollViewer { Width = 70, Height = 15, VerticalScrollBarVisibility = true };
+        var mdView = new Tedd.TUI.Markdown.MarkdownView();
+        string mdText = @"# Markdown Demo
+
+This is a **bold** text and *italic* text.
+Here is a [Link](http://example.com) and an ![Image](img.png).
+
+## Lists
+
+- Item 1
+- Item 2 with **bold**
+- Item 3
+
+## Code
+
+```csharp
+public void Hello() {
+    Console.WriteLine(""World"");
+}
+```
+
+## Table
+
+| ID | Name |
+|---|---|
+| 1 | Alice |
+| 2 | Bob |
+
+> This is a quote.
+";
+        mdView.Text = mdText;
+        mdScrollViewer.Content = mdView;
+        mdStack.AddChild(mdScrollViewer);
+
+        tabs.Items.Add(new TabItem { Header = "Markdown", Content = mdStack });
+
+        // --- Tab 7: DataGrid ---
+        var dataGridStack = new StackPanel { Orientation = Orientation.Vertical };
+        dataGridStack.AddChild(new TextBlock { Text = "DataGrid (Auto Generated Columns):" });
+
+        var dataGrid = new DataGrid
+        {
+            Width = 60,
+            Height = 10,
+            ShowHeader = true,
+            PageSize = 5,
+            AutoGenerateColumns = true,
+            ShowBorder = true,
+            BorderStyle = BoxStyle.Single
+        };
+
+        var people = new List<Person>
+        {
+            new Person { Id = 1, Name = "Alice", Age = 30, Role = "Dev" },
+            new Person { Id = 2, Name = "Bob", Age = 25, Role = "QA" },
+            new Person { Id = 3, Name = "Charlie", Age = 35, Role = "Manager" },
+            new Person { Id = 4, Name = "Dave", Age = 40, Role = "Dev" },
+            new Person { Id = 5, Name = "Eve", Age = 22, Role = "Intern" },
+            new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
+        };
+        dataGrid.ItemsSource = people;
+        dataGridStack.AddChild(dataGrid);
+
+        tabs.Items.Add(new TabItem { Header = "DataGrid", Content = dataGridStack });
+
+        // --- Tab 8: Editor ---
+        var editorStack = new StackPanel { Orientation = Orientation.Vertical };
+        editorStack.AddChild(new TextBlock { Text = "Text Editor:" });
+
+        var editorBorder = new Border { BoxStyle = BoxStyle.Single, BorderColor = ConsoleColor.Cyan, Width = 70, Height = 15 };
+        var editorBox = new TextEditor { Width = -1, Height = -1 };
+        editorBorder.Child = editorBox;
+
+        editorStack.AddChild(editorBorder);
+        tabs.Items.Add(new TabItem { Header = "Editor", Content = editorStack });
+    }
+
+    public class Person
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int Age { get; set; }
+        public string Role { get; set; } = string.Empty;
     }
 }

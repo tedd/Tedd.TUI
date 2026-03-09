@@ -54,13 +54,15 @@
             <!-- Navigation Pane (Left) -->
             <TuiExpander Dock="Dock.Left" Header="Navigation" IsExpanded="true">
                 <TuiTreeView SelectedItemChanged="OnNavSelected">
-                    <TuiTreeViewItem Header="Controls" IsExpanded="true">                        <TuiTreeViewItem Header="Form" IsSelected="true" />
+                    <TuiTreeViewItem Header="Controls" IsExpanded="true">
+                        <TuiTreeViewItem Header="Form" IsSelected="true" />
                         <TuiTreeViewItem Header="Lists" />
                         <TuiTreeViewItem Header="Table" />
                         <TuiTreeViewItem Header="Scroll" />
                         <TuiTreeViewItem Header="Code" />
                         <TuiTreeViewItem Header="Markdown" />
                         <TuiTreeViewItem Header="DataGrid" />
+                        <TuiTreeViewItem Header="Editor" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -150,6 +152,68 @@
                  </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 4: Scroll -->
+            <TuiTabItem Header="Scroll">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="ScrollBars Demo" />
+                    <TuiLabel Text="@scrollLabelText" />
+
+                    <TuiLabel Text="Horizontal:" />
+                    <TuiScrollBar Orientation="Orientation.Horizontal" Width="40" Minimum="0" Maximum="100" ViewportSize="20" Value="@hScrollValue" ValueChanged="OnHScrollChanged" />
+
+                    <TuiLabel Text="Vertical:" />
+                    <TuiScrollBar Orientation="Orientation.Vertical" Height="10" Minimum="0" Maximum="50" ViewportSize="10" Value="@vScrollValue" ValueChanged="OnVScrollChanged" />
+
+                    <TuiLabel Text="ScrollViewer:" />
+                    <TuiScrollViewer Width="40" Height="10" HorizontalScrollBarVisibility="true" VerticalScrollBarVisibility="true">
+                        <TuiStackPanel Orientation="Orientation.Vertical">
+                            @for (int i = 0; i < 20; i++)
+                            {
+                                <TuiButton Text=@($"Button {i} (Wide Content for Scroll)") />
+                            }
+                        </TuiStackPanel>
+                    </TuiScrollViewer>
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 5: Code -->
+            <TuiTabItem Header="Code">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Code Coloring Demo" />
+                    <TuiScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="true" HorizontalScrollBarVisibility="true">
+                        <TuiComponentBase Component="@codeDoc" />
+                    </TuiScrollViewer>
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 6: Markdown -->
+            <TuiTabItem Header="Markdown">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Markdown View:" />
+                    <TuiScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="true">
+                        <TuiComponentBase Component="@mdView" />
+                    </TuiScrollViewer>
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 7: DataGrid -->
+            <TuiTabItem Header="DataGrid">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="DataGrid (Auto Generated Columns):" />
+                    <TuiComponentBase Component="@dataGrid" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 8: Editor -->
+            <TuiTabItem Header="Editor">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Text Editor:" />
+                    <TuiBorder BoxStyle="BoxStyle.Single" BorderColor="ConsoleColor.Cyan" Width="70" Height="15">
+                        <TuiComponentBase Component="@textEditor" />
+                    </TuiBorder>
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -166,7 +230,8 @@
     private void OnNavSelected(object? selectedItem)
     {
         if (selectedItem is TreeViewItem tvi && tvi.Header is string header)
-        {            switch (header)
+        {
+            switch (header)
             {
                 case "Form": selectedTabIndex = 0; break;
                 case "Lists": selectedTabIndex = 1; break;
@@ -175,6 +240,7 @@
                 case "Code": selectedTabIndex = 4; break;
                 case "Markdown": selectedTabIndex = 5; break;
                 case "DataGrid": selectedTabIndex = 6; break;
+                case "Editor": selectedTabIndex = 7; break;
             }
             StateHasChanged();
         }
@@ -283,6 +349,54 @@
     private int totalRows = 0;
     private int currentPage = 0;
 
+    // Scroll Data
+    private int hScrollValue = 30;
+    private int vScrollValue = 0;
+    private string scrollLabelText = "H: 30, V: 0";
+
+    private void OnHScrollChanged(int val)
+    {
+        hScrollValue = val;
+        scrollLabelText = $"H: {hScrollValue}, V: {vScrollValue}";
+        StateHasChanged();
+    }
+
+    private void OnVScrollChanged(int val)
+    {
+        vScrollValue = val;
+        scrollLabelText = $"H: {hScrollValue}, V: {vScrollValue}";
+        StateHasChanged();
+    }
+
+    // Code Data
+    private Tedd.TUI.CodeColoring.CodeDocument codeDoc = new Tedd.TUI.CodeColoring.CodeDocument();
+
+    // Markdown Data
+    private Tedd.TUI.Markdown.MarkdownView mdView = new Tedd.TUI.Markdown.MarkdownView();
+
+    // DataGrid Data
+    private Tedd.TUI.DataGrid dataGrid = new Tedd.TUI.DataGrid
+    {
+        Width = 60,
+        Height = 10,
+        ShowHeader = true,
+        PageSize = 5,
+        AutoGenerateColumns = true,
+        ShowBorder = true,
+        BorderStyle = BoxStyle.Single
+    };
+
+    public class Person
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int Age { get; set; }
+        public string Role { get; set; } = string.Empty;
+    }
+
+    // Editor Data
+    private Tedd.TUI.TextEditor textEditor = new Tedd.TUI.TextEditor { Width = -1, Height = -1 };
+
     protected override void OnInitialized()
     {
         // Populate Data
@@ -299,6 +413,66 @@
         
         totalRows = allTableItems.Count;
         LoadPage(0);
+
+        // Init Code
+        string sampleCode = @"using System;
+
+public class Test
+{
+    public void Method()
+    {
+        Console.WriteLine(""Hello World"");
+        int x = 10;
+        if (x > 5)
+        {
+            return;
+        }
+    }
+}";
+        codeDoc.SetCode(sampleCode, "csharp");
+
+        // Init Markdown
+        string mdText = @"# Markdown Demo
+
+This is a **bold** text and *italic* text.
+Here is a [Link](http://example.com) and an ![Image](img.png).
+
+## Lists
+
+- Item 1
+- Item 2 with **bold**
+- Item 3
+
+## Code
+
+```csharp
+public void Hello() {
+    Console.WriteLine(""World"");
+}
+```
+
+## Table
+
+| ID | Name |
+|---|---|
+| 1 | Alice |
+| 2 | Bob |
+
+> This is a quote.
+";
+        mdView.Text = mdText;
+
+        // Init DataGrid
+        var people = new List<Person>
+        {
+            new Person { Id = 1, Name = "Alice", Age = 30, Role = "Dev" },
+            new Person { Id = 2, Name = "Bob", Age = 25, Role = "QA" },
+            new Person { Id = 3, Name = "Charlie", Age = 35, Role = "Manager" },
+            new Person { Id = 4, Name = "Dave", Age = 40, Role = "Dev" },
+            new Person { Id = 5, Name = "Eve", Age = 22, Role = "Intern" },
+            new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
+        };
+        dataGrid.ItemsSource = people;
     }
 
     private void OnPageChanged()
