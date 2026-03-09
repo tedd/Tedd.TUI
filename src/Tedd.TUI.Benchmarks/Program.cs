@@ -1,6 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using System;
+using System.Collections.Generic;
 using Tedd.TUI;
 using Tedd.TUI.Archive;
 
@@ -19,8 +20,8 @@ namespace Tedd.TUI.Benchmarks
     [MemoryDiagnoser]
     public class PanelZIndexBenchmark
     {
-        private TestPanel _panel = null!;
-        private TestLegacyPanel _legacyPanel = null!;
+        private TestPanel _panel;
+        private TestLegacyPanel _legacyPanel;
 
         [Params(10, 50, 100)]
         public int ChildCount { get; set; }
@@ -44,17 +45,17 @@ namespace Tedd.TUI.Benchmarks
         }
 
         [Benchmark(Baseline = true)]
-        public object EnsureZSorted_Legacy()
+        public void EnsureZSorted_Legacy()
         {
             _legacyPanel.InvalidateZState();
-            return _legacyPanel.GetVisualChild(0);
+            _legacyPanel.EnsureZSorted();
         }
 
         [Benchmark]
-        public object EnsureZSorted_Optimized()
+        public void EnsureZSorted_Optimized()
         {
             _panel.InvalidateZState();
-            return _panel.GetVisualChild(0);
+            var c = _panel.GetVisualChild(0);
         }
     }
 
@@ -62,7 +63,7 @@ namespace Tedd.TUI.Benchmarks
     {
         static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<PanelZIndexBenchmark>(args);
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }
 }
