@@ -160,6 +160,37 @@ public class TriggerTests
     }
 
     [Fact]
+    public void Trigger_RemainsActiveAfterUnwatchedPropertyChange()
+    {
+        // Verify that changing a property not referenced in any trigger condition
+        // does not deactivate an active trigger or revert its setter values.
+        var control = new TestControl();
+        var template = new ControlTemplate((c) => new Border());
+
+        var trigger = new Trigger
+        {
+            Property = TestControl.IsHoveredProperty,
+            Value = true
+        };
+        trigger.Setters.Add(new Setter(TestControl.TestValueProperty, 42));
+
+        template.Triggers.Add(trigger);
+        control.Template = template;
+
+        control.IsHovered = true;
+        Assert.Equal(42, control.TestValue);
+
+        // Change BorderBrush — not watched by any trigger, should be a no-op for trigger state
+        control.BorderBrush = ConsoleColor.Cyan;
+
+        // Trigger should still be active; TestValue must remain at 42
+        Assert.Equal(42, control.TestValue);
+
+        control.IsHovered = false;
+        Assert.Equal(0, control.TestValue);
+    }
+
+    [Fact]
     public void Trigger_RevertsValues_WhenTemplateSwapped()
     {
         var control = new TestControl();
