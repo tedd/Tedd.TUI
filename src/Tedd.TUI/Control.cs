@@ -48,6 +48,7 @@ public class Control : UIElement
 
     // Cached lists to avoid allocations during hot path evaluation
     private System.Collections.Generic.HashSet<(DependencyObject, DependencyProperty)>? _newlyActiveProperties;
+    private System.Collections.Generic.Dictionary<(DependencyObject, DependencyProperty), object?>? _winningTriggerValues;
     private System.Collections.Generic.List<(DependencyObject, DependencyProperty)>? _propertiesToRevert;
     private System.Collections.Generic.HashSet<TriggerBase>? _activeTriggers;
 
@@ -83,6 +84,9 @@ public class Control : UIElement
 
         if (_newlyActiveProperties == null) _newlyActiveProperties = new();
         else _newlyActiveProperties.Clear();
+
+        if (_winningTriggerValues == null) _winningTriggerValues = new();
+        else _winningTriggerValues.Clear();
 
         if (_activeTriggers == null) _activeTriggers = new();
 
@@ -126,30 +130,17 @@ public class Control : UIElement
                                     _triggerOriginalValues[target] = targetOriginals;
                                 }
 
-                                if (_triggerActiveValues == null) _triggerActiveValues = new();
-                                if (!_triggerActiveValues.TryGetValue(target, out var targetActives))
-                                {
-                                    targetActives = new();
-                                    _triggerActiveValues[target] = targetActives;
-                                }
-
-                                // If the trigger is newly active for this pass, and we haven't stored an original value, store it
-                                if (!wasActive && !targetOriginals.ContainsKey(setter.Property))
+                                // Save the pre-trigger original value the first time any trigger covers this property
+                                if (!targetOriginals.ContainsKey(setter.Property))
                                 {
                                     targetOriginals[setter.Property] = target is UIElement uiElement && uiElement.HasLocalValue(setter.Property)
                                         ? target.GetValue(setter.Property)
                                         : DependencyProperty.UnsetValue;
                                 }
 
-                                // Apply the setter value ONLY IF newly active, OR we need to maintain it.
-                                // Actually, if the user explicitly overrode it, we shouldn't constantly re-apply it.
-                                // If it was already active, we shouldn't `SetValue` again if it matches or if the user overrode it.
-                                if (!wasActive)
-                                {
-                                    target.SetValue(setter.Property, setter.Value);
-                                    targetActives[setter.Property] = setter.Value;
-                                }
-
+                                // Track the winning setter value: triggers are iterated in declaration order, so
+                                // a later entry overwrites an earlier one, giving "last declared wins" semantics.
+                                _winningTriggerValues[(target, setter.Property)] = setter.Value;
                                 _newlyActiveProperties.Add((target, setter.Property));
                             }
                         }
@@ -162,6 +153,38 @@ public class Control : UIElement
                         }
                     }
                 }
+            }
+        }
+
+        // Apply the winning trigger value for each covered property.
+        // This runs on every evaluation so that when a higher-priority (later-declared) trigger
+        // is still active after a lower-priority one deactivates, the correct value is maintained.
+        foreach (var kvp in _winningTriggerValues!)
+        {
+            var (target, prop) = kvp.Key;
+            var winningValue = kvp.Value;
+
+            if (_triggerActiveValues == null) _triggerActiveValues = new();
+            if (!_triggerActiveValues.TryGetValue(target, out var targetActives))
+            {
+                targetActives = new();
+                _triggerActiveValues[target] = targetActives;
+            }
+
+            var currentVal = target.GetValue(prop);
+            bool hasLastApplied = targetActives.TryGetValue(prop, out var lastApplied);
+
+            // If the user explicitly changed the value while a trigger was active, honour that override.
+            bool userModified = hasLastApplied && !object.Equals(currentVal, lastApplied);
+
+            if (!userModified)
+            {
+                if (!object.Equals(currentVal, winningValue))
+                {
+                    target.SetValue(prop, winningValue);
+                }
+                // Always record the winning value so the revert path can detect user overrides later.
+                targetActives[prop] = winningValue;
             }
         }
 
