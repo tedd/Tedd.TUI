@@ -36,7 +36,7 @@ public class ListBox : Selector
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     public static readonly DependencyProperty SelectionForegroundProperty =
-        DependencyProperty.Register("SelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Black);
+        DependencyProperty.Register(nameof(SelectionForeground), typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Black);
 
     public ConsoleColor SelectionForeground
     {
@@ -45,7 +45,7 @@ public class ListBox : Selector
     }
 
     public static readonly DependencyProperty SelectionBackgroundProperty =
-        DependencyProperty.Register("SelectionBackground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
+        DependencyProperty.Register(nameof(SelectionBackground), typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
 
     public ConsoleColor SelectionBackground
     {
@@ -54,7 +54,7 @@ public class ListBox : Selector
     }
 
     public static readonly DependencyProperty FocusedSelectionForegroundProperty =
-        DependencyProperty.Register("FocusedSelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
+        DependencyProperty.Register(nameof(FocusedSelectionForeground), typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
 
     public ConsoleColor FocusedSelectionForeground
     {
@@ -63,7 +63,7 @@ public class ListBox : Selector
     }
 
     public static readonly DependencyProperty FocusedSelectionBackgroundProperty =
-        DependencyProperty.Register("FocusedSelectionBackground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Blue);
+        DependencyProperty.Register(nameof(FocusedSelectionBackground), typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Blue);
 
     public ConsoleColor FocusedSelectionBackground
     {

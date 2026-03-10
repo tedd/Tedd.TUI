@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class TextBlock : UIElement
 {
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register("Text", typeof(string), typeof(TextBlock), string.Empty);
+        DependencyProperty.Register(nameof(Text), typeof(string), typeof(TextBlock), string.Empty);
 
     public string Text
     {

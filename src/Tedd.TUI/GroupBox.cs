@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class GroupBox : HeaderedContentControl
 {
     public static readonly DependencyProperty BoxStyleProperty =
-        DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(GroupBox), BoxStyle.Single);
+        DependencyProperty.Register(nameof(BoxStyle), typeof(BoxStyle), typeof(GroupBox), BoxStyle.Single);
 
     public BoxStyle BoxStyle
     {
@@ -14,7 +14,7 @@ public class GroupBox : HeaderedContentControl
     }
 
     public static readonly DependencyProperty BorderColorProperty =
-        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(GroupBox), ConsoleColor.Gray);
+        DependencyProperty.Register(nameof(BorderColor), typeof(ConsoleColor), typeof(GroupBox), ConsoleColor.Gray);
 
     public ConsoleColor BorderColor
     {

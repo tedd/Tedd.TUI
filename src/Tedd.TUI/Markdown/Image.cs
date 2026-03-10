@@ -5,7 +5,7 @@ namespace Tedd.TUI.Markdown;
 public class Image : UIElement
 {
     public static readonly DependencyProperty SourceProperty =
-        DependencyProperty.Register("Source", typeof(string), typeof(Image), string.Empty);
+        DependencyProperty.Register(nameof(Source), typeof(string), typeof(Image), string.Empty);
 
     public string Source
     {
@@ -14,7 +14,7 @@ public class Image : UIElement
     }
 
     public static readonly DependencyProperty AltTextProperty =
-        DependencyProperty.Register("AltText", typeof(string), typeof(Image), string.Empty);
+        DependencyProperty.Register(nameof(AltText), typeof(string), typeof(Image), string.Empty);
 
     public string AltText
     {

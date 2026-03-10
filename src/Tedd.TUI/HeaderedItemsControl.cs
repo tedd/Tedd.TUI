@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public abstract class HeaderedItemsControl : ItemsControl
 {
     public static readonly DependencyProperty HeaderProperty =
-        DependencyProperty.Register("Header", typeof(object), typeof(HeaderedItemsControl), null);
+        DependencyProperty.Register(nameof(Header), typeof(object), typeof(HeaderedItemsControl), null);
 
     public object? Header
     {
@@ -14,7 +14,7 @@ public abstract class HeaderedItemsControl : ItemsControl
     }
 
     public static readonly DependencyProperty HeaderTemplateProperty =
-        DependencyProperty.Register("HeaderTemplate", typeof(object), typeof(HeaderedItemsControl), null);
+        DependencyProperty.Register(nameof(HeaderTemplate), typeof(object), typeof(HeaderedItemsControl), null);
 
     public object? HeaderTemplate
     {
@@ -23,7 +23,7 @@ public abstract class HeaderedItemsControl : ItemsControl
     }
 
     public static readonly DependencyProperty HasHeaderProperty =
-        DependencyProperty.Register("HasHeader", typeof(bool), typeof(HeaderedItemsControl), false);
+        DependencyProperty.Register(nameof(HasHeader), typeof(bool), typeof(HeaderedItemsControl), false);
 
     public bool HasHeader
     {
