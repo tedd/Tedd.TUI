@@ -40,8 +40,23 @@ public class Slider : UIElement
             int max = Maximum;
             if (value < min) value = min;
             if (value > max) value = max;
-            SetValue(ValueProperty, value);
+
+            int oldValue = Value;
+            if (oldValue != value)
+            {
+                SetValue(ValueProperty, value);
+                RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+            }
         }
+    }
+
+    public static readonly RoutedEvent ValueChangedEvent =
+        RoutedEvent.Register("ValueChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Slider));
+
+    public event RoutedEventHandler ValueChanged
+    {
+        add => AddHandler(ValueChangedEvent, value);
+        remove => RemoveHandler(ValueChangedEvent, value);
     }
 
     public static readonly DependencyProperty OrientationProperty =

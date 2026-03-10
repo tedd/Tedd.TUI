@@ -61,4 +61,50 @@ public class SliderTests
         Assert.Equal(5, slider.Value);
         Assert.True(args.Handled);
     }
+
+    [Fact]
+    public void Slider_ValueChangedEvent_Fired()
+    {
+        var slider = new Slider { Minimum = 0, Maximum = 10, Value = 0 };
+        int eventCount = 0;
+        object? eventSender = null;
+        RoutedEventArgs? eventArgs = null;
+
+        slider.ValueChanged += (s, e) =>
+        {
+            eventCount++;
+            eventSender = s;
+            eventArgs = e;
+        };
+
+        // Act: change value within bounds
+        slider.Value = 5;
+
+        // Assert: event fired once
+        Assert.Equal(1, eventCount);
+        Assert.Same(slider, eventSender);
+        Assert.NotNull(eventArgs);
+        Assert.Equal(Slider.ValueChangedEvent, eventArgs.RoutedEvent);
+        Assert.Same(slider, eventArgs.Source);
+
+        // Act: change value out of bounds (should clamp to 10)
+        slider.Value = 15;
+
+        // Assert: event fired twice
+        Assert.Equal(2, eventCount);
+        Assert.Equal(10, slider.Value);
+
+        // Act: change value to same (10)
+        slider.Value = 10;
+
+        // Assert: event should not fire again
+        Assert.Equal(2, eventCount);
+
+        // Act: change value out of bounds (should clamp to 0)
+        slider.Value = -5;
+
+        // Assert: event fired third time
+        Assert.Equal(3, eventCount);
+        Assert.Equal(0, slider.Value);
+    }
 }
