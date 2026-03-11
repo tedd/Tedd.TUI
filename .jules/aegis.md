@@ -191,3 +191,6 @@ Implemented coverage expanding into dynamic memory allocations ensuring observab
 - Increased `Tedd.TUI.TreeView` coverage from 62.4% to 96.1%.
 - Increased `Tedd.TUI.TreeViewItem` coverage from 36.0% to 95.3%.
 - Expanded overall total structural coverage within Tedd.TUI to 76.33%. Total tests executing now 491.
+## 2024-05-24 - DataGrid Test Verification
+**Observation:** Testing the `DataGrid` required mocking generic objects and intercepting items binding events. Property bindings generated via `System.Linq.Expressions` expressions handled property paths flawlessly but require explicit tests with exception-throwing properties to prove fallback mapping.
+**Strategic Action:** Continue identifying controls using `System.Linq.Expressions` for databinding, ensuring `catch` blocks within the expressions fail gracefully or fallback reliably (e.g. `EnsureGetters()`).
