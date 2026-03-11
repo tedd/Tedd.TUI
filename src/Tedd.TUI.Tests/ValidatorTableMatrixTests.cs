@@ -155,7 +155,7 @@ public class ValidatorTableMatrixTests
         var buffer1 = new VirtualBuffer(5, 5);
         table.Render(buffer1, 0, 0);
 
-        // Assert partial rendering. Since table tries to draw vertical separators, at X=1 it might draw a top-down T-junction (┳) instead of a top-right corner (┓) due to lack of space
+        // Assert partial rendering. With BoxStyle.Heavy and width=2, the vertical separator at X=1 intersects the top border, so a top-down T-junction (┳) is expected instead of a top-right corner (┓).
         Assert.Equal('\u250F', buffer1.GetPixel(0, 0).Character); // ┏
         Assert.Equal('\u2533', buffer1.GetPixel(1, 0).Character); // ┳
     }
