@@ -16,6 +16,11 @@
 **Observation:** The README.md exhibited documentation drift regarding newly introduced UI components (`UniformGrid`, `Canvas`, `WrapPanel`, `DockPanel`, `TextEditor`, `TreeView`, `ScrollViewer`, `ScrollBar`, `DialogBox`). The Data Binding section was missing the recent optimizations leveraging C# 13 `System.Threading.Lock` and `System.Linq.Expressions` getter compilation. Furthermore, the Input & Interaction section omitted the explicit documentation of the overlay stacking API (`PushOverlay`).
 
 **Strategic Action:** Synchronized the documentation by appending the missing controls and layout panels to their respective sections. Clarified the use of `System.Threading.Lock` and `System.Linq.Expressions` for optimization within the Collections binding subsection. Detailed the `PushOverlay` implementation to define the current modal interaction and z-index paradigms accurately.
+## 2026-03-11 - Documentation Synchronization of Panel ZIndexProperty
+
+**Observation:** The README.md exhibited documentation drift regarding the layout engine's hierarchical composition, explicitly missing articulation of `Panel.ZIndexProperty`. It lacked explanation of how `Panel` respects Z-order during rendering and hit-testing by stably sorting the cached array returned by `GetVisualChild`, while preserving logical order in the `Children` collection.
+
+**Strategic Action:** Synchronized the `README.md` to precisely articulate this architectural reality. Added detailed explanation of `Panel.ZIndexProperty` support to the "Hierarchical Composition" section under the "Layout Engine" header, detailing the separation of visual rendering Z-order from logical item order.
 ## 2026-05-18 - Framework Syntax and Advanced Components Articulation
 
 **Observation:** The README.md example code failed to reflect contemporary C# 14 syntactical capabilities, specifically the `field` keyword for simplified property backing fields. Additionally, the Advanced Layout Engine section omitted robust articulation of `ScrollViewer` and `ScrollBar`. Documentation regarding the use of C# 13 `System.Threading.Lock` and compiled getter expressions was structurally sound but required syntactic validation.
@@ -41,11 +46,6 @@
 **Observation:** The README.md exhibited documentation drift regarding the integration of `ItemsControl` structural mechanisms. It omitted its composition utilizing `ItemsPanelTemplate` alongside an `ItemsPresenter` to populate the layout panel. Furthermore, the "Input & Interaction" section lacked articulation of the $O(1)$ zero-allocation routing topology optimization, specifically utilizing `System.Buffers.ArrayPool<UIElement>` during `UIElement.RaiseEvent` executions.
 
 **Strategic Action:** Executed a comprehensive revision of the README.md to synthesize these architectural paradigms. Interjected the logical separation and template bindings of `ItemsControl` into the "Rich Control Suite". Modified the "Execution Phases" section to precisely outline the `ArrayPool<UIElement>` pooling mechanics underpinning the two-phase input event routing table construction. This ensures absolute epistemological alignment with the zero-allocation routing capabilities of the Tedd.TUI framework.
-## 2026-03-11 - Documentation Synchronization of Panel ZIndexProperty
-
-**Observation:** The README.md exhibited documentation drift regarding the layout engine's hierarchical composition, explicitly missing articulation of `Panel.ZIndexProperty`. It lacked explanation of how `Panel` respects Z-order during rendering and hit-testing by stably sorting the cached array returned by `GetVisualChild`, while preserving logical order in the `Children` collection.
-
-**Strategic Action:** Synchronized the `README.md` to precisely articulate this architectural reality. Added detailed explanation of `Panel.ZIndexProperty` support to the "Hierarchical Composition" section under the "Layout Engine" header, detailing the separation of visual rendering Z-order from logical item order.
 ## 2026-11-10 - Documentation Synchronization of Platform Abstraction and Input Event Dispatching
 
 **Observation:** The README.md exhibited documentation drift by omitting the `Tedd.TUI.Platform.Blazor` WebAssembly/Server host integration and its implementation of `TuiComponentBase` cascading `ITuiContainer` while accepting `Dock` as a standard parameter. Furthermore, the two-phase input event routing description lacked explicit articulation that `TuiWindow` autonomously manages keyboard event dispatch, while mouse event dispatch is delegated to platform-specific input managers (for example, `ConsoleInputManager` for the console host and `BlazorInputManager` with bubble-only routing for the Blazor host).
