@@ -201,7 +201,7 @@ Rendering is decoupled from the platform implementation.
 ### Platform Abstraction
 - **Tedd.TUI (Core):** Contains the framework logic (`UIElement`, `Grid`, `Table`, etc.) and is platform-agnostic.
 - **Tedd.TUI.Platform.Console:** Provides the concrete implementation of `IConsole`, the input manager, and the `TuiApp` host for terminal environments.
-- **Tedd.TUI.Platform.Blazor:** Provides a WebAssembly and Server hosting architecture. The root `TuiComponentBase` dynamically cascades a generic `Dock` parameter to inject structural positioning directly into descendant implementations, unifying syntax and eliminating rigid `ITuiContainer` constraints for specialized composite panels like `DockPanel`.
+- **Tedd.TUI.Platform.Blazor:** Provides a WebAssembly and Server hosting architecture. The root `TuiComponentBase` cascades the parent `ITuiContainer` to descendant components and exposes `Dock` as a standard Blazor `[Parameter]` that applies the `DockPanel.SetDock` attached property; container-specific constraints still apply via `ITuiContainer.AddChild` (for example, `TuiDockPanel` overrides this behavior while other containers may reject unsupported children).
 
 ## XAML Support
 
