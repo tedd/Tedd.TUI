@@ -16,7 +16,7 @@ public class ItemCollectionTests
 
     [Theory]
     [MemberData(nameof(AddRangeData))]
-    public void AddRange_AddsItems(IEnumerable<object> itemsToAdd, int expectedCount, object expectedFirst, object expectedSecond, object expectedThird)
+    public void AddRange_AddsItems(IEnumerable<object> itemsToAdd, int expectedCount, object? expectedFirst, object? expectedSecond, object? expectedThird)
     {
         var coll = new ItemCollection();
         coll.AddRange(itemsToAdd);
