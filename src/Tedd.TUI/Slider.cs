@@ -4,9 +4,13 @@ namespace Tedd.TUI;
 
 public class Slider : UIElement
 {
+    private bool _isUpdatingValue;
+    private int _lastKnownValue;
+
     public Slider()
     {
         Focusable = true;
+        _lastKnownValue = (int)GetValue(ValueProperty);
     }
 
     public static readonly DependencyProperty MinimumProperty =
@@ -35,7 +39,7 @@ public class Slider : UIElement
         get => (int)GetValue(ValueProperty);
         set
         {
-            // Clamp value
+            // Pre-clamp for efficiency; OnPropertyChanged enforces the invariant for all DP writes
             int min = Minimum;
             int max = Maximum;
             if (value < min) value = min;
@@ -77,6 +81,41 @@ public class Slider : UIElement
     {
         add => AddHandler(ValueChangedEvent, value);
         remove => RemoveHandler(ValueChangedEvent, value);
+    }
+
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        base.OnPropertyChanged(dp);
+        if (dp == ValueProperty)
+        {
+            if (_isUpdatingValue) return;
+
+            int min = Minimum;
+            int max = Maximum;
+            int current = (int)GetValue(ValueProperty);
+            int clamped = current;
+            if (clamped < min) clamped = min;
+            if (clamped > max) clamped = max;
+
+            if (clamped != current)
+            {
+                _isUpdatingValue = true;
+                try
+                {
+                    SetValue(ValueProperty, clamped);
+                }
+                finally
+                {
+                    _isUpdatingValue = false;
+                }
+            }
+
+            if (clamped != _lastKnownValue)
+            {
+                _lastKnownValue = clamped;
+                RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+            }
+        }
     }
 
     public static readonly DependencyProperty OrientationProperty =
