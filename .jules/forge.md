@@ -92,3 +92,9 @@
 ## 2026-03-09 - ControlTemplate Trigger Integration
 **Observation:** The TUI framework lacked standard visual state infrastructure within `ControlTemplate`. There was an absence of WPF parity regarding `Trigger` mechanisms, which dynamically evaluate dependency properties and apply visual state updates (via `Setter`) without imperative event wiring.
 **Strategic Action:** Integrated WPF visual state triggers by establishing the `TriggerBase`, `Trigger`, and `Setter` object model. Extended `ControlTemplate` with a `Triggers` collection. Augmented `Control.OnPropertyChanged` to intercept dependency property mutations, evaluate active trigger conditions (`EvaluateTriggers`), dynamically inject setter values when conditions are met, and automatically revert to original local/inherited property states (`DependencyProperty.UnsetValue`) when conditions fail.
+## 2026-03-09 - Thumb Primitive Integration
+**Observation:** The TUI framework lacked a native `Thumb` control primitive, which is necessary for establishing draggable and resizeable interactions (such as ScrollBars and GridSplitters). Standard implementations utilized ad-hoc logic per-component, preventing standardized drag event routing.
+**Strategic Action:**
+- Engineered the `Thumb` primitive inheriting from `Control`.
+- Implemented bubbling routed events for the dragging lifecycle: `DragStarted`, `DragDelta`, and `DragCompleted`.
+- Managed mouse capture via `TuiWindow` to calculate horizontal and vertical screen coordinate deltas and emit custom `RoutedEventArgs` mirroring the WPF `System.Windows.Controls.Primitives.Thumb` architectural specification.
