@@ -44,7 +44,33 @@ public class Slider : UIElement
             int max = Maximum;
             if (value < min) value = min;
             if (value > max) value = max;
-            SetValue(ValueProperty, value);
+
+            int oldValue = Value;
+            if (oldValue != value)
+            {
+                SetValue(ValueProperty, value);
+                // ValueChanged is raised in OnPropertyChanged to also cover SetValue/binding-driven updates
+            }
+        }
+    }
+
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        base.OnPropertyChanged(dp);
+        if (dp == ValueProperty)
+        {
+            int current = (int)(GetValue(ValueProperty) ?? 0);
+            int clamped = Math.Max(Minimum, Math.Min(Maximum, current));
+            if (clamped != current)
+            {
+                // Re-clamp the stored value. The follow-up SetValue will produce a clamped value
+                // so OnPropertyChanged will not re-enter this branch (terminates in ≤ 2 calls).
+                SetValue(ValueProperty, clamped);
+            }
+            else
+            {
+                RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+            }
         }
     }
 
