@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class ContentPresenter : UIElement
 {
     public static readonly DependencyProperty ContentProperty =
-        DependencyProperty.Register("Content", typeof(object), typeof(ContentPresenter), null);
+        DependencyProperty.Register(nameof(Content), typeof(object), typeof(ContentPresenter), null);
 
     public object Content
     {
@@ -14,7 +14,7 @@ public class ContentPresenter : UIElement
     }
 
     public static readonly DependencyProperty ContentTemplateProperty =
-        DependencyProperty.Register("ContentTemplate", typeof(DataTemplate), typeof(ContentPresenter), null);
+        DependencyProperty.Register(nameof(ContentTemplate), typeof(DataTemplate), typeof(ContentPresenter), null);
 
     public DataTemplate ContentTemplate
     {
@@ -89,7 +89,7 @@ public class ContentPresenter : UIElement
             // DependencyObject inheritance chain: TextBlock -> ContentPresenter -> Border -> Button.
             // If Button sets Foreground, does it propagate?
             // Only if `ForegroundProperty` is registered as Inherited.
-            // In `Control.cs`: `DependencyProperty.Register("Foreground", ...)` -> inherited? Default is false.
+            // In `Control.cs`: `DependencyProperty.Register(nameof(Foreground), ...)` -> inherited? Default is false.
             // I should make `Foreground` inherited in `Control` (or wherever it's defined).
 
             _visualChild = tb;

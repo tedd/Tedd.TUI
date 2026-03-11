@@ -12,7 +12,7 @@ public abstract class ItemsControl : Control
     public ItemCollection Items => _items;
 
     public static readonly DependencyProperty ItemsSourceProperty =
-        DependencyProperty.Register("ItemsSource", typeof(IEnumerable), typeof(ItemsControl), null);
+        DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(ItemsControl), null);
 
     public IEnumerable ItemsSource
     {
@@ -21,7 +21,7 @@ public abstract class ItemsControl : Control
     }
 
     public static readonly DependencyProperty DisplayMemberPathProperty =
-        DependencyProperty.Register("DisplayMemberPath", typeof(string), typeof(ItemsControl), null);
+        DependencyProperty.Register(nameof(DisplayMemberPath), typeof(string), typeof(ItemsControl), null);
 
     public string DisplayMemberPath
     {
@@ -30,7 +30,7 @@ public abstract class ItemsControl : Control
     }
 
     public static readonly DependencyProperty ItemsPanelProperty =
-        DependencyProperty.Register("ItemsPanel", typeof(ItemsPanelTemplate), typeof(ItemsControl), new ItemsPanelTemplate(() => new StackPanel { Orientation = Orientation.Vertical }));
+        DependencyProperty.Register(nameof(ItemsPanel), typeof(ItemsPanelTemplate), typeof(ItemsControl), new ItemsPanelTemplate(() => new StackPanel { Orientation = Orientation.Vertical }));
 
     public ItemsPanelTemplate ItemsPanel
     {
@@ -39,7 +39,7 @@ public abstract class ItemsControl : Control
     }
 
     public static readonly DependencyProperty ItemTemplateProperty =
-        DependencyProperty.Register("ItemTemplate", typeof(DataTemplate), typeof(ItemsControl), null);
+        DependencyProperty.Register(nameof(ItemTemplate), typeof(DataTemplate), typeof(ItemsControl), null);
 
     public DataTemplate ItemTemplate
     {

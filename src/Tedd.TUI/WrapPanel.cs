@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class WrapPanel : Panel
 {
     public static readonly DependencyProperty OrientationProperty =
-        DependencyProperty.Register("Orientation", typeof(Orientation), typeof(WrapPanel), Orientation.Horizontal);
+        DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(WrapPanel), Orientation.Horizontal);
 
     public Orientation Orientation
     {

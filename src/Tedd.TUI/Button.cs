@@ -71,7 +71,7 @@ public class Button : ButtonBase
     // Public Properties
 
     public static readonly DependencyProperty BoxStyleProperty =
-        DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(Button), BoxStyle.Single);
+        DependencyProperty.Register(nameof(BoxStyle), typeof(BoxStyle), typeof(Button), BoxStyle.Single);
 
     public BoxStyle BoxStyle
     {
@@ -80,7 +80,7 @@ public class Button : ButtonBase
     }
 
     public static readonly DependencyProperty BorderColorProperty =
-        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Gray);
+        DependencyProperty.Register(nameof(BorderColor), typeof(ConsoleColor), typeof(Button), ConsoleColor.Gray);
 
     public ConsoleColor BorderColor
     {
@@ -89,7 +89,7 @@ public class Button : ButtonBase
     }
 
     public static readonly DependencyProperty FocusedForegroundProperty =
-        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(Button), ConsoleColor.Yellow);
+        DependencyProperty.Register(nameof(FocusedForeground), typeof(ConsoleColor), typeof(Button), ConsoleColor.Yellow);
 
     public ConsoleColor FocusedForeground
     {
@@ -98,7 +98,7 @@ public class Button : ButtonBase
     }
 
     public static readonly DependencyProperty FocusedBorderColorProperty =
-        DependencyProperty.Register("FocusedBorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Yellow);
+        DependencyProperty.Register(nameof(FocusedBorderColor), typeof(ConsoleColor), typeof(Button), ConsoleColor.Yellow);
 
     public ConsoleColor FocusedBorderColor
     {
@@ -109,7 +109,7 @@ public class Button : ButtonBase
     // Internal "Effective" properties for Template Binding
 
     public static readonly DependencyProperty EffectiveBorderColorProperty =
-        DependencyProperty.Register("EffectiveBorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Gray);
+        DependencyProperty.Register(nameof(EffectiveBorderColor), typeof(ConsoleColor), typeof(Button), ConsoleColor.Gray);
 
     public ConsoleColor EffectiveBorderColor
     {
@@ -118,7 +118,7 @@ public class Button : ButtonBase
     }
 
     public static readonly DependencyProperty EffectiveForegroundProperty =
-        DependencyProperty.Register("EffectiveForeground", typeof(ConsoleColor), typeof(Button), ConsoleColor.White);
+        DependencyProperty.Register(nameof(EffectiveForeground), typeof(ConsoleColor), typeof(Button), ConsoleColor.White);
 
     public ConsoleColor EffectiveForeground
     {
