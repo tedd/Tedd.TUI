@@ -7,7 +7,7 @@ public class Control : UIElement
     protected UIElement? TemplateRoot { get; private set; }
 
     public static readonly DependencyProperty TemplateProperty =
-        DependencyProperty.Register("Template", typeof(ControlTemplate), typeof(Control), null);
+        DependencyProperty.Register(nameof(Template), typeof(ControlTemplate), typeof(Control), null);
 
     public ControlTemplate Template
     {
@@ -16,7 +16,7 @@ public class Control : UIElement
     }
 
     public static readonly DependencyProperty PaddingProperty =
-        DependencyProperty.Register("Padding", typeof(Thickness), typeof(Control), new Thickness(0));
+        DependencyProperty.Register(nameof(Padding), typeof(Thickness), typeof(Control), new Thickness(0));
 
     public Thickness Padding
     {
@@ -25,7 +25,7 @@ public class Control : UIElement
     }
 
     public static readonly DependencyProperty BorderBrushProperty =
-        DependencyProperty.Register("BorderBrush", typeof(ConsoleColor), typeof(Control), ConsoleColor.Gray);
+        DependencyProperty.Register(nameof(BorderBrush), typeof(ConsoleColor), typeof(Control), ConsoleColor.Gray);
 
     public ConsoleColor BorderBrush
     {
@@ -34,7 +34,7 @@ public class Control : UIElement
     }
 
     public static readonly DependencyProperty BorderThicknessProperty =
-        DependencyProperty.Register("BorderThickness", typeof(Thickness), typeof(Control), new Thickness(0));
+        DependencyProperty.Register(nameof(BorderThickness), typeof(Thickness), typeof(Control), new Thickness(0));
 
     public Thickness BorderThickness
     {

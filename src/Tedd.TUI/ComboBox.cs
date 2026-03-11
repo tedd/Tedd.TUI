@@ -14,7 +14,7 @@ public class ComboBox : Selector
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     public static readonly DependencyProperty FocusedForegroundProperty =
-        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
+        DependencyProperty.Register(nameof(FocusedForeground), typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
 
     public ConsoleColor FocusedForeground
     {
@@ -23,7 +23,7 @@ public class ComboBox : Selector
     }
 
     public static readonly DependencyProperty FocusedTextBackgroundColorProperty =
-        DependencyProperty.Register("FocusedTextBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
+        DependencyProperty.Register(nameof(FocusedTextBackgroundColor), typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
 
     public ConsoleColor FocusedTextBackgroundColor
     {
@@ -32,7 +32,7 @@ public class ComboBox : Selector
     }
 
     public static readonly DependencyProperty ArrowColorProperty =
-        DependencyProperty.Register("ArrowColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
+        DependencyProperty.Register(nameof(ArrowColor), typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
 
     public ConsoleColor ArrowColor
     {
@@ -41,7 +41,7 @@ public class ComboBox : Selector
     }
 
     public static readonly DependencyProperty ArrowBackgroundColorProperty =
-        DependencyProperty.Register("ArrowBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Gray);
+        DependencyProperty.Register(nameof(ArrowBackgroundColor), typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Gray);
 
     public ConsoleColor ArrowBackgroundColor
     {
@@ -50,7 +50,7 @@ public class ComboBox : Selector
     }
 
     public static readonly DependencyProperty FocusedArrowColorProperty =
-        DependencyProperty.Register("FocusedArrowColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
+        DependencyProperty.Register(nameof(FocusedArrowColor), typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
 
     public ConsoleColor FocusedArrowColor
     {
@@ -59,7 +59,7 @@ public class ComboBox : Selector
     }
 
     public static readonly DependencyProperty FocusedArrowBackgroundColorProperty =
-        DependencyProperty.Register("FocusedArrowBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
+        DependencyProperty.Register(nameof(FocusedArrowBackgroundColor), typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
 
     public ConsoleColor FocusedArrowBackgroundColor
     {
@@ -68,7 +68,7 @@ public class ComboBox : Selector
     }
 
     public static readonly DependencyProperty PopupBackgroundProperty =
-        DependencyProperty.Register("PopupBackground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
+        DependencyProperty.Register(nameof(PopupBackground), typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
 
     public ConsoleColor PopupBackground
     {
@@ -77,7 +77,7 @@ public class ComboBox : Selector
     }
 
     public static readonly DependencyProperty PopupBorderColorProperty =
-        DependencyProperty.Register("PopupBorderColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.White);
+        DependencyProperty.Register(nameof(PopupBorderColor), typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.White);
 
     public ConsoleColor PopupBorderColor
     {
