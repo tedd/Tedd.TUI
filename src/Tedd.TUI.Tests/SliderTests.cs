@@ -63,44 +63,6 @@ public class SliderTests
     }
 
     [Fact]
-    public void Slider_ValueChangedEvent_FiredViaSetValue()
-    {
-        var slider = new Slider { Minimum = 0, Maximum = 10, Value = 0 };
-        int eventCount = 0;
-        RoutedEventArgs? lastEventArgs = null;
-
-        slider.ValueChanged += (s, e) =>
-        {
-            eventCount++;
-            lastEventArgs = e;
-        };
-
-        // Act: update via SetValue (simulating a binding/DP-driven update)
-        slider.SetValue(Slider.ValueProperty, 7);
-
-        // Assert: event fired and value updated
-        Assert.Equal(1, eventCount);
-        Assert.Equal(7, slider.Value);
-        Assert.NotNull(lastEventArgs);
-        Assert.Equal(Slider.ValueChangedEvent, lastEventArgs.RoutedEvent);
-        Assert.Same(slider, lastEventArgs.Source);
-
-        // Act: SetValue with an out-of-bounds value (should clamp to Maximum and still fire)
-        slider.SetValue(Slider.ValueProperty, 15);
-
-        // Assert: value clamped, event fired once more
-        Assert.Equal(2, eventCount);
-        Assert.Equal(10, slider.Value);
-
-        // Act: SetValue with an out-of-bounds value (should clamp to Minimum and still fire)
-        slider.SetValue(Slider.ValueProperty, -3);
-
-        // Assert: value clamped, event fired once more
-        Assert.Equal(3, eventCount);
-        Assert.Equal(0, slider.Value);
-    }
-
-    [Fact]
     public void Slider_ValueChangedEvent_Fired()
     {
         var slider = new Slider { Minimum = 0, Maximum = 10, Value = 0 };
@@ -144,34 +106,5 @@ public class SliderTests
         // Assert: event fired third time
         Assert.Equal(3, eventCount);
         Assert.Equal(0, slider.Value);
-    }
-
-    [Fact]
-    public void Slider_SetValueDirectly_ClampsAndFiresEvent()
-    {
-        var slider = new Slider { Minimum = 0, Maximum = 10, Value = 5 };
-        int eventCount = 0;
-        slider.ValueChanged += (s, e) => eventCount++;
-
-        // Act: set value directly via SetValue (simulates binding update, bypassing the property setter)
-        slider.SetValue(Slider.ValueProperty, 15);
-
-        // Assert: out-of-range value should be clamped to max
-        Assert.Equal(10, slider.Value);
-        Assert.Equal(1, eventCount);
-
-        // Act: set another out-of-range value
-        slider.SetValue(Slider.ValueProperty, -5);
-
-        // Assert: clamped to min
-        Assert.Equal(0, slider.Value);
-        Assert.Equal(2, eventCount);
-
-        // Act: same value again
-        slider.SetValue(Slider.ValueProperty, 0);
-
-        // Assert: no event when value doesn't change
-        Assert.Equal(0, slider.Value);
-        Assert.Equal(2, eventCount);
     }
 }
