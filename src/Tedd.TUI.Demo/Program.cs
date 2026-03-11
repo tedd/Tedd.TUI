@@ -328,20 +328,19 @@ class Program
             return btn;
         }
 
-        // Add Rows with unsorted IDs to demonstrate sorting
+        // Add 6 named rows with unsorted IDs to demonstrate sorting
         table.AddRow("10", "Alice", "30", CreateEditBtn("Alice"));
         table.AddRow("2", "Bob", "25", CreateEditBtn("Bob"));
         table.AddRow("1", "Charlie", "35", CreateEditBtn("Charlie"));
-        table.AddRow("20", "David", "40", new CheckBox { Content = "Active", IsChecked = true });
+        table.AddRow("20", "Dave", "40", new CheckBox { Content = "Active", IsChecked = true });
         table.AddRow("3", "Eve", "22", CreateEditBtn("Eve"));
-
-        // Add more rows for pagination testing
         table.AddRow("4", "Frank", "28", CreateEditBtn("Frank"));
-        table.AddRow("5", "Grace", "31", CreateEditBtn("Grace"));
-        table.AddRow("6", "Heidi", "24", CreateEditBtn("Heidi"));
-        table.AddRow("7", "Ivan", "45", CreateEditBtn("Ivan"));
-        table.AddRow("8", "Judy", "33", CreateEditBtn("Judy"));
-        table.AddRow("9", "Mallory", "29", CreateEditBtn("Mallory"));
+
+        // Add 20 generated rows for pagination testing
+        for (int i = 1; i <= 20; i++)
+        {
+            table.AddRow($"{100 + i}", $"User {i}", $"{20 + (i % 30)}", CreateEditBtn($"User {i}"));
+        }
 
         tableStack.AddChild(table);
         tabs.Items.Add(new TabItem { Header = "Table", Content = tableStack });
