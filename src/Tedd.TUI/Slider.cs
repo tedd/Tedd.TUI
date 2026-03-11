@@ -53,11 +53,19 @@ public class Slider : UIElement
             if (Value != value)
             {
                 SetValue(ValueProperty, value);
-                RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
             }
         }
     }
 
+    protected override void OnPropertyChanged(DependencyProperty property, object oldValue, object newValue)
+    {
+        base.OnPropertyChanged(property, oldValue, newValue);
+
+        if (property == ValueProperty)
+        {
+            RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+        }
+    }
     public static readonly DependencyProperty OrientationProperty =
         DependencyProperty.Register("Orientation", typeof(Orientation), typeof(Slider), Orientation.Horizontal);
 
