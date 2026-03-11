@@ -92,3 +92,11 @@
 ## 2026-03-09 - ControlTemplate Trigger Integration
 **Observation:** The TUI framework lacked standard visual state infrastructure within `ControlTemplate`. There was an absence of WPF parity regarding `Trigger` mechanisms, which dynamically evaluate dependency properties and apply visual state updates (via `Setter`) without imperative event wiring.
 **Strategic Action:** Integrated WPF visual state triggers by establishing the `TriggerBase`, `Trigger`, and `Setter` object model. Extended `ControlTemplate` with a `Triggers` collection. Augmented `Control.OnPropertyChanged` to intercept dependency property mutations, evaluate active trigger conditions (`EvaluateTriggers`), dynamically inject setter values when conditions are met, and automatically revert to original local/inherited property states (`DependencyProperty.UnsetValue`) when conditions fail.
+
+## 2026-03-09 - Dependency Object Property Precedence
+**Observation:** Discovered a major parity deficit in the Dependency Property system. The framework lacked a standardized precedence model (`EffectiveValueEntry`). Consequently, mechanisms like ControlTemplate Triggers were caching local values in external dictionaries and forcibly overwriting them via `SetValue`, mutating the base logical tree and destroying user-applied local bindings. Furthermore, the framework lacked the standard `Style` infrastructure.
+**Strategic Action:**
+- Engineered an `EffectiveValueEntry` paradigm within `DependencyObject` mirroring WPF internal architecture, partitioning resolution into explicit `LocalValue`, `TriggerValue`, and `StyleValue` slots.
+- Implemented corresponding internal mutators (`SetTriggerValue`, `SetStyleValue`) to inject state purely within the presentation phase.
+- Refactored `Control.EvaluateTriggers` to operate exclusively via `SetTriggerValue`/`ClearTriggerValue`, permanently eliminating caching allocations and preventing local value destruction.
+- Added `Style` to `UIElement`, enabling global declarative property overrides that inherently respect local precedence.

@@ -42,18 +42,9 @@ public class Control : UIElement
         set => SetValue(BorderThicknessProperty, value);
     }
 
-    // Store original values when a trigger setter is applied, to revert them when trigger condition becomes false
-    private System.Collections.Generic.Dictionary<DependencyObject, System.Collections.Generic.Dictionary<DependencyProperty, object?>>? _triggerOriginalValues;
-    private System.Collections.Generic.Dictionary<DependencyObject, System.Collections.Generic.Dictionary<DependencyProperty, object?>>? _triggerActiveValues;
-
-    // Cached lists to avoid allocations during hot path evaluation
-    private System.Collections.Generic.HashSet<(DependencyObject, DependencyProperty)>? _newlyActiveProperties;
-    private System.Collections.Generic.List<(DependencyObject, DependencyProperty)>? _propertiesToRevert;
+    // Cached sets to track trigger evaluation
     private System.Collections.Generic.HashSet<TriggerBase>? _activeTriggers;
-
-    // Set of dependency properties watched by at least one trigger in the current template; null when empty
     private System.Collections.Generic.HashSet<DependencyProperty>? _watchedTriggerProperties;
-
     private bool _isEvaluatingTriggers;
 
     protected override void OnPropertyChanged(DependencyProperty dp)
@@ -62,6 +53,34 @@ public class Control : UIElement
 
         if (dp == TemplateProperty)
         {
+            // Clear any active trigger values from the old template before applying the new one
+            if (_activeTriggers != null && _activeTriggers.Count > 0)
+            {
+                foreach (var triggerBase in _activeTriggers)
+                {
+                    if (triggerBase is Trigger trigger)
+                    {
+                        foreach (var setter in trigger.Setters)
+                        {
+                            if (setter.Property != null)
+                            {
+                                DependencyObject target = this;
+                                if (!string.IsNullOrEmpty(setter.TargetName) && TemplateRoot != null)
+                                {
+                                    var foundTarget = TemplateRoot.FindName(setter.TargetName);
+                                    if (foundTarget != null)
+                                    {
+                                        target = foundTarget;
+                                    }
+                                }
+                                target.ClearTriggerValue(setter.Property);
+                            }
+                        }
+                    }
+                }
+                _activeTriggers.Clear();
+            }
+
             ApplyTemplate();
             RebuildWatchedTriggerProperties();
             EvaluateTriggers();
@@ -103,8 +122,8 @@ public class Control : UIElement
 
         bool hasTriggers = Template != null && Template.Triggers.Count > 0;
 
-        // If there are no active trigger values and no triggers to evaluate, skip entirely
-        if (!hasTriggers && (_triggerActiveValues == null || _triggerActiveValues.Count == 0))
+        // If there are no triggers to evaluate, skip entirely
+        if (!hasTriggers && (_activeTriggers == null || _activeTriggers.Count == 0))
         {
             _activeTriggers?.Clear();
             return;
@@ -114,9 +133,6 @@ public class Control : UIElement
 
         try
         {
-            if (_newlyActiveProperties == null) _newlyActiveProperties = new();
-            else _newlyActiveProperties.Clear();
-
             if (_activeTriggers == null) _activeTriggers = new();
 
             if (hasTriggers)
@@ -134,56 +150,25 @@ public class Control : UIElement
                             if (!wasActive)
                             {
                                 _activeTriggers.Add(triggerBase);
-                            }
 
-                            foreach (var setter in trigger.Setters)
-                            {
-                                if (setter.Property != null)
+                                foreach (var setter in trigger.Setters)
                                 {
-                                    DependencyObject target = this;
-
-                                    // Resolve TargetName if specified
-                                    if (!string.IsNullOrEmpty(setter.TargetName) && TemplateRoot != null)
+                                    if (setter.Property != null)
                                     {
-                                        var foundTarget = TemplateRoot.FindName(setter.TargetName);
-                                        if (foundTarget != null)
+                                        DependencyObject target = this;
+
+                                        // Resolve TargetName if specified
+                                        if (!string.IsNullOrEmpty(setter.TargetName) && TemplateRoot != null)
                                         {
-                                            target = foundTarget;
+                                            var foundTarget = TemplateRoot.FindName(setter.TargetName);
+                                            if (foundTarget != null)
+                                            {
+                                                target = foundTarget;
+                                            }
                                         }
-                                    }
 
-                                    if (_triggerOriginalValues == null) _triggerOriginalValues = new();
-                                    if (!_triggerOriginalValues.TryGetValue(target, out var targetOriginals))
-                                    {
-                                        targetOriginals = new();
-                                        _triggerOriginalValues[target] = targetOriginals;
+                                        target.SetTriggerValue(setter.Property, setter.Value);
                                     }
-
-                                    if (_triggerActiveValues == null) _triggerActiveValues = new();
-                                    if (!_triggerActiveValues.TryGetValue(target, out var targetActives))
-                                    {
-                                        targetActives = new();
-                                        _triggerActiveValues[target] = targetActives;
-                                    }
-
-                                    // If the trigger is newly active for this pass, and we haven't stored an original value, store it
-                                    if (!wasActive && !targetOriginals.ContainsKey(setter.Property))
-                                    {
-                                        targetOriginals[setter.Property] = target is UIElement uiElement && uiElement.HasLocalValue(setter.Property)
-                                            ? target.GetValue(setter.Property)
-                                            : DependencyProperty.UnsetValue;
-                                    }
-
-                                    // Apply the setter value ONLY IF newly active, OR we need to maintain it.
-                                    // Actually, if the user explicitly overrode it, we shouldn't constantly re-apply it.
-                                    // If it was already active, we shouldn't `SetValue` again if it matches or if the user overrode it.
-                                    if (!wasActive)
-                                    {
-                                        target.SetValue(setter.Property, setter.Value);
-                                        targetActives[setter.Property] = setter.Value;
-                                    }
-
-                                    _newlyActiveProperties.Add((target, setter.Property));
                                 }
                             }
                         }
@@ -192,68 +177,25 @@ public class Control : UIElement
                             if (wasActive)
                             {
                                 _activeTriggers.Remove(triggerBase);
-                            }
-                        }
-                    }
-                }
-            }
 
-            // Revert properties that are no longer active
-            if (_triggerActiveValues != null)
-            {
-                if (_propertiesToRevert == null) _propertiesToRevert = new();
-                else _propertiesToRevert.Clear();
-
-                foreach (var kvpTarget in _triggerActiveValues)
-                {
-                    var target = kvpTarget.Key;
-                    foreach (var kvpProp in kvpTarget.Value)
-                    {
-                        var prop = kvpProp.Key;
-                        if (!_newlyActiveProperties.Contains((target, prop)))
-                        {
-                            _propertiesToRevert.Add((target, prop));
-                        }
-                    }
-                }
-
-                foreach (var (target, prop) in _propertiesToRevert)
-                {
-                    object? lastActiveValue = null;
-                    if (_triggerActiveValues.TryGetValue(target, out var targetActives))
-                    {
-                        if (targetActives.TryGetValue(prop, out lastActiveValue))
-                        {
-                            targetActives.Remove(prop);
-                            if (targetActives.Count == 0)
-                                _triggerActiveValues.Remove(target);
-                        }
-                    }
-
-                    if (_triggerOriginalValues != null && _triggerOriginalValues.TryGetValue(target, out var targetOriginals))
-                    {
-                        if (targetOriginals.TryGetValue(prop, out var originalValue))
-                        {
-                            targetOriginals.Remove(prop);
-                            if (targetOriginals.Count == 0)
-                                _triggerOriginalValues.Remove(target);
-
-                            var currentValue = target.GetValue(prop);
-
-                            // If the current value is NOT the value we set via the trigger, it means the user explicitly modified it locally.
-                            // In a real WPF precedence system, LocalValue wins over Trigger, but since we modify local value,
-                            // we must preserve the user's manual override by NOT restoring the original.
-                            bool userModified = !object.Equals(currentValue, lastActiveValue);
-
-                            if (!userModified)
-                            {
-                                if (originalValue == DependencyProperty.UnsetValue)
+                                foreach (var setter in trigger.Setters)
                                 {
-                                    target.ClearValue(prop);
-                                }
-                                else
-                                {
-                                    target.SetValue(prop, originalValue);
+                                    if (setter.Property != null)
+                                    {
+                                        DependencyObject target = this;
+
+                                        // Resolve TargetName if specified
+                                        if (!string.IsNullOrEmpty(setter.TargetName) && TemplateRoot != null)
+                                        {
+                                            var foundTarget = TemplateRoot.FindName(setter.TargetName);
+                                            if (foundTarget != null)
+                                            {
+                                                target = foundTarget;
+                                            }
+                                        }
+
+                                        target.ClearTriggerValue(setter.Property);
+                                    }
                                 }
                             }
                         }

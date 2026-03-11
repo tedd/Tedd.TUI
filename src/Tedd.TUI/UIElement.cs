@@ -22,6 +22,15 @@ public abstract class UIElement : DependencyObject
 {
     public string Name { get; set; }
 
+    public static readonly DependencyProperty StyleProperty =
+        DependencyProperty.Register("Style", typeof(Style), typeof(UIElement), null);
+
+    public Style Style
+    {
+        get => (Style)GetValue(StyleProperty);
+        set => SetValue(StyleProperty, value);
+    }
+
     // TemplatedParent for TemplateBinding
     public DependencyObject TemplatedParent
     {
@@ -202,9 +211,43 @@ public abstract class UIElement : DependencyObject
         expr.UpdateTarget();
     }
 
+    private Style? _appliedStyle;
+
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
         base.OnPropertyChanged(dp);
+
+        if (dp == StyleProperty)
+        {
+            var newStyle = Style;
+            if (_appliedStyle != newStyle)
+            {
+                if (_appliedStyle != null)
+                {
+                    foreach (var setter in _appliedStyle.Setters)
+                    {
+                        if (setter.Property != null)
+                        {
+                            ClearStyleValue(setter.Property);
+                        }
+                    }
+                }
+
+                _appliedStyle = newStyle;
+
+                if (_appliedStyle != null)
+                {
+                    foreach (var setter in _appliedStyle.Setters)
+                    {
+                        if (setter.Property != null)
+                        {
+                            SetStyleValue(setter.Property, setter.Value);
+                        }
+                    }
+                }
+                Invalidate();
+            }
+        }
 
         if (dp == Panel.ZIndexProperty && Parent is Panel p)
         {
