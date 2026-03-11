@@ -40,10 +40,10 @@ public class TuiSlider : TuiComponentBase
         if (_slider.Width != Width && Width != -1) _slider.Width = Width;
         if (_slider.Height != Height && Height != -1) _slider.Height = Height;
 
-        if (_slider.Value != Value) _slider.Value = Value;
-
         _slider.Minimum = Minimum;
         _slider.Maximum = Maximum;
+
+        if (_slider.Value != Value) _slider.Value = Value;
         _slider.SmallChange = SmallChange;
         _slider.LargeChange = LargeChange;
         _slider.Orientation = Orientation;
