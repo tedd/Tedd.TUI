@@ -126,6 +126,30 @@ public class ListBox : Selector
         }
     }
 
+    public override void OnGotFocus()
+    {
+        base.OnGotFocus();
+        NotifyContainersVisualStateChanged();
+    }
+
+    public override void OnLostFocus()
+    {
+        base.OnLostFocus();
+        NotifyContainersVisualStateChanged();
+    }
+
+    private void NotifyContainersVisualStateChanged()
+    {
+        if (ItemsPanelRoot != null)
+        {
+            for (int i = 0; i < ItemsPanelRoot.Children.Count; i++)
+            {
+                if (ItemsPanelRoot.Children[i] is ListBoxItem lbi)
+                    lbi.UpdateVisualState();
+            }
+        }
+    }
+
     public override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
