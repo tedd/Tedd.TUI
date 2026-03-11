@@ -107,4 +107,33 @@ public class SliderTests
         Assert.Equal(3, eventCount);
         Assert.Equal(0, slider.Value);
     }
+
+    [Fact]
+    public void Slider_SetValueDirectly_ClampsAndFiresEvent()
+    {
+        var slider = new Slider { Minimum = 0, Maximum = 10, Value = 5 };
+        int eventCount = 0;
+        slider.ValueChanged += (s, e) => eventCount++;
+
+        // Act: set value directly via SetValue (simulates binding update, bypassing the property setter)
+        slider.SetValue(Slider.ValueProperty, 15);
+
+        // Assert: out-of-range value should be clamped to max
+        Assert.Equal(10, slider.Value);
+        Assert.Equal(1, eventCount);
+
+        // Act: set another out-of-range value
+        slider.SetValue(Slider.ValueProperty, -5);
+
+        // Assert: clamped to min
+        Assert.Equal(0, slider.Value);
+        Assert.Equal(2, eventCount);
+
+        // Act: same value again
+        slider.SetValue(Slider.ValueProperty, 0);
+
+        // Assert: no event when value doesn't change
+        Assert.Equal(0, slider.Value);
+        Assert.Equal(2, eventCount);
+    }
 }
