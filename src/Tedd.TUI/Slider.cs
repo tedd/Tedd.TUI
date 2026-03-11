@@ -30,6 +30,15 @@ public class Slider : UIElement
     public static readonly DependencyProperty ValueProperty =
         DependencyProperty.Register(nameof(Value), typeof(int), typeof(Slider), 0);
 
+    public static readonly RoutedEvent ValueChangedEvent =
+        RoutedEvent.Register("ValueChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Slider));
+
+    public event RoutedEventHandler ValueChanged
+    {
+        add => AddHandler(ValueChangedEvent, value);
+        remove => RemoveHandler(ValueChangedEvent, value);
+    }
+
     public int Value
     {
         get => (int)GetValue(ValueProperty);
@@ -40,10 +49,23 @@ public class Slider : UIElement
             int max = Maximum;
             if (value < min) value = min;
             if (value > max) value = max;
-            SetValue(ValueProperty, value);
+
+            if (Value != value)
+            {
+                SetValue(ValueProperty, value);
+            }
         }
     }
 
+    protected override void OnPropertyChanged(DependencyProperty property, object oldValue, object newValue)
+    {
+        base.OnPropertyChanged(property, oldValue, newValue);
+
+        if (property == ValueProperty)
+        {
+            RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+        }
+    }
     public static readonly DependencyProperty OrientationProperty =
         DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(Slider), Orientation.Horizontal);
 
