@@ -108,6 +108,11 @@ public class ListBox : Selector
                 lbi.ContentTemplate = ItemTemplate;
                 lbi.Content = item;
             }
+            else if (item is UIElement uiElement)
+            {
+                // Preserve UIElement items as content so they render and interact correctly
+                lbi.Content = uiElement;
+            }
             else
             {
                 lbi.Content = GetItemText(item);
