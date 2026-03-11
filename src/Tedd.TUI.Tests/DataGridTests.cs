@@ -25,6 +25,13 @@ public class DataGridTests
         grid.ItemsSource = list;
 
         Assert.Equal(expectedColumnCount, grid.Columns.Count);
+
+        if (expectedColumnCount > 0)
+        {
+            var headers = grid.Columns.Select(c => c.Header).ToList();
+            Assert.Contains("Name", headers);
+            Assert.Contains("Age", headers);
+        }
     }
 
     [Theory]
