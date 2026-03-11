@@ -75,7 +75,7 @@ public class ListBoxItem : ContentControl
         }
     }
 
-    private void UpdateVisualState()
+    internal void UpdateVisualState()
     {
         // Try to get colors from Parent ListBox if we are inside one.
         // If not, use defaults.
