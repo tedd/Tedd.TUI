@@ -101,4 +101,119 @@ public class ListBoxTests
         Assert.Equal("Hello", row0);
         Assert.Equal("World", row1);
     }
+
+    [Fact]
+    public void ItemIsSelected_ViaIsSelectedProperty_UpdatesListBoxSelectedIndex()
+    {
+        var listBox = new ListBox();
+        listBox.Items.Add("Item 1");
+        listBox.Items.Add("Item 2");
+        listBox.Items.Add("Item 3");
+
+        // ItemsPanelRoot is populated after items are added (via OnItemsCollectionChanged → PopulatePanel)
+        Assert.NotNull(listBox.ItemsPanelRoot);
+        var container1 = listBox.ItemsPanelRoot!.Children[1] as ListBoxItem;
+        Assert.NotNull(container1);
+
+        // Act: set IsSelected = true on the second container; this raises SelectedEvent which bubbles to ListBox
+        container1!.IsSelected = true;
+
+        // Assert: SelectedIndex should be updated to match the container's position
+        Assert.Equal(1, listBox.SelectedIndex);
+    }
+
+    [Fact]
+    public void ItemSelectedEvent_RaisedOnContainer_UpdatesListBoxSelectedIndex()
+    {
+        var listBox = new ListBox();
+        listBox.Items.Add("A");
+        listBox.Items.Add("B");
+        listBox.Items.Add("C");
+
+        Assert.NotNull(listBox.ItemsPanelRoot);
+        var container2 = listBox.ItemsPanelRoot!.Children[2] as ListBoxItem;
+        Assert.NotNull(container2);
+
+        // Act: raise SelectedEvent directly on the third container
+        container2!.RaiseEvent(new RoutedEventArgs(ListBoxItem.SelectedEvent, container2));
+
+        // Assert: SelectedIndex should be updated to 2
+        Assert.Equal(2, listBox.SelectedIndex);
+    }
+
+    [Fact]
+    public void SelectedIndex_Change_Updates_ContainersIsSelected()
+    {
+        var listBox = new ListBox();
+        listBox.Items.Add("Alpha");
+        listBox.Items.Add("Beta");
+        listBox.Items.Add("Gamma");
+
+        Assert.NotNull(listBox.ItemsPanelRoot);
+
+        // Act: select the second item
+        listBox.SelectedIndex = 1;
+
+        var container0 = listBox.ItemsPanelRoot!.Children[0] as ListBoxItem;
+        var container1 = listBox.ItemsPanelRoot!.Children[1] as ListBoxItem;
+        var container2 = listBox.ItemsPanelRoot!.Children[2] as ListBoxItem;
+
+        Assert.NotNull(container0);
+        Assert.NotNull(container1);
+        Assert.NotNull(container2);
+
+        Assert.False(container0!.IsSelected);
+        Assert.True(container1!.IsSelected);
+        Assert.False(container2!.IsSelected);
+    }
+
+    [Fact]
+    public void SelectedIndex_Change_Deselects_PreviousContainer()
+    {
+        var listBox = new ListBox();
+        listBox.Items.Add("X");
+        listBox.Items.Add("Y");
+        listBox.Items.Add("Z");
+
+        Assert.NotNull(listBox.ItemsPanelRoot);
+
+        // Select the first item
+        listBox.SelectedIndex = 0;
+        var container0 = listBox.ItemsPanelRoot!.Children[0] as ListBoxItem;
+        var container1 = listBox.ItemsPanelRoot!.Children[1] as ListBoxItem;
+        Assert.NotNull(container0);
+        Assert.NotNull(container1);
+        Assert.True(container0!.IsSelected);
+        Assert.False(container1!.IsSelected);
+
+        // Act: change selection to the second item
+        listBox.SelectedIndex = 1;
+
+        // Previous container should be deselected, new one selected
+        Assert.False(container0.IsSelected);
+        Assert.True(container1.IsSelected);
+    }
+
+    [Fact]
+    public void SelectedIndex_MinusOne_Deselects_AllContainers()
+    {
+        var listBox = new ListBox();
+        listBox.Items.Add("One");
+        listBox.Items.Add("Two");
+
+        Assert.NotNull(listBox.ItemsPanelRoot);
+
+        listBox.SelectedIndex = 0;
+        var container0 = listBox.ItemsPanelRoot!.Children[0] as ListBoxItem;
+        var container1 = listBox.ItemsPanelRoot!.Children[1] as ListBoxItem;
+        Assert.NotNull(container0);
+        Assert.NotNull(container1);
+        Assert.True(container0!.IsSelected);
+
+        // Act: clear selection
+        listBox.SelectedIndex = -1;
+
+        Assert.False(container0.IsSelected);
+        Assert.False(container1!.IsSelected);
+    }
 }
