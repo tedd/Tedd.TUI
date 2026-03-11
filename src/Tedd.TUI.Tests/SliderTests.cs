@@ -63,6 +63,44 @@ public class SliderTests
     }
 
     [Fact]
+    public void Slider_ValueChangedEvent_FiredViaSetValue()
+    {
+        var slider = new Slider { Minimum = 0, Maximum = 10, Value = 0 };
+        int eventCount = 0;
+        RoutedEventArgs? lastEventArgs = null;
+
+        slider.ValueChanged += (s, e) =>
+        {
+            eventCount++;
+            lastEventArgs = e;
+        };
+
+        // Act: update via SetValue (simulating a binding/DP-driven update)
+        slider.SetValue(Slider.ValueProperty, 7);
+
+        // Assert: event fired and value updated
+        Assert.Equal(1, eventCount);
+        Assert.Equal(7, slider.Value);
+        Assert.NotNull(lastEventArgs);
+        Assert.Equal(Slider.ValueChangedEvent, lastEventArgs.RoutedEvent);
+        Assert.Same(slider, lastEventArgs.Source);
+
+        // Act: SetValue with an out-of-bounds value (should clamp to Maximum and still fire)
+        slider.SetValue(Slider.ValueProperty, 15);
+
+        // Assert: value clamped, event fired once more
+        Assert.Equal(2, eventCount);
+        Assert.Equal(10, slider.Value);
+
+        // Act: SetValue with an out-of-bounds value (should clamp to Minimum and still fire)
+        slider.SetValue(Slider.ValueProperty, -3);
+
+        // Assert: value clamped, event fired once more
+        Assert.Equal(3, eventCount);
+        Assert.Equal(0, slider.Value);
+    }
+
+    [Fact]
     public void Slider_ValueChangedEvent_Fired()
     {
         var slider = new Slider { Minimum = 0, Maximum = 10, Value = 0 };
