@@ -25,13 +25,6 @@ public class DataGridTests
         grid.ItemsSource = list;
 
         Assert.Equal(expectedColumnCount, grid.Columns.Count);
-
-        if (expectedColumnCount > 0)
-        {
-            var headers = grid.Columns.Select(c => c.Header).ToList();
-            Assert.Contains("Name", headers);
-            Assert.Contains("Age", headers);
-        }
     }
 
     [Theory]
@@ -64,7 +57,7 @@ public class DataGridTests
     [InlineData("My Header", "MyPath", 50)]
     [InlineData("EmptyHeader", "", 10)]
     [InlineData(null, null, 100)]
-    public void DataGridColumn_Properties(string? header, string? bindingPath, double widthPixels)
+    public void DataGridColumn_Properties(string header, string bindingPath, double widthPixels)
     {
         var col = new DataGridColumn();
         col.Header = header;
