@@ -26,8 +26,16 @@ public class ValidatorTableMatrixTests
         table.AddRow("1", "2");
         table.AddRow("3", "4");
 
-        // Layout dimensions:
-        // Width = Border(1) + Col1(4) + VLine(1) + Col2(4) + Border(1) = 11
+        // Disable the internal ScrollViewer scrollbars so the test geometry is fully deterministic.
+        // With the default always-on scrollbars the vertical bar would consume one body column
+        // (reducing available column width) and the horizontal bar would consume one body row,
+        // which would clip Row2 at this size.
+        var sv = (ScrollViewer)table.GetVisualChild(0);
+        sv.VerticalScrollBarVisibility = false;
+        sv.HorizontalScrollBarVisibility = false;
+
+        // Layout dimensions (scrollbars disabled):
+        // Width  = Border(1) + Col1(4) + VLine(1) + Col2(4) + Border(1) = 11
         // Height = BorderTop(1) + Header(1) + HeaderSep(1) + Row1(1) + BodySep(1) + Row2(1) + BorderBottom(1) = 7
 
         table.Measure(new Size(11, 7));
