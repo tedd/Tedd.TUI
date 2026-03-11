@@ -34,23 +34,6 @@ public class ListBoxItem : ContentControl
     public ListBoxItem()
     {
         Focusable = true;
-
-        Template = new ControlTemplate(parent =>
-        {
-            var cp = new ContentPresenter();
-            cp.TemplatedParent = parent;
-
-            var contentBinding = new Binding("Content");
-            contentBinding.RelativeSource = RelativeSource.TemplatedParent;
-            cp.SetBinding(ContentPresenter.ContentProperty, contentBinding);
-
-            var templateBinding = new Binding("ContentTemplate");
-            templateBinding.RelativeSource = RelativeSource.TemplatedParent;
-            cp.SetBinding(ContentPresenter.ContentTemplateProperty, templateBinding);
-
-            return cp;
-        });
-
     }
 
     protected override void OnPropertyChanged(DependencyProperty dp)
