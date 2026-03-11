@@ -292,6 +292,7 @@
         allData.Add(new object[] { "1", "Charlie", "35", "Edit" });
         allData.Add(new object[] { "20", "David", "40", new CheckBox { Content = "Active", IsChecked = true } }); // UI Element in cell
         allData.Add(new object[] { "3", "Eve", "22", "Edit" });
+        allData.Add(new object[] { "4", "Frank", "28", "Edit" });
 
         // Add 20 more items as requested
         for (int i = 1; i <= 20; i++)
@@ -301,7 +302,7 @@
 
         // Configure Pagination
         table.PageSize = 5;
-        table.TotalRows = allData.Count; // Tell table we have 25 items
+        table.TotalRows = allData.Count; // Tell table we have 26 items
 
         // Handler to fetch data (Server-Side Paging Simulation)
         void LoadPage()
