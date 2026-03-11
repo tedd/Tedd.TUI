@@ -7,10 +7,10 @@ namespace Tedd.TUI.Tests;
 public class ValidatorTableMatrixTests
 {
     [Theory]
-    [InlineData(BoxStyle.Single, '\u250C', '\u2510', '\u2514', '\u2518', '\u2500', '\u2502', '\u252C', '\u2534', '\u251C', '\u2524', '\u253C')]
-    [InlineData(BoxStyle.Double, '\u2554', '\u2557', '\u255A', '\u255D', '\u2550', '\u2551', '\u2566', '\u2569', '\u2560', '\u2563', '\u256C')]
-    [InlineData(BoxStyle.Heavy, '\u250F', '\u2513', '\u2517', '\u251B', '\u2501', '\u2503', '\u2533', '\u2537', '\u2523', '\u252B', '\u254B')]
-    public void CoordinatePreciseCharacterAssertion_TableBoxStyles(BoxStyle style, char tl, char tr, char bl, char br, char h, char v, char tDown, char tUp, char tLeft, char tRight, char cross)
+    [InlineData(BoxStyle.Single, '\u250C', '\u2510', '\u2514', '\u2518', '\u2500', '\u2502', '\u252C', '\u2534', '\u251C', '\u2524', '\u253C', '\u251C', '\u2524', '\u253C')]
+    [InlineData(BoxStyle.Double, '\u2554', '\u2557', '\u255A', '\u255D', '\u2550', '\u2551', '\u2566', '\u2569', '\u2560', '\u2563', '\u256C', '\u255F', '\u2562', '\u253C')]
+    [InlineData(BoxStyle.Heavy, '\u250F', '\u2513', '\u2517', '\u251B', '\u2501', '\u2503', '\u2533', '\u2537', '\u2523', '\u252B', '\u254B', '\u2520', '\u2528', '\u253C')]
+    public void CoordinatePreciseCharacterAssertion_TableBoxStyles(BoxStyle style, char tl, char tr, char bl, char br, char h, char v, char tDown, char tUp, char tLeft, char tRight, char cross, char bodySepLeft, char bodySepRight, char bodySepCross)
     {
         var table = new Table
         {
@@ -57,12 +57,10 @@ public class ValidatorTableMatrixTests
         Assert.Equal(tRight, buffer.GetPixel(10, 2).Character);
         Assert.Equal(cross, buffer.GetPixel(5, 2).Character);
 
-        // Verify Body Separator Junctions (using specific single-intersection chars for inner)
-        char bodySepTLeft = style == BoxStyle.Double ? '\u255F' : (style == BoxStyle.Heavy ? '\u2520' : '\u251C');
-        char bodySepTRight = style == BoxStyle.Double ? '\u2562' : (style == BoxStyle.Heavy ? '\u2528' : '\u2524');
-        Assert.Equal(bodySepTLeft, buffer.GetPixel(0, 4).Character);
-        Assert.Equal(bodySepTRight, buffer.GetPixel(10, 4).Character);
-        Assert.Equal('\u253C', buffer.GetPixel(5, 4).Character); // Inner cross is always standard Light cross \u253C per TableSeparator impl
+        // Verify Body Separator Junctions
+        Assert.Equal(bodySepLeft, buffer.GetPixel(0, 4).Character);
+        Assert.Equal(bodySepRight, buffer.GetPixel(10, 4).Character);
+        Assert.Equal(bodySepCross, buffer.GetPixel(5, 4).Character);
     }
 
     [Fact]
