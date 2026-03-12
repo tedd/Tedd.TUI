@@ -2,9 +2,9 @@ using System;
 
 namespace Tedd.TUI;
 
-public class TextBox : UIElement
+public class TextBoxLegacy : UIElement
 {
-    public TextBox()
+    public TextBoxLegacy()
     {
         Focusable = true;
     }
@@ -12,7 +12,7 @@ public class TextBox : UIElement
     private bool _isUserInput = false;
 
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register(nameof(Text), typeof(string), typeof(TextBox), string.Empty);
+        DependencyProperty.Register(nameof(Text), typeof(string), typeof(TextBoxLegacy), string.Empty);
 
     public string Text
     {
@@ -21,7 +21,7 @@ public class TextBox : UIElement
     }
 
     public static readonly DependencyProperty IsPasswordProperty =
-        DependencyProperty.Register(nameof(IsPassword), typeof(bool), typeof(TextBox), false);
+        DependencyProperty.Register(nameof(IsPassword), typeof(bool), typeof(TextBoxLegacy), false);
 
     public bool IsPassword
     {
@@ -30,7 +30,7 @@ public class TextBox : UIElement
     }
 
     public static readonly DependencyProperty PasswordCharProperty =
-        DependencyProperty.Register(nameof(PasswordChar), typeof(char), typeof(TextBox), '*');
+        DependencyProperty.Register(nameof(PasswordChar), typeof(char), typeof(TextBoxLegacy), '*');
 
     public char PasswordChar
     {
@@ -70,15 +70,11 @@ public class TextBox : UIElement
         var bg = effectiveBg;
 
         string text = Text ?? "";
-        int len = text.Length;
-
-        // Optimization: Zero-allocation password rendering
-        // Time Complexity: O(w) where w is the visible width of the text box.
-        // Space Complexity: O(1) by eliminating the string allocation `new string(PasswordChar, text.Length)`.
+        string display = IsPassword ? new string(PasswordChar, text.Length) : text;
 
         // Simple scrolling if text is longer than width
         int start = 0;
-        if (len > w)
+        if (display.Length > w)
         {
             // if focused, ensure cursor is visible
             // _cursorPos is absolute index in text
@@ -86,19 +82,12 @@ public class TextBox : UIElement
                 start = _cursorPos - w + 1;
         }
 
-        bool isPassword = IsPassword;
-        char passwordChar = PasswordChar;
-
         // Draw text area
         for (int i = 0; i < w; i++)
         {
             char c = ' ';
             int textIdx = start + i;
-
-            if (textIdx < len)
-            {
-                c = isPassword ? passwordChar : text[textIdx];
-            }
+            if (textIdx < display.Length) c = display[textIdx];
 
             // Cursor
             var cellBg = bg;
@@ -114,9 +103,9 @@ public class TextBox : UIElement
         }
 
         // Draw cursor at end if needed
-        if (IsFocused && _cursorPos == len && len - start < w)
+        if (IsFocused && _cursorPos == display.Length && display.Length - start < w)
         {
-            buffer.SetPixel(x + (len - start), y, ' ', ConsoleColor.Black, ConsoleColor.Gray);
+            buffer.SetPixel(x + (display.Length - start), y, ' ', ConsoleColor.Black, ConsoleColor.Gray);
         }
     }
 
