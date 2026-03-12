@@ -378,31 +378,31 @@ public class Table : UIElement
             switch (style)
             {
                 case BoxStyle.Heavy:
-                    c.TDown = '\u2533';
-                    c.TUp = '\u2537';   // ┷ (Heavy Horz, Light Up)
-                    c.TLeft = '\u2523';
-                    c.TRight = '\u252B';
-                    c.HeaderCross = '\u254B';
-                    c.BodySepTLeft = '\u2520';
-                    c.BodySepTRight = '\u2528';
+                    c.TDown = '\u2533'; // ┳ (Heavy Horz, Heavy Down)
+                    c.TUp = '\u253B';   // ┻ (Heavy Horz, Heavy Up)
+                    c.TLeft = '\u2523'; // ┣ (Heavy Vert, Heavy Right)
+                    c.TRight = '\u252B';// ┫ (Heavy Vert, Heavy Left)
+                    c.HeaderCross = '\u254B'; // ╋ (Heavy Vert, Heavy Horz)
+                    c.BodySepTLeft = '\u2520'; // ┠ (Heavy Vert, Light Right)
+                    c.BodySepTRight = '\u2528';// ┨ (Heavy Vert, Light Left)
                     break;
                 case BoxStyle.Double:
-                    c.TDown = '\u2566';
-                    c.TUp = '\u2569';   // ╧ (Double Horz, Single Up)
-                    c.TLeft = '\u2560';
-                    c.TRight = '\u2563';
-                    c.HeaderCross = '\u256C';
+                    c.TDown = '\u2566'; // ╦ (Double Horz, Double Down)
+                    c.TUp = '\u2569';   // ╩ (Double Horz, Double Up)
+                    c.TLeft = '\u2560'; // ╠ (Double Vert, Double Right)
+                    c.TRight = '\u2563';// ╣ (Double Vert, Double Left)
+                    c.HeaderCross = '\u256C'; // ╬ (Double Vert, Double Horz)
                     c.BodySepTLeft = '\u255F'; // ╟ (Double Vert, Single Right)
                     c.BodySepTRight = '\u2562'; // ╢ (Double Vert, Single Left)
                     break;
                 default:
-                    c.TDown = '\u252C';
-                    c.TUp = '\u2534';
-                    c.TLeft = '\u251C';
-                    c.TRight = '\u2524';
-                    c.HeaderCross = '\u253C';
-                    c.BodySepTLeft = '\u251C';
-                    c.BodySepTRight = '\u2524';
+                    c.TDown = '\u252C'; // ┬
+                    c.TUp = '\u2534';   // ┴
+                    c.TLeft = '\u251C'; // ├
+                    c.TRight = '\u2524';// ┤
+                    c.HeaderCross = '\u253C'; // ┼
+                    c.BodySepTLeft = '\u251C'; // ├
+                    c.BodySepTRight = '\u2524';// ┤
                     break;
             }
             return c;

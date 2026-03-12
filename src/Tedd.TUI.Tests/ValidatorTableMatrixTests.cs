@@ -9,7 +9,7 @@ public class ValidatorTableMatrixTests
     [Theory]
     [InlineData(BoxStyle.Single, '\u250C', '\u2510', '\u2514', '\u2518', '\u2500', '\u2502', '\u252C', '\u2534', '\u251C', '\u2524', '\u253C')]
     [InlineData(BoxStyle.Double, '\u2554', '\u2557', '\u255A', '\u255D', '\u2550', '\u2551', '\u2566', '\u2569', '\u2560', '\u2563', '\u256C')]
-    [InlineData(BoxStyle.Heavy, '\u250F', '\u2513', '\u2517', '\u251B', '\u2501', '\u2503', '\u2533', '\u2537', '\u2523', '\u252B', '\u254B')]
+    [InlineData(BoxStyle.Heavy, '\u250F', '\u2513', '\u2517', '\u251B', '\u2501', '\u2503', '\u2533', '\u253B', '\u2523', '\u252B', '\u254B')]
     public void CoordinatePreciseCharacterAssertion_TableBoxStyles(BoxStyle style, char tl, char tr, char bl, char br, char h, char v, char tDown, char tUp, char tLeft, char tRight, char cross)
     {
         var table = new Table
