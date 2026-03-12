@@ -18,11 +18,12 @@
   - **DataGrid:** Supports `ItemsSource` binding, `AutoGenerateColumns`, selection, and pagination.
   - **Table:** Manual row management with sorting, pagination, and header customization.
   - **MarkdownView:** Renders Markdown content with theming support.
-  - **Standard Controls:** `Button`, `TextBox`, `PasswordBox`, `TextEditor`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `GroupBox`, `TreeView`, `TreeViewItem`, `HeaderedItemsControl`, `Expander`, `DialogBox`, `UniformGrid`, `ScrollViewer`, `ScrollBar`.
+  - **Standard Controls:** `Button`, `TextBox`, `PasswordBox`, `TextEditor`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `GroupBox`, `TreeView`, `TreeViewItem`, `HeaderedItemsControl`, `Expander`, `DialogBox`, `UniformGrid`, `ScrollViewer`, `ScrollBar`, `Slider`, `Thumb`.
   - **ItemsControl:** Inherits from `Control` and utilizes an `ItemsPanel` property (`ItemsPanelTemplate`) alongside an `ItemsPresenter` to generate and populate its visual layout panel, aligning with WPF logical separation. It supports dynamic data mapping via `ItemTemplate` (`DataTemplate`), automatically propagating the ambient data object to a generated `ContentPresenter` during `PrepareContainerForItemOverride`.
   - **Expander:** Inherits from `HeaderedContentControl`, utilizing the `IsExpanded` dependency property and `Expanded`/`Collapsed` bubbling routed events to toggle `ContentPresenter.Visibility` for progressive disclosure.
   - **GroupBox:** Subclasses `HeaderedContentControl` and leverages the `ControlTemplate` engine to map its `Header` and `Content` into a visual `Border`, establishing structural parity with standard WPF grouping conventions.
   - **PasswordBox:** Inherits from `Control` and employs a `ControlTemplate` housing a `TextBox` with `IsPassword = true`, bridging a crucial parity gap for secure input masking by intercepting `OnKeyDown` events to synchronize an exposed `Password` property.
+  - **Slider & Thumb:** The `Thumb` primitive control provides standard WPF-equivalent bubbling routed events for drag lifecycles (`DragStarted`, `DragDelta`, `DragCompleted`). The `Slider` control utilizes this primitive (or analogous layout mechanics) alongside a bubbling `ValueChanged` routed event that is explicitly raised upon explicit value mutations, ensuring WPF event routing parity.
 - **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
 - **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
 - **Cross-Platform:** Decoupled rendering pipeline supporting Console (Windows/Linux/Mac).
