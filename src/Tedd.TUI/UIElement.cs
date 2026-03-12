@@ -132,6 +132,15 @@ public abstract class UIElement : DependencyObject
         set => SetValue(FocusableProperty, value);
     }
 
+    public static readonly DependencyProperty StyleProperty =
+        DependencyProperty.Register(nameof(Style), typeof(Style), typeof(UIElement), null);
+
+    public Style Style
+    {
+        get => (Style)GetValue(StyleProperty);
+        set => SetValue(StyleProperty, value);
+    }
+
     public static readonly DependencyProperty MarginProperty =
         DependencyProperty.Register(nameof(Margin), typeof(Thickness), typeof(UIElement), new Thickness(0));
 
@@ -202,9 +211,29 @@ public abstract class UIElement : DependencyObject
         expr.UpdateTarget();
     }
 
+    // Cached lists to avoid allocations during hot path evaluation for Style triggers
+    private System.Collections.Generic.HashSet<(DependencyObject, DependencyProperty)>? _newlyActiveStyleProperties;
+    private System.Collections.Generic.List<(DependencyObject, DependencyProperty)>? _stylePropertiesToRevert;
+    private System.Collections.Generic.HashSet<TriggerBase>? _activeStyleTriggers;
+    private System.Collections.Generic.HashSet<(DependencyObject, DependencyProperty)>? _styleActiveProperties;
+    private System.Collections.Generic.HashSet<DependencyProperty>? _watchedStyleTriggerProperties;
+
+    private bool _isEvaluatingStyleTriggers;
+
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
         base.OnPropertyChanged(dp);
+
+        if (dp == StyleProperty)
+        {
+            ApplyStyle();
+            RebuildWatchedStyleTriggerProperties();
+            EvaluateStyleTriggers();
+        }
+        else if (_watchedStyleTriggerProperties != null && _watchedStyleTriggerProperties.Contains(dp))
+        {
+            EvaluateStyleTriggers();
+        }
 
         if (dp == Panel.ZIndexProperty && Parent is Panel p)
         {
@@ -236,9 +265,153 @@ public abstract class UIElement : DependencyObject
         Invalidate();
     }
 
+    private void RebuildWatchedStyleTriggerProperties()
+    {
+        var style = Style;
+        if (style == null || style.Triggers.Count == 0)
+        {
+            _watchedStyleTriggerProperties = null;
+            return;
+        }
+
+        if (_watchedStyleTriggerProperties == null)
+            _watchedStyleTriggerProperties = new();
+        else
+            _watchedStyleTriggerProperties.Clear();
+
+        foreach (var triggerBase in style.Triggers)
+        {
+            if (triggerBase is Trigger trigger && trigger.Property != null)
+                _watchedStyleTriggerProperties.Add(trigger.Property);
+        }
+    }
+
+    private void EvaluateStyleTriggers()
+    {
+        if (_isEvaluatingStyleTriggers)
+            return;
+
+        bool hasTriggers = Style != null && Style.Triggers.Count > 0;
+
+        if (!hasTriggers && (_styleActiveProperties == null || _styleActiveProperties.Count == 0))
+        {
+            _activeStyleTriggers?.Clear();
+            return;
+        }
+
+        _isEvaluatingStyleTriggers = true;
+
+        try
+        {
+            if (_newlyActiveStyleProperties == null) _newlyActiveStyleProperties = new();
+            else _newlyActiveStyleProperties.Clear();
+
+            if (_activeStyleTriggers == null) _activeStyleTriggers = new();
+            if (_styleActiveProperties == null) _styleActiveProperties = new();
+
+            if (hasTriggers)
+            {
+                foreach (var triggerBase in Style!.Triggers)
+                {
+                    if (triggerBase is Trigger trigger && trigger.Property != null)
+                    {
+                        var currentValue = GetValue(trigger.Property);
+                        bool isActive = object.Equals(currentValue, trigger.Value);
+                        bool wasActive = _activeStyleTriggers.Contains(triggerBase);
+
+                        if (isActive)
+                        {
+                            if (!wasActive)
+                            {
+                                _activeStyleTriggers.Add(triggerBase);
+                            }
+
+                            foreach (var setter in trigger.Setters)
+                            {
+                                if (setter.Property != null)
+                                {
+                                    DependencyObject target = this;
+
+                                    // Style triggers shouldn't typically resolve TargetName as they apply to the element itself
+                                    // unless it's a ControlTemplate style trigger, but we'll leave it out for UIElement Style to mimic standard WPF Style scoping.
+
+                                    target.SetTriggerValue(setter.Property, setter.Value);
+
+                                    _styleActiveProperties.Add((target, setter.Property));
+                                    _newlyActiveStyleProperties.Add((target, setter.Property));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (wasActive)
+                            {
+                                _activeStyleTriggers.Remove(triggerBase);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (_styleActiveProperties != null)
+            {
+                if (_stylePropertiesToRevert == null) _stylePropertiesToRevert = new();
+                else _stylePropertiesToRevert.Clear();
+
+                foreach (var pair in _styleActiveProperties)
+                {
+                    if (!_newlyActiveStyleProperties.Contains(pair))
+                    {
+                        _stylePropertiesToRevert.Add(pair);
+                    }
+                }
+
+                foreach (var pair in _stylePropertiesToRevert)
+                {
+                    _styleActiveProperties.Remove(pair);
+                    pair.Item1.ClearTriggerValue(pair.Item2);
+                }
+            }
+        }
+        finally
+        {
+            _isEvaluatingStyleTriggers = false;
+        }
+    }
+
     protected virtual void OnDataContextChanged(object newValue)
     {
         // Called automatically when DataContext changes; override in derived classes to respond to DataContext changes.
+    }
+
+    private Style? _appliedStyle;
+
+    protected virtual void ApplyStyle()
+    {
+        if (_appliedStyle != null)
+        {
+            foreach (var setter in _appliedStyle.Setters)
+            {
+                if (setter.Property != null)
+                {
+                    ClearStyleValue(setter.Property);
+                }
+            }
+        }
+
+        var newStyle = Style;
+        if (newStyle != null)
+        {
+            foreach (var setter in newStyle.Setters)
+            {
+                if (setter.Property != null)
+                {
+                    SetStyleValue(setter.Property, setter.Value);
+                }
+            }
+        }
+
+        _appliedStyle = newStyle;
     }
 
     public virtual int VisualChildrenCount => 0;

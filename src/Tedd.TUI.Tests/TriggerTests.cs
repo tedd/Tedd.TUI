@@ -95,11 +95,11 @@ public class TriggerTests
 
         Assert.Equal(100, control.TestValue);
 
-        // Condition met
+        // Condition met, but LocalValue takes precedence over TriggerValue
         control.IsHovered = true;
-        Assert.Equal(42, control.TestValue);
+        Assert.Equal(100, control.TestValue);
 
-        // Condition no longer met, should revert to local value
+        // Condition no longer met, remains at local value
         control.IsHovered = false;
         Assert.Equal(100, control.TestValue);
     }
@@ -121,14 +121,18 @@ public class TriggerTests
         control.Template = template;
 
         control.IsHovered = true;
+        // Trigger is active but LocalValue takes precedence over TriggerValue
         Assert.Equal(42, control.TestValue);
 
         // User explicitly overrides local value while trigger is active
         control.TestValue = 999;
 
+        // Since LocalValue has higher precedence, it takes effect immediately
+        Assert.Equal(999, control.TestValue);
+
         control.IsHovered = false;
 
-        // Value should remain 999, not revert to 0
+        // Value should remain 999, as the LocalValue is untouched
         Assert.Equal(999, control.TestValue);
     }
 
