@@ -191,3 +191,6 @@ Implemented coverage expanding into dynamic memory allocations ensuring observab
 - Increased `Tedd.TUI.TreeView` coverage from 62.4% to 96.1%.
 - Increased `Tedd.TUI.TreeViewItem` coverage from 36.0% to 95.3%.
 - Expanded overall total structural coverage within Tedd.TUI to 76.33%. Total tests executing now 491.
+## 2024-05-30 - TextBox Coverage Expansion
+**Observation:** `TextBox` component exhibited partial coverage, particularly around input boundary conditions (e.g. key down limits, text scrolling rendering).
+**Strategic Action:** Added parameterized verification matrices in `TextBoxTests.cs` using `RaiseEvent` to simulate input vectors (LeftArrow, RightArrow, Backspace, Delete). Validated scrolling rendering state via buffer assertions, bringing `TextBox` to 100% test coverage.
