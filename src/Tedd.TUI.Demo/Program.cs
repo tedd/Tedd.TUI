@@ -275,8 +275,12 @@ class Program
         var listStack = new StackPanel { Orientation = Orientation.Vertical };
 
         listStack.AddChild(new TextBlock { Text = "Progress:" });
-        var progressBar = new ProgressBar { Width = 40, Value = 35 };
-        listStack.AddChild(progressBar);
+        var progressBar1 = new ProgressBar { Width = 40, Value = 35, LabelMode = ProgressBarLabelMode.Percent, LabelPercentDecimals = 0 };
+        listStack.AddChild(progressBar1);
+        var progressBar2 = new ProgressBar { Width = 40, Value = 75, LabelMode = ProgressBarLabelMode.Percent, LabelPercentDecimals = 1, ProgressColor = ConsoleColor.Blue };
+        listStack.AddChild(progressBar2);
+        var progressBar3 = new ProgressBar { Width = 40, Value = 50, LabelMode = ProgressBarLabelMode.Text, LabelText = "Loading...", ProgressColor = ConsoleColor.Red, LabelFilledColor = ConsoleColor.Yellow };
+        listStack.AddChild(progressBar3);
 
         listStack.AddChild(new TextBlock { Text = "Items:" });
         // listBox already created
