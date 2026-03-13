@@ -51,3 +51,9 @@
 **Observation:** The README.md exhibited documentation drift by omitting the `Tedd.TUI.Platform.Blazor` WebAssembly/Server host integration and its implementation of `TuiComponentBase` cascading `ITuiContainer` while accepting `Dock` as a standard parameter. Furthermore, the two-phase input event routing description lacked explicit articulation that `TuiWindow` autonomously manages keyboard event dispatch, while mouse event dispatch is delegated to platform-specific input managers (for example, `ConsoleInputManager` for the console host and `BlazorInputManager` with bubble-only routing for the Blazor host).
 
 **Strategic Action:** Synchronized the `README.md` to precisely articulate these operational realities. Appended `Tedd.TUI.Platform.Blazor` to the 'Platform Abstraction' section to detail the `ITuiContainer` cascading and `Dock` parameter semantics, eliminating assumptions of `Dock` cascading. Expanded the 'Execution Phases' under 'Input & Interaction' to explicitly delineate the WPF-parity dispatching responsibilities between `TuiWindow` and the platform-specific input managers, including `ConsoleInputManager` for console scenarios and `BlazorInputManager` (bubble-only routing) for Blazor.
+
+## 2026-03-13 - Documentation Synchronization of Slider Parity Integration
+
+**Observation:** The README.md exhibited documentation drift regarding the newly integrated `Slider` component. It was missing from the Rich Control Suite and lacked articulation of its `ValueChanged` bubbling routed event parity.
+
+**Strategic Action:** Synchronized the README.md to precisely articulate this architectural reality by appending `Slider` to the Standard Controls list and documenting its `ValueChanged` explicit dispatch mechanism.
