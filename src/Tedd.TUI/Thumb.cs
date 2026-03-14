@@ -123,7 +123,6 @@ public class Thumb : Control
             if (root != null)
             {
                 e.Handled = true;
-                Focus();
                 root.CaptureMouse(this);
                 IsDragging = true;
                 _originScreenCoord = new Point(e.GlobalX, e.GlobalY);
