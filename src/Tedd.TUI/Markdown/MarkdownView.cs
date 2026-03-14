@@ -9,7 +9,7 @@ public class MarkdownView : UIElement
     private MarkdownParser _parser;
 
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register("Text", typeof(string), typeof(MarkdownView), string.Empty);
+        DependencyProperty.Register(nameof(Text), typeof(string), typeof(MarkdownView), string.Empty);
 
     public string Text
     {

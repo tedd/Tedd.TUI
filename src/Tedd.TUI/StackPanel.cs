@@ -13,7 +13,7 @@ public enum Orientation
 public class StackPanel : Panel
 {
     public static readonly DependencyProperty OrientationProperty =
-        DependencyProperty.Register("Orientation", typeof(Orientation), typeof(StackPanel), Orientation.Vertical);
+        DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(StackPanel), Orientation.Vertical);
 
     public Orientation Orientation
     {

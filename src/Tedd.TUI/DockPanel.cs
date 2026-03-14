@@ -14,7 +14,7 @@ public enum Dock
 public class DockPanel : Panel
 {
     public static readonly DependencyProperty LastChildFillProperty =
-        DependencyProperty.Register("LastChildFill", typeof(bool), typeof(DockPanel), true);
+        DependencyProperty.Register(nameof(LastChildFill), typeof(bool), typeof(DockPanel), true);
 
     public bool LastChildFill
     {

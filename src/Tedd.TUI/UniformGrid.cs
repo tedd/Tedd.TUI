@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class UniformGrid : Panel
 {
     public static readonly DependencyProperty RowsProperty =
-        DependencyProperty.Register("Rows", typeof(int), typeof(UniformGrid), 0);
+        DependencyProperty.Register(nameof(Rows), typeof(int), typeof(UniformGrid), 0);
 
     public int Rows
     {
@@ -14,7 +14,7 @@ public class UniformGrid : Panel
     }
 
     public static readonly DependencyProperty ColumnsProperty =
-        DependencyProperty.Register("Columns", typeof(int), typeof(UniformGrid), 0);
+        DependencyProperty.Register(nameof(Columns), typeof(int), typeof(UniformGrid), 0);
 
     public int Columns
     {
@@ -23,7 +23,7 @@ public class UniformGrid : Panel
     }
 
     public static readonly DependencyProperty FirstColumnProperty =
-        DependencyProperty.Register("FirstColumn", typeof(int), typeof(UniformGrid), 0);
+        DependencyProperty.Register(nameof(FirstColumn), typeof(int), typeof(UniformGrid), 0);
 
     public int FirstColumn
     {
