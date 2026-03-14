@@ -41,6 +41,7 @@ public class ItemsPresenter : UIElement
         if (_panel == null) return;
         _panel.Children.Clear();
 
+        int index = 0;
         foreach (var item in itemsControl.Items)
         {
             UIElement container;
@@ -51,9 +52,10 @@ public class ItemsPresenter : UIElement
             else
             {
                 container = itemsControl.GetContainerForItemCore();
-                itemsControl.PrepareContainerForItemOverride(container, item);
+                itemsControl.PrepareContainerForItemOverride(container, item, index);
             }
             _panel.Children.Add(container);
+            index++;
         }
     }
 

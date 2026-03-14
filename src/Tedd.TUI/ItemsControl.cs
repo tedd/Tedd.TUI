@@ -244,7 +244,7 @@ public abstract class ItemsControl : Control
         return GetContainerForItemOverride();
     }
 
-    protected internal virtual void PrepareContainerForItemOverride(UIElement element, object item)
+    protected internal virtual void PrepareContainerForItemOverride(UIElement element, object item, int index)
     {
         if (element is ContentPresenter cp)
         {

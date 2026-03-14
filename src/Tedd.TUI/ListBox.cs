@@ -97,9 +97,9 @@ public class ListBox : Selector
         return new ListBoxItem();
     }
 
-    protected internal override void PrepareContainerForItemOverride(UIElement element, object item)
+    protected internal override void PrepareContainerForItemOverride(UIElement element, object item, int index)
     {
-        base.PrepareContainerForItemOverride(element, item);
+        base.PrepareContainerForItemOverride(element, item, index);
         if (element is ListBoxItem lbi)
         {
             // Set content correctly based on ItemTemplate or fallback
@@ -118,16 +118,8 @@ public class ListBox : Selector
                 lbi.Content = GetItemText(item);
             }
 
-            // Sync IsSelected
-            int index = Items.IndexOf(item);
-            if (index == SelectedIndex)
-            {
-                lbi.IsSelected = true;
-            }
-            else
-            {
-                lbi.IsSelected = false;
-            }
+            // Sync IsSelected using the index passed from PopulatePanel — avoids O(n²) IndexOf scan
+            lbi.IsSelected = (index == SelectedIndex);
         }
     }
 
