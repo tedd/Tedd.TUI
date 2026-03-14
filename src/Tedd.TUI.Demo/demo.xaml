@@ -62,7 +62,6 @@
                     <TreeViewItem Header="Markdown" />
                     <TreeViewItem Header="DataGrid" />
                     <TreeViewItem Header="Editor" />
-                    <TreeViewItem Header="Containers" />
                 </TreeViewItem>
             </TreeView>
         </Expander>
@@ -78,10 +77,7 @@
              <TextBox Name="NameBox" Width="30" Text="John Doe"/>
 
              <TextBlock Text="Password:"/>
-             <PasswordBox Name="PassBox" Width="30" Password="secret"/>
-
-             <TextBlock Text="Volume:"/>
-             <Slider Name="VolumeSlider" Width="20" Minimum="0" Maximum="100" Value="50"/>
+             <TextBox Name="PassBox" Width="30" IsPassword="True" Text="secret"/>
 
              <CheckBox Name="TermsCheck" Content="I agree to Terms &amp; Conditions"/>
 
@@ -107,9 +103,7 @@
        <TabItem Header="Lists">
            <StackPanel Orientation="Vertical">
               <TextBlock Text="Progress:"/>
-              <ProgressBar Width="40" Value="35" LabelMode="Percent" LabelPercentDecimals="0"/>
-              <ProgressBar Width="40" Value="75" LabelMode="Percent" LabelPercentDecimals="1" ProgressColor="Blue"/>
-              <ProgressBar Width="40" Value="50" LabelMode="Text" LabelText="Loading..." ProgressColor="Red" LabelFilledColor="Yellow"/>
+              <ProgressBar Width="40" Value="35"/>
               <TextBlock Text="Items:"/>
               <ListBox Name="SimpleList" Width="40" Height="10"/>
            </StackPanel>
@@ -184,25 +178,6 @@
                <Border BoxStyle="Single" BorderColor="Cyan" Width="70" Height="15">
                    <TextEditor Name="EditorBox" Width="-1" Height="-1" />
                </Border>
-           </StackPanel>
-       </TabItem>
-
-       <!-- Tab 9: Containers -->
-       <TabItem Header="Containers">
-           <StackPanel Orientation="Vertical">
-               <GroupBox Header="Group Box" Width="40" Height="6" BorderColor="Cyan">
-                   <StackPanel Orientation="Vertical">
-                       <TextBlock Text="This is inside a GroupBox." />
-                       <Button Content="Group Button" />
-                   </StackPanel>
-               </GroupBox>
-               <TextBlock Text=" " />
-               <Expander Header="Expander Demo" IsExpanded="False" Width="40">
-                   <StackPanel Orientation="Vertical">
-                       <TextBlock Text="This is collapsible content." />
-                       <CheckBox Content="Hidden Checkbox" />
-                   </StackPanel>
-               </Expander>
            </StackPanel>
        </TabItem>
 

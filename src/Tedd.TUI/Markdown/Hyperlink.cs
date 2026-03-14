@@ -5,7 +5,7 @@ namespace Tedd.TUI.Markdown;
 public class Hyperlink : UIElement
 {
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register(nameof(Text), typeof(string), typeof(Hyperlink), string.Empty);
+        DependencyProperty.Register("Text", typeof(string), typeof(Hyperlink), string.Empty);
 
     public string Text
     {
@@ -14,7 +14,7 @@ public class Hyperlink : UIElement
     }
 
     public static readonly DependencyProperty UrlProperty =
-        DependencyProperty.Register(nameof(Url), typeof(string), typeof(Hyperlink), string.Empty);
+        DependencyProperty.Register("Url", typeof(string), typeof(Hyperlink), string.Empty);
 
     public string Url
     {

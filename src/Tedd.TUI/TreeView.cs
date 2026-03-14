@@ -16,7 +16,7 @@ public class TreeView : UIElement
     public IList<TreeViewItem> Items => _items;
 
     public static readonly DependencyProperty ItemsSourceProperty =
-        DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(TreeView), null);
+        DependencyProperty.Register("ItemsSource", typeof(IEnumerable), typeof(TreeView), null);
 
     public IEnumerable ItemsSource
     {

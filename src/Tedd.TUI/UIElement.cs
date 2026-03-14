@@ -79,7 +79,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty BackgroundProperty =
-        DependencyProperty.Register(nameof(Background), typeof(ConsoleColor?), typeof(UIElement), null);
+        DependencyProperty.Register("Background", typeof(ConsoleColor?), typeof(UIElement), null);
 
     public ConsoleColor? Background
     {
@@ -88,7 +88,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register(nameof(Foreground), typeof(ConsoleColor), typeof(UIElement), ConsoleColor.White, isInherited: true);
+        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(UIElement), ConsoleColor.White, isInherited: true);
 
     public ConsoleColor Foreground
     {
@@ -97,7 +97,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty IsFocusedProperty =
-        DependencyProperty.Register(nameof(IsFocused), typeof(bool), typeof(UIElement), false);
+        DependencyProperty.Register("IsFocused", typeof(bool), typeof(UIElement), false);
 
     public bool IsFocused
     {
@@ -106,7 +106,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty IsEnabledProperty =
-        DependencyProperty.Register(nameof(IsEnabled), typeof(bool), typeof(UIElement), true);
+        DependencyProperty.Register("IsEnabled", typeof(bool), typeof(UIElement), true);
 
     public bool IsEnabled
     {
@@ -115,7 +115,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty VisibilityProperty =
-        DependencyProperty.Register(nameof(Visibility), typeof(bool), typeof(UIElement), true);
+        DependencyProperty.Register("Visibility", typeof(bool), typeof(UIElement), true);
 
     public bool Visibility
     {
@@ -124,7 +124,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty FocusableProperty =
-        DependencyProperty.Register(nameof(Focusable), typeof(bool), typeof(UIElement), false);
+        DependencyProperty.Register("Focusable", typeof(bool), typeof(UIElement), false);
 
     public bool Focusable
     {
@@ -133,7 +133,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty MarginProperty =
-        DependencyProperty.Register(nameof(Margin), typeof(Thickness), typeof(UIElement), new Thickness(0));
+        DependencyProperty.Register("Margin", typeof(Thickness), typeof(UIElement), new Thickness(0));
 
     public Thickness Margin
     {
@@ -142,7 +142,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty WidthProperty =
-        DependencyProperty.Register(nameof(Width), typeof(int), typeof(UIElement), -1); // -1 for Auto
+        DependencyProperty.Register("Width", typeof(int), typeof(UIElement), -1); // -1 for Auto
 
     public int Width
     {
@@ -151,7 +151,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty HeightProperty =
-        DependencyProperty.Register(nameof(Height), typeof(int), typeof(UIElement), -1); // -1 for Auto
+        DependencyProperty.Register("Height", typeof(int), typeof(UIElement), -1); // -1 for Auto
 
     public int Height
     {
@@ -160,7 +160,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty HorizontalAlignmentProperty =
-        DependencyProperty.Register(nameof(HorizontalAlignment), typeof(HorizontalAlignment), typeof(UIElement), HorizontalAlignment.Stretch);
+        DependencyProperty.Register("HorizontalAlignment", typeof(HorizontalAlignment), typeof(UIElement), HorizontalAlignment.Stretch);
 
     public HorizontalAlignment HorizontalAlignment
     {
@@ -169,7 +169,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty VerticalAlignmentProperty =
-        DependencyProperty.Register(nameof(VerticalAlignment), typeof(VerticalAlignment), typeof(UIElement), VerticalAlignment.Stretch);
+        DependencyProperty.Register("VerticalAlignment", typeof(VerticalAlignment), typeof(UIElement), VerticalAlignment.Stretch);
 
     public VerticalAlignment VerticalAlignment
     {
@@ -178,7 +178,7 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty DataContextProperty =
-        DependencyProperty.Register(nameof(DataContext), typeof(object), typeof(UIElement), null, isInherited: true);
+        DependencyProperty.Register("DataContext", typeof(object), typeof(UIElement), null, isInherited: true);
 
     public object DataContext
     {

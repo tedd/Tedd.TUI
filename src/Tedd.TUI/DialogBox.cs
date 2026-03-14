@@ -36,7 +36,7 @@ public class DialogBox : UIElement
     /// Title displayed in the dialog's title bar.
     /// </summary>
     public static readonly DependencyProperty TitleProperty =
-        DependencyProperty.Register(nameof(Title), typeof(string), typeof(DialogBox), string.Empty);
+        DependencyProperty.Register("Title", typeof(string), typeof(DialogBox), string.Empty);
 
     public string Title
     {
@@ -48,7 +48,7 @@ public class DialogBox : UIElement
     /// Border color for the dialog box frame.
     /// </summary>
     public static readonly DependencyProperty BorderColorProperty =
-        DependencyProperty.Register(nameof(BorderColor), typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.White);
+        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.White);
 
     public ConsoleColor BorderColor
     {
@@ -60,7 +60,7 @@ public class DialogBox : UIElement
     /// Title bar foreground color.
     /// </summary>
     public static readonly DependencyProperty TitleColorProperty =
-        DependencyProperty.Register(nameof(TitleColor), typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.Yellow);
+        DependencyProperty.Register("TitleColor", typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.Yellow);
 
     public ConsoleColor TitleColor
     {
@@ -72,7 +72,7 @@ public class DialogBox : UIElement
     /// Background color of the dialog.
     /// </summary>
     public static readonly DependencyProperty BackgroundColorProperty =
-        DependencyProperty.Register(nameof(BackgroundColor), typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.Black);
+        DependencyProperty.Register("BackgroundColor", typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.Black);
 
     public ConsoleColor BackgroundColor
     {
@@ -84,7 +84,7 @@ public class DialogBox : UIElement
     /// Box drawing style (Single or Double lines).
     /// </summary>
     public static readonly DependencyProperty BoxStyleProperty =
-        DependencyProperty.Register(nameof(BoxStyle), typeof(BoxStyle), typeof(DialogBox), BoxStyle.Double);
+        DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(DialogBox), BoxStyle.Double);
 
     public BoxStyle BoxStyle
     {

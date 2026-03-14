@@ -123,6 +123,7 @@ public class Thumb : Control
             if (root != null)
             {
                 e.Handled = true;
+                Focus();
                 root.CaptureMouse(this);
                 IsDragging = true;
                 _originScreenCoord = new Point(e.GlobalX, e.GlobalY);
@@ -171,17 +172,12 @@ public class Thumb : Control
                 root.ReleaseMouseCapture();
             }
 
-            // Use the actual mouse position at mouse up to compute the final drag delta.
-            int currentX = e.GlobalX;
-            int currentY = e.GlobalY;
-            _previousScreenCoord = new Point(currentX, currentY);
-
             IsDragging = false;
             e.Handled = true;
 
             var args = new DragCompletedEventArgs(
-                currentX - _originScreenCoord.X,
-                currentY - _originScreenCoord.Y,
+                _previousScreenCoord.X - _originScreenCoord.X,
+                _previousScreenCoord.Y - _originScreenCoord.Y,
                 false,
                 DragCompletedEvent,
                 this);

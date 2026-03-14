@@ -55,7 +55,7 @@ public class Border : ScrollViewer
     }
 
     public static readonly DependencyProperty BorderColorProperty =
-        DependencyProperty.Register(nameof(BorderColor), typeof(ConsoleColor), typeof(Border), ConsoleColor.White);
+        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(Border), ConsoleColor.White);
 
     public ConsoleColor BorderColor
     {
@@ -64,7 +64,7 @@ public class Border : ScrollViewer
     }
 
     public static readonly DependencyProperty BoxStyleProperty =
-        DependencyProperty.Register(nameof(BoxStyle), typeof(BoxStyle), typeof(Border), BoxStyle.Single);
+        DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(Border), BoxStyle.Single);
 
     public BoxStyle BoxStyle
     {

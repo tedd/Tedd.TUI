@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class Expander : HeaderedContentControl
 {
     public static readonly DependencyProperty IsExpandedProperty =
-        DependencyProperty.Register(nameof(IsExpanded), typeof(bool), typeof(Expander), false);
+        DependencyProperty.Register("IsExpanded", typeof(bool), typeof(Expander), false);
 
     public bool IsExpanded
     {
