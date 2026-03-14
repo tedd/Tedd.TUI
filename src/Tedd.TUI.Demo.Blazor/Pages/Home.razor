@@ -63,6 +63,7 @@
                         <TuiTreeViewItem Header="Markdown" />
                         <TuiTreeViewItem Header="DataGrid" />
                         <TuiTreeViewItem Header="Editor" />
+                        <TuiTreeViewItem Header="Containers" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -78,8 +79,11 @@
                     <TuiTextBox Width="30" @bind-Text="formName" />
                     
                     <TuiLabel Text="Password:" />
-                    <TuiTextBox Width="30" IsPassword="true" @bind-Text="formPass" />
+                    <TuiPasswordBox Width="30" @bind-Password="formPass" />
                     
+                    <TuiLabel Text="Volume:" />
+                    <TuiSlider Width="20" Minimum="0" Maximum="100" @bind-Value="volumeValue" />
+
                     <TuiCheckBox Content="I agree to Terms & Conditions" @bind-IsChecked="isAgreed" />
                     
                     <TuiLabel Text="Gender:" />
@@ -214,6 +218,27 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 9: Containers -->
+            <TuiTabItem Header="Containers">
+                <TuiStackPanel Orientation="@(Orientation.Vertical)">
+                    <TuiGroupBox Header="Group Box" Width="40" Height="6" BorderColor="@(ConsoleColor.Cyan)">
+                        <TuiStackPanel Orientation="@(Orientation.Vertical)">
+                            <TuiLabel Text="This is inside a GroupBox." />
+                            <TuiButton Text="Group Button" />
+                        </TuiStackPanel>
+                    </TuiGroupBox>
+
+                    <TuiLabel Text=" " /> <!-- Spacer -->
+
+                    <TuiExpander Header="Expander Demo" IsExpanded="false" Width="40">
+                        <TuiStackPanel Orientation="@(Orientation.Vertical)">
+                            <TuiLabel Text="This is collapsible content." />
+                            <TuiCheckBox Content="Hidden Checkbox" />
+                        </TuiStackPanel>
+                    </TuiExpander>
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -241,6 +266,7 @@
                 case "Markdown": selectedTabIndex = 5; break;
                 case "DataGrid": selectedTabIndex = 6; break;
                 case "Editor": selectedTabIndex = 7; break;
+                case "Containers": selectedTabIndex = 8; break;
             }
             StateHasChanged();
         }
@@ -267,6 +293,7 @@
     // Form Data
     private string formName = "John Doe";
     private string formPass = "secret";
+    private int volumeValue = 50;
     private bool isAgreed = false;
     private bool isMale = true;
     private bool isFemale = false; 
@@ -405,6 +432,7 @@
         allTableItems.Add(new TableItem { Id = "1", Name = "Charlie", Age = "35", Action = "Edit" });
         allTableItems.Add(new TableItem { Id = "20", Name = "David", Age = "40", IsCheckable = true });
         allTableItems.Add(new TableItem { Id = "3", Name = "Eve", Age = "22", Action = "Edit" });
+        allTableItems.Add(new TableItem { Id = "4", Name = "Frank", Age = "28", Action = "Edit" });
         
         for (int i = 1; i <= 20; i++)
         {
@@ -472,6 +500,10 @@ public void Hello() {
             new Person { Id = 5, Name = "Eve", Age = 22, Role = "Intern" },
             new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
         };
+        for (int i = 1; i <= 20; i++)
+        {
+            people.Add(new Person { Id = 100 + i, Name = $"User {i}", Age = 20 + (i % 30), Role = i % 2 == 0 ? "QA" : "Dev" });
+        }
         dataGrid.ItemsSource = people;
     }
 

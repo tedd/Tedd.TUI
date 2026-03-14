@@ -10,7 +10,7 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty MinimumProperty =
-        DependencyProperty.Register("Minimum", typeof(int), typeof(Slider), 0);
+        DependencyProperty.Register(nameof(Minimum), typeof(int), typeof(Slider), 0);
 
     public int Minimum
     {
@@ -19,7 +19,7 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty MaximumProperty =
-        DependencyProperty.Register("Maximum", typeof(int), typeof(Slider), 10);
+        DependencyProperty.Register(nameof(Maximum), typeof(int), typeof(Slider), 10);
 
     public int Maximum
     {
@@ -28,7 +28,16 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty ValueProperty =
-        DependencyProperty.Register("Value", typeof(int), typeof(Slider), 0);
+        DependencyProperty.Register(nameof(Value), typeof(int), typeof(Slider), 0);
+
+    public static readonly RoutedEvent ValueChangedEvent =
+        RoutedEvent.Register("ValueChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Slider));
+
+    public event RoutedEventHandler ValueChanged
+    {
+        add => AddHandler(ValueChangedEvent, value);
+        remove => RemoveHandler(ValueChangedEvent, value);
+    }
 
     public int Value
     {
@@ -40,12 +49,25 @@ public class Slider : UIElement
             int max = Maximum;
             if (value < min) value = min;
             if (value > max) value = max;
-            SetValue(ValueProperty, value);
+
+            if (Value != value)
+            {
+                SetValue(ValueProperty, value);
+            }
         }
     }
 
+    protected override void OnPropertyChanged(DependencyProperty property, object oldValue, object newValue)
+    {
+        base.OnPropertyChanged(property, oldValue, newValue);
+
+        if (property == ValueProperty)
+        {
+            RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+        }
+    }
     public static readonly DependencyProperty OrientationProperty =
-        DependencyProperty.Register("Orientation", typeof(Orientation), typeof(Slider), Orientation.Horizontal);
+        DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(Slider), Orientation.Horizontal);
 
     public Orientation Orientation
     {
@@ -54,7 +76,7 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty SmallChangeProperty =
-        DependencyProperty.Register("SmallChange", typeof(int), typeof(Slider), 1);
+        DependencyProperty.Register(nameof(SmallChange), typeof(int), typeof(Slider), 1);
 
     public int SmallChange
     {
@@ -63,7 +85,7 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty LargeChangeProperty =
-        DependencyProperty.Register("LargeChange", typeof(int), typeof(Slider), 5);
+        DependencyProperty.Register(nameof(LargeChange), typeof(int), typeof(Slider), 5);
 
     public int LargeChange
     {
@@ -72,7 +94,7 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty TrackColorProperty =
-        DependencyProperty.Register("TrackColor", typeof(ConsoleColor), typeof(Slider), ConsoleColor.DarkGray);
+        DependencyProperty.Register(nameof(TrackColor), typeof(ConsoleColor), typeof(Slider), ConsoleColor.DarkGray);
 
     public ConsoleColor TrackColor
     {
@@ -81,7 +103,7 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty ThumbColorProperty =
-        DependencyProperty.Register("ThumbColor", typeof(ConsoleColor), typeof(Slider), ConsoleColor.White);
+        DependencyProperty.Register(nameof(ThumbColor), typeof(ConsoleColor), typeof(Slider), ConsoleColor.White);
 
     public ConsoleColor ThumbColor
     {
@@ -90,7 +112,7 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty FocusedThumbColorProperty =
-        DependencyProperty.Register("FocusedThumbColor", typeof(ConsoleColor), typeof(Slider), ConsoleColor.Yellow);
+        DependencyProperty.Register(nameof(FocusedThumbColor), typeof(ConsoleColor), typeof(Slider), ConsoleColor.Yellow);
 
     public ConsoleColor FocusedThumbColor
     {

@@ -10,7 +10,7 @@ public class CheckBox : ToggleButton
     }
 
     public static readonly DependencyProperty FocusedForegroundProperty =
-        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Yellow);
+        DependencyProperty.Register(nameof(FocusedForeground), typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Yellow);
 
     public ConsoleColor FocusedForeground
     {
@@ -19,7 +19,7 @@ public class CheckBox : ToggleButton
     }
 
     public static readonly DependencyProperty CheckColorProperty =
-        DependencyProperty.Register("CheckColor", typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Green);
+        DependencyProperty.Register(nameof(CheckColor), typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Green);
 
     public ConsoleColor CheckColor
     {
@@ -28,7 +28,7 @@ public class CheckBox : ToggleButton
     }
 
     public static readonly DependencyProperty BracketColorProperty =
-        DependencyProperty.Register("BracketColor", typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Gray);
+        DependencyProperty.Register(nameof(BracketColor), typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Gray);
 
     public ConsoleColor BracketColor
     {
@@ -37,7 +37,7 @@ public class CheckBox : ToggleButton
     }
 
     public static readonly DependencyProperty CheckedCharProperty =
-        DependencyProperty.Register("CheckedChar", typeof(char), typeof(CheckBox), '√');
+        DependencyProperty.Register(nameof(CheckedChar), typeof(char), typeof(CheckBox), '√');
 
     public char CheckedChar
     {
@@ -46,7 +46,7 @@ public class CheckBox : ToggleButton
     }
 
     public static readonly DependencyProperty UncheckedCharProperty =
-        DependencyProperty.Register("UncheckedChar", typeof(char), typeof(CheckBox), ' ');
+        DependencyProperty.Register(nameof(UncheckedChar), typeof(char), typeof(CheckBox), ' ');
 
     public char UncheckedChar
     {
@@ -55,7 +55,7 @@ public class CheckBox : ToggleButton
     }
 
     public static readonly DependencyProperty IndeterminateCharProperty =
-        DependencyProperty.Register("IndeterminateChar", typeof(char), typeof(CheckBox), '-');
+        DependencyProperty.Register(nameof(IndeterminateChar), typeof(char), typeof(CheckBox), '-');
 
     public char IndeterminateChar
     {

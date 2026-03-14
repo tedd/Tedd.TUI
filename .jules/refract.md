@@ -40,3 +40,7 @@
 ## 2026-03-06 - Property Modernization
 **Observation:** Identified legacy auto-implemented properties utilizing manual private backing fields (e.g., `_templateRoot` in `Control.cs`, `_parent` in `UIElement.cs`, `_theme` in `MarkdownView.cs`, `_content` in `TuiWindow.cs`).
 **Strategic Action:** Applied C# 14 field-backed properties to minimize lexical boilerplate and encapsulate validation logic directly within the accessor. Replaced manual backing fields with the `field` keyword or automatic properties where applicable, effectively reducing cognitive load without altering the functional semantics.
+
+## 2026-03-06 - Replace String Literals with `nameof` in DependencyProperty Registrations
+**Observation:** Numerous properties registered using `DependencyProperty.Register` and `DependencyProperty.RegisterAttached` utilized hardcoded string literals for property names (e.g., `"Left"`, `"Width"`). This pattern is fragile against refactoring and increases the likelihood of runtime errors due to string typos.
+**Strategic Action:** Replaced hardcoded string literals with `nameof(PropertyName)` expressions across the `Tedd.TUI` codebase in `DependencyProperty.Register` and `DependencyProperty.RegisterAttached` calls. Using `nameof(...)` ensures the compiler validates property names at compile time, eliminating string typo bugs and making refactoring safe.

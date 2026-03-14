@@ -98,3 +98,6 @@
 - Engineered the `Thumb` primitive inheriting from `Control`.
 - Implemented bubbling routed events for the dragging lifecycle: `DragStarted`, `DragDelta`, and `DragCompleted`.
 - Managed mouse capture via `TuiWindow` to calculate horizontal and vertical screen coordinate deltas and emit custom `RoutedEventArgs` mirroring the WPF `System.Windows.Controls.Primitives.Thumb` architectural specification.
+## 2026-03-09 - ListBox WPF Isomorphism Parity
+**Observation:** The TUI framework's `ListBox` component lacked architectural parity with standard WPF models. It directly implemented scrolling, item measurement, and rendering (`Render`, `MeasureOverride`, `ArrangeOverride`) instead of utilizing the `ItemsControl` templating paradigms (`ControlTemplate`, `ItemsPresenter`, `ScrollViewer`, and generated containers).
+**Strategic Action:** Refactored `ListBox` to use a `ControlTemplate` wrapping an `ItemsPresenter` within a `ScrollViewer`. Created the `ListBoxItem` component (inheriting from `ContentControl`) to act as the generated item container. Implemented `Selected`/`Unselected` bubbling routed events on `ListBoxItem` to decouple selection synchronization, allowing `ListBox` to map UI interactions directly to its `SelectedIndex` property, establishing strict XAML structural isomorphism.
