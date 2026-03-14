@@ -106,7 +106,9 @@
        <TabItem Header="Lists">
            <StackPanel Orientation="Vertical">
               <TextBlock Text="Progress:"/>
-              <ProgressBar Width="40" Value="35"/>
+              <ProgressBar Width="40" Value="35" LabelMode="Percent" LabelPercentDecimals="0"/>
+              <ProgressBar Width="40" Value="75" LabelMode="Percent" LabelPercentDecimals="1" ProgressColor="Blue"/>
+              <ProgressBar Width="40" Value="50" LabelMode="Text" LabelText="Loading..." ProgressColor="Red" LabelFilledColor="Yellow"/>
               <TextBlock Text="Items:"/>
               <ListBox Name="SimpleList" Width="40" Height="10"/>
            </StackPanel>
