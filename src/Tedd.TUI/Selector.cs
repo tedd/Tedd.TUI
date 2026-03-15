@@ -6,40 +6,48 @@ namespace Tedd.TUI;
 
 public abstract class Selector : ItemsControl
 {
-    private int _selectedIndex = -1;
+    private bool _isUpdatingSelection;
+
     public int SelectedIndex
     {
-        get => _selectedIndex;
+        get => field;
         set
         {
-            if (_selectedIndex != value)
+            if (field != value)
             {
                 if (value < -1 || value >= Items.Count) return;
-                _selectedIndex = value;
-                OnSelectionChanged();
+                field = value;
+                if (!_isUpdatingSelection) OnSelectionChanged();
             }
         }
-    }
+    } = -1;
 
-    private object? _selectedItem;
     public object? SelectedItem
     {
-        get => _selectedItem;
+        get => field;
         set
         {
-            if (_selectedItem != value)
+            if (field != value)
             {
-                _selectedItem = value;
+                field = value;
                 // Sync Index
-                int index = Items.IndexOf(value);
-                if (index >= 0)
+                _isUpdatingSelection = true;
+                try
                 {
-                    _selectedIndex = index;
+                    int index = Items.IndexOf(value);
+                    if (index >= 0)
+                    {
+                        SelectedIndex = index;
+                    }
+                    else
+                    {
+                        SelectedIndex = -1;
+                        field = null;
+                    }
                 }
-                else
+                finally
                 {
-                    _selectedIndex = -1;
-                    _selectedItem = null;
+                    _isUpdatingSelection = false;
                 }
                 OnSelectionChanged();
             }
@@ -50,14 +58,22 @@ public abstract class Selector : ItemsControl
 
     protected virtual void OnSelectionChanged()
     {
-        // Keep SelectedItem in sync if Index changed first
-        if (_selectedIndex >= 0 && _selectedIndex < Items.Count)
+        _isUpdatingSelection = true;
+        try
         {
-            _selectedItem = Items[_selectedIndex];
+            // Keep SelectedItem in sync if Index changed first
+            if (SelectedIndex >= 0 && SelectedIndex < Items.Count)
+            {
+                SelectedItem = Items[SelectedIndex];
+            }
+            else
+            {
+                SelectedItem = null;
+            }
         }
-        else
+        finally
         {
-            _selectedItem = null;
+            _isUpdatingSelection = false;
         }
 
         SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -69,34 +85,45 @@ public abstract class Selector : ItemsControl
         base.OnItemsCollectionChanged(sender, e);
 
         // Re-validate selection state
-        if (_selectedItem != null)
+        if (SelectedItem != null)
         {
-            int index = Items.IndexOf(_selectedItem);
+            int index = Items.IndexOf(SelectedItem);
             if (index >= 0)
             {
-                _selectedIndex = index;
+                _isUpdatingSelection = true;
+                try { SelectedIndex = index; }
+                finally { _isUpdatingSelection = false; }
             }
             else
             {
-                _selectedIndex = -1;
-                _selectedItem = null;
+                _isUpdatingSelection = true;
+                try
+                {
+                    SelectedIndex = -1;
+                    SelectedItem = null;
+                }
+                finally { _isUpdatingSelection = false; }
                 // Notify that selection is lost
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
         }
-        else if (_selectedIndex >= 0)
+        else if (SelectedIndex >= 0)
         {
             // Re-sync if SelectedIndex points to valid item
-            if (_selectedIndex < Items.Count)
+            if (SelectedIndex < Items.Count)
             {
-                _selectedItem = Items[_selectedIndex];
+                _isUpdatingSelection = true;
+                try { SelectedItem = Items[SelectedIndex]; }
+                finally { _isUpdatingSelection = false; }
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
             else
             {
-                _selectedIndex = -1;
+                _isUpdatingSelection = true;
+                try { SelectedIndex = -1; }
+                finally { _isUpdatingSelection = false; }
                 // No change event needed if both were effectively null/invalid
             }
         }

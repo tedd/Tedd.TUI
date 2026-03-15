@@ -77,7 +77,7 @@ public class Paragraph : UIElement
         // So we must buffer items in the current row, calculate max height, then arrange them?
         // Yes.
 
-        List<UIElement> currentRowChildren = new List<UIElement>();
+        List<UIElement> currentRowChildren = [];
         int currentRowWidth = 0;
 
         foreach (var child in _children)

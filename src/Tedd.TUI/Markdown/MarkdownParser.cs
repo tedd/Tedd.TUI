@@ -24,7 +24,7 @@ public class MarkdownParser
         if (string.IsNullOrEmpty(markdown)) return doc;
 
         // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
-        var lines = new List<string>();
+        List<string> lines = [];
         foreach (var line in markdown.AsSpan().EnumerateLines())
         {
             lines.Add(line.ToString());
@@ -248,14 +248,14 @@ public class MarkdownParser
     private abstract class Block { }
     private class HeaderBlock : Block { public int Level; public string Text; }
     private class ParagraphBlock : Block { public StringBuilder Text = new StringBuilder(); }
-    private class ListBlock : Block { public List<string> Items = new List<string>(); }
+    private class ListBlock : Block { public List<string> Items = []; }
     private class CodeBlock : Block { public string Code; public string Language; }
     private class QuoteBlock : Block { public StringBuilder Text = new StringBuilder(); }
     private class TableBlock : Block { public List<string> Headers; public List<List<string>> Rows = new List<List<string>>(); }
 
     private List<Block> ParseBlocks(List<string> lines)
     {
-        var blocks = new List<Block>();
+        List<Block> blocks = [];
         Block? currentBlock = null;
 
         for (int i = 0; i < lines.Count; i++)
@@ -279,7 +279,7 @@ public class MarkdownParser
                 if (currentBlock != null) { blocks.Add(currentBlock); currentBlock = null; }
 
                 var lang = trimmed.Trim('`', '~').Trim();
-                var codeLines = new List<string>();
+                List<string> codeLines = [];
                 i++; // Skip fence
                 while (i < lines.Count)
                 {
@@ -381,7 +381,7 @@ public class MarkdownParser
         // Split by | but ignore escaped? Simple split for now.
         // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
         ReadOnlySpan<char> span = line.AsSpan();
-        var result = new List<string>();
+        List<string> result = [];
         int start = 0;
         while (start < span.Length)
         {
@@ -408,7 +408,7 @@ public class MarkdownParser
 
     private List<Token> ParseInline(string text)
     {
-        var tokens = new List<Token>();
+        List<Token> tokens = [];
         if (string.IsNullOrEmpty(text)) return tokens;
 
         int i = 0;

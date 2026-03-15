@@ -68,7 +68,7 @@ public class ListBoxItem : ContentControl
         if (parentListBox == null)
         {
             var curr = Parent;
-            while(curr != null && !(curr is ListBox))
+            while (curr != null && !(curr is ListBox))
             {
                 curr = curr.Parent;
             }

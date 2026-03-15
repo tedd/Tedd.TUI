@@ -21,7 +21,7 @@ public class TableColumn
 
 public class TableRow : UIElement
 {
-    private List<UIElement> _cells = new List<UIElement>();
+    private List<UIElement> _cells = [];
     public IList<UIElement> Cells => _cells;
     public object? Tag { get; set; } // For data binding or identification
 

@@ -6,11 +6,10 @@ namespace Tedd.TUI.CodeColoring;
 
 public class CodeDocument : StackPanel
 {
-    private Theme? _theme;
     public Theme Theme
     {
-        get => _theme ?? Theme.Default;
-        set => _theme = value;
+        get => field ?? Theme.Default;
+        set => field = value;
     }
 
     private StackPanel? _currentLinePanel;

@@ -6,19 +6,17 @@ public class ScrollViewer : UIElement
 {
     protected readonly ScrollBar _verticalScrollBar;
     protected readonly ScrollBar _horizontalScrollBar;
-    private UIElement? _content;
-
     public UIElement? Content
     {
-        get => _content;
+        get => field;
         set
         {
-            if (_content != value)
+            if (field != value)
             {
-                _content = value;
-                if (_content != null)
+                field = value;
+                if (field != null)
                 {
-                    _content.Parent = this;
+                    field.Parent = this;
                 }
                 Invalidate();
             }
@@ -65,7 +63,7 @@ public class ScrollViewer : UIElement
         get
         {
             int count = 0;
-            if (_content != null) count++;
+            if (Content != null) count++;
             if (VerticalScrollBarVisibility) count++;
             if (HorizontalScrollBarVisibility) count++;
             return count;
@@ -75,9 +73,9 @@ public class ScrollViewer : UIElement
     public override UIElement GetVisualChild(int index)
     {
         // Simple mapping, order: Content, VScroll, HScroll
-        if (_content != null)
+        if (Content != null)
         {
-            if (index == 0) return _content;
+            if (index == 0) return Content;
             index--;
         }
 
@@ -116,10 +114,10 @@ public class ScrollViewer : UIElement
         contentAvailable.Height = Math.Max(0, contentAvailable.Height - hScrollHeight);
 
         Size contentSize = new Size(0, 0);
-        if (_content != null)
+        if (Content != null)
         {
-            _content.Measure(contentAvailable);
-            contentSize = _content.DesiredSize;
+            Content.Measure(contentAvailable);
+            contentSize = Content.DesiredSize;
         }
 
         // 2. Setup ScrollBars
@@ -164,7 +162,7 @@ public class ScrollViewer : UIElement
         // Typically Arrange sets the slot. 
         // If we want clipping, we Arrange it to its DesiredSize (larger than viewport).
         // Then in Render, we use clip and offset.
-        if (_content != null)
+        if (Content != null)
         {
             // Give it what it wants, so it renders fully (internally) or as much as it wants.
             // But we must place it.
@@ -174,7 +172,7 @@ public class ScrollViewer : UIElement
             // TUI Layout: Render uses x = RenderSize.X + offsetX.
             // If we Arrange at (0,0), RenderSize.X is 0.
             // In Render(), we will pass (x - ScrollValues, y - ScrollValues).
-            _content.Arrange(new Rect(0, 0, Math.Max(viewportW, _content.DesiredSize.Width), Math.Max(viewportH, _content.DesiredSize.Height)));
+            Content.Arrange(new Rect(0, 0, Math.Max(viewportW, Content.DesiredSize.Width), Math.Max(viewportH, Content.DesiredSize.Height)));
         }
 
         // Arrange ScrollBars
@@ -200,7 +198,7 @@ public class ScrollViewer : UIElement
         int viewportH = Math.Max(0, RenderSize.Height - hScrollHeight);
 
         // Render Content with Clip
-        if (_content != null)
+        if (Content != null)
         {
             // Push Clip
             buffer.PushClip(new Rect(x, y, viewportW, viewportH));
@@ -209,8 +207,8 @@ public class ScrollViewer : UIElement
             int contentY = y - _verticalScrollBar.Value;
 
             // We need to render the content at shifted position.
-            // But _content.Render uses its RenderSize.X/Y which we set to 0 in Arrange.
-            // So _content.Render(buffer, contentX, contentY) works if Arrange X,Y were 0.
+            // But Content.Render uses its RenderSize.X/Y which we set to 0 in Arrange.
+            // So Content.Render(buffer, contentX, contentY) works if Arrange X,Y were 0.
             // Note: Render(buffer, offX, offY) calculates pos = RenderSize.X + offX.
             // Since RenderSize.X is 0 (relative to ScrollViewer), pos becomes 0 + contentX.
             // Correct.
@@ -218,14 +216,14 @@ public class ScrollViewer : UIElement
             // We pass the global offset (x, y) adjusted by scroll.
             // Wait, Render(buffer, offsetX, offsetY).
             // Parent calls ScrollViewer.Render(buffer, parentX, parentY).
-            // ScrollViewer.Render calls _content.Render(..., x - scroll, y - scroll).
-            // _content.Render adds its RenderSize.X (0).
+            // ScrollViewer.Render calls Content.Render(..., x - scroll, y - scroll).
+            // Content.Render adds its RenderSize.X (0).
             // Result: parentX + (x - scroll) = wrong?
             // x IS (RenderSize.X + offsetX). i.e. Absolute X of ScrollViewer.
             // We want absolute X of content to be AbsoluteX_SV - Scroll.
             // Param of Render is "offsetX".
-            // _content.Render(buffer, currentOffsetX, currentOffsetY).
-            // absolute = _content.RenderSize.X + currentOffsetX.
+            // Content.Render(buffer, currentOffsetX, currentOffsetY).
+            // absolute = Content.RenderSize.X + currentOffsetX.
             // We want absolute = x - scroll.
             // 0 + currentOffsetX = x - scroll.
             // currentOffsetX = x - scroll.
@@ -254,11 +252,11 @@ public class ScrollViewer : UIElement
             // We want to verify this.
 
             // So for Child Content:
-            // We call _content.Render(buffer, absolute_SV_X - scrollX, absolute_SV_Y - scrollY).
+            // We call Content.Render(buffer, absolute_SV_X - scrollX, absolute_SV_Y - scrollY).
             // Then child calculates: child_abs_X = child.RentX (0) + (absolute_SV_X - scrollX).
             // = absolute_SV_X - scrollX. Correct.
 
-            _content.Render(buffer, x - _horizontalScrollBar.Value, y - _verticalScrollBar.Value);
+            Content.Render(buffer, x - _horizontalScrollBar.Value, y - _verticalScrollBar.Value);
 
             buffer.PopClip();
         }

@@ -110,7 +110,7 @@ public class DemoController
 
             for (int i = 1; i <= 20; i++)
             {
-                AddTableRow($"{100+i}", $"User {i}", $"{20 + (i%30)}");
+                AddTableRow($"{100 + i}", $"User {i}", $"{20 + (i % 30)}");
             }
         }
 

@@ -196,7 +196,7 @@ public abstract class ItemsControl : Control
                     int newIndex = e.NewStartingIndex;
                     if (oldIndex >= 0 && newIndex >= 0)
                     {
-                        var itemsToMove = new List<object>();
+                        List<object> itemsToMove = [];
                         foreach (var item in e.OldItems) itemsToMove.Add(item);
 
                         for (int i = 0; i < itemsToMove.Count; i++) _items.InternalRemoveAt(oldIndex);
