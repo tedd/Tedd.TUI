@@ -1,10 +1,10 @@
 using System;
 
-namespace Tedd.TUI;
+namespace Tedd.TUI.Archive;
 
-public class TextBox : UIElement
+public class TextBoxLegacy : UIElement
 {
-    public TextBox()
+    public TextBoxLegacy()
     {
         Focusable = true;
     }
@@ -12,7 +12,7 @@ public class TextBox : UIElement
     private bool _isUserInput = false;
 
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register(nameof(Text), typeof(string), typeof(TextBox), string.Empty);
+        DependencyProperty.Register(nameof(Text), typeof(string), typeof(TextBoxLegacy), string.Empty);
 
     public string Text
     {
@@ -21,7 +21,7 @@ public class TextBox : UIElement
     }
 
     public static readonly DependencyProperty IsPasswordProperty =
-        DependencyProperty.Register(nameof(IsPassword), typeof(bool), typeof(TextBox), false);
+        DependencyProperty.Register(nameof(IsPassword), typeof(bool), typeof(TextBoxLegacy), false);
 
     public bool IsPassword
     {
@@ -30,7 +30,7 @@ public class TextBox : UIElement
     }
 
     public static readonly DependencyProperty PasswordCharProperty =
-        DependencyProperty.Register(nameof(PasswordChar), typeof(char), typeof(TextBox), '*');
+        DependencyProperty.Register(nameof(PasswordChar), typeof(char), typeof(TextBoxLegacy), '*');
 
     public char PasswordChar
     {
@@ -44,7 +44,6 @@ public class TextBox : UIElement
 
         if (dp == TextProperty && !_isUserInput)
         {
-            // Move cursor to end when text is set programmatically
             var text = Text ?? "";
             _cursorPos = text.Length;
         }
@@ -52,7 +51,6 @@ public class TextBox : UIElement
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        // Default width
         return new Size(Width > 0 ? Width : 20, 1);
     }
 
@@ -63,40 +61,25 @@ public class TextBox : UIElement
         int w = RenderSize.Width;
 
         var fg = IsFocused ? ConsoleColor.Yellow : ConsoleColor.White;
-        // Default to provided Background, or transparent (existing buffer background) if null
-        // However, existing behavior was hardcoded Black when not focused.
-        // We want to support transparency if Background is null.
         var effectiveBg = IsFocused ? ConsoleColor.DarkBlue : (Background ?? buffer.GetPixel(x, y).Background);
         var bg = effectiveBg;
 
         string text = Text ?? "";
-        int textLength = text.Length;
+        string display = IsPassword ? new string(PasswordChar, text.Length) : text;
 
-        // Simple scrolling if text is longer than width
         int start = 0;
-        if (textLength > w)
+        if (display.Length > w)
         {
-            // if focused, ensure cursor is visible
-            // _cursorPos is absolute index in text
             if (_cursorPos >= w)
                 start = _cursorPos - w + 1;
         }
 
-        // Optimization: Removed new string() allocation for PasswordChar
-        bool isPassword = IsPassword;
-        char passwordChar = PasswordChar;
-
-        // Draw text area
         for (int i = 0; i < w; i++)
         {
             char c = ' ';
             int textIdx = start + i;
-            if (textIdx < textLength)
-            {
-                c = isPassword ? passwordChar : text[textIdx];
-            }
+            if (textIdx < display.Length) c = display[textIdx];
 
-            // Cursor
             var cellBg = bg;
             var cellFg = fg;
 
@@ -109,10 +92,9 @@ public class TextBox : UIElement
             buffer.SetPixel(x + i, y, c, cellFg, cellBg);
         }
 
-        // Draw cursor at end if needed
-        if (IsFocused && _cursorPos == textLength && textLength - start < w)
+        if (IsFocused && _cursorPos == display.Length && display.Length - start < w)
         {
-            buffer.SetPixel(x + (textLength - start), y, ' ', ConsoleColor.Black, ConsoleColor.Gray);
+            buffer.SetPixel(x + (display.Length - start), y, ' ', ConsoleColor.Black, ConsoleColor.Gray);
         }
     }
 
@@ -120,9 +102,6 @@ public class TextBox : UIElement
     {
         base.OnMouseDown(e);
         Focus();
-        // Move cursor to click position?
-        // int relativeX = e.X - RenderSize.X;
-        // _cursorPos = Math.Min(Text.Length, relativeX);
         e.Handled = true;
     }
 
