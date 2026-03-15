@@ -95,3 +95,9 @@
 ## 2026-03-09 - ListBox WPF Isomorphism Parity
 **Observation:** The TUI framework's `ListBox` component lacked architectural parity with standard WPF models. It directly implemented scrolling, item measurement, and rendering (`Render`, `MeasureOverride`, `ArrangeOverride`) instead of utilizing the `ItemsControl` templating paradigms (`ControlTemplate`, `ItemsPresenter`, `ScrollViewer`, and generated containers).
 **Strategic Action:** Refactored `ListBox` to use a `ControlTemplate` wrapping an `ItemsPresenter` within a `ScrollViewer`. Created the `ListBoxItem` component (inheriting from `ContentControl`) to act as the generated item container. Implemented `Selected`/`Unselected` bubbling routed events on `ListBoxItem` to decouple selection synchronization, allowing `ListBox` to map UI interactions directly to its `SelectedIndex` property, establishing strict XAML structural isomorphism.
+## 2026-03-15 - Thumb Control Parity Integration
+**Observation:** The TUI framework lacked a `Thumb` primitive control, which is the foundational building block for draggable components in WPF (like ScrollBar thumbs, window resizers, slider thumbs). Without it, drag interactions require ad-hoc mouse capture logic in each control.
+**Strategic Action:**
+- Implemented `Thumb` inheriting from `Control`.
+- Created `DragStarted`, `DragDelta`, and `DragCompleted` bubbling routed events with corresponding specific `EventArgs` and explicitly defined delegates.
+- Leveraged `TuiWindow.CaptureMouse` and `TuiWindow.ReleaseMouseCapture()` for global mouse capture on mouse events triggering the drag lifecycle.
