@@ -155,6 +155,13 @@
         var volumeSlider = new Slider { Width = 20, Minimum = 0, Maximum = 100, Value = 50 };
         formStack.AddChild(volumeSlider);
 
+        // ToggleButton
+        formStack.AddChild(new TextBlock { Text = "Toggle Buttons:" });
+        var toggleGroup = new StackPanel { Orientation = Orientation.Horizontal };
+        toggleGroup.AddChild(new ToggleButton { Content = "Standard Toggle" });
+        toggleGroup.AddChild(new ToggleButton { Content = "Three-State Toggle", IsThreeState = true, IsChecked = null });
+        formStack.AddChild(toggleGroup);
+
         // CheckBox
         var termsCheck = new CheckBox { Content = "I agree to Terms & Conditions" };
         formStack.AddChild(termsCheck);

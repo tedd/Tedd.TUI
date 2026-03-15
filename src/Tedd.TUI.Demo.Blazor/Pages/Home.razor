@@ -84,6 +84,12 @@
                     <TuiLabel Text="Volume:" />
                     <TuiSlider Width="20" Minimum="0" Maximum="100" @bind-Value="volumeValue" />
 
+                    <TuiLabel Text="Toggle Buttons:" />
+                    <TuiStackPanel Orientation="@(Orientation.Horizontal)">
+                        <TuiToggleButton Content="Standard Toggle" />
+                        <TuiToggleButton Content="Three-State Toggle" IsThreeState="true" IsChecked="@null" />
+                    </TuiStackPanel>
+
                     <TuiCheckBox Content="I agree to Terms & Conditions" @bind-IsChecked="isAgreed" />
                     
                     <TuiLabel Text="Gender:" />

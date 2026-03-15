@@ -83,6 +83,12 @@
              <TextBlock Text="Volume:"/>
              <Slider Name="VolumeSlider" Width="20" Minimum="0" Maximum="100" Value="50"/>
 
+             <TextBlock Text="Toggle Buttons:"/>
+             <StackPanel Orientation="Horizontal">
+                <ToggleButton Content="Standard Toggle"/>
+                <ToggleButton Content="Three-State Toggle" IsThreeState="True" IsChecked="{x:Null}"/>
+             </StackPanel>
+
              <CheckBox Name="TermsCheck" Content="I agree to Terms &amp; Conditions"/>
 
              <TextBlock Text="Gender:"/>
