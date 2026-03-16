@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class HeaderedContentControl : ContentControl
 {
     public static readonly DependencyProperty HeaderProperty =
-        DependencyProperty.Register(nameof(Header), typeof(object), typeof(HeaderedContentControl), null);
+        DependencyProperty.Register("Header", typeof(object), typeof(HeaderedContentControl), null);
 
     public object Header
     {
@@ -14,7 +14,7 @@ public class HeaderedContentControl : ContentControl
     }
 
     public static readonly DependencyProperty HeaderTemplateProperty =
-        DependencyProperty.Register(nameof(HeaderTemplate), typeof(DataTemplate), typeof(HeaderedContentControl), null);
+        DependencyProperty.Register("HeaderTemplate", typeof(DataTemplate), typeof(HeaderedContentControl), null);
 
     public DataTemplate HeaderTemplate
     {

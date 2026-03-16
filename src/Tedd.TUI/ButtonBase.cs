@@ -14,7 +14,7 @@ public abstract class ButtonBase : ContentControl
     }
 
     public static readonly DependencyProperty ClickModeProperty =
-        DependencyProperty.Register(nameof(ClickMode), typeof(ClickMode), typeof(ButtonBase), ClickMode.Release);
+        DependencyProperty.Register("ClickMode", typeof(ClickMode), typeof(ButtonBase), ClickMode.Release);
 
     public ClickMode ClickMode
     {
@@ -23,7 +23,7 @@ public abstract class ButtonBase : ContentControl
     }
 
     public static readonly DependencyProperty IsPressedProperty =
-        DependencyProperty.Register(nameof(IsPressed), typeof(bool), typeof(ButtonBase), false);
+        DependencyProperty.Register("IsPressed", typeof(bool), typeof(ButtonBase), false);
 
     public bool IsPressed
     {

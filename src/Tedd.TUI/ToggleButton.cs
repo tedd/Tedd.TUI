@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class ToggleButton : ButtonBase
 {
     public static readonly DependencyProperty IsCheckedProperty =
-        DependencyProperty.Register(nameof(IsChecked), typeof(bool?), typeof(ToggleButton), false);
+        DependencyProperty.Register("IsChecked", typeof(bool?), typeof(ToggleButton), false);
 
     public bool? IsChecked
     {
@@ -14,7 +14,7 @@ public class ToggleButton : ButtonBase
     }
 
     public static readonly DependencyProperty IsThreeStateProperty =
-        DependencyProperty.Register(nameof(IsThreeState), typeof(bool), typeof(ToggleButton), false);
+        DependencyProperty.Register("IsThreeState", typeof(bool), typeof(ToggleButton), false);
 
     public bool IsThreeState
     {

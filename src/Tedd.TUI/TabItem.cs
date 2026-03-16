@@ -10,7 +10,7 @@ public class TabItem : HeaderedContentControl
     }
 
     public static readonly DependencyProperty IsSelectedProperty =
-        DependencyProperty.Register(nameof(IsSelected), typeof(bool), typeof(TabItem), false);
+        DependencyProperty.Register("IsSelected", typeof(bool), typeof(TabItem), false);
 
     public bool IsSelected
     {

@@ -13,7 +13,7 @@ public class TabControl : Selector
     }
 
     public static readonly DependencyProperty BoxStyleProperty =
-        DependencyProperty.Register(nameof(BoxStyle), typeof(BoxStyle), typeof(TabControl), BoxStyle.Single);
+        DependencyProperty.Register("BoxStyle", typeof(BoxStyle), typeof(TabControl), BoxStyle.Single);
 
     public BoxStyle BoxStyle
     {

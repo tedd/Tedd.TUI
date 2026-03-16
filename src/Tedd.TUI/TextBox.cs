@@ -12,7 +12,7 @@ public class TextBox : UIElement
     private bool _isUserInput = false;
 
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register(nameof(Text), typeof(string), typeof(TextBox), string.Empty);
+        DependencyProperty.Register("Text", typeof(string), typeof(TextBox), string.Empty);
 
     public string Text
     {
@@ -21,7 +21,7 @@ public class TextBox : UIElement
     }
 
     public static readonly DependencyProperty IsPasswordProperty =
-        DependencyProperty.Register(nameof(IsPassword), typeof(bool), typeof(TextBox), false);
+        DependencyProperty.Register("IsPassword", typeof(bool), typeof(TextBox), false);
 
     public bool IsPassword
     {
@@ -30,7 +30,7 @@ public class TextBox : UIElement
     }
 
     public static readonly DependencyProperty PasswordCharProperty =
-        DependencyProperty.Register(nameof(PasswordChar), typeof(char), typeof(TextBox), '*');
+        DependencyProperty.Register("PasswordChar", typeof(char), typeof(TextBox), '*');
 
     public char PasswordChar
     {

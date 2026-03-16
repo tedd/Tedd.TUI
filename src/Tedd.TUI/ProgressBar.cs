@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class ProgressBar : UIElement
 {
     public static readonly DependencyProperty MinimumProperty =
-        DependencyProperty.Register(nameof(Minimum), typeof(int), typeof(ProgressBar), 0);
+        DependencyProperty.Register("Minimum", typeof(int), typeof(ProgressBar), 0);
 
     public int Minimum
     {
@@ -14,7 +14,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty MaximumProperty =
-        DependencyProperty.Register(nameof(Maximum), typeof(int), typeof(ProgressBar), 100);
+        DependencyProperty.Register("Maximum", typeof(int), typeof(ProgressBar), 100);
 
     public int Maximum
     {
@@ -23,7 +23,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty ValueProperty =
-        DependencyProperty.Register(nameof(Value), typeof(int), typeof(ProgressBar), 0);
+        DependencyProperty.Register("Value", typeof(int), typeof(ProgressBar), 0);
 
     public int Value
     {
@@ -32,7 +32,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty LabelModeProperty =
-        DependencyProperty.Register(nameof(LabelMode), typeof(ProgressBarLabelMode), typeof(ProgressBar), ProgressBarLabelMode.None);
+        DependencyProperty.Register("LabelMode", typeof(ProgressBarLabelMode), typeof(ProgressBar), ProgressBarLabelMode.None);
 
     public ProgressBarLabelMode LabelMode
     {
@@ -41,7 +41,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty LabelTextProperty =
-        DependencyProperty.Register(nameof(LabelText), typeof(string), typeof(ProgressBar), null);
+        DependencyProperty.Register("LabelText", typeof(string), typeof(ProgressBar), null);
 
     public string LabelText
     {
@@ -50,7 +50,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty LabelPercentDecimalsProperty =
-        DependencyProperty.Register(nameof(LabelPercentDecimals), typeof(int), typeof(ProgressBar), 0);
+        DependencyProperty.Register("LabelPercentDecimals", typeof(int), typeof(ProgressBar), 0);
 
     public int LabelPercentDecimals
     {
@@ -59,7 +59,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty ProgressColorProperty =
-        DependencyProperty.Register(nameof(ProgressColor), typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.Green);
+        DependencyProperty.Register("ProgressColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.Green);
 
     public ConsoleColor ProgressColor
     {
@@ -68,7 +68,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty EmptyColorProperty =
-        DependencyProperty.Register(nameof(EmptyColor), typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.DarkGray);
+        DependencyProperty.Register("EmptyColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.DarkGray);
 
     public ConsoleColor EmptyColor
     {
@@ -77,7 +77,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty LabelFilledColorProperty =
-        DependencyProperty.Register(nameof(LabelFilledColor), typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.Black);
+        DependencyProperty.Register("LabelFilledColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.Black);
 
     public ConsoleColor LabelFilledColor
     {
@@ -86,7 +86,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty LabelFilledBackgroundProperty =
-        DependencyProperty.Register(nameof(LabelFilledBackground), typeof(ConsoleColor?), typeof(ProgressBar), null);
+        DependencyProperty.Register("LabelFilledBackground", typeof(ConsoleColor?), typeof(ProgressBar), null);
 
     public ConsoleColor? LabelFilledBackground
     {
@@ -95,7 +95,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty LabelEmptyColorProperty =
-        DependencyProperty.Register(nameof(LabelEmptyColor), typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.White);
+        DependencyProperty.Register("LabelEmptyColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.White);
 
     public ConsoleColor LabelEmptyColor
     {
@@ -104,7 +104,7 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty LabelEmptyBackgroundProperty =
-        DependencyProperty.Register(nameof(LabelEmptyBackground), typeof(ConsoleColor?), typeof(ProgressBar), null);
+        DependencyProperty.Register("LabelEmptyBackground", typeof(ConsoleColor?), typeof(ProgressBar), null);
 
     public ConsoleColor? LabelEmptyBackground
     {

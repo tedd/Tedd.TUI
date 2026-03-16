@@ -34,7 +34,7 @@ public class PasswordBox : Control
     }
 
     public static readonly DependencyProperty PasswordProperty =
-        DependencyProperty.Register(nameof(Password), typeof(string), typeof(PasswordBox), string.Empty);
+        DependencyProperty.Register("Password", typeof(string), typeof(PasswordBox), string.Empty);
 
     public string Password
     {
@@ -43,7 +43,7 @@ public class PasswordBox : Control
     }
 
     public static readonly DependencyProperty PasswordCharProperty =
-        DependencyProperty.Register(nameof(PasswordChar), typeof(char), typeof(PasswordBox), '*');
+        DependencyProperty.Register("PasswordChar", typeof(char), typeof(PasswordBox), '*');
 
     public char PasswordChar
     {

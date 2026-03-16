@@ -10,7 +10,7 @@ public class RadioButton : ToggleButton
     }
 
     public static readonly DependencyProperty GroupNameProperty =
-        DependencyProperty.Register(nameof(GroupName), typeof(string), typeof(RadioButton), string.Empty);
+        DependencyProperty.Register("GroupName", typeof(string), typeof(RadioButton), string.Empty);
 
     public string GroupName
     {
@@ -19,7 +19,7 @@ public class RadioButton : ToggleButton
     }
 
     public static readonly DependencyProperty FocusedForegroundProperty =
-        DependencyProperty.Register(nameof(FocusedForeground), typeof(ConsoleColor), typeof(RadioButton), ConsoleColor.Yellow);
+        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(RadioButton), ConsoleColor.Yellow);
 
     public ConsoleColor FocusedForeground
     {
@@ -28,7 +28,7 @@ public class RadioButton : ToggleButton
     }
 
     public static readonly DependencyProperty CheckColorProperty =
-        DependencyProperty.Register(nameof(CheckColor), typeof(ConsoleColor), typeof(RadioButton), ConsoleColor.Green);
+        DependencyProperty.Register("CheckColor", typeof(ConsoleColor), typeof(RadioButton), ConsoleColor.Green);
 
     public ConsoleColor CheckColor
     {
@@ -37,7 +37,7 @@ public class RadioButton : ToggleButton
     }
 
     public static readonly DependencyProperty BracketColorProperty =
-        DependencyProperty.Register(nameof(BracketColor), typeof(ConsoleColor), typeof(RadioButton), ConsoleColor.Gray);
+        DependencyProperty.Register("BracketColor", typeof(ConsoleColor), typeof(RadioButton), ConsoleColor.Gray);
 
     public ConsoleColor BracketColor
     {
@@ -46,7 +46,7 @@ public class RadioButton : ToggleButton
     }
 
     public static readonly DependencyProperty CheckedCharProperty =
-        DependencyProperty.Register(nameof(CheckedChar), typeof(char), typeof(RadioButton), 'o');
+        DependencyProperty.Register("CheckedChar", typeof(char), typeof(RadioButton), 'o');
 
     public char CheckedChar
     {
@@ -55,7 +55,7 @@ public class RadioButton : ToggleButton
     }
 
     public static readonly DependencyProperty UncheckedCharProperty =
-        DependencyProperty.Register(nameof(UncheckedChar), typeof(char), typeof(RadioButton), ' ');
+        DependencyProperty.Register("UncheckedChar", typeof(char), typeof(RadioButton), ' ');
 
     public char UncheckedChar
     {

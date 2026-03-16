@@ -14,7 +14,6 @@ public class ListBoxMeasureTests
         listBox.Height = 10;
         listBox.Items.Add("Item 1");
 
-        listBox.ApplyTemplate();
         listBox.Measure(new Size(100, 100));
 
         Assert.Equal(10, listBox.DesiredSize.Height);
@@ -29,7 +28,6 @@ public class ListBoxMeasureTests
         listBox.Items.Add("Item 2");
         listBox.Items.Add("Item 3");
 
-        listBox.ApplyTemplate();
         // Available size is large enough
         listBox.Measure(new Size(100, 100));
 
@@ -47,7 +45,6 @@ public class ListBoxMeasureTests
             listBox.Items.Add($"Item {i}");
         }
 
-        listBox.ApplyTemplate();
         // Available size is smaller (5)
         listBox.Measure(new Size(100, 5));
 
@@ -62,7 +59,6 @@ public class ListBoxMeasureTests
         listBox.Width = 20;
         listBox.Items.Add("Long Item Name");
 
-        listBox.ApplyTemplate();
         listBox.Measure(new Size(100, 100));
 
         Assert.Equal(20, listBox.DesiredSize.Width);
@@ -76,14 +72,11 @@ public class ListBoxMeasureTests
         listBox.Items.Add("Short");
         listBox.Items.Add("Long Item Name"); // Length 14
 
-        listBox.ApplyTemplate();
         // Available size is large enough
         listBox.Measure(new Size(100, 100));
 
-        // ScrollViewer is set to VerticalScrollBarVisibility = true.
-        // This adds 1 to the width for the ScrollBar.
-        // Expect width to accommodate "Long Item Name" (14) + ScrollBar (1) = 15
-        Assert.Equal(15, listBox.DesiredSize.Width);
+        // Expect width to accommodate "Long Item Name" (14)
+        Assert.Equal(14, listBox.DesiredSize.Width);
     }
 
     [Fact]
@@ -97,14 +90,12 @@ public class ListBoxMeasureTests
             listBox.Items.Add("Item"); // Length 4
         }
 
-        listBox.ApplyTemplate();
         // Available height 5, so scrollbar needed.
         listBox.Measure(new Size(100, 5));
 
         // Height should be 5.
         Assert.Equal(5, listBox.DesiredSize.Height);
 
-        // ScrollViewer has VerticalScrollBarVisibility = true, so ScrollBar is always 1
         // Width should be 4 (Item) + 1 (ScrollBar) = 5.
         Assert.Equal(5, listBox.DesiredSize.Width);
     }
