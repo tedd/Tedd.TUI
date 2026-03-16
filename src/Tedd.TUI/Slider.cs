@@ -57,9 +57,9 @@ public class Slider : UIElement
         }
     }
 
-    protected override void OnPropertyChanged(DependencyProperty property, object oldValue, object newValue)
+    protected override void OnPropertyChanged(DependencyProperty property)
     {
-        base.OnPropertyChanged(property, oldValue, newValue);
+        base.OnPropertyChanged(property);
 
         if (property == ValueProperty)
         {
