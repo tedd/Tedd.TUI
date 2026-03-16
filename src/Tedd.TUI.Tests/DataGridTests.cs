@@ -57,7 +57,7 @@ public class DataGridTests
     [InlineData("My Header", "MyPath", 50)]
     [InlineData("EmptyHeader", "", 10)]
     [InlineData(null, null, 100)]
-    public void DataGridColumn_Properties(string header, string bindingPath, double widthPixels)
+    public void DataGridColumn_Properties(string? header, string? bindingPath, double widthPixels)
     {
         var col = new DataGridColumn();
         col.Header = header;
@@ -153,7 +153,7 @@ public class DataGridTests
     [InlineData("Invalid", "NonExistent")]
     [InlineData("EmptyPath", "")]
     [InlineData("NullPath", null)]
-    public void EnsureGetters_InvalidPropertyPath_ReturnsEmptyString(string header, string bindingPath)
+    public void EnsureGetters_InvalidPropertyPath_ReturnsEmptyString(string header, string? bindingPath)
     {
         var grid = new DataGrid { AutoGenerateColumns = false };
         grid.Columns.Add(new DataGridColumn { Header = header, BindingPath = bindingPath });
