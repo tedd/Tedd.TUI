@@ -1,0 +1,16 @@
+--- src/Tedd.TUI/Slider.cs
++++ src/Tedd.TUI/Slider.cs
+@@ -57,11 +57,11 @@
+         }
+     }
+
+-    protected override void OnPropertyChanged(DependencyProperty property, object oldValue, object newValue)
++    protected override void OnPropertyChanged(DependencyProperty property)
+     {
+-        base.OnPropertyChanged(property, oldValue, newValue);
++        base.OnPropertyChanged(property);
+
+         if (property == ValueProperty)
+         {
+             RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+         }

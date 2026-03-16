@@ -53,7 +53,6 @@ public class DemoController
                         case "Markdown": MainTabs.SelectedIndex = 5; break;
                         case "DataGrid": MainTabs.SelectedIndex = 6; break;
                         case "Editor": MainTabs.SelectedIndex = 7; break;
-                        case "Containers": MainTabs.SelectedIndex = 8; break;
                     }
                 }
             };
@@ -107,11 +106,11 @@ public class DemoController
             AddTableRow("20", "David", "40", true);
             AddTableRow("3", "Eve", "22");
             AddTableRow("4", "Frank", "28");
-
-            for (int i = 1; i <= 20; i++)
-            {
-                AddTableRow($"{100+i}", $"User {i}", $"{20 + (i%30)}");
-            }
+            AddTableRow("5", "Grace", "31");
+            AddTableRow("6", "Heidi", "24");
+            AddTableRow("7", "Ivan", "45");
+            AddTableRow("8", "Judy", "33");
+            AddTableRow("9", "Mallory", "29");
         }
 
         // Init ScrollViewer content
@@ -189,10 +188,6 @@ public void Hello() {
                 new Person { Id = 5, Name = "Eve", Age = 22, Role = "Intern" },
                 new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
             };
-            for (int i = 1; i <= 20; i++)
-            {
-                people.Add(new Person { Id = 100 + i, Name = $"User {i}", Age = 20 + (i % 30), Role = i % 2 == 0 ? "QA" : "Dev" });
-            }
             DemoDataGrid.ItemsSource = people;
         }
 

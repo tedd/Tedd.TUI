@@ -100,7 +100,6 @@
         var nodeMarkdown = new TreeViewItem { Header = "Markdown" };
         var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
         var nodeEditor = new TreeViewItem { Header = "Editor" };
-        var nodeContainers = new TreeViewItem { Header = "Containers" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -110,7 +109,6 @@
         rootNode.Items.Add(nodeMarkdown);
         rootNode.Items.Add(nodeDataGrid);
         rootNode.Items.Add(nodeEditor);
-        rootNode.Items.Add(nodeContainers);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -132,7 +130,6 @@
             else if (sel == nodeMarkdown) tabs.SelectedIndex = 5;
             else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
-            else if (sel == nodeContainers) tabs.SelectedIndex = 8;
             StateHasChanged();
         };
 
@@ -244,12 +241,8 @@
         var listStack = new StackPanel { Orientation = Orientation.Vertical };
 
         listStack.AddChild(new TextBlock { Text = "Progress:" });
-        var progressBar1 = new ProgressBar { Width = 40, Value = 35, LabelMode = ProgressBarLabelMode.Percent, LabelPercentDecimals = 0 };
-        var progressBar2 = new ProgressBar { Width = 40, Value = 75, LabelMode = ProgressBarLabelMode.Percent, LabelPercentDecimals = 1, ProgressColor = ConsoleColor.Blue };
-        var progressBar3 = new ProgressBar { Width = 40, Value = 50, LabelMode = ProgressBarLabelMode.Text, LabelText = "Loading...", ProgressColor = ConsoleColor.Red, LabelFilledColor = ConsoleColor.Yellow };
-        listStack.AddChild(progressBar1);
-        listStack.AddChild(progressBar2);
-        listStack.AddChild(progressBar3);
+        var progressBar = new ProgressBar { Width = 40, Value = 35 };
+        listStack.AddChild(progressBar);
 
         listStack.AddChild(new TextBlock { Text = "Items:" });
         var listBox = new ListBox { Width = 40, Height = 10 };
@@ -297,7 +290,6 @@
         allData.Add(new object[] { "1", "Charlie", "35", "Edit" });
         allData.Add(new object[] { "20", "David", "40", new CheckBox { Content = "Active", IsChecked = true } }); // UI Element in cell
         allData.Add(new object[] { "3", "Eve", "22", "Edit" });
-        allData.Add(new object[] { "4", "Frank", "28", "Edit" });
 
         // Add 20 more items as requested
         for (int i = 1; i <= 20; i++)
@@ -307,7 +299,7 @@
 
         // Configure Pagination
         table.PageSize = 5;
-        table.TotalRows = allData.Count; // Tell table we have 26 items
+        table.TotalRows = allData.Count; // Tell table we have 25 items
 
         // Handler to fetch data (Server-Side Paging Simulation)
         void LoadPage()
@@ -483,10 +475,6 @@ public void Hello() {
             new Person { Id = 5, Name = "Eve", Age = 22, Role = "Intern" },
             new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
         };
-        for (int i = 1; i <= 20; i++)
-        {
-            people.Add(new Person { Id = 100 + i, Name = $"User {i}", Age = 20 + (i % 30), Role = i % 2 == 0 ? "QA" : "Dev" });
-        }
         dataGrid.ItemsSource = people;
         dataGridStack.AddChild(dataGrid);
 
@@ -502,27 +490,6 @@ public void Hello() {
 
         editorStack.AddChild(editorBorder);
         tabs.Items.Add(new TabItem { Header = "Editor", Content = editorStack });
-
-        // --- Tab 9: Containers ---
-        var containerStack = new StackPanel { Orientation = Orientation.Vertical };
-
-        var groupBox = new GroupBox { Header = "Group Box", Width = 40, Height = 6, BorderColor = ConsoleColor.Cyan };
-        var groupContent = new StackPanel { Orientation = Orientation.Vertical };
-        groupContent.AddChild(new TextBlock { Text = "This is inside a GroupBox." });
-        groupContent.AddChild(new Button { Content = "Group Button" });
-        groupBox.Content = groupContent;
-        containerStack.AddChild(groupBox);
-
-        containerStack.AddChild(new TextBlock { Text = " " }); // Spacer
-
-        var expander = new Expander { Header = "Expander Demo", IsExpanded = false, Width = 40 };
-        var expanderContent = new StackPanel { Orientation = Orientation.Vertical };
-        expanderContent.AddChild(new TextBlock { Text = "This is collapsible content." });
-        expanderContent.AddChild(new CheckBox { Content = "Hidden Checkbox" });
-        expander.Content = expanderContent;
-        containerStack.AddChild(expander);
-
-        tabs.Items.Add(new TabItem { Header = "Containers", Content = containerStack });
     }
 
     public class Person
