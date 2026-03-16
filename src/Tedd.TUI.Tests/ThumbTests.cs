@@ -60,22 +60,24 @@ public class ThumbTests
         Assert.Equal(thumb, root.CapturedElement);
 
         // Simulate Drag Delta
-        var mouseMoveArgs = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = 15, GlobalY = 12, X = 5, Y = 2 };
+        // Use local coordinates (X, Y) that differ from global movement to ensure
+        // the Thumb uses the intended coordinate space (global) for drag deltas.
+        var mouseMoveArgs = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = 15, GlobalY = 12, X = 3, Y = 1 };
         thumb.RaiseEvent(mouseMoveArgs);
 
         Assert.True(dragDelta);
         Assert.Equal(5, deltaX);
         Assert.Equal(2, deltaY);
 
-        // Simulate another Delta
-        mouseMoveArgs = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = 17, GlobalY = 15, X = 7, Y = 5 };
+        // Simulate another Delta with different local coordinates again
+        mouseMoveArgs = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = 17, GlobalY = 15, X = 4, Y = 0 };
         thumb.RaiseEvent(mouseMoveArgs);
 
         Assert.Equal(7, deltaX); // 5 + 2
         Assert.Equal(5, deltaY); // 2 + 3
 
-        // Simulate Drag Complete
-        var mouseUpArgs = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = 17, GlobalY = 15, X = 7, Y = 5 };
+        // Simulate Drag Complete with local coordinates that don't match global
+        var mouseUpArgs = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = 17, GlobalY = 15, X = 4, Y = 0 };
         thumb.RaiseEvent(mouseUpArgs);
 
         Assert.True(dragCompleted);
