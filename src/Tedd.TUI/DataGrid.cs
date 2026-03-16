@@ -10,10 +10,10 @@ namespace Tedd.TUI;
 
 public class DataGridColumn : DependencyObject
 {
-    public string Header { get; set; }
+    public string? Header { get; set; }
     public GridLength Width { get; set; } = GridLength.Star;
-    public string BindingPath { get; set; }
-    public string Format { get; set; }
+    public string? BindingPath { get; set; }
+    public string? Format { get; set; }
 
     // Internal mapping to TableColumn
     internal TableColumn _tableColumn;
