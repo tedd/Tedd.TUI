@@ -104,7 +104,7 @@ public class TableRow : UIElement
 
 public class Table : UIElement
 {
-    public List<TableColumn> Columns { get; } = new List<TableColumn>();
+    public List<TableColumn> Columns { get; } = [];
 
     private ObservableCollection<TableRow> _rows;
     public IList<TableRow> Rows => _rows;

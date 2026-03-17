@@ -29,7 +29,7 @@ public class PythonLanguage : ILanguage
         grammar.Add("string", new Pattern(@"(?:[rub]|br|rb)?(""|')(?:\\.|(?!\1)[^\\\r\n])*\1", regexOptions: "i", greedy: true));
         grammar.Add("function", new Pattern(@"((?:^|\s)def[ \t]+)[a-zA-Z_]\w*(?=\s*\()", lookbehind: true));
         grammar.Add("class-name", new Pattern(@"(\bclass\s+)\w+", regexOptions: "i", lookbehind: true));
-        grammar.Add("decorator", new Pattern(@"(^[\t ]*)@\w+(?:\.\w+)*", regexOptions: "m", lookbehind: true, alias: "annotation punctuation", inside: new Grammar { { "punctuation", new List<Pattern> { new Pattern(@"\.") } } }));
+        grammar.Add("decorator", new Pattern(@"(^[\t ]*)@\w+(?:\.\w+)*", regexOptions: "m", lookbehind: true, alias: "annotation punctuation", inside: new Grammar { { "punctuation", [new Pattern(@"\.")] } }));
         grammar.Add("keyword", new Pattern(@"\b(?:_(?=\s*:)|and|as|assert|async|await|break|case|class|continue|def|del|elif|else|except|exec|finally|for|from|global|if|import|in|is|lambda|match|nonlocal|not|or|pass|print|raise|return|try|while|with|yield)\b"));
         grammar.Add("builtin", new Pattern(@"\b(?:__import__|abs|all|any|apply|ascii|basestring|bin|bool|buffer|bytearray|bytes|callable|chr|classmethod|cmp|coerce|compile|complex|delattr|dict|dir|divmod|enumerate|eval|execfile|file|filter|float|format|frozenset|getattr|globals|hasattr|hash|help|hex|id|input|int|intern|isinstance|issubclass|iter|len|list|locals|long|map|max|memoryview|min|next|object|oct|open|ord|pow|property|range|raw_input|reduce|reload|repr|reversed|round|set|setattr|slice|sorted|staticmethod|str|sum|super|tuple|type|unichr|unicode|vars|xrange|zip)\b"));
         grammar.Add("boolean", new Pattern(@"\b(?:False|None|True)\b"));

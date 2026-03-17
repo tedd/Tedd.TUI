@@ -40,3 +40,6 @@
 ## 2026-03-06 - Property Modernization
 **Observation:** Identified legacy auto-implemented properties utilizing manual private backing fields (e.g., `_templateRoot` in `Control.cs`, `_parent` in `UIElement.cs`, `_theme` in `MarkdownView.cs`, `_content` in `TuiWindow.cs`).
 **Strategic Action:** Applied C# 14 field-backed properties to minimize lexical boilerplate and encapsulate validation logic directly within the accessor. Replaced manual backing fields with the `field` keyword or automatic properties where applicable, effectively reducing cognitive load without altering the functional semantics.
+## 2024-05-24 - C# 12 Collection Expressions
+**Observation:** Discovered multiple instances of explicit, verbose generic list instantiations, such as `new List<Pattern> { ... }` in syntax highlighting code (Json5.cs, Python.cs, PowerShell.cs) and `new List<TableColumn>()` in Table.cs.
+**Strategic Action:** Replaced legacy generic collection instantiations with C# 12 collection expressions (`[...]` and `[]`) to optimize memory allocation and reduce lexical boilerplate.
