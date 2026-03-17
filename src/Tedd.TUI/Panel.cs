@@ -58,82 +58,23 @@ public abstract class Panel : UIElement
         _children.CopyTo(_zSortedChildren, 0);
 
         // We use GetZIndex(c) to sort.
-        // We need a stable sort. We implement an O(N log N) iterative merge sort to eliminate allocations while maintaining stability.
-        UIElement[] temp = System.Buffers.ArrayPool<UIElement>.Shared.Rent(count);
+        // We need a stable sort. We use MemoryExtensions.Sort with a composed key (ZIndex as high 32 bits, index as low 32 bits) to eliminate allocations.
+        // This takes O(N log N) time and O(N) space (from ArrayPool), avoiding complex merge-sort overhead and extra array rentals.
+        long[] keys = System.Buffers.ArrayPool<long>.Shared.Rent(count);
         try
         {
-            int[] zIndices = System.Buffers.ArrayPool<int>.Shared.Rent(count);
-            int[] tempZIndices = System.Buffers.ArrayPool<int>.Shared.Rent(count);
-            try
+            for (int i = 0; i < count; i++)
             {
-                for (int i = 0; i < count; i++)
-                {
-                    zIndices[i] = GetZIndex(_zSortedChildren[i]);
-                }
-
-                // Iterative Merge Sort
-                for (int width = 1; width < count; width = 2 * width)
-                {
-                    for (int i = 0; i < count; i += 2 * width)
-                    {
-                        int left = i;
-                        int mid = Math.Min(i + width, count);
-                        int right = Math.Min(i + 2 * width, count);
-
-                        int l = left;
-                        int r = mid;
-                        int k = left;
-
-                        while (l < mid && r < right)
-                        {
-                            if (zIndices[l] <= zIndices[r]) // <= ensures stability
-                            {
-                                tempZIndices[k] = zIndices[l];
-                                temp[k] = _zSortedChildren[l];
-                                l++;
-                            }
-                            else
-                            {
-                                tempZIndices[k] = zIndices[r];
-                                temp[k] = _zSortedChildren[r];
-                                r++;
-                            }
-                            k++;
-                        }
-
-                        while (l < mid)
-                        {
-                            tempZIndices[k] = zIndices[l];
-                            temp[k] = _zSortedChildren[l];
-                            l++;
-                            k++;
-                        }
-
-                        while (r < right)
-                        {
-                            tempZIndices[k] = zIndices[r];
-                            temp[k] = _zSortedChildren[r];
-                            r++;
-                            k++;
-                        }
-
-                        for (int j = left; j < right; j++)
-                        {
-                            _zSortedChildren[j] = temp[j];
-                            zIndices[j] = tempZIndices[j];
-                        }
-                    }
-                }
+                // Encode ZIndex into high 32 bits, and original index into low 32 bits for stable sorting.
+                // A long preserves the signed bit properly.
+                keys[i] = ((long)GetZIndex(_zSortedChildren[i]) << 32) | (uint)i;
             }
-            finally
-            {
-                System.Buffers.ArrayPool<int>.Shared.Return(zIndices);
-                System.Buffers.ArrayPool<int>.Shared.Return(tempZIndices);
-            }
+
+            MemoryExtensions.Sort(keys.AsSpan(0, count), _zSortedChildren.AsSpan(0, count));
         }
         finally
         {
-            System.Buffers.ArrayPool<UIElement>.Shared.Return(temp);
+            System.Buffers.ArrayPool<long>.Shared.Return(keys);
         }
     }
 
