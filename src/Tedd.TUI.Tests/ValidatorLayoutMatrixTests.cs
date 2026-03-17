@@ -121,4 +121,129 @@ public class ValidatorLayoutMatrixTests
         border.Render(buffer1, 0, 0);
         Assert.Equal(' ', buffer1.GetPixel(0, 0).Character); // Border requires >= 2x2
     }
+
+    [Fact]
+    public void CoordinatePreciseCharacterAssertion_TableBorders()
+    {
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = true,
+            ShowVerticalLines = true,
+            ShowHorizontalLines = true,
+            BorderStyle = BoxStyle.Heavy
+        };
+
+        var col1 = new TableColumn { Header = "A", Width = new GridLength(3, GridUnitType.Pixel) };
+        var col2 = new TableColumn { Header = "B", Width = new GridLength(3, GridUnitType.Pixel) };
+        table.Columns.Add(col1);
+        table.Columns.Add(col2);
+
+        table.AddRow("1", "2");
+
+        // Layout the table within a VirtualBuffer
+        // Width = 1(border) + 3(col1) + 1(vline) + 3(col2) + 1(border) = 9
+        // Height = 1(top border) + 1(header) + 1(header sep) + 1(row) + 1(bottom border) = 5
+        table.Measure(new Size(9, 5));
+        table.Arrange(new Rect(0, 0, 9, 5));
+
+        // For heavy style Table BoxChars are:
+        // TDown: '\u2533', TUp: '\u253B', TLeft: '\u2523', TRight: '\u252B', HeaderCross: '\u254B'
+        // TL: '\u250F', TR: '\u2513', BL: '\u2517', BR: '\u251B'
+
+        // Let's explicitly check TDown, TUp, TLeft, TRight, and HeaderCross characters as required by memory.
+
+        var buffer = new VirtualBuffer(9, 5);
+
+        // We need to apply template/ensure scrollbar is hidden if Table internally uses ScrollViewer.
+        // Actually Table dynamically creates ScrollViewer. Let's make sure it doesn't show scrollbars.
+        var sv = table.GetVisualChild(0) as ScrollViewer;
+        if (sv != null)
+        {
+            sv.VerticalScrollBarVisibility = false;
+            sv.HorizontalScrollBarVisibility = false;
+        }
+
+        // Re-measure and arrange to be safe
+        table.Measure(new Size(9, 5));
+        table.Arrange(new Rect(0, 0, 9, 5));
+        table.Render(buffer, 0, 0);
+
+        // Verify Outer Corners
+        Assert.Equal('\u250F', buffer.GetPixel(0, 0).Character); // TopLeft Heavy
+        Assert.Equal('\u2513', buffer.GetPixel(8, 0).Character); // TopRight Heavy
+        Assert.Equal('\u2517', buffer.GetPixel(0, 4).Character); // BottomLeft Heavy
+        Assert.Equal('\u251B', buffer.GetPixel(8, 4).Character); // BottomRight Heavy
+
+        // Verify TDown (Top Border Junction)
+        // Position: X=4 (1 border + 3 col1)
+        Assert.Equal('\u2533', buffer.GetPixel(4, 0).Character);
+
+        // Verify TUp (Bottom Border Junction)
+        Assert.Equal('\u253B', buffer.GetPixel(4, 4).Character);
+
+        // Verify TLeft (Left Border Junction at Header Separator)
+        // Header is at Y=1, Header Sep is at Y=2
+        Assert.Equal('\u2523', buffer.GetPixel(0, 2).Character);
+
+        // Verify TRight (Right Border Junction at Header Separator)
+        Assert.Equal('\u252B', buffer.GetPixel(8, 2).Character);
+
+        // Verify HeaderCross (Cross at Header Separator)
+        Assert.Equal('\u254B', buffer.GetPixel(4, 2).Character);
+    }
+
+    [Fact]
+    public void HierarchicalCompositionValidation_TableMatrix()
+    {
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10, GridUnitType.Pixel) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10, GridUnitType.Pixel) });
+
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = true,
+            ShowVerticalLines = true,
+            BorderStyle = BoxStyle.Double
+        };
+        table.Columns.Add(new TableColumn { Header = "X", Width = new GridLength(5, GridUnitType.Pixel) });
+        table.AddRow("Y");
+
+        grid.Children.Add(table);
+
+        grid.Measure(new Size(10, 10));
+        grid.Arrange(new Rect(0, 0, 10, 10));
+
+        var sv = table.GetVisualChild(0) as ScrollViewer;
+        if (sv != null)
+        {
+            sv.VerticalScrollBarVisibility = false;
+            sv.HorizontalScrollBarVisibility = false;
+        }
+
+        grid.Measure(new Size(10, 10));
+        grid.Arrange(new Rect(0, 0, 10, 10));
+
+        var buffer = new VirtualBuffer(10, 10);
+        grid.Render(buffer, 0, 0);
+
+        // For BoxStyle.Double: TL = \u2554, TR = \u2557
+        Assert.Equal('\u2554', buffer.GetPixel(0, 0).Character); // Table is at 0,0
+        // Width of table is 1 + 5 + 1 = 7.
+        // The table actual width inside Grid depends on measure. Table measure returns 7 desired width.
+        // Grid default HorizontalAlignment is Stretch? UIElement HorizontalAlignment default is Stretch.
+        // Table Arrange is called with finalSize (10, 10). So table width is 10.
+        // Let's assert at X=9
+        Assert.Equal('\u2557', buffer.GetPixel(9, 0).Character);
+
+        // Dynamic layout mutation: resize grid to 0x0
+        grid.Measure(new Size(0, 0));
+        grid.Arrange(new Rect(0, 0, 0, 0));
+
+        var zeroBuffer = new VirtualBuffer(10, 10);
+        grid.Render(zeroBuffer, 0, 0);
+
+        Assert.Equal(' ', zeroBuffer.GetPixel(0, 0).Character); // Should not render anything
+    }
 }

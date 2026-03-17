@@ -379,7 +379,7 @@ public class Table : UIElement
             {
                 case BoxStyle.Heavy:
                     c.TDown = '\u2533';
-                    c.TUp = '\u2537';   // ┷ (Heavy Horz, Light Up)
+                    c.TUp = '\u253B';
                     c.TLeft = '\u2523';
                     c.TRight = '\u252B';
                     c.HeaderCross = '\u254B';
@@ -387,13 +387,13 @@ public class Table : UIElement
                     c.BodySepTRight = '\u2528';
                     break;
                 case BoxStyle.Double:
-                    c.TDown = '\u2566';
-                    c.TUp = '\u2569';   // ╧ (Double Horz, Single Up)
+                    c.TDown = '\u2566'; //
+                    c.TUp = '\u2569';
                     c.TLeft = '\u2560';
                     c.TRight = '\u2563';
                     c.HeaderCross = '\u256C';
-                    c.BodySepTLeft = '\u255F'; // ╟ (Double Vert, Single Right)
-                    c.BodySepTRight = '\u2562'; // ╢ (Double Vert, Single Left)
+                    c.BodySepTLeft = '\u255F';
+                    c.BodySepTRight = '\u2562';
                     break;
                 default:
                     c.TDown = '\u252C';
@@ -411,10 +411,13 @@ public class Table : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-        int x = RenderSize.X + offsetX;
-        int y = RenderSize.Y + offsetY;
         int w = RenderSize.Width;
         int h = RenderSize.Height;
+
+        if (w <= 0 || h <= 0) return;
+
+        int x = RenderSize.X + offsetX;
+        int y = RenderSize.Y + offsetY;
 
         TableBoxChars chars = TableBoxChars.Get(BorderStyle);
 
