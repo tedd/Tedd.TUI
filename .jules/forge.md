@@ -98,3 +98,9 @@
 - Engineered the `Thumb` primitive inheriting from `Control`.
 - Implemented bubbling routed events for the dragging lifecycle: `DragStarted`, `DragDelta`, and `DragCompleted`.
 - Managed mouse capture via `TuiWindow` to calculate horizontal and vertical screen coordinate deltas and emit custom `RoutedEventArgs` mirroring the WPF `System.Windows.Controls.Primitives.Thumb` architectural specification.
+## 2026-03-09 - GridSplitter Integration
+**Observation:** The TUI framework lacked a native `GridSplitter` component, preventing dynamic runtime adjustment of Grid-based layouts which is a fundamental WPF capability.
+**Strategic Action:**
+- Engineered the `GridSplitter` component inheriting from `Thumb`.
+- Implemented `GridResizeDirection` to govern the axis of resizing (`Columns`, `Rows`, `Auto`).
+- Hooked into `DragDelta` to explicitly adjust adjacent `GridLength` components (`Star` and `Pixel`) while preserving the total allocated space ratio between `Star` columns, successfully establishing behavioral parity with WPF layout mutation paradigms without imposing GC allocations during continuous dragging.
