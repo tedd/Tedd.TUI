@@ -94,6 +94,28 @@ public class SliderCoverageTests
     }
 
     [Theory]
+    [InlineData(ConsoleKey.LeftArrow, 4)]
+    [InlineData(ConsoleKey.RightArrow, 6)]
+    public void OnKeyDown_Horizontal_AdjustsValue(ConsoleKey key, int expectedValue)
+    {
+        var slider = new Slider
+        {
+            Orientation = Orientation.Horizontal,
+            Minimum = 0,
+            Maximum = 10,
+            Value = 5,
+            SmallChange = 1
+        };
+
+        var args = new KeyEventArgs(UIElement.KeyDownEvent, slider) { Key = key };
+        // Use RaiseEvent to simulate properly
+        slider.RaiseEvent(args);
+
+        Assert.Equal(expectedValue, slider.Value);
+        Assert.True(args.Handled);
+    }
+
+    [Theory]
     [InlineData(0, 5, 5)]   // Click middle -> 5
     [InlineData(0, 0, 0)]   // Click top -> 0
     [InlineData(0, 10, 10)] // Click bottom -> 10
@@ -128,6 +150,34 @@ public class SliderCoverageTests
     }
 
     [Theory]
+    [InlineData(5, 0, 5)]   // Click middle -> 5
+    [InlineData(0, 0, 0)]   // Click left -> 0
+    [InlineData(10, 0, 10)] // Click right -> 10
+    public void OnMouseDown_Horizontal_SetsValue(int x, int y, int expectedValue)
+    {
+        var slider = new Slider
+        {
+            Orientation = Orientation.Horizontal,
+            Minimum = 0,
+            Maximum = 10,
+            Value = 0,
+            Width = 11,
+            Height = 1
+        };
+        slider.Measure(new Size(11, 1));
+        slider.Arrange(new Rect(0, 0, 11, 1));
+
+        var args = new MouseEventArgs(UIElement.MouseDownEvent, slider) { X = x, Y = y };
+        args.GlobalX = x;
+        args.GlobalY = y;
+
+        slider.RaiseEvent(args);
+
+        Assert.Equal(expectedValue, slider.Value);
+        Assert.True(args.Handled);
+    }
+
+    [Theory]
     [InlineData(5, 5)]
     [InlineData(-10, 0)] // Clamped min
     [InlineData(100, 10)] // Clamped max
@@ -136,5 +186,66 @@ public class SliderCoverageTests
         var slider = new Slider { Minimum = 0, Maximum = 10 };
         slider.Value = input;
         Assert.Equal(expected, slider.Value);
+    }
+
+    [Fact]
+    public void Properties_LargeChange_GetSet()
+    {
+        var slider = new Slider();
+        slider.LargeChange = 20;
+        Assert.Equal(20, slider.LargeChange);
+    }
+
+    [Fact]
+    public void Properties_FocusedThumbColor_GetSet()
+    {
+        var slider = new Slider();
+        slider.FocusedThumbColor = ConsoleColor.Magenta;
+        Assert.Equal(ConsoleColor.Magenta, slider.FocusedThumbColor);
+    }
+
+    [Fact]
+    public void Render_FocusedThumbColor_UsedWhenFocused()
+    {
+        var slider = new Slider
+        {
+            Orientation = Orientation.Horizontal,
+            Minimum = 0,
+            Maximum = 10,
+            Value = 5,
+            Width = 11,
+            Height = 1,
+            FocusedThumbColor = ConsoleColor.Magenta
+        };
+
+        var win = new TuiWindow();
+        win.Content = slider;
+        win.Measure(new Size(11, 1));
+        win.Arrange(new Rect(0, 0, 11, 1));
+
+        slider.Focus();
+
+        var buffer = new VirtualBuffer(11, 1);
+        slider.Render(buffer, 0, 0);
+
+        Assert.Equal('O', buffer.GetPixel(5, 0).Character);
+        Assert.Equal(ConsoleColor.Magenta, buffer.GetPixel(5, 0).Foreground);
+    }
+
+    [Fact]
+    public void ValueChangedEvent_AddRemoveHandler()
+    {
+        var slider = new Slider();
+        bool fired = false;
+        RoutedEventHandler handler = (s, e) => fired = true;
+
+        slider.ValueChanged += handler;
+        slider.Value = 5;
+        Assert.True(fired);
+
+        fired = false;
+        slider.ValueChanged -= handler;
+        slider.Value = 10;
+        Assert.False(fired);
     }
 }
