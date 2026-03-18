@@ -65,11 +65,46 @@ public class GridSplitter : Thumb
                 double change = e.HorizontalChange;
                 if (change == 0) return;
 
-                int newLeftWidth = Math.Max(0, leftCol.ActualWidth + (int)change);
-                int newRightWidth = Math.Max(0, rightCol.ActualWidth - (int)change);
+                // Clamp horizontal change so both columns stay within Min/Max and total width stays constant.
+                double leftActual = leftCol.ActualWidth;
+                double rightActual = rightCol.ActualWidth;
 
-                leftCol.Width = new GridLength(newLeftWidth, GridUnitType.Pixel);
-                rightCol.Width = new GridLength(newRightWidth, GridUnitType.Pixel);
+                double leftMin = leftCol.MinWidth;
+                double leftMax = leftCol.MaxWidth;
+                double rightMin = rightCol.MinWidth;
+                double rightMax = rightCol.MaxWidth;
+
+                // Normalize Max* if unbounded.
+                if (double.IsPositiveInfinity(leftMax)) leftMax = double.MaxValue;
+                if (double.IsPositiveInfinity(rightMax)) rightMax = double.MaxValue;
+
+                double maxPositiveChange = double.PositiveInfinity;
+                double maxNegativeChange = double.NegativeInfinity;
+
+                // How much we can move splitter to the right (positive change):
+                // - left column can grow up to leftMax
+                // - right column can shrink down to rightMin
+                double leftCanGrow = leftMax - leftActual;
+                double rightCanShrink = rightActual - rightMin;
+                maxPositiveChange = Math.Min(leftCanGrow, rightCanShrink);
+
+                // How much we can move splitter to the left (negative change):
+                // - left column can shrink down to leftMin
+                // - right column can grow up to rightMax
+                double leftCanShrink = leftActual - leftMin;
+                double rightCanGrow = rightMax - rightActual;
+                maxNegativeChange = -Math.Min(leftCanShrink, rightCanGrow);
+
+                // Clamp requested change into allowed range.
+                if (change > maxPositiveChange) change = maxPositiveChange;
+                if (change < maxNegativeChange) change = maxNegativeChange;
+                if (change == 0) return;
+
+                double newLeftWidth = leftActual + change;
+                double newRightWidth = rightActual - change;
+
+                leftCol.Width = new GridLength((int)newLeftWidth, GridUnitType.Pixel);
+                rightCol.Width = new GridLength((int)newRightWidth, GridUnitType.Pixel);
                 grid.Invalidate();
             }
         }
@@ -83,11 +118,46 @@ public class GridSplitter : Thumb
                 double change = e.VerticalChange;
                 if (change == 0) return;
 
-                int newTopHeight = Math.Max(0, topRow.ActualHeight + (int)change);
-                int newBottomHeight = Math.Max(0, bottomRow.ActualHeight - (int)change);
+                // Clamp vertical change so both rows stay within Min/Max and total height stays constant.
+                double topActual = topRow.ActualHeight;
+                double bottomActual = bottomRow.ActualHeight;
 
-                topRow.Height = new GridLength(newTopHeight, GridUnitType.Pixel);
-                bottomRow.Height = new GridLength(newBottomHeight, GridUnitType.Pixel);
+                double topMin = topRow.MinHeight;
+                double topMax = topRow.MaxHeight;
+                double bottomMin = bottomRow.MinHeight;
+                double bottomMax = bottomRow.MaxHeight;
+
+                // Normalize Max* if unbounded.
+                if (double.IsPositiveInfinity(topMax)) topMax = double.MaxValue;
+                if (double.IsPositiveInfinity(bottomMax)) bottomMax = double.MaxValue;
+
+                double maxPositiveChange = double.PositiveInfinity;
+                double maxNegativeChange = double.NegativeInfinity;
+
+                // How much we can move splitter down (positive change):
+                // - top row can grow up to topMax
+                // - bottom row can shrink down to bottomMin
+                double topCanGrow = topMax - topActual;
+                double bottomCanShrink = bottomActual - bottomMin;
+                maxPositiveChange = Math.Min(topCanGrow, bottomCanShrink);
+
+                // How much we can move splitter up (negative change):
+                // - top row can shrink down to topMin
+                // - bottom row can grow up to bottomMax
+                double topCanShrink = topActual - topMin;
+                double bottomCanGrow = bottomMax - bottomActual;
+                maxNegativeChange = -Math.Min(topCanShrink, bottomCanGrow);
+
+                // Clamp requested change into allowed range.
+                if (change > maxPositiveChange) change = maxPositiveChange;
+                if (change < maxNegativeChange) change = maxNegativeChange;
+                if (change == 0) return;
+
+                double newTopHeight = topActual + change;
+                double newBottomHeight = bottomActual - change;
+
+                topRow.Height = new GridLength((int)newTopHeight, GridUnitType.Pixel);
+                bottomRow.Height = new GridLength((int)newBottomHeight, GridUnitType.Pixel);
                 grid.Invalidate();
             }
         }
