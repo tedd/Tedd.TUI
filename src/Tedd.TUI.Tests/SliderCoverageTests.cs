@@ -167,9 +167,11 @@ public class SliderCoverageTests
         slider.Measure(new Size(11, 1));
         slider.Arrange(new Rect(0, 0, 11, 1));
 
-        var args = new MouseEventArgs(UIElement.MouseDownEvent, slider) { X = x, Y = y };
-        args.GlobalX = x;
-        args.GlobalY = y;
+        var args = new MouseEventArgs(UIElement.MouseDownEvent, slider)
+        {
+            GlobalX = x,
+            GlobalY = y
+        };
 
         slider.RaiseEvent(args);
 
