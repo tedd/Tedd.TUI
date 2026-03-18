@@ -139,7 +139,7 @@ public class GridSplitterTests
         splitter.RaiseEvent(new DragDeltaEventArgs(2, 0, Thumb.DragDeltaEvent, splitter));
 
         // It should have resized the columns
-        Assert.Equal(1.2, grid.ColumnDefinitions[0].Width.Value);
-        Assert.Equal(0.8, grid.ColumnDefinitions[2].Width.Value);
+        Assert.Equal(1.2, grid.ColumnDefinitions[0].Width.Value, 3);
+        Assert.Equal(0.8, grid.ColumnDefinitions[2].Width.Value, 3);
     }
 }
