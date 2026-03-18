@@ -95,14 +95,38 @@ public class GridSplitter : Thumb
                 var next = grid.RowDefinitions[row + 1];
 
                 double dy = e.VerticalChange;
-                int h1 = prev.ActualHeight;
-                int h2 = next.ActualHeight;
+                double h1 = prev.ActualHeight;
+                double h2 = next.ActualHeight;
+
+                // Clamp dy so that both rows respect MinHeight/MaxHeight and keep a consistent total height.
+                double min1 = Math.Max(prev.MinHeight, 0);
+                double max1 = double.IsNaN(prev.MaxHeight) || double.IsInfinity(prev.MaxHeight) ? double.PositiveInfinity : prev.MaxHeight;
+                double min2 = Math.Max(next.MinHeight, 0);
+                double max2 = double.IsNaN(next.MaxHeight) || double.IsInfinity(next.MaxHeight) ? double.PositiveInfinity : next.MaxHeight;
+
+                double dyLower = Math.Max(min1 - h1, h2 - max2);
+                double dyUpper = Math.Min(max1 - h1, h2 - min2);
+
+                double clampedDy;
+                if (dyLower <= dyUpper)
+                {
+                    if (dy < dyLower)
+                        clampedDy = dyLower;
+                    else if (dy > dyUpper)
+                        clampedDy = dyUpper;
+                    else
+                        clampedDy = dy;
+                }
+                else
+                {
+                    clampedDy = 0;
+                }
 
                 if (prev.Height.GridUnitType == GridUnitType.Star && next.Height.GridUnitType == GridUnitType.Star)
                 {
                     double totalStars = prev.Height.Value + next.Height.Value;
-                    double newH1 = Math.Max(0, h1 + dy);
-                    double newH2 = Math.Max(0, h2 - dy);
+                    double newH1 = h1 + clampedDy;
+                    double newH2 = h2 - clampedDy;
                     if (newH1 + newH2 > 0)
                     {
                         double ratio = newH1 / (newH1 + newH2);
@@ -112,16 +136,16 @@ public class GridSplitter : Thumb
                 }
                 else if (prev.Height.GridUnitType == GridUnitType.Pixel && next.Height.GridUnitType == GridUnitType.Star)
                 {
-                    prev.Height = new GridLength(Math.Max(0, h1 + dy), GridUnitType.Pixel);
+                    prev.Height = new GridLength(h1 + clampedDy, GridUnitType.Pixel);
                 }
                 else if (prev.Height.GridUnitType == GridUnitType.Star && next.Height.GridUnitType == GridUnitType.Pixel)
                 {
-                    next.Height = new GridLength(Math.Max(0, h2 - dy), GridUnitType.Pixel);
+                    next.Height = new GridLength(h2 - clampedDy, GridUnitType.Pixel);
                 }
                 else
                 {
-                    prev.Height = new GridLength(Math.Max(0, h1 + dy), GridUnitType.Pixel);
-                    next.Height = new GridLength(Math.Max(0, h2 - dy), GridUnitType.Pixel);
+                    prev.Height = new GridLength(h1 + clampedDy, GridUnitType.Pixel);
+                    next.Height = new GridLength(h2 - clampedDy, GridUnitType.Pixel);
                 }
 
                 grid.Invalidate();
