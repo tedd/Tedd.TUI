@@ -225,7 +225,7 @@ public class SliderCoverageTests
         win.Measure(new Size(11, 1));
         win.Arrange(new Rect(0, 0, 11, 1));
 
-        slider.Focus();
+        Assert.True(slider.Focus());
 
         var buffer = new VirtualBuffer(11, 1);
         slider.Render(buffer, 0, 0);
