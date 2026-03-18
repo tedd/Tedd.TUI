@@ -62,16 +62,25 @@ public class GridSplitter : Thumb
                 }
                 else if (prev.Width.GridUnitType == GridUnitType.Pixel && next.Width.GridUnitType == GridUnitType.Star)
                 {
-                    prev.Width = new GridLength(Math.Max(0, w1 + dx), GridUnitType.Pixel);
+                    var newPrevWidth = Math.Max(0, w1 + dx);
+                    newPrevWidth = Math.Max(prev.MinWidth, Math.Min(prev.MaxWidth, newPrevWidth));
+                    prev.Width = new GridLength(newPrevWidth, GridUnitType.Pixel);
                 }
                 else if (prev.Width.GridUnitType == GridUnitType.Star && next.Width.GridUnitType == GridUnitType.Pixel)
                 {
-                    next.Width = new GridLength(Math.Max(0, w2 - dx), GridUnitType.Pixel);
+                    var newNextWidth = Math.Max(0, w2 - dx);
+                    newNextWidth = Math.Max(next.MinWidth, Math.Min(next.MaxWidth, newNextWidth));
+                    next.Width = new GridLength(newNextWidth, GridUnitType.Pixel);
                 }
                 else // Pixel and Pixel, or Auto
                 {
-                    prev.Width = new GridLength(Math.Max(0, w1 + dx), GridUnitType.Pixel);
-                    next.Width = new GridLength(Math.Max(0, w2 - dx), GridUnitType.Pixel);
+                    var newPrevWidth = Math.Max(0, w1 + dx);
+                    newPrevWidth = Math.Max(prev.MinWidth, Math.Min(prev.MaxWidth, newPrevWidth));
+                    prev.Width = new GridLength(newPrevWidth, GridUnitType.Pixel);
+
+                    var newNextWidth = Math.Max(0, w2 - dx);
+                    newNextWidth = Math.Max(next.MinWidth, Math.Min(next.MaxWidth, newNextWidth));
+                    next.Width = new GridLength(newNextWidth, GridUnitType.Pixel);
                 }
 
                 grid.Invalidate();
