@@ -65,10 +65,7 @@ public class ValidatorTableTests
         // Heavy Top T-Junction (TDown) at X=4, Y=0
         Assert.Equal('\u2533', buffer.GetPixel(4, 0).Character);
 
-        // Heavy Bottom T-Junction (TUp) at X=4, Y=7
-        // Wait, the Table implementation uses \u2537 for BoxStyle.Heavy TUp
-        // Let's assert what the actual BoxStyle definition for Table currently uses,
-        // which from code is '\u2537' for TUp in BoxStyle.Heavy.
+        // Heavy Bottom T-Junction (TUp) at X=4, Y=7; BoxStyle.Heavy uses U+2537 for TUp junctions
         Assert.Equal('\u2537', buffer.GetPixel(4, 7).Character);
 
         // Header Separator Horizontal Line (Heavy) at X=1..3, Y=2
