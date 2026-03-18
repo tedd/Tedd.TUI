@@ -20,6 +20,73 @@ public class GridSplitter : Thumb
         set => SetValue(ResizeDirectionProperty, value);
     }
 
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        // Let the base class/template decide first.
+        var baseSize = base.MeasureOverride(availableSize);
+
+        // If a template is present, respect its desired size.
+        if (TemplateRoot != null)
+        {
+            return baseSize;
+        }
+
+        // Ensure a non-zero thickness so the splitter is visible and hit-testable.
+        var direction = GetEffectiveResizeDirectionForMeasure();
+
+        int width = baseSize.Width;
+        int height = baseSize.Height;
+
+        const int splitterThickness = 1;
+
+        if (direction == GridResizeDirection.Columns)
+        {
+            // Vertical splitter: fixed width, spans available height.
+            width = splitterThickness;
+            if (height <= 0)
+            {
+                height = availableSize.Height > 0 ? availableSize.Height : 1;
+            }
+        }
+        else
+        {
+            // Horizontal splitter (Rows): fixed height, spans available width.
+            height = splitterThickness;
+            if (width <= 0)
+            {
+                width = availableSize.Width > 0 ? availableSize.Width : 1;
+            }
+        }
+
+        return new Size(width, height);
+    }
+
+    private GridResizeDirection GetEffectiveResizeDirectionForMeasure()
+    {
+        var direction = ResizeDirection;
+
+        if (direction != GridResizeDirection.Auto)
+        {
+            return direction;
+        }
+
+        // Heuristic similar to WPF's GridSplitter when Auto:
+        if (HorizontalAlignment == HorizontalAlignment.Stretch &&
+            VerticalAlignment != VerticalAlignment.Stretch)
+        {
+            return GridResizeDirection.Rows;
+        }
+
+        if (VerticalAlignment == VerticalAlignment.Stretch &&
+            HorizontalAlignment != HorizontalAlignment.Stretch)
+        {
+            return GridResizeDirection.Columns;
+        }
+
+        // Fallback: prefer column-resizing (vertical splitter).
+        return GridResizeDirection.Columns;
+    }
+
     public GridSplitter()
     {
         Background = ConsoleColor.DarkGray;
