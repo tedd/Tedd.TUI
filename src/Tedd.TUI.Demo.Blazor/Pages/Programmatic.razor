@@ -493,7 +493,7 @@ public void Hello() {
 
         // Percent Mode
         var percentStack = new StackPanel { Orientation = Orientation.Vertical };
-        percentStack.AddChild(new TextBlock { Text = "Percent Mode (Default)" });
+        percentStack.AddChild(new TextBlock { Text = "Percent Mode" });
         percentStack.AddChild(new ProgressBar { Width = 40, Value = 35, LabelMode = ProgressBarLabelMode.Percent, LabelPercentDecimals = 0 });
         percentStack.AddChild(new ProgressBar { Width = 40, Value = 75, LabelMode = ProgressBarLabelMode.Percent, LabelPercentDecimals = 1, ProgressColor = ConsoleColor.Blue });
         progressBarTabs.Items.Add(new TabItem { Header = "Percent", Content = percentStack });
