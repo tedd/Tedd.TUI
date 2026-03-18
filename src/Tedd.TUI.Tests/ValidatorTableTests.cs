@@ -182,7 +182,16 @@ public class ValidatorTableTests
         // For a size of 1x1, it might just draw the border character or the first character of the header "C" at 0,0.
         // What we care about in extreme constraint testing is that it does NOT throw exceptions and gracefully clips.
         // We will assert nothing is outside the 1x1 render area.
-        Assert.Equal(' ', buffer1.GetPixel(1, 0).Character);
-        Assert.Equal(' ', buffer1.GetPixel(0, 1).Character);
+        for (var y = 0; y < 10; y++)
+        {
+            for (var x = 0; x < 10; x++)
+            {
+                // (0,0) is the only cell inside the 1x1 render area when rendering at (0,0).
+                if (x == 0 && y == 0)
+                    continue;
+
+                Assert.Equal(' ', buffer1.GetPixel(x, y).Character);
+            }
+        }
     }
 }
