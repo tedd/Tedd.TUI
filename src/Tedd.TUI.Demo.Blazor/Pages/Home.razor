@@ -63,6 +63,7 @@
                         <TuiTreeViewItem Header="Markdown" />
                         <TuiTreeViewItem Header="DataGrid" />
                         <TuiTreeViewItem Header="Editor" />
+                        <TuiTreeViewItem Header="ProgressBar" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -107,12 +108,6 @@
             <!-- Tab 2: Lists -->
             <TuiTabItem Header="Lists">
                 <TuiStackPanel Orientation="Orientation.Vertical">
-                    <TuiLabel Text="Progress:" />
-                    <TuiLabel Text="Progress:" />
-                    <TuiProgressBar Width="40" Value="35" LabelMode="ProgressBarLabelMode.Percent" LabelPercentDecimals="0" />
-                    <TuiProgressBar Width="40" Value="75" LabelMode="ProgressBarLabelMode.Percent" LabelPercentDecimals="1" ProgressColor="ConsoleColor.Blue" />
-                    <TuiProgressBar Width="40" Value="50" LabelMode="ProgressBarLabelMode.Text" LabelText="Loading..." ProgressColor="ConsoleColor.Red" LabelFilledColor="ConsoleColor.Yellow" />
-                    
                     <TuiLabel Text="Items:" />
                     <!-- Generating static items for demo -->
                     <TuiListBox Width="40" Height="10" Items="@listItems" />
@@ -214,6 +209,34 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 9: ProgressBar -->
+            <TuiTabItem Header="ProgressBar">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="ProgressBar Permutations:" />
+                    <TuiTabControl Width="70" Height="15">
+                        <TuiTabItem Header="Percent">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="Percent Mode (Default)" />
+                                <TuiProgressBar Width="40" Value="35" LabelMode="ProgressBarLabelMode.Percent" LabelPercentDecimals="0" />
+                                <TuiProgressBar Width="40" Value="75" LabelMode="ProgressBarLabelMode.Percent" LabelPercentDecimals="1" ProgressColor="ConsoleColor.Blue" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="Text">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="Text Mode" />
+                                <TuiProgressBar Width="40" Value="50" LabelMode="ProgressBarLabelMode.Text" LabelText="Loading..." ProgressColor="ConsoleColor.Red" LabelFilledColor="ConsoleColor.Yellow" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="None">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="None Mode" />
+                                <TuiProgressBar Width="40" Value="60" LabelMode="ProgressBarLabelMode.None" ProgressColor="ConsoleColor.Green" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                    </TuiTabControl>
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -241,6 +264,7 @@
                 case "Markdown": selectedTabIndex = 5; break;
                 case "DataGrid": selectedTabIndex = 6; break;
                 case "Editor": selectedTabIndex = 7; break;
+                case "ProgressBar": selectedTabIndex = 8; break;
             }
             StateHasChanged();
         }

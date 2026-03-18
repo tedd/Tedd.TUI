@@ -52,6 +52,7 @@ public class DemoController
                         case "Markdown": MainTabs.SelectedIndex = 5; break;
                         case "DataGrid": MainTabs.SelectedIndex = 6; break;
                         case "Editor": MainTabs.SelectedIndex = 7; break;
+                        case "ProgressBar": MainTabs.SelectedIndex = 8; break;
                     }
                 }
             };
