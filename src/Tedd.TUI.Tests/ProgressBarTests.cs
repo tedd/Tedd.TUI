@@ -91,4 +91,76 @@ public class ProgressBarTests
         Assert.Equal('0', buffer.GetPixel(4, 0).Character);
         Assert.Equal('%', buffer.GetPixel(5, 0).Character);
     }
+
+    [Fact]
+    public void Properties_LabelText_GetSet()
+    {
+        var pb = new ProgressBar();
+        pb.LabelText = "Processing";
+        Assert.Equal("Processing", pb.LabelText);
+    }
+
+    [Fact]
+    public void Properties_Colors_GetSet()
+    {
+        var pb = new ProgressBar();
+        pb.ProgressColor = ConsoleColor.Red;
+        pb.EmptyColor = ConsoleColor.Blue;
+        pb.LabelFilledColor = ConsoleColor.White;
+        pb.LabelFilledBackground = ConsoleColor.DarkRed;
+        pb.LabelEmptyColor = ConsoleColor.Black;
+        pb.LabelEmptyBackground = ConsoleColor.DarkBlue;
+
+        Assert.Equal(ConsoleColor.Red, pb.ProgressColor);
+        Assert.Equal(ConsoleColor.Blue, pb.EmptyColor);
+        Assert.Equal(ConsoleColor.White, pb.LabelFilledColor);
+        Assert.Equal(ConsoleColor.DarkRed, pb.LabelFilledBackground);
+        Assert.Equal(ConsoleColor.Black, pb.LabelEmptyColor);
+        Assert.Equal(ConsoleColor.DarkBlue, pb.LabelEmptyBackground);
+    }
+
+    [Fact]
+    public void Render_WithTextLabel()
+    {
+        var pb = new ProgressBar
+        {
+            Minimum = 0,
+            Maximum = 100,
+            Value = 50,
+            Width = 10,
+            LabelMode = ProgressBarLabelMode.Text,
+            LabelText = "50%"
+        };
+        pb.Measure(new Size(10, 1));
+        pb.Arrange(new Rect(0, 0, 10, 1));
+
+        var buffer = new VirtualBuffer(10, 1);
+        pb.Render(buffer, 0, 0);
+
+        Assert.Equal('5', buffer.GetPixel(3, 0).Character);
+        Assert.Equal('0', buffer.GetPixel(4, 0).Character);
+        Assert.Equal('%', buffer.GetPixel(5, 0).Character);
+    }
+
+    [Fact]
+    public void Render_NullLabelText_DoesNotThrow()
+    {
+        var pb = new ProgressBar
+        {
+            Minimum = 0,
+            Maximum = 100,
+            Value = 50,
+            Width = 10,
+            LabelMode = ProgressBarLabelMode.Text,
+            LabelText = null
+        };
+        pb.Measure(new Size(10, 1));
+        pb.Arrange(new Rect(0, 0, 10, 1));
+
+        var buffer = new VirtualBuffer(10, 1);
+        pb.Render(buffer, 0, 0);
+
+        // No text should be rendered, just blocks
+        Assert.Equal('█', buffer.GetPixel(3, 0).Character);
+    }
 }
