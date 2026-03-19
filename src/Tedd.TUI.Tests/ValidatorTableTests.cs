@@ -146,8 +146,6 @@ public class ValidatorTableTests
             ShowVerticalLines = true,
             ShowHorizontalLines = true,
             BorderStyle = BoxStyle.Heavy,
-            HorizontalScrollBarVisibility = false,
-            VerticalScrollBarVisibility = false
         };
         table.Columns.Add(new TableColumn { Header = "Col", Width = new GridLength(10, GridUnitType.Pixel) });
         table.AddRow("Test");
