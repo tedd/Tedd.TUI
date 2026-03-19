@@ -64,6 +64,12 @@ public class GridSplitterTests
         // Act
         // Simulate dragging
         var dragArgs = new DragDeltaEventArgs(0.0, 3.0, Thumb.DragDeltaEvent, splitter);
+        // The GridSplitter auto-direction defaults to Columns if HorizontalAlignment and VerticalAlignment are not set. Let's set HorizontalAlignment to Stretch so it resolves to Rows.
+        splitter.HorizontalAlignment = HorizontalAlignment.Stretch;
+        splitter.ResizeDirection = GridResizeDirection.Rows;
+        window.Measure(new Size(80, 24));
+        window.Arrange(new Rect(0, 0, 80, 24));
+
         splitter.RaiseEvent(dragArgs);
 
         // Assert
