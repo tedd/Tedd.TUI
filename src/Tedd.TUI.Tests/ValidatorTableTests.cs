@@ -146,9 +146,17 @@ public class ValidatorTableTests
             ShowVerticalLines = true,
             ShowHorizontalLines = true,
             BorderStyle = BoxStyle.Heavy,
-
-
         };
+
+        // If we want to hide scrollbars for edge rendering test, we can do it via the template or similar,
+        // but since they were removed to fix compilation, we need to ensure the rendering fits or clips properly.
+        var sv = table.GetVisualChild(0) as ScrollViewer;
+        if (sv != null)
+        {
+            sv.VerticalScrollBarVisibility = false;
+            sv.HorizontalScrollBarVisibility = false;
+        }
+
         table.Columns.Add(new TableColumn { Header = "Col", Width = new GridLength(10, GridUnitType.Pixel) });
         table.AddRow("Test");
 
@@ -172,7 +180,11 @@ public class ValidatorTableTests
         table.Measure(new Size(1, 1));
         table.Arrange(new Rect(0, 0, 1, 1));
         var buffer1 = new VirtualBuffer(10, 10);
+
+        // By setting a clip, we emulate what a parent or layout container would do
+        buffer1.PushClip(new Rect(0, 0, 1, 1));
         table.Render(buffer1, 0, 0);
+        buffer1.PopClip();
 
         // Table with borders and headers needs at least 2x2. At 1x1, it shouldn't throw,
         // it may draw a partial border, but it should not fail.

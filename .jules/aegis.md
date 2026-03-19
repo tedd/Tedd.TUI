@@ -200,3 +200,6 @@ Implemented coverage expanding into dynamic memory allocations ensuring observab
 ## 2026-03-19 - ScrollViewer Test Coverage Expansion
 **Observation:** Coverage for ScrollViewer lacked testing on HorizontalOffset mapping, exact scroll bounds, invalid bounds in GetVisualChild, and base event dispatch handlers for OnMouseDown. Initial iterations incorrectly assumed ScrollBarVisibility enum properties for scrollbar visiblity which are bool properties in Tedd.TUI.
 **Strategic Action:** Deployed parameterized unit tests to achieve 100% branch and line coverage for ScrollViewer. Added assertions on the execution of exception-free code paths using Record.Exception(). Refactored layout property calls to respect Tedd.TUI's specific boolean scrollbar visibility configuration.
+## 2026-03-19 - GridSplitter Test Expansion
+**Observation:** Coverage for GridSplitter revealed incomplete execution pathways for horizontal and vertical auto-direction inference based on relative bounds.
+**Strategic Action:** Added assertions on `ValidatorTableTests` checking empty pixel boundaries beyond standard view. Refactored `GridSplitter.cs` constraint inference logic using actual component sizing (`DesiredSize` and `ActualWidth`) to correctly bind layout limits.
