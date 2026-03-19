@@ -103,8 +103,8 @@ public class TreeView : UIElement
         _scrollViewer = new ScrollViewer
         {
             Content = _stackPanel,
-            HorizontalScrollBarVisibility = true,
-            VerticalScrollBarVisibility = true
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Visible,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible
         };
         _scrollViewer.Parent = this; // Set visual parent
 

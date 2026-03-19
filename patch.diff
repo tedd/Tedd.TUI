@@ -1,16 +1,120 @@
---- src/Tedd.TUI/Slider.cs
-+++ src/Tedd.TUI/Slider.cs
-@@ -57,11 +57,11 @@
+--- src/Tedd.TUI/ScrollViewer.cs
++++ src/Tedd.TUI/ScrollViewer.cs
+@@ -74,8 +74,8 @@
+         {
+             int count = 0;
+             if (_content != null) count++;
+-            if (VerticalScrollBarVisibility) count++;
+-            if (HorizontalScrollBarVisibility) count++;
++            if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible) count++;
++            if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible) count++;
+             return count;
          }
      }
+@@ -89,13 +89,13 @@
+             index--;
+         }
 
--    protected override void OnPropertyChanged(DependencyProperty property, object oldValue, object newValue)
-+    protected override void OnPropertyChanged(DependencyProperty property)
-     {
--        base.OnPropertyChanged(property, oldValue, newValue);
-+        base.OnPropertyChanged(property);
-
-         if (property == ValueProperty)
+-        if (VerticalScrollBarVisibility)
++        if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible)
          {
-             RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+             if (index == 0) return _verticalScrollBar;
+             index--;
+         }
+
+-        if (HorizontalScrollBarVisibility)
++        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             if (index == 0) return _horizontalScrollBar;
+         }
+@@ -110,15 +110,15 @@
+         // If Horizontal scroll enabled, width is infinite.
+
+         Size contentAvailable = availableSize;
+-        if (VerticalScrollBarVisibility) contentAvailable.Height = int.MaxValue;
+-        if (HorizontalScrollBarVisibility) contentAvailable.Width = int.MaxValue;
++        if (VerticalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Height = int.MaxValue;
++        if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Width = int.MaxValue;
+
+         // Reserve space for scrollbars if they are going to be visible?
+         // Basic logic: Measure content, see if it fits. If not, show scrollbars.
+         // For now, simple logic: If Visibility is True, reserve space.
+
+-        int vScrollWidth = VerticalScrollBarVisibility ? 1 : 0;
+-        int hScrollHeight = HorizontalScrollBarVisibility ? 1 : 0;
++        int vScrollWidth = VerticalScrollBarVisibility == ScrollBarVisibility.Visible ? 1 : 0;
++        int hScrollHeight = HorizontalScrollBarVisibility == ScrollBarVisibility.Visible ? 1 : 0;
+
+         contentAvailable.Width = Math.Max(0, contentAvailable.Width - vScrollWidth);
+         contentAvailable.Height = Math.Max(0, contentAvailable.Height - hScrollHeight);
+@@ -131,7 +131,7 @@
+         }
+
+         // 2. Setup ScrollBars
+-        if (VerticalScrollBarVisibility)
++        if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             int viewport = Math.Max(1, availableSize.Height - hScrollHeight);
+             int extent = contentSize.Height;
+@@ -141,7 +141,7 @@
+             _verticalScrollBar.Measure(new Size(vScrollWidth, viewport));
+         }
+
+-        if (HorizontalScrollBarVisibility)
++        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             int viewport = Math.Max(1, availableSize.Width - vScrollWidth);
+             int extent = contentSize.Width;
+@@ -160,8 +160,8 @@
+
+     protected override void ArrangeOverride(Size finalSize)
+     {
+-        int vScrollWidth = VerticalScrollBarVisibility ? 1 : 0;
+-        int hScrollHeight = HorizontalScrollBarVisibility ? 1 : 0;
++        int vScrollWidth = VerticalScrollBarVisibility == ScrollBarVisibility.Visible ? 1 : 0;
++        int hScrollHeight = HorizontalScrollBarVisibility == ScrollBarVisibility.Visible ? 1 : 0;
+
+         int viewportW = Math.Max(0, finalSize.Width - vScrollWidth);
+         int viewportH = Math.Max(0, finalSize.Height - hScrollHeight);
+@@ -186,12 +186,12 @@
+         }
+
+         // Arrange ScrollBars
+-        if (VerticalScrollBarVisibility)
++        if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             _verticalScrollBar.Arrange(new Rect(finalSize.Width - vScrollWidth, 0, vScrollWidth, viewportH));
+         }
+
+-        if (HorizontalScrollBarVisibility)
++        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             _horizontalScrollBar.Arrange(new Rect(0, finalSize.Height - hScrollHeight, viewportW, hScrollHeight));
+         }
+@@ -202,8 +202,8 @@
+         int x = RenderSize.X + offsetX;
+         int y = RenderSize.Y + offsetY;
+
+-        int vScrollWidth = VerticalScrollBarVisibility ? 1 : 0;
+-        int hScrollHeight = HorizontalScrollBarVisibility ? 1 : 0;
++        int vScrollWidth = VerticalScrollBarVisibility == ScrollBarVisibility.Visible ? 1 : 0;
++        int hScrollHeight = HorizontalScrollBarVisibility == ScrollBarVisibility.Visible ? 1 : 0;
+         int viewportW = Math.Max(0, RenderSize.Width - vScrollWidth);
+         int viewportH = Math.Max(0, RenderSize.Height - hScrollHeight);
+
+@@ -272,12 +272,12 @@
+         }
+
+         // Render ScrollBars (no scroll offset, no clip usually, or clip to SV bounds)
+-        if (VerticalScrollBarVisibility)
++        if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             // They are children, so they need Absolute Parent X (which is x).
+             _verticalScrollBar.Render(buffer, x, y);
+         }
+
+-        if (HorizontalScrollBarVisibility)
++        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             _horizontalScrollBar.Render(buffer, x, y);
          }

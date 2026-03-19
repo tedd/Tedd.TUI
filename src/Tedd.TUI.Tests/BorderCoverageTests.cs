@@ -149,7 +149,7 @@ public class BorderCoverageTests
     public void ArrangeOverride_WithHorizontalScrollBar()
     {
         var border = new Border();
-        border.HorizontalScrollBarVisibility = true;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
         border.Measure(new Size(20, 20));
         border.Arrange(new Rect(0, 0, 20, 20));
 
@@ -164,8 +164,8 @@ public class BorderCoverageTests
         border.Title = new TextBlock { Text = "Title" };
         border.StatusBar = new TextBlock { Text = "Status" };
         border.Content = new TextBlock { Text = "Content" };
-        border.VerticalScrollBarVisibility = true;
-        border.HorizontalScrollBarVisibility = true;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         border.Measure(new Size(20, 20));
         border.Arrange(new Rect(0, 0, 20, 20));

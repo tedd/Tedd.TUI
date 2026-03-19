@@ -1,16 +1,62 @@
---- src/Tedd.TUI/Slider.cs
-+++ src/Tedd.TUI/Slider.cs
-@@ -57,11 +57,11 @@
+--- src/Tedd.TUI/Border.cs
++++ src/Tedd.TUI/Border.cs
+@@ -210,8 +210,8 @@
+         // Content area is inside the border.
+         Size contentAvailable = new Size(Math.Max(0, availableSize.Width - borderW), Math.Max(0, availableSize.Height - borderH));
+
+-        if (VerticalScrollBarVisibility) contentAvailable.Height = int.MaxValue;
+-        if (HorizontalScrollBarVisibility) contentAvailable.Width = int.MaxValue;
++        if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible) contentAvailable.Height = int.MaxValue;
++        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible) contentAvailable.Width = int.MaxValue;
+
+         Size contentSize = new Size(0, 0);
+         if (Content != null)
+@@ -221,7 +221,7 @@
          }
-     }
 
--    protected override void OnPropertyChanged(DependencyProperty property, object oldValue, object newValue)
-+    protected override void OnPropertyChanged(DependencyProperty property)
-     {
--        base.OnPropertyChanged(property, oldValue, newValue);
-+        base.OnPropertyChanged(property);
-
-         if (property == ValueProperty)
+         // Setup ScrollBars based on Content Size vs Viewport Size
+-        if (VerticalScrollBarVisibility)
++        if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible)
          {
-             RaiseEvent(new RoutedEventArgs(ValueChangedEvent, this));
+             int viewport = Math.Max(1, availableSize.Height - borderH);
+             int extent = contentSize.Height;
+@@ -234,7 +234,7 @@
+             _verticalScrollBar.Measure(new Size(1, vScrollHeight));
          }
+
+-        if (HorizontalScrollBarVisibility)
++        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             int viewport = Math.Max(1, availableSize.Width - borderW);
+             int extent = contentSize.Width;
+@@ -292,7 +292,7 @@
+
+         // Arrange ScrollBars
+         // Vertical on right edge
+-        if (VerticalScrollBarVisibility)
++        if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             int vTop = 1 + VerticalScrollBarMarginTop;
+             int vHeight = Math.Max(0, h - 2 - VerticalScrollBarMarginTop - VerticalScrollBarMarginBottom);
+@@ -300,7 +300,7 @@
+         }
+
+         // Horizontal on bottom edge
+-        if (HorizontalScrollBarVisibility)
++        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible)
+         {
+             // If StatusBar exists, HScroll starts after it
+             int hLeft = 1 + HorizontalScrollBarMarginLeft + statusW;
+@@ -358,10 +358,10 @@
+         }
+
+         // ScrollBars (on border lines)
+-        if (VerticalScrollBarVisibility)
++        if (VerticalScrollBarVisibility == ScrollBarVisibility.Visible)
+             _verticalScrollBar.Render(buffer, x, y);
+
+-        if (HorizontalScrollBarVisibility)
++        if (HorizontalScrollBarVisibility == ScrollBarVisibility.Visible)
+             _horizontalScrollBar.Render(buffer, x, y);
+
+         // Content (inside border)

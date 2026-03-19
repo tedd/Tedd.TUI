@@ -17,8 +17,8 @@ public class ValidatorLayoutMatrixTests
             BoxStyle = style,
             Width = 10,
             Height = 10,
-            VerticalScrollBarVisibility = false,
-            HorizontalScrollBarVisibility = false
+            VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden
         };
 
         border.Measure(new Size(10, 10));
@@ -50,7 +50,7 @@ public class ValidatorLayoutMatrixTests
         rootGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-        var leftBorder = new Border { BoxStyle = BoxStyle.Single, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
+        var leftBorder = new Border { BoxStyle = BoxStyle.Single, VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden };
         Grid.SetColumn(leftBorder, 0);
 
         var stackPanel = new StackPanel();
@@ -60,7 +60,7 @@ public class ValidatorLayoutMatrixTests
         stackPanel.Children.Add(txt2);
         leftBorder.Content = stackPanel;
 
-        var rightBorder = new Border { BoxStyle = BoxStyle.Double, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
+        var rightBorder = new Border { BoxStyle = BoxStyle.Double, VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden };
         Grid.SetColumn(rightBorder, 1);
 
         rootGrid.Children.Add(leftBorder);

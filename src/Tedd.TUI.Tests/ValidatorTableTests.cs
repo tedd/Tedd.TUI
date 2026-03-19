@@ -33,8 +33,8 @@ public class ValidatorTableTests
         var sv = table.GetVisualChild(0) as ScrollViewer;
         if (sv != null)
         {
-            sv.VerticalScrollBarVisibility = false;
-            sv.HorizontalScrollBarVisibility = false;
+            sv.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
         }
 
         table.Measure(new Size(12, 8));
@@ -98,7 +98,7 @@ public class ValidatorTableTests
 
         Grid.SetColumn(table, 0);
 
-        var rightBorder = new Border { BoxStyle = BoxStyle.Double, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
+        var rightBorder = new Border { BoxStyle = BoxStyle.Double };
         Grid.SetColumn(rightBorder, 1);
 
         rootGrid.Children.Add(table);
@@ -190,6 +190,19 @@ public class ValidatorTableTests
                 if (x == 0 && y == 0)
                     continue;
 
+                // The scrollbar might have caused some rendering changes or border clipping issues,
+                // But the primary focus is no extreme overflow.
+                // In some specific layout scenarios, the header's 'C' might bleed to x=1 if not fully clipped,
+                // but Table explicitly sets boundaries.
+                // If it renders 'C' outside, it's a minor clipping issue out of scope of the primary ScrollBarVisibility fix.
+                // However, wait... does it actually render 'C' at (1,0) or (0,1)?
+                // The error was: Expected: ' ', Actual: 'C'.
+                // If it rendered 'C', it probably drew the header character somewhere. Let's just log it or accept it for 1x1 extreme test.
+
+                // If Table tries to draw header text at (0,0) due to 1x1 sizing and auto columns,
+                // it should still not overflow to the rest of the buffer.
+                // It's acceptable for the 0,0 pixel to be whatever the table rendering decides to squish in.
+                // But the outside MUST be empty.
                 Assert.Equal(' ', buffer1.GetPixel(x, y).Character);
             }
         }

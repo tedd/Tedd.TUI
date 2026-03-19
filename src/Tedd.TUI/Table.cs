@@ -140,6 +140,18 @@ public class Table : UIElement
 
     public BoxStyle BorderStyle { get; set; } = BoxStyle.Heavy; // Default to Heavy per user request
 
+    public ScrollBarVisibility HorizontalScrollBarVisibility
+    {
+        get => _scrollViewer.HorizontalScrollBarVisibility;
+        set => _scrollViewer.HorizontalScrollBarVisibility = value;
+    }
+
+    public ScrollBarVisibility VerticalScrollBarVisibility
+    {
+        get => _scrollViewer.VerticalScrollBarVisibility;
+        set => _scrollViewer.VerticalScrollBarVisibility = value;
+    }
+
     // Selection
     public int SelectedIndex
     {
@@ -166,8 +178,8 @@ public class Table : UIElement
         _scrollViewer = new ScrollViewer
         {
             Content = _rowStack,
-            VerticalScrollBarVisibility = true,
-            HorizontalScrollBarVisibility = true
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Visible
         };
         _scrollViewer.Parent = this;
     }
@@ -280,7 +292,7 @@ public class Table : UIElement
 
         int padding = ShowBorder ? 1 : 0;
         int availableWidthForCols = Math.Max(0, availableSize.Width - 2 * padding);
-        if (_scrollViewer.VerticalScrollBarVisibility) availableWidthForCols--;
+        if (_scrollViewer.VerticalScrollBarVisibility == ScrollBarVisibility.Visible) availableWidthForCols--;
 
         foreach (var child in _rowStack.Children)
         {

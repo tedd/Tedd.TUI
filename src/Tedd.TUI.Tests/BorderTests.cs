@@ -51,8 +51,8 @@ public class BorderTests
         border.Child = child;
 
         // Disable scrolling to test constraints
-        border.VerticalScrollBarVisibility = false;
-        border.HorizontalScrollBarVisibility = false;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
 
         // Border size 20x20. Border thickness 1 (implicit).
         // Available for child: 20 - 2 = 18.
@@ -86,8 +86,8 @@ public class BorderTests
         border.Child = child;
 
         // Enable both scrollbars
-        border.VerticalScrollBarVisibility = true;
-        border.HorizontalScrollBarVisibility = true;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         // If standard ScrollViewer logic applied, width would be 20 - 2 (border) - 1 (vscroll) = 17?
         // But Border ScrollBars are embedded in border.
@@ -104,8 +104,8 @@ public class BorderTests
         // But we can check that if HScroll is FALSE, and VScroll is TRUE:
         // Width is 18 (not 17).
 
-        border.HorizontalScrollBarVisibility = false;
-        border.VerticalScrollBarVisibility = true;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         border.Measure(new Size(20, 20));
 
