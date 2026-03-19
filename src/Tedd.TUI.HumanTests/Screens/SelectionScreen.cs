@@ -31,7 +31,7 @@ public class SelectionScreen : StackPanel
         var scrollViewer = new ScrollViewer
         {
             Height = 15,
-            VerticalScrollBarVisibility = true
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible
         };
 
         var itemsPanel = new StackPanel { Orientation = Orientation.Vertical };

@@ -154,7 +154,7 @@ public class BorderCoverageTests
         border.Arrange(new Rect(0, 0, 20, 20));
 
         // Horizontal scrollbar should be arranged
-        Assert.True(border.HorizontalScrollBarVisibility);
+        Assert.Equal(ScrollBarVisibility.Visible, border.HorizontalScrollBarVisibility);
     }
 
     [Fact]
@@ -174,8 +174,8 @@ public class BorderCoverageTests
         border.Render(buffer, 0, 0);
 
         // We aren't testing exact pixel output here, just executing the branches
-        Assert.True(border.VerticalScrollBarVisibility);
-        Assert.True(border.HorizontalScrollBarVisibility);
+        Assert.Equal(ScrollBarVisibility.Visible, border.VerticalScrollBarVisibility);
+        Assert.Equal(ScrollBarVisibility.Visible, border.HorizontalScrollBarVisibility);
         Assert.NotNull(border.Title);
         Assert.NotNull(border.StatusBar);
         Assert.NotNull(border.Content);

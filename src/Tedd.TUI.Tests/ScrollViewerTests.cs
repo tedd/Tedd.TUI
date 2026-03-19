@@ -25,7 +25,7 @@ public class ScrollViewerTests
         sv.Content = child;
 
         // Disable Horizontal Scroll (should constrain width)
-        sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
         // Enable Vertical Scroll (should unconstrain height)
         sv.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
 
@@ -46,8 +46,8 @@ public class ScrollViewerTests
         var child = new MeasuringChild();
         sv.Content = child;
 
-        sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
-        sv.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        sv.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
         sv.Measure(new Size(50, 50));
 
