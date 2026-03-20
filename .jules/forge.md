@@ -102,3 +102,10 @@
 ## 2026-03-09 - GridSplitter Integration
 **Observation:** The TUI framework lacked a `GridSplitter` component, which is a standard WPF control used within a `Grid` to dynamically resize rows and columns.
 **Strategic Action:** Engineered the `GridSplitter` component inheriting from `Thumb`. Leveraged existing `DragDelta` event routing to intercept user interactions and translate them into size modifications on adjacent `RowDefinition`/`ColumnDefinition` objects of the parent `Grid`, filling a critical UI parity gap while maintaining the zero-allocation recursive layout engine methodology.
+
+## 2026-03-09 - UserControl Integration
+**Observation:** The TUI framework lacked a `UserControl` component, a fundamental base class in standard WPF architecture used for encapsulating composed UI pieces into reusable XAML definitions. Because there was no explicit `UserControl`, developers had to fall back to `ContentControl`, breaking standard semantic conventions and structural API parity.
+**Strategic Action:**
+- Engineered `UserControl` component inheriting from `ContentControl`.
+- Implemented the standard object hierarchy, correctly relying on `ContentControl`'s implicit `ContentPresenter` and `UIElement`'s default `Focusable = false` properties.
+- This creates an exact mapped behavior and structural parity for `<UserControl>` elements, fully enabling WPF-like component composition within the zero-allocation recursive layout engine.
