@@ -147,15 +147,17 @@ public class ValidatorTableTests
             ShowHorizontalLines = true,
             BorderStyle = BoxStyle.Heavy
         };
-        // Table does not expose scrollbar visibility directly; we extract the internal ScrollViewer
+        table.Columns.Add(new TableColumn { Header = "Col", Width = new GridLength(10, GridUnitType.Pixel) });
+        table.AddRow("Test");
+
+        // Force disable scrollbars for exact rendering tests without layout anomalies
+        table.Measure(new Size(10, 10)); // Force template generation
         var sv = table.GetVisualChild(0) as ScrollViewer;
         if (sv != null)
         {
             sv.HorizontalScrollBarVisibility = false;
             sv.VerticalScrollBarVisibility = false;
         }
-        table.Columns.Add(new TableColumn { Header = "Col", Width = new GridLength(10, GridUnitType.Pixel) });
-        table.AddRow("Test");
 
         // 0x0
         table.Measure(new Size(0, 0));
