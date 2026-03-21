@@ -46,3 +46,19 @@
 **Observation:** The README.md exhibited documentation drift regarding newly integrated controls (`Thumb`, `Slider`, `ListBox`) and their respective structural mechanisms (e.g., `ControlTemplate` wrapping in `ListBox`, explicitly dispatched routed events in `Slider` and `Thumb`). Furthermore, the "Input & Interaction" section lacked articulation of the `TuiWindow` mouse capture API (`CaptureMouse`/`ReleaseMouseCapture`) and the requirement for custom routed event arguments to explicitly override `InvokeEventHandler`.
 
 **Strategic Action:** Executed a comprehensive revision of the README.md to synthesize these architectural paradigms. Updated the "Rich Control Suite" to encompass the mechanisms of `ListBox`, `Slider`, and `Thumb`. Expanded the "Input & Interaction" section to detail the global mouse capture mechanics and custom event routing paradigms. This ensures exact epistemological alignment with the current codebase reality.
+
+## 2024-05-24 - Epistemological Friction in Overlay Management
+**Observation:** The README documented `TuiWindow` overlay stacking verification as using a `HashSet<UIElement>` for $O(1)$ presence verification. However, empirical analysis of `src/Tedd.TUI/TuiWindow.cs` revealed that it utilizes a `List<UIElement>` and an $O(N)$ `Contains` check (`_overlays.Contains(overlay)`).
+**Strategic Action:** Synchronized the documentation to reflect the $O(N)$ reality, ensuring algorithmic precision. We must avoid speculative 'neuro-bunk' regarding data structures that are not explicitly instantiated in the codebase.
+
+## 2024-05-24 - Incomplete Articulation of Zero-Allocation Routing
+**Observation:** The documentation for `UIElement.RaiseEvent` routing failed to explicitly define its time and space complexity, omitting the architectural $O(h)$ time complexity and clarifying the $O(1)$ allocation overhead utilizing `System.Buffers.ArrayPool<UIElement>`.
+**Strategic Action:** Articulated the precise Big-O complexity in the README.md to ensure accurate knowledge transfer for performance optimization.
+
+## 2024-05-24 - DataGrid Caching Synchronization
+**Observation:** `DataGrid.cs` compilation of expression-based delegates utilizes a `System.Threading.Lock` for synchronization. The documentation correctly identified the lock but lacked strict contemporary API contextualization (C# 13 / .NET 9.0+).
+**Strategic Action:** Clarified the documentation to ensure the locking mechanism is appropriately scoped to contemporary runtime capabilities.
+
+## 2024-05-24 - Panel Z-Index Sorting Articulation
+**Observation:** The `Panel` depth positioning (`ZIndexProperty`) logic was entirely missing from the core Layout Engine documentation despite recent framework optimizations utilizing a stable, allocation-free $O(N \log N)$ iterative merge sort via `ArrayPool`.
+**Strategic Action:** Appended the Z-Index Sorting architectural mechanics to the Hierarchical Composition section.
