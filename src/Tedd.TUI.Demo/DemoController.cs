@@ -27,6 +27,9 @@ public class DemoController
     public TextEditor EditorBox;
     public TreeView NavTree;
     public TabControl MainTabs;
+    public Slider HSlider;
+    public Slider VSlider;
+    public TextBlock SliderLabel;
 
 
     public void Initialize(TuiApp app, TuiWindow window)
@@ -53,6 +56,7 @@ public class DemoController
                         case "DataGrid": MainTabs.SelectedIndex = 6; break;
                         case "Editor": MainTabs.SelectedIndex = 7; break;
                         case "ProgressBar": MainTabs.SelectedIndex = 8; break;
+                        case "Slider": MainTabs.SelectedIndex = 9; break;
                     }
                 }
             };
@@ -196,6 +200,11 @@ public void Hello() {
         if (VScroll != null) VScroll.ValueChanged += OnScrollChanged;
         OnScrollChanged(null, null);
 
+        // Init Slider Events
+        if (HSlider != null) HSlider.ValueChanged += OnSliderChanged;
+        if (VSlider != null) VSlider.ValueChanged += OnSliderChanged;
+        OnSliderChanged(null, null);
+
         // Init TextEditor
         if (EditorBox != null)
         {
@@ -292,5 +301,11 @@ public void Hello() {
     {
         if (ScrollLabel != null && HScroll != null && VScroll != null)
             ScrollLabel.Text = $"H: {HScroll.Value}, V: {VScroll.Value}";
+    }
+
+    public void OnSliderChanged(object sender, EventArgs e)
+    {
+        if (SliderLabel != null && HSlider != null && VSlider != null)
+            SliderLabel.Text = $"H: {HSlider.Value}, V: {VSlider.Value}";
     }
 }

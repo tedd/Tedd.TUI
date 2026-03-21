@@ -63,6 +63,7 @@
                     <TreeViewItem Header="DataGrid" />
                     <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
+                    <TreeViewItem Header="Slider" />
                 </TreeViewItem>
             </TreeView>
         </Expander>
@@ -205,6 +206,20 @@
                        </StackPanel>
                    </TabItem>
                </TabControl>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 10: Slider -->
+       <TabItem Header="Slider">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="Slider Demo"/>
+               <TextBlock Name="SliderLabel" Text="H: 30, V: 10"/>
+
+               <TextBlock Text="Horizontal:"/>
+               <Slider Name="HSlider" Orientation="Horizontal" Width="40" Minimum="0" Maximum="100" Value="30"/>
+
+               <TextBlock Text="Vertical:"/>
+               <Slider Name="VSlider" Orientation="Vertical" Height="10" Minimum="0" Maximum="50" Value="10"/>
            </StackPanel>
        </TabItem>
 

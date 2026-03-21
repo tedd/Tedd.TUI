@@ -416,6 +416,8 @@ public class Table : UIElement
         int w = RenderSize.Width;
         int h = RenderSize.Height;
 
+        if (w <= 0 || h <= 0) return;
+
         TableBoxChars chars = TableBoxChars.Get(BorderStyle);
 
         // 1. Draw Outer Border

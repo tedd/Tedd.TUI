@@ -49,7 +49,7 @@ public class GridSplitterTests
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) }); // Splitter row
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10, GridUnitType.Pixel) });
 
-        var splitter = new GridSplitter();
+        var splitter = new GridSplitter() { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetRow(splitter, 1);
         grid.Children.Add(splitter);
         window.Content = grid;
@@ -63,6 +63,7 @@ public class GridSplitterTests
 
         // Act
         // Simulate dragging
+        // e.VerticalChange is int in Tedd.TUI
         var dragArgs = new DragDeltaEventArgs(0.0, 3.0, Thumb.DragDeltaEvent, splitter);
         splitter.RaiseEvent(dragArgs);
 
