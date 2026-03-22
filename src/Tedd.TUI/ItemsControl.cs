@@ -81,6 +81,14 @@ public abstract class ItemsControl : Control
             }
             Invalidate();
         }
+        else if (dp == ItemTemplateProperty)
+        {
+            if (ItemsPresenter != null)
+            {
+                ItemsPresenter.PopulatePanel(this);
+            }
+            Invalidate();
+        }
     }
 
     protected virtual void OnItemsSourceChanged(IEnumerable? newValue)

@@ -88,3 +88,17 @@
 ## 2024-03-08 - Panel ZIndex Parity Integration
 **Observation:** The core `Panel` layout framework lacked the `ZIndex` attached dependency property found in WPF, leading to the inability to deterministically control the visual stacking order of sibling children during rendering and hit testing without altering their logical collection order.
 **Strategic Action:** Implemented `Panel.ZIndexProperty`. Upgraded `Panel` to intercept visual child access via `GetVisualChild`, intercepting access with a cached, lazily-evaluated array sorted stably by `ZIndex` to ensure declaration order is respected for ties. Hooked into `UIElement.OnPropertyChanged` and `UIElementCollection` mutations to accurately invalidate the Z-state cache (`InvalidateZState()`), strictly aligning layout behavior with WPF paradigms.
+
+## 2026-03-09 - ControlTemplate Trigger Integration
+**Observation:** The TUI framework lacked standard visual state infrastructure within `ControlTemplate`. There was an absence of WPF parity regarding `Trigger` mechanisms, which dynamically evaluate dependency properties and apply visual state updates (via `Setter`) without imperative event wiring.
+**Strategic Action:** Integrated WPF visual state triggers by establishing the `TriggerBase`, `Trigger`, and `Setter` object model. Extended `ControlTemplate` with a `Triggers` collection. Augmented `Control.OnPropertyChanged` to intercept dependency property mutations, evaluate active trigger conditions (`EvaluateTriggers`), dynamically inject setter values when conditions are met, and automatically revert to original local/inherited property states (`DependencyProperty.UnsetValue`) when conditions fail.
+## 2026-03-09 - Thumb Primitive Integration
+**Observation:** The TUI framework lacked a native `Thumb` control primitive, which is necessary for establishing draggable and resizeable interactions (such as ScrollBars and GridSplitters). Standard implementations utilized ad-hoc logic per-component, preventing standardized drag event routing.
+**Strategic Action:**
+- Engineered the `Thumb` primitive inheriting from `Control`.
+- Implemented bubbling routed events for the dragging lifecycle: `DragStarted`, `DragDelta`, and `DragCompleted`.
+- Managed mouse capture via `TuiWindow` to calculate horizontal and vertical screen coordinate deltas and emit custom `RoutedEventArgs` mirroring the WPF `System.Windows.Controls.Primitives.Thumb` architectural specification.
+
+## 2026-03-09 - GridSplitter Integration
+**Observation:** The TUI framework lacked a `GridSplitter` component, which is a standard WPF control used within a `Grid` to dynamically resize rows and columns.
+**Strategic Action:** Engineered the `GridSplitter` component inheriting from `Thumb`. Leveraged existing `DragDelta` event routing to intercept user interactions and translate them into size modifications on adjacent `RowDefinition`/`ColumnDefinition` objects of the parent `Grid`, filling a critical UI parity gap while maintaining the zero-allocation recursive layout engine methodology.

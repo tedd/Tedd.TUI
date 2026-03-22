@@ -135,6 +135,8 @@ class Program
         var nodeCode = new TreeViewItem { Header = "Code" };
         var nodeMarkdown = new TreeViewItem { Header = "Markdown" };
         var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
+        var nodeEditor = new TreeViewItem { Header = "Editor" };
+        var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -143,6 +145,8 @@ class Program
         rootNode.Items.Add(nodeCode);
         rootNode.Items.Add(nodeMarkdown);
         rootNode.Items.Add(nodeDataGrid);
+        rootNode.Items.Add(nodeEditor);
+        rootNode.Items.Add(nodeProgressBar);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -164,6 +168,8 @@ class Program
             else if (sel == nodeCode) tabs.SelectedIndex = 4;
             else if (sel == nodeMarkdown) tabs.SelectedIndex = 5;
             else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
+            else if (sel == nodeEditor) tabs.SelectedIndex = 7;
+            else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
         };
 
 
@@ -265,10 +271,6 @@ class Program
 
         // --- Tab 2: Lists & Progress ---
         var listStack = new StackPanel { Orientation = Orientation.Vertical };
-
-        listStack.AddChild(new TextBlock { Text = "Progress:" });
-        var progressBar = new ProgressBar { Width = 40, Value = 35 };
-        listStack.AddChild(progressBar);
 
         listStack.AddChild(new TextBlock { Text = "Items:" });
         // listBox already created
@@ -488,6 +490,45 @@ public void Hello() {
         dataGridStack.AddChild(dataGrid);
 
         tabs.Items.Add(new TabItem { Header = "DataGrid", Content = dataGridStack });
+
+        // --- Tab 8: Editor ---
+        var editorStack = new StackPanel { Orientation = Orientation.Vertical };
+        editorStack.AddChild(new TextBlock { Text = "Text Editor:" });
+
+        var editorBorder = new Border { BoxStyle = BoxStyle.Single, BorderColor = ConsoleColor.Cyan, Width = 70, Height = 15 };
+        var editorBox = new TextEditor { Width = -1, Height = -1 };
+        editorBorder.Child = editorBox;
+
+        editorStack.AddChild(editorBorder);
+        tabs.Items.Add(new TabItem { Header = "Editor", Content = editorStack });
+
+        // --- Tab 9: ProgressBar ---
+        var progressBarStack = new StackPanel { Orientation = Orientation.Vertical };
+        progressBarStack.AddChild(new TextBlock { Text = "ProgressBar Permutations:" });
+
+        var progressBarTabs = new TabControl { Width = 70, Height = 15 };
+
+        // Percent Mode
+        var percentStack = new StackPanel { Orientation = Orientation.Vertical };
+        percentStack.AddChild(new TextBlock { Text = "Percent Mode (Default)" });
+        percentStack.AddChild(new ProgressBar { Width = 40, Value = 35, LabelMode = ProgressBarLabelMode.Percent, LabelPercentDecimals = 0 });
+        percentStack.AddChild(new ProgressBar { Width = 40, Value = 75, LabelMode = ProgressBarLabelMode.Percent, LabelPercentDecimals = 1, ProgressColor = ConsoleColor.Blue });
+        progressBarTabs.Items.Add(new TabItem { Header = "Percent", Content = percentStack });
+
+        // Text Mode
+        var textStack = new StackPanel { Orientation = Orientation.Vertical };
+        textStack.AddChild(new TextBlock { Text = "Text Mode" });
+        textStack.AddChild(new ProgressBar { Width = 40, Value = 50, LabelMode = ProgressBarLabelMode.Text, LabelText = "Loading...", ProgressColor = ConsoleColor.Red, LabelFilledColor = ConsoleColor.Yellow });
+        progressBarTabs.Items.Add(new TabItem { Header = "Text", Content = textStack });
+
+        // None Mode
+        var noneStack = new StackPanel { Orientation = Orientation.Vertical };
+        noneStack.AddChild(new TextBlock { Text = "None Mode" });
+        noneStack.AddChild(new ProgressBar { Width = 40, Value = 60, LabelMode = ProgressBarLabelMode.None, ProgressColor = ConsoleColor.Green });
+        progressBarTabs.Items.Add(new TabItem { Header = "None", Content = noneStack });
+
+        progressBarStack.AddChild(progressBarTabs);
+        tabs.Items.Add(new TabItem { Header = "ProgressBar", Content = progressBarStack });
 
         // Run App
 

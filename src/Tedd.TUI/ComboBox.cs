@@ -223,6 +223,7 @@ public class ComboBox : Selector
         // Setup ListBox
         _popupListBox.ItemsSource = this.Items;
         _popupListBox.DisplayMemberPath = this.DisplayMemberPath;
+        _popupListBox.ItemTemplate = this.ItemTemplate;
         _popupListBox.SelectedIndex = this.SelectedIndex;
 
         // Popup width matches ComboBox width, adjusted for border

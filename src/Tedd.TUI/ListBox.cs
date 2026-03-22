@@ -197,17 +197,33 @@ public class ListBox : Selector
                     // else: ShowSelection is false and not focused, use default colors
                 }
 
-                string content = GetItemText(Items[itemIndex]);
-                if (content.Length > effectiveW) content = content.Substring(0, effectiveW);
-
-                for (int dx = 0; dx < content.Length; dx++)
+                if (ItemTemplate != null)
                 {
-                    buffer.SetPixel(x + dx, y + i, content[dx], fg, bg);
+                    // Fill row with selection background first, then render template content on top
+                    for (int dx = 0; dx < effectiveW; dx++)
+                    {
+                        buffer.SetPixel(x + dx, y + i, ' ', fg, bg);
+                    }
+                    var container = GetContainerForItemCore();
+                    PrepareContainerForItemOverride(container, Items[itemIndex]);
+                    container.Measure(new Size(effectiveW, 1));
+                    container.Arrange(new Rect(0, 0, effectiveW, 1));
+                    container.Render(buffer, x, y + i);
                 }
-                // Fill rest of line with bg
-                for (int dx = content.Length; dx < effectiveW; dx++)
+                else
                 {
-                    buffer.SetPixel(x + dx, y + i, ' ', fg, bg);
+                    string content = GetItemText(Items[itemIndex]);
+                    if (content.Length > effectiveW) content = content.Substring(0, effectiveW);
+
+                    for (int dx = 0; dx < content.Length; dx++)
+                    {
+                        buffer.SetPixel(x + dx, y + i, content[dx], fg, bg);
+                    }
+                    // Fill rest of line with bg
+                    for (int dx = content.Length; dx < effectiveW; dx++)
+                    {
+                        buffer.SetPixel(x + dx, y + i, ' ', fg, bg);
+                    }
                 }
             }
         }
@@ -226,7 +242,7 @@ public class ListBox : Selector
         // Check if ScrollBar hit
         if (_scrollBar.Visibility && e.X >= RenderSize.Width - 1)
         {
-            // Pass to ScrollBar. 
+            // Pass to ScrollBar.
             // We need to pass local coordinates to ScrollBar.
             // ScrollBar is at (Width-1, 0).
             // So localX = e.X - (Width-1) = 0 usually.

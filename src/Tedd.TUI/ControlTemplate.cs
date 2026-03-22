@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Tedd.TUI;
 
@@ -10,6 +11,8 @@ public abstract class FrameworkTemplate
 public class ControlTemplate : FrameworkTemplate
 {
     private readonly Func<Control, UIElement> _factory;
+
+    public List<TriggerBase> Triggers { get; } = new List<TriggerBase>();
 
     public ControlTemplate(Func<Control, UIElement> factory)
     {
