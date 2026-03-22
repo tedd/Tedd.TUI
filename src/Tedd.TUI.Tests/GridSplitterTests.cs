@@ -15,7 +15,7 @@ public class GridSplitterTests
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) }); // Splitter column
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10, GridUnitType.Pixel) });
 
-        var splitter = new GridSplitter();
+        var splitter = new GridSplitter { VerticalAlignment = VerticalAlignment.Stretch, ResizeDirection = GridResizeDirection.Columns };
         Grid.SetColumn(splitter, 1);
         grid.Children.Add(splitter);
         window.Content = grid;
@@ -49,7 +49,7 @@ public class GridSplitterTests
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) }); // Splitter row
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10, GridUnitType.Pixel) });
 
-        var splitter = new GridSplitter();
+        var splitter = new GridSplitter { HorizontalAlignment = HorizontalAlignment.Stretch, ResizeDirection = GridResizeDirection.Rows };
         Grid.SetRow(splitter, 1);
         grid.Children.Add(splitter);
         window.Content = grid;
