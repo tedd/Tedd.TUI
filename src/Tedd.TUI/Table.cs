@@ -52,7 +52,16 @@ public class TableRow : UIElement
             cell.Measure(new Size(int.MaxValue, availableSize.Height));
             maxHeight = Math.Max(maxHeight, cell.DesiredSize.Height);
         }
-        return new Size(0, maxHeight > 0 ? maxHeight : 1);
+
+        int totalWidth = 0;
+        var table = FindAncestor<Table>();
+        if (table != null && table.Columns.Count > 0)
+        {
+             foreach (var col in table.Columns) totalWidth += col.ActualWidth;
+             if (table.ShowVerticalLines) totalWidth += table.Columns.Count - 1;
+        }
+
+        return new Size(totalWidth, maxHeight > 0 ? maxHeight : 1);
     }
 
     protected override void ArrangeOverride(Size finalSize)
@@ -989,7 +998,7 @@ internal class TableSeparator : UIElement
 {
     protected override Size MeasureOverride(Size availableSize)
     {
-        return new Size(availableSize.Width, 1);
+        return new Size(0, 1);
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)

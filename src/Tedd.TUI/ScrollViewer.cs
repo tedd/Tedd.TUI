@@ -158,6 +158,24 @@ public class ScrollViewer : UIElement
         int viewportW = Math.Max(0, finalSize.Width - vScrollWidth);
         int viewportH = Math.Max(0, finalSize.Height - hScrollHeight);
 
+        // Update ScrollBars max/viewport based on final arranged viewport
+        if (_content != null)
+        {
+            if (VerticalScrollBarVisibility)
+            {
+                int extent = _content.DesiredSize.Height;
+                _verticalScrollBar.ViewportSize = Math.Max(1, viewportH);
+                _verticalScrollBar.Maximum = Math.Max(0, extent - viewportH);
+            }
+
+            if (HorizontalScrollBarVisibility)
+            {
+                int extent = _content.DesiredSize.Width;
+                _horizontalScrollBar.ViewportSize = Math.Max(1, viewportW);
+                _horizontalScrollBar.Maximum = Math.Max(0, extent - viewportW);
+            }
+        }
+
         // Arrange Content
         // We arrange it at (0,0) relative to us?
         // Or do we modify render offset?
