@@ -137,6 +137,7 @@ class Program
         var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
         var nodeEditor = new TreeViewItem { Header = "Editor" };
         var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
+        var nodeSlider = new TreeViewItem { Header = "Slider" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -147,6 +148,7 @@ class Program
         rootNode.Items.Add(nodeDataGrid);
         rootNode.Items.Add(nodeEditor);
         rootNode.Items.Add(nodeProgressBar);
+        rootNode.Items.Add(nodeSlider);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -170,6 +172,7 @@ class Program
             else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
             else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
+            else if (sel == nodeSlider) tabs.SelectedIndex = 9;
         };
 
 
@@ -529,6 +532,33 @@ public void Hello() {
 
         progressBarStack.AddChild(progressBarTabs);
         tabs.Items.Add(new TabItem { Header = "ProgressBar", Content = progressBarStack });
+
+        // --- Tab 10: Slider ---
+        var sliderStack = new StackPanel { Orientation = Orientation.Vertical };
+        sliderStack.AddChild(new TextBlock { Text = "Slider Demo" });
+
+        var sliderLabel = new TextBlock { Text = "H: 0, V: 0" };
+        sliderStack.AddChild(sliderLabel);
+
+        sliderStack.AddChild(new TextBlock { Text = "Horizontal:" });
+        var hSlider = new Slider { Width = 20, Minimum = 0, Maximum = 100, Value = 50 };
+        sliderStack.AddChild(hSlider);
+
+        sliderStack.AddChild(new TextBlock { Text = "Vertical:" });
+        var vSlider = new Slider { Height = 10, Minimum = 0, Maximum = 100, Value = 50, Orientation = Orientation.Vertical };
+        sliderStack.AddChild(vSlider);
+
+        void UpdateSliderLabel(object s, EventArgs e)
+        {
+            sliderLabel.Text = $"H: {hSlider.Value}, V: {vSlider.Value}";
+        }
+
+        hSlider.ValueChanged += UpdateSliderLabel;
+        vSlider.ValueChanged += UpdateSliderLabel;
+
+        UpdateSliderLabel(null, EventArgs.Empty);
+
+        tabs.Items.Add(new TabItem { Header = "Slider", Content = sliderStack });
 
         // Run App
 

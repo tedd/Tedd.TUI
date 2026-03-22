@@ -64,6 +64,7 @@
                         <TuiTreeViewItem Header="DataGrid" />
                         <TuiTreeViewItem Header="Editor" />
                         <TuiTreeViewItem Header="ProgressBar" />
+                        <TuiTreeViewItem Header="Slider" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -237,6 +238,20 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 10: Slider -->
+            <TuiTabItem Header="Slider">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Slider Demo" />
+                    <TuiLabel Text="@sliderLabelText" />
+
+                    <TuiLabel Text="Horizontal:" />
+                    <TuiSlider Orientation="Orientation.Horizontal" Width="20" Minimum="0" Maximum="100" Value="@hSliderValue" ValueChanged="OnHSliderChanged" />
+
+                    <TuiLabel Text="Vertical:" />
+                    <TuiSlider Orientation="Orientation.Vertical" Height="10" Minimum="0" Maximum="100" Value="@vSliderValue" ValueChanged="OnVSliderChanged" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -265,6 +280,7 @@
                 case "DataGrid": selectedTabIndex = 6; break;
                 case "Editor": selectedTabIndex = 7; break;
                 case "ProgressBar": selectedTabIndex = 8; break;
+                case "Slider": selectedTabIndex = 9; break;
             }
             StateHasChanged();
         }
@@ -397,6 +413,25 @@
 
     // Markdown Data
     private Tedd.TUI.Markdown.MarkdownView mdView = new Tedd.TUI.Markdown.MarkdownView();
+
+    // Slider Data
+    private int hSliderValue = 50;
+    private int vSliderValue = 50;
+    private string sliderLabelText = "H: 50, V: 50";
+
+    private void OnHSliderChanged(int val)
+    {
+        hSliderValue = val;
+        sliderLabelText = $"H: {hSliderValue}, V: {vSliderValue}";
+        StateHasChanged();
+    }
+
+    private void OnVSliderChanged(int val)
+    {
+        vSliderValue = val;
+        sliderLabelText = $"H: {hSliderValue}, V: {vSliderValue}";
+        StateHasChanged();
+    }
 
     // DataGrid Data
     private Tedd.TUI.DataGrid dataGrid = new Tedd.TUI.DataGrid
