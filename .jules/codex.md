@@ -46,3 +46,9 @@
 **Observation:** The README.md exhibited documentation drift regarding newly integrated controls (`Thumb`, `Slider`, `ListBox`) and their respective structural mechanisms (e.g., `ControlTemplate` wrapping in `ListBox`, explicitly dispatched routed events in `Slider` and `Thumb`). Furthermore, the "Input & Interaction" section lacked articulation of the `TuiWindow` mouse capture API (`CaptureMouse`/`ReleaseMouseCapture`) and the requirement for custom routed event arguments to explicitly override `InvokeEventHandler`.
 
 **Strategic Action:** Executed a comprehensive revision of the README.md to synthesize these architectural paradigms. Updated the "Rich Control Suite" to encompass the mechanisms of `ListBox`, `Slider`, and `Thumb`. Expanded the "Input & Interaction" section to detail the global mouse capture mechanics and custom event routing paradigms. This ensures exact epistemological alignment with the current codebase reality.
+
+## 2026-03-22 - Documentation Synchronization of MenuBar and MenuItem Structural Mechanics
+
+**Observation:** The README.md exhibited documentation drift regarding newly integrated controls (`MenuBar`, `MenuItem`) and their respective structural mechanisms (e.g., leveraging `TuiWindow.PushOverlay` for recursive input routing and focus traversal). Furthermore, these components were entirely absent from the "Rich Control Suite" section.
+
+**Strategic Action:** Executed a comprehensive revision of the README.md to synthesize these architectural paradigms. Integrated `MenuBar` and `MenuItem` into the "Standard Controls" enumeration. Appended dedicated architectural definitions under "Rich Control Suite" detailing the use of `StackPanel` as a root and the dynamic invocation of `PushOverlay` to render flyout submenus. This ensures exact epistemological alignment with the current codebase reality.
