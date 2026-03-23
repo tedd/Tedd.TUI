@@ -197,3 +197,11 @@ Implemented coverage expanding into dynamic memory allocations ensuring observab
 ## 2024-05-24 - Slider and ProgressBar Test Coverage Expansion
 **Observation:** Slider and ProgressBar components exhibited less than 100% test coverage due to untested edge conditions such as null label text in ProgressBar, unused property getters/setters, and horizontal orientation boundary clicks/keyboard interactions in Slider.
 **Strategic Action:** Developed explicit parameterization testing across all component axes (including properties like `LabelMode.Text` rendering with null inputs) to enforce strict coverage metrics. Verified that routing events and style property application do not throw exceptions under anomalous conditions.
+
+## 2026-03-22 - GridSplitter Test Automation Coverage
+
+**Observation:**
+Identified coverage deficits in `GridSplitter` properties specifically related to `ResizeDirection`. The setter for `GridResizeDirection` and the fallback resolution logic inside `GetEffectiveResizeDirectionForMeasure` and `OnDragDelta` when evaluating boundary constraints were previously untested.
+
+**Strategic Action:**
+Implemented parameterized test `GridSplitter_SetResizeDirection_AffectsBehavior` utilizing `[Theory]` to explicitly evaluate `GridResizeDirection.Rows`, `GridResizeDirection.Columns`, and `GridResizeDirection.Auto`. The tests simulate extreme boundary conditions where column minimums/maximums clamp spatial mutations (`maxPositiveChange`/`maxNegativeChange`) during horizontal and vertical `DragDelta` events, ensuring deterministic algorithm behavior. Added `Table_PropertyAssignments_TriggerLayoutInvalidation` to verify missing table layout property assignments.

@@ -83,6 +83,15 @@ public class GridSplitter : Thumb
             return GridResizeDirection.Columns;
         }
 
+        // Fallback to auto-detecting by looking at definitions
+        if (Parent is Grid grid)
+        {
+            if (grid.RowDefinitions.Count > 0 && grid.ColumnDefinitions.Count == 0)
+            {
+                return GridResizeDirection.Rows;
+            }
+        }
+
         // Fallback: prefer column-resizing (vertical splitter).
         return GridResizeDirection.Columns;
     }
@@ -104,11 +113,11 @@ public class GridSplitter : Thumb
 
         if (direction == GridResizeDirection.Auto)
         {
-            if (HorizontalAlignment == HorizontalAlignment.Stretch && (VerticalAlignment != VerticalAlignment.Stretch || ActualWidth > ActualHeight))
+            if (HorizontalAlignment == HorizontalAlignment.Stretch && (VerticalAlignment != VerticalAlignment.Stretch || RenderSize.Width > RenderSize.Height))
             {
                 direction = GridResizeDirection.Rows;
             }
-            else if (VerticalAlignment == VerticalAlignment.Stretch && (HorizontalAlignment != HorizontalAlignment.Stretch || ActualWidth <= ActualHeight))
+            else if (VerticalAlignment == VerticalAlignment.Stretch && (HorizontalAlignment != HorizontalAlignment.Stretch || RenderSize.Width <= RenderSize.Height))
             {
                 direction = GridResizeDirection.Columns;
             }
@@ -116,9 +125,21 @@ public class GridSplitter : Thumb
             {
                 direction = GridResizeDirection.Rows;
             }
-            else
+            else if (RenderSize.Height > RenderSize.Width)
             {
                 direction = GridResizeDirection.Columns;
+            }
+            else
+            {
+                // Fallback to auto-detecting by looking at definitions
+                if (grid.RowDefinitions.Count > 0 && grid.ColumnDefinitions.Count == 0)
+                {
+                    direction = GridResizeDirection.Rows;
+                }
+                else
+                {
+                    direction = GridResizeDirection.Columns;
+                }
             }
         }
 
@@ -229,11 +250,6 @@ public class GridSplitter : Thumb
             }
         }
     }
-
-    // We need to access ActualWidth/ActualHeight for auto-direction logic if not stretched,
-    // RenderSize is available via UIElement.
-    private int ActualWidth => RenderSize.Width;
-    private int ActualHeight => RenderSize.Height;
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {

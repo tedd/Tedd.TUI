@@ -420,6 +420,8 @@ public class Table : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (RenderSize.Width <= 0 || RenderSize.Height <= 0) return;
+
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
         int w = RenderSize.Width;
@@ -454,7 +456,7 @@ public class Table : UIElement
         }
 
         // 2. Draw Header
-        if (ShowHeader)
+        if (ShowHeader && h > (ShowBorder ? 1 : 0))
         {
             int headerY = y + (ShowBorder ? 1 : 0);
             int startX = x + (ShowBorder ? 1 : 0);
@@ -1003,6 +1005,8 @@ internal class TableSeparator : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (RenderSize.Width <= 0 || RenderSize.Height <= 0) return;
+
         var table = FindAncestor<Table>();
         if (table == null) return;
 

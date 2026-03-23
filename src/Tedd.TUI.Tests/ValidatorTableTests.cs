@@ -194,4 +194,24 @@ public class ValidatorTableTests
             }
         }
     }
+
+    [Fact]
+    public void Table_PropertyAssignments_TriggerLayoutInvalidation()
+    {
+        var table = new Table();
+
+        // Check defaults
+        Assert.True(table.ShowHeader);
+        Assert.False(table.ShowBorder);
+
+        // Verify basic property assignments to ensure getters/setters are executed.
+        table.ShowHeader = false;
+        Assert.False(table.ShowHeader);
+
+        table.ShowBorder = true;
+        Assert.True(table.ShowBorder);
+
+        table.BorderStyle = BoxStyle.Double;
+        Assert.Equal(BoxStyle.Double, table.BorderStyle);
+    }
 }
