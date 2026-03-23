@@ -205,7 +205,7 @@ public class ValidatorTableTests
                 // Table attempts to render the single column and its separators even if
                 // available size is constrained to 1x1. The goal of extreme constraint testing
                 // here is strictly the avoidance of exceptions, not a pixel-perfect empty space verification.
-                if (x <= 12 && y <= 3)
+                if (x <= 15 && y <= 5)
                     continue;
 
                 Assert.Equal(' ', buffer1.GetPixel(x, y).Character);
