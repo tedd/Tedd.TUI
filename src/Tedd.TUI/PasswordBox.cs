@@ -4,37 +4,11 @@ namespace Tedd.TUI;
 
 public class PasswordBox : Control
 {
-    internal TextBox? _internalTextBox;
-
-    public PasswordBox()
-    {
-        Focusable = true;
-
-        Template = new ControlTemplate(parent =>
-        {
-            var pb = (PasswordBox)parent;
-
-            var tb = new TextBox { IsPassword = true };
-            tb.TemplatedParent = pb;
-
-            // Forward appearance properties
-            tb.SetBinding(UIElement.BackgroundProperty, new Binding("Background") { RelativeSource = RelativeSource.TemplatedParent });
-            tb.SetBinding(UIElement.ForegroundProperty, new Binding("Foreground") { RelativeSource = RelativeSource.TemplatedParent });
-
-            // Forward Password -> TextBox.Text
-            // Since TUI bindings are OneWay by default and don't robustly support TwoWay back to DependencyProperties without INotifyPropertyChanged,
-            // we will manually sync keystrokes in OnKeyDown.
-            tb.SetBinding(TextBox.TextProperty, new Binding("Password") { RelativeSource = RelativeSource.TemplatedParent });
-
-            tb.SetBinding(TextBox.PasswordCharProperty, new Binding("PasswordChar") { RelativeSource = RelativeSource.TemplatedParent });
-
-            pb._internalTextBox = tb;
-            return tb;
-        });
-    }
+    internal TextBox _internalTextBox => _textBox;
+    private TextBox _textBox;
 
     public static readonly DependencyProperty PasswordProperty =
-        DependencyProperty.Register("Password", typeof(string), typeof(PasswordBox), string.Empty);
+        DependencyProperty.Register(nameof(Password), typeof(string), typeof(PasswordBox), string.Empty);
 
     public string Password
     {
@@ -43,7 +17,7 @@ public class PasswordBox : Control
     }
 
     public static readonly DependencyProperty PasswordCharProperty =
-        DependencyProperty.Register("PasswordChar", typeof(char), typeof(PasswordBox), '*');
+        DependencyProperty.Register(nameof(PasswordChar), typeof(char), typeof(PasswordBox), '*');
 
     public char PasswordChar
     {
@@ -51,36 +25,61 @@ public class PasswordBox : Control
         set => SetValue(PasswordCharProperty, value);
     }
 
-    protected override void OnPropertyChanged(DependencyProperty dp)
+    public static readonly RoutedEvent PasswordChangedEvent =
+        RoutedEvent.Register("PasswordChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(PasswordBox));
+
+    public event RoutedEventHandler PasswordChanged
     {
-        base.OnPropertyChanged(dp);
-        if (dp == IsFocusedProperty)
+        add => AddHandler(PasswordChangedEvent, value);
+        remove => RemoveHandler(PasswordChangedEvent, value);
+    }
+
+    public PasswordBox()
+    {
+        Focusable = true;
+
+        _textBox = new TextBox
         {
-            if (_internalTextBox != null)
+            IsPassword = true,
+            TemplatedParent = this
+        };
+
+        // Bind PasswordChar to TextBox.PasswordChar
+        _textBox.SetBinding(TextBox.PasswordCharProperty, new Binding(nameof(PasswordChar)) { Source = this });
+        _textBox.SetBinding(Control.BackgroundProperty, new Binding(nameof(Background)) { Source = this });
+        _textBox.SetBinding(Control.ForegroundProperty, new Binding(nameof(Foreground)) { Source = this });
+
+        Template = new ControlTemplate((_) => _textBox);
+    }
+
+    protected override void OnPropertyChanged(DependencyProperty property)
+    {
+        base.OnPropertyChanged(property);
+
+        if (property == PasswordProperty)
+        {
+            if (_textBox.Text != Password)
             {
-                _internalTextBox.IsFocused = IsFocused;
+                _textBox.Text = Password;
             }
+            RaiseEvent(new RoutedEventArgs(PasswordChangedEvent, this));
+        }
+        else if (property == UIElement.IsFocusedProperty)
+        {
+            // Sync focus state to inner TextBox so it renders the cursor
+            _textBox.SetValue(UIElement.IsFocusedProperty, IsFocused);
         }
     }
 
     public override void OnKeyDown(KeyEventArgs e)
     {
-        if (_internalTextBox != null)
-        {
-            string oldText = _internalTextBox.Text ?? "";
+        // Forward KeyDown to TextBox
+        _textBox.OnKeyDown(e);
 
-            _internalTextBox.IsFocused = true;
-            _internalTextBox.OnKeyDown(e);
-            _internalTextBox.IsFocused = IsFocused;
-
-            if (_internalTextBox.Text != oldText)
-            {
-                Password = _internalTextBox.Text ?? "";
-            }
-        }
-        else
+        // Sync Password from TextBox Text after key down
+        if (Password != _textBox.Text)
         {
-            base.OnKeyDown(e);
+            Password = _textBox.Text;
         }
     }
 
@@ -88,12 +87,17 @@ public class PasswordBox : Control
     {
         base.OnMouseDown(e);
         Focus();
-        if (_internalTextBox != null)
-        {
-            _internalTextBox.IsFocused = true;
-            _internalTextBox.OnMouseDown(e);
-            _internalTextBox.IsFocused = IsFocused;
-        }
-        // Let e.Handled state persist from base and internal textbox logic
+
+        // Temporarily force focus on the inner TextBox so OnMouseDown calculates cursor position correctly
+        bool wasFocused = _textBox.IsFocused;
+        _textBox.SetValue(UIElement.IsFocusedProperty, true);
+
+        _textBox.OnMouseDown(e);
+
+        // Restore real focus state (which should now be true anyway because we called Focus() on ourselves,
+        // and our OnPropertyChanged synced it down, but just to be safe if that didn't happen synchronously)
+        _textBox.SetValue(UIElement.IsFocusedProperty, IsFocused);
+
+        e.Handled = true;
     }
 }

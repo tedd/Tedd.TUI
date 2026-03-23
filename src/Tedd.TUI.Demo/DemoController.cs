@@ -12,7 +12,8 @@ public class DemoController
     // Controls injected by XamlLoader via Name matching
     public ListBox LogBox;
     public TextBox NameBox;
-    public TextBox PassBox;
+    public PasswordBox PassBox;
+    public Slider VolumeSlider;
     public CheckBox TermsCheck;
     public ComboBox CountryCombo;
     public ListBox SimpleList;

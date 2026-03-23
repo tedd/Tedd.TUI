@@ -183,8 +183,13 @@ class Program
 
         // Password Input
         formStack.AddChild(new TextBlock { Text = "Password:" });
-        var passBox = new TextBox { Width = 30, IsPassword = true, Text = "secret" };
+        var passBox = new PasswordBox { Width = 30, Password = "secret" };
         formStack.AddChild(passBox);
+
+        // Slider
+        formStack.AddChild(new TextBlock { Text = "Volume:" });
+        var volumeSlider = new Slider { Width = 30, Minimum = 0, Maximum = 100, Value = 50 };
+        formStack.AddChild(volumeSlider);
 
         // CheckBox
         var termsCheck = new CheckBox { Content = "I agree to Terms & Conditions" };
