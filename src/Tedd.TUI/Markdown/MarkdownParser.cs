@@ -480,8 +480,9 @@ public class MarkdownParser
     private int FindNextSpecial(string text, int start)
     {
         // Find [ or ! or * or `
-        char[] chars = { '[', '!', '*', '`' };
-        return text.IndexOfAny(chars, start);
+        ReadOnlySpan<char> chars = ['[', '!', '*', '`'];
+        int index = text.AsSpan(start).IndexOfAny(chars);
+        return index == -1 ? -1 : start + index;
     }
 
     private class LinkMatch { public string Text; public string Url; public int NextIndex; }
