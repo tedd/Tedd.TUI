@@ -37,17 +37,21 @@ public class DependencyProperty
 
 public class DependencyObject : INotifyPropertyChanged
 {
-    private readonly Dictionary<DependencyProperty, object> _values = new();
+    private readonly Dictionary<DependencyProperty, object> _localValues = new();
+    private readonly Dictionary<DependencyProperty, object> _triggerValues = new();
 
     protected virtual DependencyObject? InheritanceParent => null;
-
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public object? GetValue(DependencyProperty dp)
     {
-        if (_values.TryGetValue(dp, out var value))
+        if (_localValues.TryGetValue(dp, out var value))
         {
             return value;
+        }
+        if (_triggerValues.TryGetValue(dp, out var tValue))
+        {
+            return tValue;
         }
         if (dp.IsInherited && InheritanceParent != null)
         {
@@ -58,20 +62,33 @@ public class DependencyObject : INotifyPropertyChanged
 
     public void SetValue(DependencyProperty dp, object? value)
     {
-        // Basic type validation
         if (value != null && !dp.PropertyType.IsInstanceOfType(value))
         {
             throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
         }
 
-        _values[dp] = value ?? null!;
+        _localValues[dp] = value ?? null!;
 
         OnPropertyChanged(dp);
     }
 
+    internal void SetTriggerValue(DependencyProperty dp, object? value)
+    {
+        _triggerValues[dp] = value ?? null!;
+        OnPropertyChanged(dp);
+    }
+
+    internal void ClearTriggerValue(DependencyProperty dp)
+    {
+        if (_triggerValues.Remove(dp))
+        {
+            OnPropertyChanged(dp);
+        }
+    }
+
     public void ClearValue(DependencyProperty dp)
     {
-        if (_values.Remove(dp))
+        if (_localValues.Remove(dp))
         {
             OnPropertyChanged(dp);
         }
@@ -79,7 +96,7 @@ public class DependencyObject : INotifyPropertyChanged
 
     public bool HasLocalValue(DependencyProperty dp)
     {
-        return _values.ContainsKey(dp);
+        return _localValues.ContainsKey(dp);
     }
 
     protected virtual void OnPropertyChanged(DependencyProperty dp)
