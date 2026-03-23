@@ -79,7 +79,8 @@ public class TriggerTests
     public void Trigger_RevertsToLocalValue_WhenConditionNoLongerMet()
     {
         var control = new TestControl();
-        // Do not set local value initially so trigger can apply
+        control.TestValue = 100; // Local value
+
         var template = new ControlTemplate((c) => new Border());
 
         var trigger = new Trigger
@@ -92,38 +93,14 @@ public class TriggerTests
         template.Triggers.Add(trigger);
         control.Template = template;
 
-        Assert.Equal(0, control.TestValue); // Default value
+        Assert.Equal(100, control.TestValue);
 
         // Condition met
         control.IsHovered = true;
         Assert.Equal(42, control.TestValue);
 
-        // Condition no longer met, should revert to default value
+        // Condition no longer met, should revert to local value
         control.IsHovered = false;
-        Assert.Equal(0, control.TestValue);
-    }
-
-    [Fact]
-    public void Trigger_IgnoresSetter_WhenLocalValueIsSet()
-    {
-        var control = new TestControl();
-        control.TestValue = 100; // Local value
-
-        var template = new ControlTemplate((c) => new Border());
-        var trigger = new Trigger
-        {
-            Property = TestControl.IsHoveredProperty,
-            Value = true
-        };
-        trigger.Setters.Add(new Setter(TestControl.TestValueProperty, 42));
-
-        template.Triggers.Add(trigger);
-        control.Template = template;
-
-        Assert.Equal(100, control.TestValue); // Local wins over default
-
-        // Condition met - but local value should still win
-        control.IsHovered = true;
         Assert.Equal(100, control.TestValue);
     }
 
