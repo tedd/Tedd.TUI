@@ -133,6 +133,41 @@ public class TriggerTests
     }
 
     [Fact]
+    public void Trigger_ReExposesTriggerValue_AfterClearValueWhileActive()
+    {
+        // Regression: SetValue while trigger is active followed by ClearValue must
+        // re-expose the trigger value rather than falling back to inherited/default.
+        var control = new TestControl();
+        var template = new ControlTemplate((c) => new Border());
+
+        var trigger = new Trigger
+        {
+            Property = TestControl.IsHoveredProperty,
+            Value = true
+        };
+        trigger.Setters.Add(new Setter(TestControl.TestValueProperty, 42));
+
+        template.Triggers.Add(trigger);
+        control.Template = template;
+
+        // Activate the trigger
+        control.IsHovered = true;
+        Assert.Equal(42, control.TestValue);
+
+        // Explicitly override the setter property while the trigger is still active
+        control.TestValue = 999;
+        Assert.Equal(999, control.TestValue);
+
+        // Clear the local override — the trigger is still active, so its value must surface
+        control.ClearValue(TestControl.TestValueProperty);
+        Assert.Equal(42, control.TestValue);
+
+        // Deactivate the trigger — should revert to the default (0)
+        control.IsHovered = false;
+        Assert.Equal(0, control.TestValue);
+    }
+
+    [Fact]
     public void Trigger_ResolvesTargetName()
     {
         var control = new TestControl();
