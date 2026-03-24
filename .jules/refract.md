@@ -40,3 +40,6 @@
 ## 2026-03-06 - Property Modernization
 **Observation:** Identified legacy auto-implemented properties utilizing manual private backing fields (e.g., `_templateRoot` in `Control.cs`, `_parent` in `UIElement.cs`, `_theme` in `MarkdownView.cs`, `_content` in `TuiWindow.cs`).
 **Strategic Action:** Applied C# 14 field-backed properties to minimize lexical boilerplate and encapsulate validation logic directly within the accessor. Replaced manual backing fields with the `field` keyword or automatic properties where applicable, effectively reducing cognitive load without altering the functional semantics.
+## 2024-05-19 - C# 14 Array Initialization and Slicing Optimization
+**Observation:** Legacy local character array initialized on every method invocation in `FindNextSpecial` within `src/Tedd.TUI/Markdown/MarkdownParser.cs` causing unnecessary heap allocation: `char[] chars = { '[', '!', '*', '`' };`.
+**Strategic Action:** Replaced the per-call `char[]` allocation with a `ReadOnlySpan<char>` initialized via a C# 12 collection expression: `ReadOnlySpan<char> chars = ['[', '!', '*', '`'];`, and switched to a span-based search `text.AsSpan(start).IndexOfAny(chars)` to scan from `start` without creating additional arrays or substrings, thereby reducing heap allocations.
