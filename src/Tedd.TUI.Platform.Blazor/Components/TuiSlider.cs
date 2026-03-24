@@ -43,11 +43,15 @@ public class TuiSlider : TuiComponentBase
         _slider.Minimum = Minimum;
         _slider.Maximum = Maximum;
 
-        if (_slider.Value != Value)
+        var clampedValue = Math.Clamp(Value, Minimum, Maximum);
+
+        if (_slider.Value != clampedValue)
         {
-            _slider.Value = Value;
+            _slider.Value = clampedValue;
         }
 
+        // Keep the component's Value in sync with the clamped value without raising events.
+        Value = clampedValue;
         _slider.Orientation = Orientation;
         _slider.SmallChange = SmallChange;
         _slider.LargeChange = LargeChange;
