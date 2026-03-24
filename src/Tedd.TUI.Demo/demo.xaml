@@ -78,7 +78,11 @@
              <TextBox Name="NameBox" Width="30" Text="John Doe"/>
 
              <TextBlock Text="Password:"/>
-             <TextBox Name="PassBox" Width="30" IsPassword="True" Text="secret"/>
+             <PasswordBox Name="PassBox" Width="30" Password="secret"/>
+
+             <TextBlock Text="Volume:"/>
+             <Slider Name="FormSlider" Minimum="0" Maximum="100" Value="50" Width="20"/>
+             <TextBlock Name="VolumeLabel" Text="Current Volume: 50"/>
 
              <CheckBox Name="TermsCheck" Content="I agree to Terms &amp; Conditions"/>
 

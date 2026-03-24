@@ -12,7 +12,9 @@ public class DemoController
     // Controls injected by XamlLoader via Name matching
     public ListBox LogBox;
     public TextBox NameBox;
-    public TextBox PassBox;
+    public PasswordBox PassBox;
+    public Slider FormSlider;
+    public TextBlock VolumeLabel;
     public CheckBox TermsCheck;
     public ComboBox CountryCombo;
     public ListBox SimpleList;
@@ -34,6 +36,12 @@ public class DemoController
         _app = app;
         _window = window;
 
+
+        // Init Slider logic
+        if (FormSlider != null && VolumeLabel != null)
+        {
+            FormSlider.ValueChanged += (s, e) => VolumeLabel.Text = $"Current Volume: {FormSlider.Value}";
+        }
 
         // Init Navigation Tree logic
         if (NavTree != null && MainTabs != null)
