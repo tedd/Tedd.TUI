@@ -49,7 +49,7 @@ public class GridSplitterTests
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) }); // Splitter row
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10, GridUnitType.Pixel) });
 
-        var splitter = new GridSplitter();
+        var splitter = new GridSplitter() { ResizeDirection = GridResizeDirection.Rows };
         Grid.SetRow(splitter, 1);
         grid.Children.Add(splitter);
         window.Content = grid;

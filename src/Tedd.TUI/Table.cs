@@ -427,27 +427,36 @@ public class Table : UIElement
 
         TableBoxChars chars = TableBoxChars.Get(BorderStyle);
 
+        if (w <= 0 || h <= 0) return;
+
         // 1. Draw Outer Border
         if (ShowBorder)
         {
             buffer.SetPixel(x, y, chars.TL, HeaderForeground, HeaderBackground);
-            buffer.SetPixel(x + w - 1, y, chars.TR, HeaderForeground, HeaderBackground);
-            buffer.SetPixel(x, y + h - 1, chars.BL, HeaderForeground, HeaderBackground);
-            buffer.SetPixel(x + w - 1, y + h - 1, chars.BR, HeaderForeground, HeaderBackground);
+            if (w > 1) buffer.SetPixel(x + w - 1, y, chars.TR, HeaderForeground, HeaderBackground);
+            if (h > 1) buffer.SetPixel(x, y + h - 1, chars.BL, HeaderForeground, HeaderBackground);
+            if (w > 1 && h > 1) buffer.SetPixel(x + w - 1, y + h - 1, chars.BR, HeaderForeground, HeaderBackground);
 
-            buffer.DrawHLine(x + 1, y, w - 2, chars.H, HeaderForeground, HeaderBackground);
-            buffer.DrawHLine(x + 1, y + h - 1, w - 2, chars.H, HeaderForeground, HeaderBackground);
+            if (w > 2)
+            {
+                buffer.DrawHLine(x + 1, y, w - 2, chars.H, HeaderForeground, HeaderBackground);
+                if (h > 1) buffer.DrawHLine(x + 1, y + h - 1, w - 2, chars.H, HeaderForeground, HeaderBackground);
+            }
 
-            buffer.DrawVLine(x, y + 1, h - 2, chars.V, HeaderForeground, HeaderBackground);
-            buffer.DrawVLine(x + w - 1, y + 1, h - 2, chars.V, HeaderForeground, HeaderBackground);
+            if (h > 2)
+            {
+                buffer.DrawVLine(x, y + 1, h - 2, chars.V, HeaderForeground, HeaderBackground);
+                if (w > 1) buffer.DrawVLine(x + w - 1, y + 1, h - 2, chars.V, HeaderForeground, HeaderBackground);
+            }
 
-            if (ShowVerticalLines)
+            if (ShowVerticalLines && w > 2)
             {
                 int cx = 1;
                 for (int i = 0; i < Columns.Count - 1; i++)
                 {
                     cx += Columns[i].ActualWidth;
-                    buffer.SetPixel(x + cx, y, chars.TDown, HeaderForeground, HeaderBackground);
+                    if (cx < w - 1)
+                        buffer.SetPixel(x + cx, y, chars.TDown, HeaderForeground, HeaderBackground);
                     cx++;
                 }
             }
@@ -463,11 +472,18 @@ public class Table : UIElement
             for (int i = 0; i < Columns.Count; i++)
             {
                 var col = Columns[i];
-                var span = (col.Header ?? "").AsSpan();
-                if (span.Length > col.ActualWidth) span = span.Slice(0, col.ActualWidth);
+                int drawWidth = col.ActualWidth;
+                int maxColX = x + w - (ShowBorder ? 1 : 0);
+                if (colX + drawWidth > maxColX) drawWidth = maxColX - colX;
 
-                buffer.DrawHLine(colX, headerY, col.ActualWidth, ' ', HeaderForeground, HeaderBackground);
-                buffer.DrawString(colX, headerY, span, HeaderForeground, HeaderBackground);
+                if (drawWidth > 0)
+                {
+                    var span = (col.Header ?? "").AsSpan();
+                    if (span.Length > drawWidth) span = span.Slice(0, drawWidth);
+
+                    buffer.DrawHLine(colX, headerY, drawWidth, ' ', HeaderForeground, HeaderBackground);
+                    buffer.DrawString(colX, headerY, span, HeaderForeground, HeaderBackground);
+                }
 
                 colX += col.ActualWidth;
 
@@ -488,32 +504,41 @@ public class Table : UIElement
 
             int sepY = headerY + 1;
 
-            if (ShowBorder)
+            if (ShowBorder && sepY < y + h - 1)
             {
                 buffer.SetPixel(x, sepY, chars.TLeft, HeaderForeground, HeaderBackground);
-                buffer.SetPixel(x + w - 1, sepY, chars.TRight, HeaderForeground, HeaderBackground);
+                if (w > 1) buffer.SetPixel(x + w - 1, sepY, chars.TRight, HeaderForeground, HeaderBackground);
             }
 
-            int lineX = startX;
-            for (int i = 0; i < Columns.Count; i++)
+            if (sepY < y + h)
             {
-                int cw = Columns[i].ActualWidth;
-                buffer.DrawHLine(lineX, sepY, cw, chars.HeaderSepH, HeaderForeground, HeaderBackground);
-                lineX += cw;
-
-                if (i < Columns.Count - 1)
+                int lineX = startX;
+                for (int i = 0; i < Columns.Count; i++)
                 {
-                    if (ShowVerticalLines)
-                        buffer.SetPixel(lineX, sepY, chars.HeaderCross, HeaderForeground, HeaderBackground);
-                    lineX++;
-                }
-            }
+                    int cw = Columns[i].ActualWidth;
+                    int maxLineX = x + w - (ShowBorder ? 1 : 0);
+                    int drawWidth = cw;
+                    if (lineX + drawWidth > maxLineX) drawWidth = maxLineX - lineX;
 
-            // Fill remaining separator line
-            if (lineX < x + w - (ShowBorder ? 1 : 0))
-            {
-                int endX = x + w - (ShowBorder ? 1 : 0);
-                buffer.DrawHLine(lineX, sepY, endX - lineX, chars.HeaderSepH, HeaderForeground, HeaderBackground);
+                    if (drawWidth > 0)
+                        buffer.DrawHLine(lineX, sepY, drawWidth, chars.HeaderSepH, HeaderForeground, HeaderBackground);
+
+                    lineX += cw;
+
+                    if (i < Columns.Count - 1 && lineX < maxLineX)
+                    {
+                        if (ShowVerticalLines)
+                            buffer.SetPixel(lineX, sepY, chars.HeaderCross, HeaderForeground, HeaderBackground);
+                        lineX++;
+                    }
+                }
+
+                // Fill remaining separator line
+                if (lineX < x + w - (ShowBorder ? 1 : 0))
+                {
+                    int endX = x + w - (ShowBorder ? 1 : 0);
+                    buffer.DrawHLine(lineX, sepY, endX - lineX, chars.HeaderSepH, HeaderForeground, HeaderBackground);
+                }
             }
         }
 
@@ -535,7 +560,7 @@ public class Table : UIElement
                 if (screenY >= bodyScreenY && screenY < bodyScreenY + _scrollViewer.RenderSize.Height)
                 {
                     buffer.SetPixel(x, screenY, chars.BodySepTLeft, HeaderForeground, HeaderBackground);
-                    buffer.SetPixel(x + w - 1, screenY, chars.BodySepTRight, HeaderForeground, HeaderBackground);
+                    if (w > 1) buffer.SetPixel(x + w - 1, screenY, chars.BodySepTRight, HeaderForeground, HeaderBackground);
                 }
             }
 
@@ -544,14 +569,15 @@ public class Table : UIElement
         }
 
         // 5. Draw Bottom Border Junctions
-        if (ShowBorder && ShowVerticalLines)
+        if (ShowBorder && ShowVerticalLines && h > 1 && w > 2)
         {
             int cx = 1;
             int by = y + h - 1;
             for (int i = 0; i < Columns.Count - 1; i++)
             {
                 cx += Columns[i].ActualWidth;
-                buffer.SetPixel(x + cx, by, chars.TUp, HeaderForeground, HeaderBackground);
+                if (cx < w - 1)
+                    buffer.SetPixel(x + cx, by, chars.TUp, HeaderForeground, HeaderBackground);
                 cx++;
             }
         }

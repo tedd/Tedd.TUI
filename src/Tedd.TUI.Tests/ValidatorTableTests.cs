@@ -190,7 +190,7 @@ public class ValidatorTableTests
                 if (x == 0 && y == 0)
                     continue;
 
-                Assert.Equal(' ', buffer1.GetPixel(x, y).Character);
+                if(' ' != buffer1.GetPixel(x, y).Character) Console.WriteLine($"Mismatch at {x},{y} : {buffer1.GetPixel(x, y).Character}"); Assert.Equal(' ', buffer1.GetPixel(x, y).Character);
             }
         }
     }
