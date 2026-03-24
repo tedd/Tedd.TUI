@@ -83,6 +83,21 @@ public class GridSplitter : Thumb
             return GridResizeDirection.Columns;
         }
 
+        if (Parent is Grid grid)
+        {
+            int row = Grid.GetRow(this);
+            int col = Grid.GetColumn(this);
+
+            bool rowIsAuto = row >= 0 && row < grid.RowDefinitions.Count && grid.RowDefinitions[row].Height.GridUnitType == GridUnitType.Auto;
+            bool colIsAuto = col >= 0 && col < grid.ColumnDefinitions.Count && grid.ColumnDefinitions[col].Width.GridUnitType == GridUnitType.Auto;
+
+            if (rowIsAuto && !colIsAuto) return GridResizeDirection.Rows;
+            if (colIsAuto && !rowIsAuto) return GridResizeDirection.Columns;
+
+            if (grid.RowDefinitions.Count > grid.ColumnDefinitions.Count) return GridResizeDirection.Rows;
+            if (grid.ColumnDefinitions.Count > grid.RowDefinitions.Count) return GridResizeDirection.Columns;
+        }
+
         // Fallback: prefer column-resizing (vertical splitter).
         return GridResizeDirection.Columns;
     }
