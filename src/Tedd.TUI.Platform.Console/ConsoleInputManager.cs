@@ -303,6 +303,7 @@ public class ConsoleInputManager
         // 0: buttons (0=left, 1=middle, 2=right)
         // x, y: 1-based coordinates
         // M = press, m = release
+        // Optimization: Time Complexity: O(N), Space Complexity: O(1)
 
         try
         {
