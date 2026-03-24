@@ -102,3 +102,10 @@
 ## 2026-03-09 - GridSplitter Integration
 **Observation:** The TUI framework lacked a `GridSplitter` component, which is a standard WPF control used within a `Grid` to dynamically resize rows and columns.
 **Strategic Action:** Engineered the `GridSplitter` component inheriting from `Thumb`. Leveraged existing `DragDelta` event routing to intercept user interactions and translate them into size modifications on adjacent `RowDefinition`/`ColumnDefinition` objects of the parent `Grid`, filling a critical UI parity gap while maintaining the zero-allocation recursive layout engine methodology.
+## 2026-03-09 - Dependency Property Trigger Precedence Fix
+**Observation:** Discovered a parity deficit where `Control.cs` manually cached and restored original `_localValues` to apply visual state triggers, breaking the XAML declarative property precedence (where Local > Trigger but explicit user overrides during an active trigger should persist).
+**Strategic Action:**
+- Segmented `DependencyObject` state into `_localValues` and `_triggerValues`.
+- Implemented `SetTriggerValue`/`ClearTriggerValue` internal methods.
+- Corrected `GetValue()` to accurately evaluate `_triggerValues` and `_localValues`, properly simulating explicit local overrides via `_triggerValues.Remove(dp)` in `SetValue`.
+- Upgraded `Control.EvaluateTriggers` to use these native API paths, removing error-prone internal value caching logic and ensuring WPF-isomorphic resolution.
