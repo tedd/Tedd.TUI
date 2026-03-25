@@ -183,7 +183,7 @@ The framework employs a robust, recursive two-pass layout system orchestrated by
 
 ### Overlay System
 Tedd.TUI implements a robust stacking overlay system orchestrated by `TuiWindow`. This architecture is designed to bypass standard document-flow layout passes for modal or transient visual elements (such as `DialogBox` and context menus).
-- **Stacking Mechanics:** Overlays are managed chronologically via `PushOverlay` and `RemoveOverlay` (superseding the obsolete `SetOverlay` method). New overlays are structurally appended to a dedicated rendering collection rather than the standard `Content` visual tree. Internally, the stacking system optimizes topological checks utilizing a `HashSet<UIElement>` to provide $O(1)$ presence verification, preventing redundant stack allocations and enabling an early-exit if the requested overlay is already at the apex.
+- **Stacking Mechanics:** Overlays are managed chronologically via `PushOverlay` and `RemoveOverlay` (superseding the obsolete `SetOverlay` method). New overlays are structurally appended to a dedicated rendering collection rather than the standard `Content` visual tree. Internally, the stacking system optimizes topological checks utilizing a `List<UIElement>` to provide $O(N)$ presence verification while preventing redundant stack allocations.
 - **Rendering & Hit-Testing Priority:** To achieve absolute visual supremacy, the `Render` pipeline processes the overlay collection iteratively *after* the primary `Content`. Conversely, the deterministic input routing system evaluates the overlay stack in reverse topological order (top-to-bottom) during `InputHitTestRecursive`, ensuring the active overlay intercepts global input coordinates before underlying standard components.
 
 ### Input & Interaction
