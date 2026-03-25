@@ -32,7 +32,7 @@ public class GridSplitter : Thumb
         }
 
         // Ensure a non-zero thickness so the splitter is visible and hit-testable.
-        var direction = GetEffectiveResizeDirectionForMeasure();
+        var direction = GetEffectiveResizeDirection();
 
         int width = baseSize.Width;
         int height = baseSize.Height;
@@ -61,7 +61,7 @@ public class GridSplitter : Thumb
         return new Size(width, height);
     }
 
-    private GridResizeDirection GetEffectiveResizeDirectionForMeasure()
+    private GridResizeDirection GetEffectiveResizeDirection()
     {
         var direction = ResizeDirection;
 
@@ -83,27 +83,19 @@ public class GridSplitter : Thumb
             return GridResizeDirection.Columns;
         }
 
-        // If both are stretch, let's look at the parent Grid to see if we're in a Row or Column that gives us a hint.
         if (Parent is Grid grid)
         {
             int row = Grid.GetRow(this);
             int col = Grid.GetColumn(this);
 
-            // If the row we are in is Auto or we are spanning columns but not rows, we are likely a horizontal splitter.
-            int rowSpan = Grid.GetRowSpan(this);
-            int colSpan = Grid.GetColumnSpan(this);
+            bool rowIsAuto = row >= 0 && row < grid.RowDefinitions.Count && grid.RowDefinitions[row].Height.GridUnitType == GridUnitType.Auto;
+            bool colIsAuto = col >= 0 && col < grid.ColumnDefinitions.Count && grid.ColumnDefinitions[col].Width.GridUnitType == GridUnitType.Auto;
 
-            if (colSpan > 1 && rowSpan == 1) return GridResizeDirection.Rows;
-            if (rowSpan > 1 && colSpan == 1) return GridResizeDirection.Columns;
+            if (rowIsAuto && !colIsAuto) return GridResizeDirection.Rows;
+            if (colIsAuto && !rowIsAuto) return GridResizeDirection.Columns;
 
-            if (row >= 0 && row < grid.RowDefinitions.Count && grid.RowDefinitions[row].Height.GridUnitType == GridUnitType.Auto)
-            {
-                return GridResizeDirection.Rows;
-            }
-            if (col >= 0 && col < grid.ColumnDefinitions.Count && grid.ColumnDefinitions[col].Width.GridUnitType == GridUnitType.Auto)
-            {
-                return GridResizeDirection.Columns;
-            }
+            if (grid.RowDefinitions.Count > grid.ColumnDefinitions.Count) return GridResizeDirection.Rows;
+            if (grid.ColumnDefinitions.Count > grid.RowDefinitions.Count) return GridResizeDirection.Columns;
         }
 
         // Fallback: prefer column-resizing (vertical splitter).
@@ -123,28 +115,7 @@ public class GridSplitter : Thumb
         int row = Grid.GetRow(this);
         int col = Grid.GetColumn(this);
 
-        GridResizeDirection direction = ResizeDirection;
-
-        if (direction == GridResizeDirection.Auto)
-        {
-            // If it's effectively a horizontal bar (width > height), resize rows.
-            // If it's a vertical bar (height > width), resize columns.
-            // When Grid length is Auto and limits are unconstrained, RenderSize height might be int.MaxValue.
-            // But we should use our own MeasureOverride thickness logic to guide direction.
-            var measureDirection = GetEffectiveResizeDirectionForMeasure();
-            if (measureDirection != GridResizeDirection.Auto)
-            {
-                direction = measureDirection;
-            }
-            else if (ActualWidth > ActualHeight)
-            {
-                direction = GridResizeDirection.Rows;
-            }
-            else
-            {
-                direction = GridResizeDirection.Columns;
-            }
-        }
+        GridResizeDirection direction = GetEffectiveResizeDirection();
 
         if (direction == GridResizeDirection.Columns)
         {
@@ -253,11 +224,6 @@ public class GridSplitter : Thumb
             }
         }
     }
-
-    // We need to access ActualWidth/ActualHeight for auto-direction logic if not stretched,
-    // RenderSize is available via UIElement.
-    private int ActualWidth => RenderSize.Width;
-    private int ActualHeight => RenderSize.Height;
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
