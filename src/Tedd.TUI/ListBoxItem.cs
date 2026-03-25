@@ -35,7 +35,7 @@ public class ListBoxItem : ContentControl
     {
         Focusable = true;
 
-        Template = new ControlTemplate(parent =>
+        var template = new ControlTemplate(parent =>
         {
             var cp = new ContentPresenter
             {
@@ -51,7 +51,9 @@ public class ListBoxItem : ContentControl
         selectedTrigger.Setters.Add(new Setter { Property = BackgroundProperty, Value = ConsoleColor.White });
         selectedTrigger.Setters.Add(new Setter { Property = ForegroundProperty, Value = ConsoleColor.Black });
 
-        Template.Triggers.Add(selectedTrigger);
+        template.Triggers.Add(selectedTrigger);
+
+        Template = template;
     }
 
     protected override void OnPropertyChanged(DependencyProperty dp)
