@@ -83,6 +83,29 @@ public class GridSplitter : Thumb
             return GridResizeDirection.Columns;
         }
 
+        // If both are stretch, let's look at the parent Grid to see if we're in a Row or Column that gives us a hint.
+        if (Parent is Grid grid)
+        {
+            int row = Grid.GetRow(this);
+            int col = Grid.GetColumn(this);
+
+            // If the row we are in is Auto or we are spanning columns but not rows, we are likely a horizontal splitter.
+            int rowSpan = Grid.GetRowSpan(this);
+            int colSpan = Grid.GetColumnSpan(this);
+
+            if (colSpan > 1 && rowSpan == 1) return GridResizeDirection.Rows;
+            if (rowSpan > 1 && colSpan == 1) return GridResizeDirection.Columns;
+
+            if (row >= 0 && row < grid.RowDefinitions.Count && grid.RowDefinitions[row].Height.GridUnitType == GridUnitType.Auto)
+            {
+                return GridResizeDirection.Rows;
+            }
+            if (col >= 0 && col < grid.ColumnDefinitions.Count && grid.ColumnDefinitions[col].Width.GridUnitType == GridUnitType.Auto)
+            {
+                return GridResizeDirection.Columns;
+            }
+        }
+
         // Fallback: prefer column-resizing (vertical splitter).
         return GridResizeDirection.Columns;
     }
@@ -104,15 +127,16 @@ public class GridSplitter : Thumb
 
         if (direction == GridResizeDirection.Auto)
         {
-            if (HorizontalAlignment == HorizontalAlignment.Stretch && (VerticalAlignment != VerticalAlignment.Stretch || ActualWidth > ActualHeight))
+            // If it's effectively a horizontal bar (width > height), resize rows.
+            // If it's a vertical bar (height > width), resize columns.
+            // When Grid length is Auto and limits are unconstrained, RenderSize height might be int.MaxValue.
+            // But we should use our own MeasureOverride thickness logic to guide direction.
+            var measureDirection = GetEffectiveResizeDirectionForMeasure();
+            if (measureDirection != GridResizeDirection.Auto)
             {
-                direction = GridResizeDirection.Rows;
+                direction = measureDirection;
             }
-            else if (VerticalAlignment == VerticalAlignment.Stretch && (HorizontalAlignment != HorizontalAlignment.Stretch || ActualWidth <= ActualHeight))
-            {
-                direction = GridResizeDirection.Columns;
-            }
-            else if (RenderSize.Width > RenderSize.Height)
+            else if (ActualWidth > ActualHeight)
             {
                 direction = GridResizeDirection.Rows;
             }
