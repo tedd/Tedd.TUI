@@ -104,7 +104,15 @@ public class GridSplitter : Thumb
 
         if (direction == GridResizeDirection.Auto)
         {
-            if (HorizontalAlignment == HorizontalAlignment.Stretch && (VerticalAlignment != VerticalAlignment.Stretch || ActualWidth > ActualHeight))
+            if (e.VerticalChange != 0 && e.HorizontalChange == 0)
+            {
+                direction = GridResizeDirection.Rows;
+            }
+            else if (e.HorizontalChange != 0 && e.VerticalChange == 0)
+            {
+                direction = GridResizeDirection.Columns;
+            }
+            else if (HorizontalAlignment == HorizontalAlignment.Stretch && (VerticalAlignment != VerticalAlignment.Stretch || ActualWidth > ActualHeight))
             {
                 direction = GridResizeDirection.Rows;
             }

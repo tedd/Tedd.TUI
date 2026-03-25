@@ -424,6 +424,10 @@ public class Table : UIElement
         int y = RenderSize.Y + offsetY;
         int w = RenderSize.Width;
         int h = RenderSize.Height;
+        if (w <= 0 || h <= 0) return;
+        buffer.PushClip(new Rect(x, y, w, h));
+        try {
+        if (w <= 0 || h <= 0) return;
 
         TableBoxChars chars = TableBoxChars.Get(BorderStyle);
 
@@ -560,6 +564,7 @@ public class Table : UIElement
         {
             RenderPagination(buffer, offsetX, offsetY);
         }
+        } finally { buffer.PopClip(); }
     }
 
     public override void OnKeyDown(KeyEventArgs e)
