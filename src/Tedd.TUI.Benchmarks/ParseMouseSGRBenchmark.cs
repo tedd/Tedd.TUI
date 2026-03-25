@@ -10,23 +10,21 @@ namespace Tedd.TUI.Benchmarks
         private string _sequence = "[<0;15;32M";
 
         [Benchmark(Baseline = true)]
-        public void ParseMouseSGR_Legacy()
+        public int ParseMouseSGR_Legacy()
         {
             var result = ParseMouseSGRLegacy.ParseMouseSGR_Legacy(_sequence);
-            if (result.HasValue)
-            {
-                _ = result.Value.btn + result.Value.x + result.Value.y + (result.Value.isDown ? 1 : 0);
-            }
+            return result.HasValue
+                ? result.Value.btn + result.Value.x + result.Value.y + (result.Value.isDown ? 1 : 0)
+                : 0;
         }
 
         [Benchmark]
-        public void ParseMouseSGR_Optimized()
+        public int ParseMouseSGR_Optimized()
         {
             var result = ParseMouseSGR_Opt(_sequence);
-            if (result.HasValue)
-            {
-                _ = result.Value.btn + result.Value.x + result.Value.y + (result.Value.isDown ? 1 : 0);
-            }
+            return result.HasValue
+                ? result.Value.btn + result.Value.x + result.Value.y + (result.Value.isDown ? 1 : 0)
+                : 0;
         }
 
         public static (int btn, int x, int y, bool isDown)? ParseMouseSGR_Opt(string seq)
