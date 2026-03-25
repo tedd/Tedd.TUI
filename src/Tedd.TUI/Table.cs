@@ -84,6 +84,8 @@ public class TableRow : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (RenderSize.Width <= 0 || RenderSize.Height <= 0) return;
+
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
@@ -420,6 +422,8 @@ public class Table : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (RenderSize.Width <= 0 || RenderSize.Height <= 0) return;
+
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
         int w = RenderSize.Width;
@@ -443,7 +447,7 @@ public class Table : UIElement
             if (h > 2) buffer.DrawVLine(x, y + 1, h - 2, chars.V, HeaderForeground, HeaderBackground);
             if (h > 2 && w > 1) buffer.DrawVLine(x + w - 1, y + 1, h - 2, chars.V, HeaderForeground, HeaderBackground);
 
-            if (ShowVerticalLines)
+            if (ShowVerticalLines && w > 2)
             {
                 int cx = 1;
                 for (int i = 0; i < Columns.Count - 1; i++)
@@ -459,13 +463,12 @@ public class Table : UIElement
         }
 
         // 2. Draw Header
-        if (ShowHeader)
+        if (ShowHeader && h > (ShowBorder ? 1 : 0) && w > 0)
         {
             int headerY = y + (ShowBorder ? 1 : 0);
             int startX = x + (ShowBorder ? 1 : 0);
 
-            int colX = startX;
-            for (int i = 0; i < Columns.Count; i++)
+            if (headerY < y + h) // Ensure we don't draw outside Table bounds
             {
                 var col = Columns[i];
                 int actualW = col.ActualWidth;
@@ -481,21 +484,22 @@ public class Table : UIElement
                 buffer.DrawHLine(colX, headerY, drawWidth, ' ', HeaderForeground, HeaderBackground);
                 buffer.DrawString(colX, headerY, span, HeaderForeground, HeaderBackground);
 
-                colX += col.ActualWidth;
+                    colX += col.ActualWidth;
 
-                if (i < Columns.Count - 1)
-                {
-                    if (ShowVerticalLines)
-                        buffer.SetPixel(colX, headerY, chars.HeaderInnerV, HeaderForeground, HeaderBackground);
-                    colX++;
+                    if (i < Columns.Count - 1)
+                    {
+                        if (ShowVerticalLines)
+                            buffer.SetPixel(colX, headerY, chars.HeaderInnerV, HeaderForeground, HeaderBackground);
+                        colX++;
+                    }
                 }
-            }
 
-            // Fill remaining header background
-            if (colX < x + w - (ShowBorder ? 1 : 0))
-            {
-                int endX = x + w - (ShowBorder ? 1 : 0);
-                buffer.DrawHLine(colX, headerY, endX - colX, ' ', HeaderForeground, HeaderBackground);
+                // Fill remaining header background
+                if (colX < x + w - (ShowBorder ? 1 : 0))
+                {
+                    int endX = x + w - (ShowBorder ? 1 : 0);
+                    buffer.DrawHLine(colX, headerY, endX - colX, ' ', HeaderForeground, HeaderBackground);
+                }
             }
 
             int sepY = headerY + 1;
@@ -1024,6 +1028,8 @@ internal class TableSeparator : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (RenderSize.Width <= 0 || RenderSize.Height <= 0) return;
+
         var table = FindAncestor<Table>();
         if (table == null) return;
 

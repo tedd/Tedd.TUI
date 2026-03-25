@@ -183,8 +183,16 @@ class Program
 
         // Password Input
         formStack.AddChild(new TextBlock { Text = "Password:" });
-        var passBox = new TextBox { Width = 30, IsPassword = true, Text = "secret" };
+        var passBox = new PasswordBox { Width = 30, Password = "secret" };
         formStack.AddChild(passBox);
+
+        // Slider Input
+        formStack.AddChild(new TextBlock { Text = "Volume:" });
+        var volumeSlider = new Slider { Minimum = 0, Maximum = 100, Value = 50, Width = 20 };
+        var volumeLabel = new TextBlock { Text = $"Current Volume: {volumeSlider.Value}" };
+        volumeSlider.ValueChanged += (s, e) => { volumeLabel.Text = $"Current Volume: {volumeSlider.Value}"; };
+        formStack.AddChild(volumeSlider);
+        formStack.AddChild(volumeLabel);
 
         // CheckBox
         var termsCheck = new CheckBox { Content = "I agree to Terms & Conditions" };

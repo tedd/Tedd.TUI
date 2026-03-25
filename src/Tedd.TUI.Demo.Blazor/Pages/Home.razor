@@ -79,8 +79,12 @@
                     <TuiTextBox Width="30" @bind-Text="formName" />
                     
                     <TuiLabel Text="Password:" />
-                    <TuiTextBox Width="30" IsPassword="true" @bind-Text="formPass" />
+                    <TuiPasswordBox Width="30" @bind-Password="formPass" />
                     
+                    <TuiLabel Text="Volume:" />
+                    <TuiSlider Minimum="0" Maximum="100" @bind-Value="formVolume" Width="20" />
+                    <TuiLabel Text="@($"Current Volume: {formVolume}")" />
+
                     <TuiCheckBox Content="I agree to Terms & Conditions" @bind-IsChecked="isAgreed" />
                     
                     <TuiLabel Text="Gender:" />
@@ -291,6 +295,7 @@
     // Form Data
     private string formName = "John Doe";
     private string formPass = "secret";
+    private int formVolume = 50;
     private bool isAgreed = false;
     private bool isMale = true;
     private bool isFemale = false; 

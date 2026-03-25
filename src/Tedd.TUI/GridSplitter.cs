@@ -32,7 +32,7 @@ public class GridSplitter : Thumb
         }
 
         // Ensure a non-zero thickness so the splitter is visible and hit-testable.
-        var direction = GetEffectiveResizeDirectionForMeasure();
+        var direction = GetEffectiveResizeDirection();
 
         int width = baseSize.Width;
         int height = baseSize.Height;
@@ -61,7 +61,7 @@ public class GridSplitter : Thumb
         return new Size(width, height);
     }
 
-    private GridResizeDirection GetEffectiveResizeDirectionForMeasure()
+    private GridResizeDirection GetEffectiveResizeDirection()
     {
         var direction = ResizeDirection;
 
@@ -83,6 +83,21 @@ public class GridSplitter : Thumb
             return GridResizeDirection.Columns;
         }
 
+        if (Parent is Grid grid)
+        {
+            int row = Grid.GetRow(this);
+            int col = Grid.GetColumn(this);
+
+            bool rowIsAuto = row >= 0 && row < grid.RowDefinitions.Count && grid.RowDefinitions[row].Height.GridUnitType == GridUnitType.Auto;
+            bool colIsAuto = col >= 0 && col < grid.ColumnDefinitions.Count && grid.ColumnDefinitions[col].Width.GridUnitType == GridUnitType.Auto;
+
+            if (rowIsAuto && !colIsAuto) return GridResizeDirection.Rows;
+            if (colIsAuto && !rowIsAuto) return GridResizeDirection.Columns;
+
+            if (grid.RowDefinitions.Count > grid.ColumnDefinitions.Count) return GridResizeDirection.Rows;
+            if (grid.ColumnDefinitions.Count > grid.RowDefinitions.Count) return GridResizeDirection.Columns;
+        }
+
         // Fallback: prefer column-resizing (vertical splitter).
         return GridResizeDirection.Columns;
     }
@@ -100,27 +115,7 @@ public class GridSplitter : Thumb
         int row = Grid.GetRow(this);
         int col = Grid.GetColumn(this);
 
-        GridResizeDirection direction = ResizeDirection;
-
-        if (direction == GridResizeDirection.Auto)
-        {
-            if (HorizontalAlignment == HorizontalAlignment.Stretch && (VerticalAlignment != VerticalAlignment.Stretch || ActualWidth > ActualHeight))
-            {
-                direction = GridResizeDirection.Rows;
-            }
-            else if (VerticalAlignment == VerticalAlignment.Stretch && (HorizontalAlignment != HorizontalAlignment.Stretch || ActualWidth <= ActualHeight))
-            {
-                direction = GridResizeDirection.Columns;
-            }
-            else if (RenderSize.Width > RenderSize.Height)
-            {
-                direction = GridResizeDirection.Rows;
-            }
-            else
-            {
-                direction = GridResizeDirection.Columns;
-            }
-        }
+        GridResizeDirection direction = GetEffectiveResizeDirection();
 
         if (direction == GridResizeDirection.Columns)
         {
@@ -230,11 +225,6 @@ public class GridSplitter : Thumb
             }
         }
     }
-
-    // We need to access ActualWidth/ActualHeight for auto-direction logic if not stretched,
-    // RenderSize is available via UIElement.
-    private int ActualWidth => RenderSize.Width;
-    private int ActualHeight => RenderSize.Height;
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
