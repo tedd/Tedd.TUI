@@ -95,7 +95,11 @@ public class ListBox : Selector
             {
                 if (i < ItemsPanelRoot.Children.Count && ItemsPanelRoot.Children[i] is ListBoxItem lbi)
                 {
-                    lbi.IsSelected = (i == SelectedIndex);
+                    bool shouldBeSelected = (i == SelectedIndex);
+                    if (lbi.IsSelected != shouldBeSelected)
+                    {
+                        lbi.IsSelected = shouldBeSelected;
+                    }
                 }
             }
         }
