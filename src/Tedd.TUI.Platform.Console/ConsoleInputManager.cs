@@ -303,20 +303,31 @@ public class ConsoleInputManager
         // 0: buttons (0=left, 1=middle, 2=right)
         // x, y: 1-based coordinates
         // M = press, m = release
+        // Optimization: Time Complexity: O(N), Space Complexity: O(1)
 
         try
         {
-            var clean = seq.Substring(2); // Remove [<
-            var lastChar = clean[clean.Length - 1];
-            clean = clean.Substring(0, clean.Length - 1);
+            ReadOnlySpan<char> span = seq.AsSpan();
 
-            var parts = clean.Split(';');
-            if (parts.Length >= 3)
+            if (span.Length < 6 || !span.StartsWith("[<")) return;
+
+            ReadOnlySpan<char> clean = span.Slice(2);
+            char lastChar = clean[^1];
+            clean = clean.Slice(0, clean.Length - 1);
+
+            int firstSemi = clean.IndexOf(';');
+            if (firstSemi == -1) return;
+
+            int secondSemi = clean.Slice(firstSemi + 1).IndexOf(';');
+            if (secondSemi == -1) return;
+            secondSemi += firstSemi + 1;
+
+            if (int.TryParse(clean.Slice(0, firstSemi), out int btn) &&
+                int.TryParse(clean.Slice(firstSemi + 1, secondSemi - firstSemi - 1), out int x) &&
+                int.TryParse(clean.Slice(secondSemi + 1), out int y))
             {
-                int btn = int.Parse(parts[0]);
-                int x = int.Parse(parts[1]) - 1;
-                int y = int.Parse(parts[2]) - 1;
-
+                x -= 1;
+                y -= 1;
                 bool isDown = (lastChar == 'M');
 
                 // Simple Left Click logic

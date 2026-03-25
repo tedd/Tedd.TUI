@@ -218,6 +218,7 @@ public class GridSplitter : Thumb
                 double newTopHeight = topActual + change;
                 double newBottomHeight = bottomActual - change;
 
+                // Adjust row heights
                 topRow.Height = new GridLength((int)newTopHeight, GridUnitType.Pixel);
                 bottomRow.Height = new GridLength((int)newBottomHeight, GridUnitType.Pixel);
                 grid.Invalidate();
