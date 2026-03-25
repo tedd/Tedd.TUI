@@ -84,6 +84,8 @@ public class TableRow : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (RenderSize.Width <= 0 || RenderSize.Height <= 0) return;
+
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
@@ -420,14 +422,19 @@ public class Table : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (RenderSize.Width <= 0 || RenderSize.Height <= 0) return;
+
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
         int w = RenderSize.Width;
         int h = RenderSize.Height;
 
-        TableBoxChars chars = TableBoxChars.Get(BorderStyle);
+        buffer.PushClip(new Rect(x, y, w, h));
+        try
+        {
+            TableBoxChars chars = TableBoxChars.Get(BorderStyle);
 
-        // 1. Draw Outer Border
+            // 1. Draw Outer Border
         if (ShowBorder)
         {
             buffer.SetPixel(x, y, chars.TL, HeaderForeground, HeaderBackground);
@@ -559,6 +566,11 @@ public class Table : UIElement
         if (PageSize > 0)
         {
             RenderPagination(buffer, offsetX, offsetY);
+        }
+        }
+        finally
+        {
+            buffer.PopClip();
         }
     }
 
@@ -1003,6 +1015,8 @@ internal class TableSeparator : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (RenderSize.Width <= 0 || RenderSize.Height <= 0) return;
+
         var table = FindAncestor<Table>();
         if (table == null) return;
 

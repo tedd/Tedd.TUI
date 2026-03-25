@@ -50,6 +50,7 @@ public class GridSplitterTests
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(10, GridUnitType.Pixel) });
 
         var splitter = new GridSplitter();
+        splitter.ResizeDirection = GridResizeDirection.Rows;
         Grid.SetRow(splitter, 1);
         grid.Children.Add(splitter);
         window.Content = grid;
