@@ -10,8 +10,8 @@ public class ValidatorPanelTests
     public void StackPanel_HierarchicalCompositionValidation()
     {
         var panel = new StackPanel { Orientation = Orientation.Vertical };
-        var topBorder = new Border { BoxStyle = BoxStyle.Single, Width = 10, Height = 3 };
-        var bottomBorder = new Border { BoxStyle = BoxStyle.Double, Width = 10, Height = 3 };
+        var topBorder = new Border { BoxStyle = BoxStyle.Single, Width = 10, Height = 3, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
+        var bottomBorder = new Border { BoxStyle = BoxStyle.Double, Width = 10, Height = 3, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
 
         panel.Children.Add(topBorder);
         panel.Children.Add(bottomBorder);
@@ -36,13 +36,13 @@ public class ValidatorPanelTests
     {
         var panel = new DockPanel { LastChildFill = true };
 
-        var leftBorder = new Border { BoxStyle = BoxStyle.Heavy, Width = 5 };
+        var leftBorder = new Border { BoxStyle = BoxStyle.Heavy, Width = 5, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
         DockPanel.SetDock(leftBorder, Dock.Left);
 
-        var rightBorder = new Border { BoxStyle = BoxStyle.Single, Width = 5 };
+        var rightBorder = new Border { BoxStyle = BoxStyle.Single, Width = 5, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
         DockPanel.SetDock(rightBorder, Dock.Right);
 
-        var fillBorder = new Border { BoxStyle = BoxStyle.Double };
+        var fillBorder = new Border { BoxStyle = BoxStyle.Double, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
 
         panel.Children.Add(leftBorder);
         panel.Children.Add(rightBorder);
@@ -71,9 +71,9 @@ public class ValidatorPanelTests
     public void Panel_DynamicStateMutation()
     {
         var panel = new DockPanel { LastChildFill = true };
-        var topBorder = new Border { BoxStyle = BoxStyle.Heavy, Height = 2 };
+        var topBorder = new Border { BoxStyle = BoxStyle.Heavy, Height = 2, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
         DockPanel.SetDock(topBorder, Dock.Top);
-        var fillBorder = new Border { BoxStyle = BoxStyle.Double };
+        var fillBorder = new Border { BoxStyle = BoxStyle.Double, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
 
         panel.Children.Add(topBorder);
         panel.Children.Add(fillBorder);
@@ -103,7 +103,7 @@ public class ValidatorPanelTests
     public void Panel_BoundaryAndEdgeVerification_ExtremeConstraints()
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal };
-        panel.Children.Add(new Border { BoxStyle = BoxStyle.Single, Width = 5, Height = 5 });
+        panel.Children.Add(new Border { BoxStyle = BoxStyle.Single, Width = 5, Height = 5, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false });
         panel.Children.Add(new TextBlock { Text = "Test" });
 
         // 0x0 size
