@@ -36,13 +36,13 @@ public class ValidatorPanelTests
     {
         var panel = new DockPanel { LastChildFill = true };
 
-        var leftBorder = new Border { BoxStyle = BoxStyle.Heavy, Width = 5, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
+        var leftBorder = new Border { BoxStyle = BoxStyle.Heavy, Width = 5, HorizontalScrollBarVisibility = false, VerticalScrollBarVisibility = false };
         DockPanel.SetDock(leftBorder, Dock.Left);
 
-        var rightBorder = new Border { BoxStyle = BoxStyle.Single, Width = 5, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
+        var rightBorder = new Border { BoxStyle = BoxStyle.Single, Width = 5, HorizontalScrollBarVisibility = false, VerticalScrollBarVisibility = false };
         DockPanel.SetDock(rightBorder, Dock.Right);
 
-        var fillBorder = new Border { BoxStyle = BoxStyle.Double, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
+        var fillBorder = new Border { BoxStyle = BoxStyle.Double, HorizontalScrollBarVisibility = false, VerticalScrollBarVisibility = false };
 
         panel.Children.Add(leftBorder);
         panel.Children.Add(rightBorder);
