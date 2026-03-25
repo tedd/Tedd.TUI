@@ -32,7 +32,7 @@ public class GridSplitter : Thumb
         }
 
         // Ensure a non-zero thickness so the splitter is visible and hit-testable.
-        var direction = GetEffectiveResizeDirectionForMeasure();
+        var direction = GetEffectiveResizeDirection();
 
         int width = baseSize.Width;
         int height = baseSize.Height;
@@ -61,7 +61,7 @@ public class GridSplitter : Thumb
         return new Size(width, height);
     }
 
-    private GridResizeDirection GetEffectiveResizeDirectionForMeasure()
+    private GridResizeDirection GetEffectiveResizeDirection()
     {
         var direction = ResizeDirection;
 
@@ -115,27 +115,7 @@ public class GridSplitter : Thumb
         int row = Grid.GetRow(this);
         int col = Grid.GetColumn(this);
 
-        GridResizeDirection direction = ResizeDirection;
-
-        if (direction == GridResizeDirection.Auto)
-        {
-            if (HorizontalAlignment == HorizontalAlignment.Stretch && (VerticalAlignment != VerticalAlignment.Stretch || ActualWidth > ActualHeight))
-            {
-                direction = GridResizeDirection.Rows;
-            }
-            else if (VerticalAlignment == VerticalAlignment.Stretch && (HorizontalAlignment != HorizontalAlignment.Stretch || ActualWidth <= ActualHeight))
-            {
-                direction = GridResizeDirection.Columns;
-            }
-            else if (RenderSize.Width > RenderSize.Height)
-            {
-                direction = GridResizeDirection.Rows;
-            }
-            else
-            {
-                direction = GridResizeDirection.Columns;
-            }
-        }
+        GridResizeDirection direction = GetEffectiveResizeDirection();
 
         if (direction == GridResizeDirection.Columns)
         {
@@ -244,11 +224,6 @@ public class GridSplitter : Thumb
             }
         }
     }
-
-    // We need to access ActualWidth/ActualHeight for auto-direction logic if not stretched,
-    // RenderSize is available via UIElement.
-    private int ActualWidth => RenderSize.Width;
-    private int ActualHeight => RenderSize.Height;
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
