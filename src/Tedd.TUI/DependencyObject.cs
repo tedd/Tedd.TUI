@@ -39,6 +39,11 @@ public class DependencyObject : INotifyPropertyChanged
 {
     private readonly Dictionary<DependencyProperty, object> _localValues = new();
     private readonly Dictionary<DependencyProperty, object> _triggerValues = new();
+    // Tracks properties for which SetValue was called while a trigger was active.
+    // GetValue returns the local value for these, giving it precedence over the trigger.
+    // Clearing the local value (ClearValue) removes the property from this set so that
+    // the still-active trigger value is re-exposed instead of falling back to inherited/default.
+    private readonly HashSet<DependencyProperty> _localOverridesActiveTrigger = new();
 
     protected virtual DependencyObject? InheritanceParent => null;
 
@@ -46,10 +51,12 @@ public class DependencyObject : INotifyPropertyChanged
 
     public object? GetValue(DependencyProperty dp)
     {
-        // For Template Triggers, the trigger value takes precedence over a pre-existing local value.
-        // However, an explicit local value set *after* the trigger is active will override the trigger value.
-        // We model this by evaluating _triggerValues first, but when SetValue is called directly,
-        // we remove the active trigger value to simulate an explicit local override.
+        // A local value explicitly set while a trigger is active takes highest precedence.
+        if (_localOverridesActiveTrigger.Contains(dp) && _localValues.TryGetValue(dp, out var overrideValue))
+        {
+            return overrideValue;
+        }
+        // Active trigger values take precedence over pre-existing local values.
         if (_triggerValues.TryGetValue(dp, out var triggerValue))
         {
             return triggerValue;
@@ -75,15 +82,28 @@ public class DependencyObject : INotifyPropertyChanged
 
         _localValues[dp] = value ?? null!;
 
-        // An explicitly set local value overrides an active trigger.
-        _triggerValues.Remove(dp);
+        // If an active trigger is present for this property, track the local value as a
+        // post-trigger override so that GetValue returns it with higher priority than the
+        // trigger.  The trigger value is intentionally kept so that clearing the local
+        // value (ClearValue) re-exposes the trigger rather than falling back to
+        // inherited/default.
+        if (_triggerValues.ContainsKey(dp))
+        {
+            _localOverridesActiveTrigger.Add(dp);
+        }
 
         OnPropertyChanged(dp);
     }
 
     public void ClearValue(DependencyProperty dp)
     {
-        if (_localValues.Remove(dp))
+        bool changed = _localValues.Remove(dp);
+        // Clearing the local value removes the post-trigger override flag; the trigger
+        // value (if still present) will naturally surface from GetValue.
+        // Even when no local value was present, removing the override flag can expose a
+        // different effective value (the trigger's), so treat it as a change.
+        changed = changed || (_localOverridesActiveTrigger.Remove(dp) && _triggerValues.ContainsKey(dp));
+        if (changed)
         {
             OnPropertyChanged(dp);
         }
@@ -111,6 +131,9 @@ public class DependencyObject : INotifyPropertyChanged
     {
         if (_triggerValues.Remove(dp))
         {
+            // Trigger is no longer active; any post-trigger local override is now just a
+            // regular local value, so remove the flag.
+            _localOverridesActiveTrigger.Remove(dp);
             OnPropertyChanged(dp);
         }
     }

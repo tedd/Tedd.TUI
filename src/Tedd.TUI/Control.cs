@@ -158,21 +158,10 @@ public class Control : UIElement
                                         _activeTriggerProperties[target] = targetActives;
                                     }
 
-                                    // Apply the setter when the trigger has just become active,
-                                    // or when it remains active but the target no longer has a
-                                    // local value for the property and the current value differs
-                                    // from the setter value (e.g. after a local override is cleared).
-                                    bool shouldApplySetter = !wasActive;
-                                    if (wasActive && !target.HasLocalValue(setter.Property))
-                                    {
-                                        var currentTargetValue = target.GetValue(setter.Property);
-                                        if (!Equals(currentTargetValue, setter.Value))
-                                        {
-                                            shouldApplySetter = true;
-                                        }
-                                    }
-
-                                    if (shouldApplySetter)
+                                    // Only apply the setter when the trigger has just become active.
+                                    // While the trigger remains active its value is already present
+                                    // in _triggerValues and surfaced by GetValue automatically.
+                                    if (!wasActive)
                                     {
                                         target.SetTriggerValue(setter.Property, setter.Value);
                                         targetActives.Add(setter.Property);
