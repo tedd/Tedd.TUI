@@ -42,7 +42,7 @@ public class Control : UIElement
         set => SetValue(BorderThicknessProperty, value);
     }
 
-    // Store original values when a trigger setter is applied, to revert them when trigger condition becomes false
+    // Tracks, per DependencyObject, which dependency properties currently have values applied by active triggers
     private System.Collections.Generic.Dictionary<DependencyObject, System.Collections.Generic.HashSet<DependencyProperty>>? _activeTriggerProperties;
 
     // Cached lists to avoid allocations during hot path evaluation
