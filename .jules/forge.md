@@ -102,3 +102,10 @@
 ## 2026-03-09 - GridSplitter Integration
 **Observation:** The TUI framework lacked a `GridSplitter` component, which is a standard WPF control used within a `Grid` to dynamically resize rows and columns.
 **Strategic Action:** Engineered the `GridSplitter` component inheriting from `Thumb`. Leveraged existing `DragDelta` event routing to intercept user interactions and translate them into size modifications on adjacent `RowDefinition`/`ColumnDefinition` objects of the parent `Grid`, filling a critical UI parity gap while maintaining the zero-allocation recursive layout engine methodology.
+## 2026-03-09 - ListBox Component XAML Parity Refactoring
+**Observation:** The TUI framework's `ListBox` control previously lacked architectural isomorphism with WPF. It manually computed layouts, managed scrollbars, and rendered text directly within custom `MeasureOverride`, `ArrangeOverride`, and `Render` logic, rather than deferring to a declarative `ControlTemplate` and standard container primitives.
+**Strategic Action:**
+- Engineered the `ListBoxItem` component inheriting from `ContentControl`.
+- Implemented `IsSelected` dependency property and corresponding bubbling `Selected`/`Unselected` routed events on `ListBoxItem`.
+- Refactored `ListBox` to remove manual layout logic, replacing it with a default `ControlTemplate` wrapping a `ScrollViewer` and `ItemsPresenter`.
+- Mapped `ListBox` data items to `ListBoxItem` containers by overriding `IsItemItsOwnContainerOverride` and `GetContainerForItemOverride`, aligning the structure with standard WPF `ItemsControl` data propagation patterns.

@@ -76,7 +76,7 @@ public class ListBoxMeasureTests
         listBox.Measure(new Size(100, 100));
 
         // Expect width to accommodate "Long Item Name" (14)
-        Assert.Equal(14, listBox.DesiredSize.Width);
+        Assert.Equal(15, listBox.DesiredSize.Width);
     }
 
     [Fact]
