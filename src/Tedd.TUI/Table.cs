@@ -454,7 +454,7 @@ public class Table : UIElement
         }
 
         // 2. Draw Header
-        if (ShowHeader)
+        if (ShowHeader && h > (ShowBorder ? 1 : 0) && w > 0)
         {
             int headerY = y + (ShowBorder ? 1 : 0);
             int startX = x + (ShowBorder ? 1 : 0);
