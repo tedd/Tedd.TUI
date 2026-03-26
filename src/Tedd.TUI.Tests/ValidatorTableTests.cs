@@ -67,8 +67,8 @@ public class ValidatorTableTests
         // Heavy Top T-Junction (TDown) at X=4, Y=0
         Assert.Equal('\u2533', buffer.GetPixel(4, 0).Character);
 
-        // Heavy Bottom T-Junction (TUp) at X=4, Y=7; BoxStyle.Heavy uses U+2537 for TUp junctions
-        Assert.Equal('\u2537', buffer.GetPixel(4, 7).Character);
+        // Heavy Bottom T-Junction (TUp) at X=4, Y=7; BoxStyle.Heavy uses U+253B for TUp junctions
+        Assert.Equal('\u253B', buffer.GetPixel(4, 7).Character);
 
         // Header Separator Horizontal Line (Heavy) at X=1..3, Y=2
         Assert.Equal('\u2501', buffer.GetPixel(2, 2).Character);
@@ -193,5 +193,117 @@ public class ValidatorTableTests
                 Assert.Equal(' ', buffer1.GetPixel(x, y).Character);
             }
         }
+    }
+
+    [Fact]
+    public void Table_BoundaryAndEdgeVerification_ZeroSizeConstraint()
+    {
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = true,
+            BorderStyle = BoxStyle.Double
+        };
+        table.Columns.Add(new TableColumn { Header = "A" });
+        table.AddRow("Test");
+
+        table.Measure(new Size(0, 0));
+        table.Arrange(new Rect(0, 0, 0, 0));
+
+        var buffer = new VirtualBuffer(10, 10);
+        // Ensure no exception is thrown when rendering an empty layout
+        var ex = Record.Exception(() => table.Render(buffer, 0, 0));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public void Table_CoordinatePreciseCharacterAssertion_HeavyTUpTDown()
+    {
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = false,
+            ShowVerticalLines = true,
+            ShowHorizontalLines = true,
+            BorderStyle = BoxStyle.Heavy,
+            Width = 10,
+            Height = 5
+        };
+
+        table.Columns.Add(new TableColumn { Width = new GridLength(4, GridUnitType.Pixel) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(4, GridUnitType.Pixel) });
+        table.AddRow("A", "B");
+
+        var sv = table.GetVisualChild(0) as ScrollViewer;
+        if (sv != null)
+        {
+            sv.VerticalScrollBarVisibility = false;
+            sv.HorizontalScrollBarVisibility = false;
+        }
+
+        table.Measure(new Size(10, 5));
+        table.Arrange(new Rect(0, 0, 10, 5));
+
+        var buffer = new VirtualBuffer(10, 5);
+        table.Render(buffer, 0, 0);
+
+        // Verify TDown (Heavy) at top junction
+        Assert.Equal('\u2533', buffer.GetPixel(5, 0).Character);
+
+        // Verify TUp (Heavy uses U+253B) at bottom junction
+        Assert.Equal('\u253B', buffer.GetPixel(5, 4).Character);
+    }
+
+    [Fact]
+    public void Table_HierarchicalCompositionAndDynamicStateMutation_NestedGrids()
+    {
+        var parentGrid = new Grid();
+        parentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        parentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+        var childGrid = new Grid();
+        childGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        childGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = true,
+            ShowVerticalLines = true,
+            BorderStyle = BoxStyle.Heavy
+        };
+        table.Columns.Add(new TableColumn { Header = "1", Width = new GridLength(1, GridUnitType.Star) });
+        table.AddRow("A");
+
+        Grid.SetColumn(table, 0);
+        childGrid.Children.Add(table);
+
+        Grid.SetRow(childGrid, 0);
+        parentGrid.Children.Add(childGrid);
+
+        // Initial layout pass
+        parentGrid.Measure(new Size(20, 20));
+        parentGrid.Arrange(new Rect(0, 0, 20, 20));
+
+        var buffer = new VirtualBuffer(20, 20);
+        parentGrid.Render(buffer, 0, 0);
+
+        // Verify table constraints within nested grids
+        // Table should be at (0, 0) to (9, 9) because parent grid row is 10 high and child grid col is 10 wide
+        Assert.Equal('\u250F', buffer.GetPixel(0, 0).Character); // TL
+        Assert.Equal('\u2513', buffer.GetPixel(9, 0).Character); // TR
+
+        // Dynamic State Mutation
+        parentGrid.Measure(new Size(40, 30));
+        parentGrid.Arrange(new Rect(0, 0, 40, 30));
+
+        var newBuffer = new VirtualBuffer(40, 30);
+        parentGrid.Render(newBuffer, 0, 0);
+
+        // Table should now be at (0, 0) to (19, 14)
+        Assert.Equal('\u250F', newBuffer.GetPixel(0, 0).Character); // TL
+        Assert.Equal('\u2513', newBuffer.GetPixel(19, 0).Character); // TR
+        Assert.Equal('\u2517', newBuffer.GetPixel(0, 14).Character); // BL
+        Assert.Equal('\u251B', newBuffer.GetPixel(19, 14).Character); // BR
     }
 }
