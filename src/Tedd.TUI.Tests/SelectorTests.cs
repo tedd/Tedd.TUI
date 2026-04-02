@@ -10,6 +10,15 @@ public class SelectorTests
     private class TestSelector : Selector
     {
         // Concrete implementation for testing abstract Selector
+        protected internal override UIElement GetContainerForItemOverride()
+        {
+            return new ListBoxItem();
+        }
+
+        protected internal override bool IsItemItsOwnContainerOverride(object item)
+        {
+            return item is ListBoxItem;
+        }
     }
 
     [Fact]
@@ -18,6 +27,38 @@ public class SelectorTests
         var selector = new TestSelector();
         Assert.Equal(-1, selector.SelectedIndex);
         Assert.Null(selector.SelectedItem);
+    }
+
+    [Fact]
+    public void Item_Selection_Via_RoutedEvent()
+    {
+        var selector = new TestSelector();
+        selector.Template = new ControlTemplate(parent =>
+        {
+            var ip = new ItemsPresenter();
+            ip.TemplatedParent = parent;
+            return ip;
+        });
+
+        selector.Items.Add("A");
+        selector.Items.Add("B");
+
+        selector.ApplyTemplate();
+        selector.Measure(new Size(100, 100));
+
+        var ipPresenter = selector.GetVisualChild(0) as ItemsPresenter;
+        Assert.NotNull(ipPresenter);
+        var panel = ipPresenter.GetVisualChild(0) as Panel;
+        Assert.NotNull(panel);
+
+        // Raise selected event from the second item container
+        var itemContainer = panel.Children[1] as ListBoxItem;
+        Assert.NotNull(itemContainer);
+
+        itemContainer.IsSelected = true; // Triggers SelectedEvent bubbling to Selector
+
+        Assert.Equal(1, selector.SelectedIndex);
+        Assert.Equal("B", selector.SelectedItem);
     }
 
     [Fact]

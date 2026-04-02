@@ -6,6 +6,39 @@ namespace Tedd.TUI;
 
 public abstract class Selector : ItemsControl
 {
+    public Selector()
+    {
+        AddHandler(ListBoxItem.SelectedEvent, new RoutedEventHandler(OnItemSelected));
+    }
+
+    private void OnItemSelected(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource is ListBoxItem item)
+        {
+            var dataItem = ItemsControlFromItemContainer(item);
+            if (dataItem != DependencyProperty.UnsetValue)
+            {
+                SelectedItem = dataItem;
+            }
+        }
+    }
+
+    private object ItemsControlFromItemContainer(DependencyObject container)
+    {
+        // Simple logic to find the item. We should ideally look it up, but for now we can iterate.
+        // If container is UIElement, we can just find it in Items if it is its own container, or we need ItemContainerGenerator equivalent.
+        // In our ItemsControl, we generate containers and add them to ItemsPanel.
+        if (ItemsPresenter != null && ItemsPresenter.GetVisualChild(0) is Panel panel)
+        {
+            int index = panel.Children.IndexOf((UIElement)container);
+            if (index >= 0 && index < Items.Count)
+            {
+                return Items[index];
+            }
+        }
+        return DependencyProperty.UnsetValue;
+    }
+
     private int _selectedIndex = -1;
     public int SelectedIndex
     {
@@ -60,8 +93,38 @@ public abstract class Selector : ItemsControl
             _selectedItem = null;
         }
 
+        UpdateContainerSelection();
+
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         Invalidate();
+    }
+
+    private void UpdateContainerSelection()
+    {
+        if (ItemsPresenter != null && ItemsPresenter.GetVisualChild(0) is Panel panel)
+        {
+            for (int i = 0; i < panel.Children.Count; i++)
+            {
+                if (panel.Children[i] is ListBoxItem lbi)
+                {
+                    lbi.IsSelected = (i == _selectedIndex);
+                }
+            }
+        }
+    }
+
+    protected internal override void PrepareContainerForItemOverride(UIElement element, object item)
+    {
+        base.PrepareContainerForItemOverride(element, item);
+        if (element is ListBoxItem lbi)
+        {
+            bool isSelected = false;
+            if (_selectedIndex >= 0 && _selectedIndex < Items.Count && Items[_selectedIndex] == item)
+            {
+                isSelected = true;
+            }
+            lbi.IsSelected = isSelected;
+        }
     }
 
     protected override void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
