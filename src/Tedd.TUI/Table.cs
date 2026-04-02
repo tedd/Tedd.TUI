@@ -470,19 +470,22 @@ public class Table : UIElement
 
             if (headerY < y + h) // Ensure we don't draw outside Table bounds
             {
-                var col = Columns[i];
-                int actualW = col.ActualWidth;
+                int colX = startX;
+                for (int i = 0; i < Columns.Count; i++)
+                {
+                    var col = Columns[i];
+                    int actualW = col.ActualWidth;
 
-                // Adjust for extreme constraints where the available width is less than ActualWidth
-                int availableWidth = x + w - (ShowBorder ? 1 : 0) - colX;
-                if (availableWidth < 0) availableWidth = 0;
-                int drawWidth = Math.Min(actualW, availableWidth);
+                    // Adjust for extreme constraints where the available width is less than ActualWidth
+                    int availableWidth = x + w - (ShowBorder ? 1 : 0) - colX;
+                    if (availableWidth < 0) availableWidth = 0;
+                    int drawWidth = Math.Min(actualW, availableWidth);
 
-                var span = (col.Header ?? "").AsSpan();
-                if (span.Length > drawWidth) span = span.Slice(0, drawWidth);
+                    var span = (col.Header ?? "").AsSpan();
+                    if (span.Length > drawWidth) span = span.Slice(0, drawWidth);
 
-                buffer.DrawHLine(colX, headerY, drawWidth, ' ', HeaderForeground, HeaderBackground);
-                buffer.DrawString(colX, headerY, span, HeaderForeground, HeaderBackground);
+                    buffer.DrawHLine(colX, headerY, drawWidth, ' ', HeaderForeground, HeaderBackground);
+                    buffer.DrawString(colX, headerY, span, HeaderForeground, HeaderBackground);
 
                     colX += col.ActualWidth;
 

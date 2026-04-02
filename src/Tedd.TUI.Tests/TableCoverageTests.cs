@@ -299,6 +299,260 @@ public class TableCoverageTests
     }
 
     [Fact]
+    public void Table_FindName_ReturnsCorrectElement()
+    {
+        var table = new Table { Name = "MyTable" };
+        Assert.Equal(table, table.FindName("MyTable"));
+
+        var row1 = new TableRow { Name = "Row1" };
+        var row2 = new TableRow { Name = "Row2" };
+        table.AddRow(row1);
+        table.AddRow(row2);
+
+        Assert.Equal(row1, table.FindName("Row1"));
+        Assert.Equal(row2, table.FindName("Row2"));
+        Assert.Null(table.FindName("NonExistent"));
+    }
+
+    [Fact]
+    public void Table_GetVisualChild_ThrowsArgumentOutOfRange()
+    {
+        var table = new Table();
+        Assert.Throws<ArgumentOutOfRangeException>(() => table.GetVisualChild(1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => table.GetVisualChild(-1));
+    }
+
+    [Fact]
+    public void Table_SortKeySelector_IComparable()
+    {
+        var table = new Table();
+        var col = new TableColumn { Header = "ID" };
+        col.SortKeySelector = row => int.Parse(((TextBlock)row.Cells[0]).Text);
+        table.Columns.Add(col);
+
+        table.AddRow("10");
+        table.AddRow("2");
+
+        table.Sort(col);
+
+        Assert.Equal("2", ((TextBlock)table.Rows[0].Cells[0]).Text);
+        Assert.Equal("10", ((TextBlock)table.Rows[1].Cells[0]).Text);
+    }
+
+    [Fact]
+    public void Table_GetCellValue_Fallback()
+    {
+        var table = new Table();
+        var col = new TableColumn { Header = "Custom" };
+        table.Columns.Add(col);
+
+        var row = new TableRow();
+        var customElement = new ContentControl(); // Not a TextBlock
+        row.AddCell(customElement);
+        table.AddRow(row);
+
+        table.AddRow("A"); // Ensure sort compares against it
+
+        // This will trigger GetCellValue on the non-TextBlock element, returning the UIElement itself
+        table.Sort(col);
+
+        // The fallback logic calls `.ToString()` on the UIElement for comparison.
+        Assert.Equal(2, table.Rows.Count);
+    }
+
+    [Fact]
+    public void Table_Pagination_GetDigitCount()
+    {
+        // Testing GetDigitCount by formatting strings that trigger the internal boundary checks
+        int totalPages = 10000;
+        int width = 100;
+
+        // This will call GetDigitCount internally
+        string result = GetPaginationString(width, totalPages, 1000);
+        Assert.Contains("1001", result);
+        Assert.Contains("10000", result);
+    }
+
+    [Fact]
+    public void Table_Pagination_GetDigitCount_Max()
+    {
+        // Testing high values of GetDigitCount
+        int width = 100;
+
+        string result1 = GetPaginationString(width, 1000000, 1);
+        Assert.Contains("1000000", result1);
+
+        string result2 = GetPaginationString(width, 10000000, 1);
+        Assert.Contains("10000000", result2);
+
+        string result3 = GetPaginationString(width, 100000000, 1);
+        Assert.Contains("100000000", result3);
+
+        string result4 = GetPaginationString(width, 1000000000, 1);
+        Assert.Contains("1000000000", result4);
+
+        string result5 = GetPaginationString(width, int.MaxValue, 1);
+        Assert.Contains(int.MaxValue.ToString(), result5);
+    }
+
+    [Fact]
+    public void Table_OnMouseDown_HandlePaginationClick_WithBrackets()
+    {
+        var table = new Table();
+        table.PageSize = 1;
+        for (int i = 0; i < 5; i++) table.AddRow(i.ToString());
+
+        int width = 50;
+        table.Measure(new Size(width, 10));
+        table.Arrange(new Rect(0, 0, width, 10));
+
+        // Let's click the current page, which has brackets "[1]"
+        table.CurrentPage = 0;
+
+        string s = GetPaginationString(width, table.TotalPages, table.CurrentPage);
+        int startX = (width - s.Length) / 2;
+        int idx1 = s.IndexOf('1'); // Inside the brackets "[1]"
+        int clickX = startX + idx1;
+
+        var args = new MouseEventArgs { X = clickX, Y = 9, Handled = false };
+        table.OnMouseDown(args);
+
+        // Clicking the current page shouldn't change the page
+        Assert.Equal(0, table.CurrentPage);
+    }
+
+    [Fact]
+    public void Table_Sort_KeySelector_FallbackToString()
+    {
+        var table = new Table();
+        var col = new TableColumn { Header = "ID" };
+        // Return a generic object so it doesn't implement IComparable
+        col.SortKeySelector = row => new object();
+        table.Columns.Add(col);
+
+        table.AddRow("10");
+        table.AddRow("2");
+
+        table.Sort(col);
+        Assert.Equal(2, table.Rows.Count);
+        // We just care that it does not crash, since Object.ToString() will be called
+    }
+
+    [Fact]
+    public void Table_Render_Pagination_Triggered()
+    {
+        var table = new Table();
+        table.PageSize = 2;
+        table.AddRow("A");
+        table.AddRow("B");
+        table.AddRow("C"); // 3 rows, 2 pages
+
+        table.Measure(new Size(20, 10));
+        table.Arrange(new Rect(0, 0, 20, 10));
+
+        var buffer = new VirtualBuffer(20, 10);
+        table.Render(buffer, 0, 0);
+
+        // Check if pagination was rendered at the bottom
+        bool hasPaginationChars = false;
+        for (int x = 0; x < 20; x++)
+        {
+            if (buffer.GetPixel(x, 9).Character != ' ')
+            {
+                hasPaginationChars = true;
+                break;
+            }
+        }
+        Assert.True(hasPaginationChars);
+    }
+
+    [Fact]
+    public void Table_BoxChars_Double_And_Single_Coverage()
+    {
+        var table = new Table();
+        table.ShowBorder = true;
+        table.ShowHeader = true;
+        table.ShowHorizontalLines = true;
+        table.ShowVerticalLines = true;
+
+        var col1 = new TableColumn { Header = "A", Width = new GridLength(2, GridUnitType.Pixel) };
+        var col2 = new TableColumn { Header = "B", Width = new GridLength(2, GridUnitType.Pixel) };
+        table.Columns.Add(col1);
+        table.Columns.Add(col2);
+
+        table.AddRow("1", "2");
+
+        // Render with BoxStyle.Double
+        table.BorderStyle = BoxStyle.Double;
+        table.Measure(new Size(10, 10));
+        table.Arrange(new Rect(0, 0, 10, 10));
+
+        var buffer = new VirtualBuffer(10, 10);
+        table.Render(buffer, 0, 0);
+
+        // Render with BoxStyle.Single
+        table.BorderStyle = BoxStyle.Single;
+        table.Render(buffer, 0, 0);
+    }
+
+    [Fact]
+    public void Table_Render_Pagination_Triggered_Ignore()
+    {
+        var table = new Table();
+        table.PageSize = 2;
+        table.AddRow("A");
+        table.AddRow("B");
+        table.AddRow("C"); // 3 rows, 2 pages
+
+        table.Measure(new Size(20, 10));
+        table.Arrange(new Rect(0, 0, 20, 10));
+
+        var buffer = new VirtualBuffer(20, 10);
+        table.Render(buffer, 0, 0);
+
+        // Check if pagination was rendered at the bottom
+        bool hasPaginationChars = false;
+        for (int x = 0; x < 20; x++)
+        {
+            if (buffer.GetPixel(x, 9).Character != ' ')
+            {
+                hasPaginationChars = true;
+                break;
+            }
+        }
+        Assert.True(hasPaginationChars);
+    }
+
+    [Fact]
+    public void Table_OnMouseDown_SelectRow_Body()
+    {
+        var table = new Table();
+        table.ShowHeader = true;
+        table.ShowBorder = false;
+
+        var col1 = new TableColumn { Header = "ID", Width = new GridLength(10, GridUnitType.Pixel) };
+        table.Columns.Add(col1);
+
+        table.AddRow("Row1");
+        table.AddRow("Row2");
+
+        table.Measure(new Size(20, 10));
+        table.Arrange(new Rect(0, 0, 20, 10));
+
+        bool eventFired = false;
+        table.SelectionChanged += (s, e) => eventFired = true;
+
+        // Header height is 2, Border offset is 0.
+        // Row1 is at Y=2, Row2 is at Y=3.
+        var args = new MouseEventArgs { X = 2, Y = 3, Handled = false };
+        table.OnMouseDown(args);
+
+        Assert.True(args.Handled);
+        Assert.Equal(1, table.SelectedIndex);
+        Assert.True(eventFired);
+    }
+
+    [Fact]
     public void Table_PageSize_Zero()
     {
         var table = new Table();
