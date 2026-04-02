@@ -197,3 +197,7 @@ Implemented coverage expanding into dynamic memory allocations ensuring observab
 ## 2024-05-24 - Slider and ProgressBar Test Coverage Expansion
 **Observation:** Slider and ProgressBar components exhibited less than 100% test coverage due to untested edge conditions such as null label text in ProgressBar, unused property getters/setters, and horizontal orientation boundary clicks/keyboard interactions in Slider.
 **Strategic Action:** Developed explicit parameterization testing across all component axes (including properties like `LabelMode.Text` rendering with null inputs) to enforce strict coverage metrics. Verified that routing events and style property application do not throw exceptions under anomalous conditions.
+
+## 2024-04-02 - Tedd.TUI.Table coverage improvements
+**Observation:** Table component was missing coverage for core functions including GetDigitCount and border drawing edge cases.
+**Strategic Action:** Converted test implementations to leverage `[Theory]` and `[InlineData]` constructs, covering parameterized boundary limits for methods like `Table.GetDigitCount`. Coverage was systematically expanded by simulating varied constraints, enabling coverage metrics around pagination edge cases and table junction styles.

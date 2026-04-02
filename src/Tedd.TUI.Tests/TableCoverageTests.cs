@@ -376,4 +376,86 @@ public class TableCoverageTests
         Assert.Equal('\u2500', buffer.GetPixel(5, 4).Character);
         Assert.Equal('\u2528', buffer.GetPixel(8, 4).Character);
     }
+
+
+    [Theory]
+    [InlineData("MyTable", true)]
+    [InlineData("MyCell", true)]
+    [InlineData("NotFound", false)]
+    public void Table_FindName_Parameterized(string searchName, bool shouldFind)
+    {
+        var table = new Table { Name = "MyTable" };
+        var row1 = new TableRow();
+        var tb = new TextBlock { Name = "MyCell" };
+        row1.AddCell(tb);
+        table.AddRow(row1);
+
+        var found = table.FindName(searchName);
+        if (shouldFind)
+        {
+            Assert.NotNull(found);
+            Assert.Equal(searchName, found.Name);
+        }
+        else
+        {
+            Assert.Null(found);
+        }
+    }
+
+    [Theory]
+    [InlineData(BoxStyle.Double, '\u2554')]
+    [InlineData(BoxStyle.Single, '\u250C')]
+    [InlineData(BoxStyle.Heavy, '\u250F')]
+    public void Table_BoxStyle_Parameterized(BoxStyle style, char expectedTopLeft)
+    {
+        var buffer = new VirtualBuffer(20, 10);
+        var table = new Table { ShowBorder = true, ShowHeader = true };
+        table.Columns.Add(new TableColumn { Header = "A", Width = new GridLength(5, GridUnitType.Pixel) });
+        table.Columns.Add(new TableColumn { Header = "B", Width = new GridLength(5, GridUnitType.Pixel) });
+        table.AddRow("1", "2");
+
+        table.BorderStyle = style;
+        table.Measure(new Size(20, 10));
+        table.Arrange(new Rect(0, 0, 20, 10));
+        table.Render(buffer);
+
+        Assert.Equal(expectedTopLeft, buffer.GetPixel(0, 0).Character);
+    }
+
+    [Theory]
+    [InlineData(1000, 4)]
+    [InlineData(10000, 5)]
+    [InlineData(100000, 6)]
+    [InlineData(1000000, 7)]
+    [InlineData(10000000, 8)]
+    [InlineData(100000000, 9)]
+    [InlineData(1000000000, 10)]
+    [InlineData(int.MaxValue, 10)]
+    public void Table_GetDigitCount_Parameterized(int input, int expectedLength)
+    {
+        Assert.Equal(expectedLength, Table.GetDigitCount(input));
+    }
+
+    [Fact]
+    public void Table_RenderPagination_EdgeCases()
+    {
+        var buffer = new VirtualBuffer(50, 10);
+        var table = new Table { PageSize = 1 };
+        table.AddRow("1");
+        table.AddRow("2");
+
+        table.Measure(new Size(50, 10));
+        table.Arrange(new Rect(0, 0, 50, 10));
+
+        table.Render(buffer);
+
+        // Assert bottom row has pagination drawn (it should draw `< 1 ... 2 >` somewhere)
+        bool hasPagination = false;
+        for (int i = 0; i < 50; i++)
+        {
+            if (buffer.GetPixel(i, 9).Character == '<') hasPagination = true;
+        }
+        Assert.True(hasPagination);
+    }
+
 }
