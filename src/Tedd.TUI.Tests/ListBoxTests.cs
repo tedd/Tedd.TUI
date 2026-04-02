@@ -66,6 +66,16 @@ public class ListBoxTests
         listBox.Items.Add(new { Name = "Alice" });
         listBox.Items.Add(new { Name = "Bob" });
 
+        // When applying the template the ItemsPresenter takes over rendering
+        listBox.ApplyTemplate();
+
+        // Simulate forcing visual tree to render inside tests when no TuiWindow handles it
+        // The container generation takes place during ItemsPresenter MeasureOverride in some implementations or on collection change.
+        // Wait, ItemsControl generates it on collection changed or layout.
+        var ip = listBox.GetVisualChild(0) as ScrollViewer;
+        var presenter = ip.Content as ItemsPresenter;
+        presenter.PopulatePanel(listBox);
+
         listBox.Measure(new Size(10, 2));
         listBox.Arrange(new Rect(0, 0, 10, 2));
 
@@ -86,8 +96,14 @@ public class ListBoxTests
         var listBox = new ListBox();
         listBox.Width = 10;
         listBox.Height = 2;
+
         listBox.Items.Add("Hello");
         listBox.Items.Add("World");
+
+        listBox.ApplyTemplate();
+        var ip = listBox.GetVisualChild(0) as ScrollViewer;
+        var presenter = ip.Content as ItemsPresenter;
+        presenter.PopulatePanel(listBox);
 
         listBox.Measure(new Size(10, 2));
         listBox.Arrange(new Rect(0, 0, 10, 2));

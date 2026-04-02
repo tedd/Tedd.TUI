@@ -246,7 +246,19 @@ public abstract class ItemsControl : Control
 
     protected internal virtual void PrepareContainerForItemOverride(UIElement element, object item)
     {
-        if (element is ContentPresenter cp)
+        if (element is ContentControl cc)
+        {
+            if (ItemTemplate != null)
+            {
+                cc.ContentTemplate = ItemTemplate;
+                cc.Content = item;
+            }
+            else
+            {
+                cc.Content = GetItemText(item);
+            }
+        }
+        else if (element is ContentPresenter cp)
         {
             if (ItemTemplate != null)
             {

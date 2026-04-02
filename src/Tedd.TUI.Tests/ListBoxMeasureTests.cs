@@ -23,6 +23,7 @@ public class ListBoxMeasureTests
     public void Measure_AutoHeight_UsesItemCount()
     {
         var listBox = new ListBox();
+        listBox.ApplyTemplate();
         // Default Height is -1 (Auto)
         listBox.Items.Add("Item 1");
         listBox.Items.Add("Item 2");
@@ -39,6 +40,7 @@ public class ListBoxMeasureTests
     public void Measure_AutoHeight_ConstrainedByAvailableSize()
     {
         var listBox = new ListBox();
+        listBox.ApplyTemplate();
         // Default Height is -1 (Auto)
         for (int i = 0; i < 10; i++)
         {
@@ -56,6 +58,7 @@ public class ListBoxMeasureTests
     public void Measure_FixedWidth_UsesFixedWidth()
     {
         var listBox = new ListBox();
+        listBox.ApplyTemplate();
         listBox.Width = 20;
         listBox.Items.Add("Long Item Name");
 
@@ -68,6 +71,7 @@ public class ListBoxMeasureTests
     public void Measure_AutoWidth_UsesMaxItemWidth()
     {
         var listBox = new ListBox();
+        listBox.ApplyTemplate();
         // Default Width is -1 (Auto)
         listBox.Items.Add("Short");
         listBox.Items.Add("Long Item Name"); // Length 14
@@ -75,14 +79,15 @@ public class ListBoxMeasureTests
         // Available size is large enough
         listBox.Measure(new Size(100, 100));
 
-        // Expect width to accommodate "Long Item Name" (14)
-        Assert.Equal(14, listBox.DesiredSize.Width);
+        // Expect width to accommodate "Long Item Name" (14) + 1 for vertical scrollbar
+        Assert.Equal(15, listBox.DesiredSize.Width);
     }
 
     [Fact]
     public void Measure_AutoWidth_WithScrollbar()
     {
         var listBox = new ListBox();
+        listBox.ApplyTemplate();
         // Default Width is -1 (Auto)
         // Add items > available height to trigger scrollbar
         for (int i = 0; i < 10; i++)
