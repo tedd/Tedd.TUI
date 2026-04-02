@@ -376,4 +376,93 @@ public class TableCoverageTests
         Assert.Equal('\u2500', buffer.GetPixel(5, 4).Character);
         Assert.Equal('\u2528', buffer.GetPixel(8, 4).Character);
     }
+
+    [Fact]
+    public void Table_Properties_Setters_Invalidate()
+    {
+        var table = new Table();
+        bool selectionFired = false;
+        bool pageFired = false;
+        table.SelectionChanged += (s, e) => selectionFired = true;
+        table.PageChanged += (s, e) => pageFired = true;
+
+        table.ShowHorizontalLines = true;
+        table.SelectedIndex = 1;
+        table.PageSize = 10;
+        table.TotalRows = 50;
+        table.CurrentPage = 1;
+
+        Assert.True(table.ShowHorizontalLines);
+        Assert.Equal(1, table.SelectedIndex);
+        Assert.Equal(10, table.PageSize);
+        Assert.Equal(50, table.TotalRows);
+        Assert.Equal(1, table.CurrentPage);
+        Assert.True(selectionFired);
+        Assert.True(pageFired);
+    }
+
+    [Fact]
+    public void Table_CurrentPage_Clamps()
+    {
+        var table = new Table();
+        table.PageSize = 10;
+        table.TotalRows = 50;
+
+        table.CurrentPage = -5;
+        Assert.Equal(0, table.CurrentPage);
+
+        table.CurrentPage = 100;
+        Assert.Equal(4, table.CurrentPage); // max is 5 - 1 = 4
+    }
+
+    [Fact]
+    public void Table_TotalPages_Empty()
+    {
+        var table = new Table();
+        table.PageSize = 10;
+        Assert.Equal(0, table.TotalPages);
+    }
+
+    [Fact]
+    public void Table_FindName()
+    {
+        var table = new Table { Name = "MyTable" };
+        var row1 = new TableRow { Name = "Row1" };
+        var row2 = new TableRow { Name = "Row2" };
+        table.AddRow(row1);
+        table.AddRow(row2);
+
+        Assert.Equal(table, table.FindName("MyTable"));
+        Assert.Equal(row1, table.FindName("Row1"));
+        Assert.Equal(row2, table.FindName("Row2"));
+        Assert.Null(table.FindName("NonExistent"));
+    }
+
+    [Fact]
+    public void Table_OnDataContextChanged()
+    {
+        var table = new Table();
+        table.DataContext = "TestContext";
+        var sv = (ScrollViewer)table.GetVisualChild(0);
+        Assert.Equal("TestContext", sv.DataContext);
+    }
+
+    [Theory]
+    [InlineData(BoxStyle.Single)]
+    [InlineData(BoxStyle.Heavy)]
+    [InlineData(BoxStyle.Double)]
+    public void Table_Render_BoxStyles(BoxStyle style)
+    {
+        var table = new Table { BorderStyle = style, ShowBorder = true, ShowHeader = true, ShowVerticalLines = true };
+        table.Columns.Add(new TableColumn { Header = "Col1", Width = new GridLength(5, GridUnitType.Pixel) });
+        table.Columns.Add(new TableColumn { Header = "Col2", Width = new GridLength(5, GridUnitType.Pixel) });
+        table.AddRow("V1", "V2");
+
+        table.Measure(new Size(20, 20));
+        table.Arrange(new Rect(0, 0, 20, 20));
+
+        var buffer = new VirtualBuffer(20, 20);
+        var ex = Record.Exception(() => table.Render(buffer));
+        Assert.Null(ex);
+    }
 }
