@@ -197,3 +197,14 @@ Implemented coverage expanding into dynamic memory allocations ensuring observab
 ## 2024-05-24 - Slider and ProgressBar Test Coverage Expansion
 **Observation:** Slider and ProgressBar components exhibited less than 100% test coverage due to untested edge conditions such as null label text in ProgressBar, unused property getters/setters, and horizontal orientation boundary clicks/keyboard interactions in Slider.
 **Strategic Action:** Developed explicit parameterization testing across all component axes (including properties like `LabelMode.Text` rendering with null inputs) to enforce strict coverage metrics. Verified that routing events and style property application do not throw exceptions under anomalous conditions.
+## 2026-04-01 - Table BoxStyle.Heavy Character Coordinate Correction
+
+**Observation:**
+The `Tedd.TUI.Table` component had rendering tests explicitly asserting precise box-drawing character output. The `BoxStyle.Heavy` configuration was emitting light-up `┷` and light-horizontal body separator elements `┠` and `┨` rather than correct heavy elements `┻`, `┣`, and `┫`. This failure mode specific to the TUI character buffer was detected during unit test execution.
+
+**Strategic Action:**
+Corrected the mapping in `TableBoxChars.Get` for `BoxStyle.Heavy`:
+- Updated `TUp` to `\u253B`
+- Updated `BodySepTLeft` to `\u2523`
+- Updated `BodySepTRight` to `\u252B`
+This structural paradigm ensures unit tests focusing on exhaustive spatial and hierarchical validation execute correctly.
