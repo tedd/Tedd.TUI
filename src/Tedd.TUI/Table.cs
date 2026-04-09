@@ -489,7 +489,7 @@ public class Table : UIElement
 
                     colX += col.ActualWidth;
 
-                    if (i < Columns.Count - 1)
+                    if (i < Columns.Count - 1 && colX < x + w - (ShowBorder ? 1 : 0))
                     {
                         if (ShowVerticalLines)
                             buffer.SetPixel(colX, headerY, chars.HeaderInnerV, HeaderForeground, HeaderBackground);
