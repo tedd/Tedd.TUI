@@ -390,7 +390,7 @@ public class Table : UIElement
             {
                 case BoxStyle.Heavy:
                     c.TDown = '\u2533';
-                    c.TUp = '\u2537';   // ┷ (Heavy Horz, Light Up)
+                    c.TUp = '\u253B';   // ┻ (Heavy Horz, Heavy Up)
                     c.TLeft = '\u2523';
                     c.TRight = '\u252B';
                     c.HeaderCross = '\u254B';
@@ -467,22 +467,25 @@ public class Table : UIElement
         {
             int headerY = y + (ShowBorder ? 1 : 0);
             int startX = x + (ShowBorder ? 1 : 0);
+            int colX = startX;
 
             if (headerY < y + h) // Ensure we don't draw outside Table bounds
             {
-                var col = Columns[i];
-                int actualW = col.ActualWidth;
+                for (int i = 0; i < Columns.Count; i++)
+                {
+                    var col = Columns[i];
+                    int actualW = col.ActualWidth;
 
-                // Adjust for extreme constraints where the available width is less than ActualWidth
-                int availableWidth = x + w - (ShowBorder ? 1 : 0) - colX;
-                if (availableWidth < 0) availableWidth = 0;
-                int drawWidth = Math.Min(actualW, availableWidth);
+                    // Adjust for extreme constraints where the available width is less than ActualWidth
+                    int availableWidth = x + w - (ShowBorder ? 1 : 0) - colX;
+                    if (availableWidth < 0) availableWidth = 0;
+                    int drawWidth = Math.Min(actualW, availableWidth);
 
-                var span = (col.Header ?? "").AsSpan();
-                if (span.Length > drawWidth) span = span.Slice(0, drawWidth);
+                    var span = (col.Header ?? "").AsSpan();
+                    if (span.Length > drawWidth) span = span.Slice(0, drawWidth);
 
-                buffer.DrawHLine(colX, headerY, drawWidth, ' ', HeaderForeground, HeaderBackground);
-                buffer.DrawString(colX, headerY, span, HeaderForeground, HeaderBackground);
+                    buffer.DrawHLine(colX, headerY, drawWidth, ' ', HeaderForeground, HeaderBackground);
+                    buffer.DrawString(colX, headerY, span, HeaderForeground, HeaderBackground);
 
                     colX += col.ActualWidth;
 
