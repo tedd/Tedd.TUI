@@ -107,7 +107,11 @@ public abstract class Selector : ItemsControl
             {
                 if (panel.Children[i] is ListBoxItem lbi)
                 {
-                    lbi.IsSelected = (i == _selectedIndex);
+                    bool shouldBeSelected = (i == _selectedIndex);
+                    if (lbi.IsSelected != shouldBeSelected)
+                    {
+                        lbi.IsSelected = shouldBeSelected;
+                    }
                 }
             }
         }
