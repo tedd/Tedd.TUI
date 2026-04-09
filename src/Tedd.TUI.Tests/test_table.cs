@@ -7,7 +7,7 @@ namespace Tedd.TUI.Tests
     public class TableValidatorTests
     {
         [Fact]
-        public void Table_NestedInCanvas_NegativeConstraints_ValidatesDimensionalBehavior()
+        public void Table_NestedInCanvas_ZeroSizeConstraints_ValidatesDimensionalBehavior()
         {
             var table = new Table
             {
