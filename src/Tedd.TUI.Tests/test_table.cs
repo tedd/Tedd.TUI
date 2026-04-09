@@ -54,7 +54,10 @@ namespace Tedd.TUI.Tests
             table.Render(zeroBuffer, 0, 0);
 
             // Should not throw and nothing should render
-            Assert.Equal(' ', zeroBuffer.GetPixel(0, 0).Character);
+            foreach (var cell in zeroBuffer.Cells)
+            {
+                Assert.Equal(' ', cell.Character);
+            }
         }
     }
 }
