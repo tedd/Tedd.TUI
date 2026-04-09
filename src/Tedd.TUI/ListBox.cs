@@ -34,6 +34,23 @@ public class ListBox : Selector
         return new ListBoxItem();
     }
 
+    protected internal override void PrepareContainerForItemOverride(UIElement element, object item)
+    {
+        base.PrepareContainerForItemOverride(element, item);
+
+        if (element is ListBoxItem listBoxItem)
+        {
+            if (ItemTemplate != null)
+            {
+                listBoxItem.ContentTemplate = ItemTemplate;
+                listBoxItem.Content = item;
+            }
+            else
+            {
+                listBoxItem.Content = GetItemText(item);
+            }
+        }
+    }
     /// <summary>
     /// When true (default), selection is visible even when unfocused.
     /// When false, selection highlighting is only shown while focused.
