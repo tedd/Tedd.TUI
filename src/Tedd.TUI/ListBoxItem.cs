@@ -53,7 +53,10 @@ public class ListBoxItem : ContentControl
         base.OnMouseDown(e);
         if (!e.Handled)
         {
-            IsSelected = true;
+            if (!IsSelected)
+            {
+                IsSelected = true;
+            }
             e.Handled = true;
         }
     }
