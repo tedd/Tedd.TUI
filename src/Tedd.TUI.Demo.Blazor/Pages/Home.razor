@@ -129,7 +129,7 @@
                         <TuiTableColumn Header="ID" Width="5" />
                         <TuiTableColumn Header="Name" Width="*" />
                         <TuiTableColumn Header="Age" Width="Auto" />
-                        <TuiTableColumn Header="Actions" Width="10" />
+                        <TuiTableColumn Header="Actions" Width="15" />
                         
                         @foreach(var item in currentTableRows)
                         {
@@ -143,7 +143,7 @@
                                 }
                                 else
                                 {
-                                     <TuiLabel Text="@item.Action" />
+                                     <TuiButton Text="@item.Action" OnClick='() => Log($"Edit Clicked: {item.Name}")' />
                                 }
                             </TuiTableRow>
                         }
@@ -180,7 +180,7 @@
                 <TuiStackPanel Orientation="Orientation.Vertical">
                     <TuiLabel Text="Code Coloring Demo" />
                     <TuiScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="true" HorizontalScrollBarVisibility="true">
-                        <TuiComponentBase Component="@codeDoc" />
+                        <TuiHost Component="@codeDoc" />
                     </TuiScrollViewer>
                 </TuiStackPanel>
             </TuiTabItem>
@@ -190,7 +190,7 @@
                 <TuiStackPanel Orientation="Orientation.Vertical">
                     <TuiLabel Text="Markdown View:" />
                     <TuiScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="true">
-                        <TuiComponentBase Component="@mdView" />
+                        <TuiHost Component="@mdView" />
                     </TuiScrollViewer>
                 </TuiStackPanel>
             </TuiTabItem>
@@ -199,7 +199,7 @@
             <TuiTabItem Header="DataGrid">
                 <TuiStackPanel Orientation="Orientation.Vertical">
                     <TuiLabel Text="DataGrid (Auto Generated Columns):" />
-                    <TuiComponentBase Component="@dataGrid" />
+                    <TuiHost Component="@dataGrid" />
                 </TuiStackPanel>
             </TuiTabItem>
 
@@ -208,7 +208,7 @@
                 <TuiStackPanel Orientation="Orientation.Vertical">
                     <TuiLabel Text="Text Editor:" />
                     <TuiBorder BoxStyle="BoxStyle.Single" BorderColor="ConsoleColor.Cyan" Width="70" Height="15">
-                        <TuiComponentBase Component="@textEditor" />
+                        <TuiHost Component="@textEditor" />
                     </TuiBorder>
                 </TuiStackPanel>
             </TuiTabItem>
@@ -437,7 +437,7 @@
         
         for (int i = 1; i <= 20; i++)
         {
-            allTableItems.Add(new TableItem { Id = $"{100+i}", Name = $"User {i}", Age = $"{20 + (i%30)}", Action = "View" });
+            allTableItems.Add(new TableItem { Id = $"{100+i}", Name = $"User {i}", Age = $"{20 + (i%30)}", Action = "Edit" });
         }
         
         totalRows = allTableItems.Count;

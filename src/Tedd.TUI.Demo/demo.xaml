@@ -46,6 +46,12 @@
        <TextBlock Text="Tedd.TUI Demo Application (XAML)" Foreground="Cyan"/>
     </Border>
 
+    <!-- Mode Switcher -->
+    <StackPanel Orientation="Horizontal">
+        <TextBlock Text="Render Mode: " />
+        <ComboBox Name="RenderModeCombo" Width="15" />
+    </StackPanel>
+
     <!-- Tabs -->
 
     <!-- Bifurcated Architecture -->
