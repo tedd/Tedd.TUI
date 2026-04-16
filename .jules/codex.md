@@ -54,3 +54,8 @@
 ## 2026-03-25 - Epistemological Correction of TuiWindow Overlay Optimization
 **Observation:** The README.md fabricated a structural capability by stating the TuiWindow overlay system used a HashSet<UIElement> for O(1) presence verification, when the implementation empirically utilizes a List<UIElement> with O(N) traversal.
 **Strategic Action:** Synchronized the documentation to accurately reflect the List<UIElement> O(N) presence verification, eliminating neuro-bunk and establishing absolute epistemological alignment.
+## 2026-03-25 - Epistemological Alignment of DependencyObject and Table Structural Documentation
+
+**Observation:** The README.md exhibited documentation drift regarding two specific architectural mechanisms. First, it falsely claimed that `DependencyObject` resolved property precedence using a "single internal dictionary", whereas the runtime implementation leverages discrete `_localValues` and `_triggerValues` collections to isolate states and maintain override precedence. Second, the 'Table' property documentation provided an incorrect Unicode value (`\u2537`) for the `BoxStyle.Heavy` TUp character.
+
+**Strategic Action:** Synchronized the documentation to articulate the dual-dictionary strategy (`_localValues` and `_triggerValues`) within the 'Core System' section, eliminating the monolithic storage neuro-bunk. Corrected the `BoxStyle.Heavy` TUp Unicode requirement in the 'Rich Control Suite' to the empirically accurate `\u253B` character.
