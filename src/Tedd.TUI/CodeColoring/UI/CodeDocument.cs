@@ -85,7 +85,7 @@ public class CodeDocument : StackPanel
 
         while (start < length)
         {
-            int newlineIndex = text.IndexOfAny(new[] { '\r', '\n' }, start);
+            int newlineIndex = text.IndexOfAny([ '\r', '\n'  ], start);
 
             if (newlineIndex == -1)
             {

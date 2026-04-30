@@ -5,7 +5,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class BatchLanguage : ILanguage
 {
     public string Id => "batch";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

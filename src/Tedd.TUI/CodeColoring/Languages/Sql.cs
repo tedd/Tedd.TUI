@@ -6,7 +6,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class SqlLanguage : ILanguage
 {
     public string Id => "sql";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

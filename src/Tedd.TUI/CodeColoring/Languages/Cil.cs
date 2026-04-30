@@ -6,7 +6,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class CilLanguage : ILanguage
 {
     public string Id => "cil";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

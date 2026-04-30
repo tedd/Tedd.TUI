@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class AspNetLanguage : ILanguage
 {
     public string Id => "aspnet";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

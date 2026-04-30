@@ -5,7 +5,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class PowerShellLanguage : ILanguage
 {
     public string Id => "powershell";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {
