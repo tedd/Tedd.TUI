@@ -152,22 +152,15 @@ public class ValidatorLayoutMatrixTests
         stack.Children.Add(border1);
         stack.Children.Add(border2);
 
+        // Set alignment before layout/render so the test validates a single deterministic render pass.
+        border1.HorizontalAlignment = HorizontalAlignment.Left;
+        border2.HorizontalAlignment = HorizontalAlignment.Left;
+
         stack.Measure(new Size(20, 20));
         stack.Arrange(new Rect(0, 0, 20, 20));
 
         var buffer = new VirtualBuffer(20, 20);
         stack.Render(buffer, 0, 0);
-
-        // When StackPanel stretches items by default if we don't set alignment, but here we set Width/Height.
-        // Actually, if we set HorizontalAlignment=Center, it might put them in the center,
-        // default is Stretch. Since Width=10, they are 10 wide. Wait, if parent is 20 wide,
-        // default HorizontalAlignment is Stretch but Width=10 overrides it? Let's center it or top/left it.
-        border1.HorizontalAlignment = HorizontalAlignment.Left;
-        border2.HorizontalAlignment = HorizontalAlignment.Left;
-        stack.Measure(new Size(20, 20));
-        stack.Arrange(new Rect(0, 0, 20, 20));
-        stack.Render(buffer, 0, 0);
-
         // border1 at 0,0 to 9,4
         Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
         Assert.Equal('\u2518', buffer.GetPixel(9, 4).Character);
