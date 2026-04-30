@@ -14,7 +14,7 @@ public class ItemsControlTests
     public void ItemsSource_Populates_Items()
     {
         var control = new TestItemsControl();
-        string[] source = [ "A", "B", "C"  ];
+        string[] source = [ "A", "B", "C" ];
 
         control.ItemsSource = source;
 
