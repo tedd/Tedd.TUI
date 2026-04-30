@@ -46,4 +46,4 @@
 
 ## 2025-05-18 - Parameter Optimization and Collection Expressions
 **Observation:** The codebase contained numerous legacy array initializations using explicit types like `new string[0]`, `new[] { ... }`, and `new object[] { ... }` in files such as language definitions in `CodeColoring/Languages`, `XamlLoader.cs`, and tests.
-**Strategic Action:** Upgraded to C# 12 collection expressions (`[]`) across the codebase to strictly mitigate heap allocations and enforce syntactic conciseness without compromising semantic integrity. Applied explicit array casts `(Grammar[])` where necessary for interface targets.
+**Strategic Action:** Upgraded to C# 12 collection expressions (`[]`) across the codebase to reduce syntactic boilerplate and, for empty-array cases, avoid unnecessary allocations without compromising semantic integrity. Applied explicit array casts `(Grammar[])` where necessary for interface targets.
