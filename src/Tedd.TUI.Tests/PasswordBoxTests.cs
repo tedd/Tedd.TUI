@@ -144,8 +144,8 @@ public class PasswordBoxTests
     public void OnKeyDown_NullInternalTextBox_CallsBase(ConsoleKey key, bool expectedHandled)
     {
         var pb = new PasswordBox();
-        pb.Template = null; // Prevent template application
-        pb._internalTextBox = null; // Manually clear because constructor applies default template
+        pb.Template = null; // Remove the already-applied template to force the null _internalTextBox fallback branch
+        pb._internalTextBox = null;
 
         Assert.Null(pb._internalTextBox);
 
@@ -183,19 +183,17 @@ public class PasswordBoxTests
     [InlineData(0, 0)]
     [InlineData(100, 100)]
     [InlineData(-5, -5)]
-    public void OnMouseDown_NullInternalTextBox_SetsFocus(int x, int y)
+    public void OnMouseDown_NullInternalTextBox_DoesNotThrow(int x, int y)
     {
         var pb = new PasswordBox();
         pb.Template = null;
         pb._internalTextBox = null;
 
-        Assert.Null(pb._internalTextBox);
-        Assert.False(pb.IsFocused);
-
         var args = new MouseEventArgs { X = x, Y = y };
-        // Since Focus() needs tree, we just test no crash here
-        pb.OnMouseDown(args);
 
-        Assert.Null(pb._internalTextBox);
+        var ex = Record.Exception(() => pb.OnMouseDown(args));
+
+        Assert.Null(ex);
+        Assert.False(args.Handled);
     }
 }
