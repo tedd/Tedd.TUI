@@ -170,13 +170,13 @@ public class PasswordBoxTests
         Assert.False(pb._internalTextBox!.IsFocused);
 
         var args = new MouseEventArgs { X = x, Y = y };
-        // Focus() relies on TuiWindow which we aren't fully mocking here, so IsFocused might not actually become true.
-        // But we can at least assert we don't crash and _internalTextBox state mirrors pb
-        pb.IsFocused = true; // force the focus state manually since we aren't in a real tree
+        Assert.False(args.Handled);
+
+        // Focus() relies on TuiWindow which we aren't fully mocking here, so avoid asserting on focus state.
+        // Instead, verify that the mouse event was actually processed/forwarded.
         pb.OnMouseDown(args);
 
-        // Let's assert the internal text box also had its events/state processed
-        Assert.True(pb._internalTextBox.IsFocused);
+        Assert.True(args.Handled);
     }
 
     [Theory]
