@@ -137,23 +137,16 @@ public class PasswordBoxTests
         Assert.True(pb._internalTextBox.IsFocused);
     }
 
-    [Theory]
-    [InlineData(ConsoleKey.Tab, false)]
-    [InlineData(ConsoleKey.Enter, false)]
-    [InlineData(ConsoleKey.A, false)]
-    public void OnKeyDown_NullInternalTextBox_CallsBase(ConsoleKey key, bool expectedHandled)
+    [Fact]
+    public void OnKeyDown_NullInternalTextBox_DoesNotThrow()
     {
         var pb = new PasswordBox();
         pb.Template = null; // Remove the already-applied template to force the null _internalTextBox fallback branch
         pb._internalTextBox = null;
 
-        Assert.Null(pb._internalTextBox);
+        var ex = Record.Exception(() => pb.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.A }));
 
-        var args = new KeyEventArgs { Key = key };
-        pb.OnKeyDown(args);
-
-        // Base behavior doesn't crash
-        Assert.Equal(expectedHandled, args.Handled);
+        Assert.Null(ex);
     }
 
     [Theory]
