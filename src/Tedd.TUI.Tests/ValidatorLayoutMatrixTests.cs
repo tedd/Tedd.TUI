@@ -146,26 +146,23 @@ public class ValidatorLayoutMatrixTests
     public void StackPanel_HierarchicalCompositionAndDynamicStateMutation()
     {
         var stack = new StackPanel { Orientation = Orientation.Vertical };
-        var border1 = new Border { BoxStyle = BoxStyle.Single, Width = 10, Height = 5, VerticalAlignment = VerticalAlignment.Top };
-        var border2 = new Border { BoxStyle = BoxStyle.Double, Width = 10, Height = 5, VerticalAlignment = VerticalAlignment.Top };
+        // Children are left-aligned so positions are deterministic: stacked top-to-bottom at x=0.
+        var border1 = new Border { BoxStyle = BoxStyle.Single, Width = 10, Height = 5, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
+        var border2 = new Border { BoxStyle = BoxStyle.Double, Width = 10, Height = 5, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
 
         stack.Children.Add(border1);
         stack.Children.Add(border2);
-
-        // Set alignment before layout/render so the test validates a single deterministic render pass.
-        border1.HorizontalAlignment = HorizontalAlignment.Left;
-        border2.HorizontalAlignment = HorizontalAlignment.Left;
 
         stack.Measure(new Size(20, 20));
         stack.Arrange(new Rect(0, 0, 20, 20));
 
         var buffer = new VirtualBuffer(20, 20);
         stack.Render(buffer, 0, 0);
-        // border1 at 0,0 to 9,4
+        // border1 occupies rows 0-4 at x=0..9
         Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
         Assert.Equal('\u2518', buffer.GetPixel(9, 4).Character);
 
-        // border2 at 0,5 to 9,9
+        // border2 stacked below border1, occupies rows 5-9 at x=0..9
         Assert.Equal('\u2554', buffer.GetPixel(0, 5).Character);
         Assert.Equal('\u255D', buffer.GetPixel(9, 9).Character);
 
