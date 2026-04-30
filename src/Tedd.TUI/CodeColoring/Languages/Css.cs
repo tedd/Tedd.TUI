@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class CssLanguage : ILanguage
 {
     public string Id => "css";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

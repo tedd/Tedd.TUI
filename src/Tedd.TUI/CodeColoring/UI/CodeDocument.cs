@@ -80,39 +80,35 @@ public class CodeDocument : StackPanel
     {
         if (string.IsNullOrEmpty(text)) return;
 
-        int start = 0;
-        int length = text.Length;
+        ReadOnlySpan<char> remaining = text.AsSpan();
 
-        while (start < length)
+        while (!remaining.IsEmpty)
         {
-            int newlineIndex = text.IndexOfAny(new[] { '\r', '\n' }, start);
+            int newlineIndex = remaining.IndexOfAny('\r', '\n');
 
             if (newlineIndex == -1)
             {
                 // No more newlines, add remaining text
-                string part = text.Substring(start);
-                AddSpan(_currentLinePanel, part, type);
+                AddSpan(_currentLinePanel, remaining.ToString(), type);
                 break;
             }
 
             // Add text before newline
-            if (newlineIndex > start)
+            if (newlineIndex > 0)
             {
-                string part = text.Substring(start, newlineIndex - start);
-                AddSpan(_currentLinePanel, part, type);
+                AddSpan(_currentLinePanel, remaining.Slice(0, newlineIndex).ToString(), type);
             }
 
-            // Handle newline
-            // Check for \r\n
-            if (text[newlineIndex] == '\r' && newlineIndex + 1 < length && text[newlineIndex + 1] == '\n')
+            // Handle newline - check for \r\n
+            if (remaining[newlineIndex] == '\r' && newlineIndex + 1 < remaining.Length && remaining[newlineIndex + 1] == '\n')
             {
                 // Windows newline, skip 2 chars
-                start = newlineIndex + 2;
+                remaining = remaining.Slice(newlineIndex + 2);
             }
             else
             {
                 // \r or \n
-                start = newlineIndex + 1;
+                remaining = remaining.Slice(newlineIndex + 1);
             }
 
             // Start new line

@@ -5,7 +5,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class YamlLanguage : ILanguage
 {
     public string Id => "yaml";
-    public string[] Aliases => new[] { "yml" };
+    public string[] Aliases => [ "yml"  ];
 
     public Grammar GetGrammar()
     {

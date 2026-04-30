@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class RustLanguage : ILanguage
 {
     public string Id => "rust";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

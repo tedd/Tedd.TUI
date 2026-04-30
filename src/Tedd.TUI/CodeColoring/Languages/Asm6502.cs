@@ -6,7 +6,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class Asm6502Language : ILanguage
 {
     public string Id => "asm6502";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {
