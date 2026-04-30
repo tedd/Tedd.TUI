@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class MarkdownLanguage : ILanguage
 {
     public string Id => "markdown";
-    public string[] Aliases => [ "md"  ];
+    public string[] Aliases => [ "md" ];
 
     public Grammar GetGrammar()
     {
