@@ -5,7 +5,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class BashLanguage : ILanguage
 {
     public string Id => "bash";
-    public string[] Aliases => [ "sh", "shell"  ];
+    public string[] Aliases => [ "sh", "shell" ];
 
     public Grammar GetGrammar()
     {
