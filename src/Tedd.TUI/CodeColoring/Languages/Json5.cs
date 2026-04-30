@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class Json5Language : ILanguage
 {
     public string Id => "json5";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

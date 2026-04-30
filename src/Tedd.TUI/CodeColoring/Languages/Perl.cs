@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class PerlLanguage : ILanguage
 {
     public string Id => "perl";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

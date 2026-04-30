@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class MarkdownLanguage : ILanguage
 {
     public string Id => "markdown";
-    public string[] Aliases => new[] { "md" };
+    public string[] Aliases => [ "md" ];
 
     public Grammar GetGrammar()
     {
@@ -130,7 +130,7 @@ public class MarkdownLanguage : ILanguage
             { "code-snippet", grammar["code-snippet"] }
         };
 
-        foreach (var target in new[] { boldInside, italicInside, strikeInside, urlInside })
+        foreach (var target in new Grammar[] { boldInside, italicInside, strikeInside, urlInside })
         {
             foreach (var kvp in inlineTokens)
             {

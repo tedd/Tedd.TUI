@@ -5,7 +5,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class CLikeLanguage : ILanguage
 {
     public string Id => "clike";
-    public string[] Aliases => new string[0];
+    public string[] Aliases => [];
 
     public Grammar GetGrammar()
     {

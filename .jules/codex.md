@@ -57,3 +57,8 @@
 ## 2024-05-01 - Overlay System Mechanism Updates
 **Observation:** The README.md incorrectly stated that overlays were "appended to a dedicated rendering collection rather than the standard `Content` visual tree." The `TuiWindow` implementation includes overlays in its `VisualChildrenCount` and returns them from `GetVisualChild`, meaning they are formally part of the visual tree, while their `DataContext` is assigned from the current window `DataContext` when pushed.
 **Strategic Action:** Updated the README.md to accurately state that overlays are integral components of the `TuiWindow` Visual Tree and are assigned the current `DataContext` when pushed, while explicitly detailing that they bypass the standard `Measure` and `Arrange` passes.
+## 2026-03-25 - Epistemological Alignment of DependencyObject and Table Structural Documentation
+
+**Observation:** The README.md exhibited documentation drift regarding two specific architectural mechanisms. First, it falsely claimed that `DependencyObject` resolved property precedence using a "single internal dictionary", whereas the runtime implementation leverages discrete `_localValues` and `_triggerValues` collections to isolate states and maintain override precedence. Second, the 'Table' property documentation provided an incorrect Unicode value (`\u2537`) for the `BoxStyle.Heavy` TUp character.
+
+**Strategic Action:** Synchronized the documentation to articulate the dual-dictionary strategy (`_localValues` and `_triggerValues`) within the 'Core System' section, eliminating the monolithic storage neuro-bunk. Corrected the `BoxStyle.Heavy` TUp Unicode requirement in the 'Rich Control Suite' to the empirically accurate `\u253B` character.

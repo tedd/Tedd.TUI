@@ -122,4 +122,70 @@ public class PasswordBoxTests
         // TextBox handles normal characters, so e.Handled should be true
         Assert.True(args.Handled);
     }
+
+    [Fact]
+    public void OnPropertyChanged_IsFocused_UpdatesInternalTextBox()
+    {
+        var pb = new PasswordBox();
+        // _internalTextBox is set during construction via Control.OnPropertyChanged(TemplateProperty)
+
+        Assert.NotNull(pb._internalTextBox);
+        Assert.False(pb._internalTextBox.IsFocused);
+
+        pb.IsFocused = true;
+
+        Assert.True(pb._internalTextBox.IsFocused);
+    }
+
+    [Fact]
+    public void OnKeyDown_NullInternalTextBox_DoesNotThrow()
+    {
+        var pb = new PasswordBox();
+        pb.Template = null; // Remove the already-applied template to force the null _internalTextBox fallback branch
+        pb._internalTextBox = null;
+
+        var ex = Record.Exception(() => pb.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.A }));
+
+        Assert.Null(ex);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(10, 5)]
+    [InlineData(-1, -1)]
+    public void OnMouseDown_ForwardsEvent_WithInternalTextBox(int x, int y)
+    {
+        var pb = new PasswordBox();
+        // _internalTextBox is set during construction via Control.OnPropertyChanged(TemplateProperty)
+
+        Assert.False(pb.IsFocused);
+        Assert.False(pb._internalTextBox!.IsFocused);
+
+        var args = new MouseEventArgs { X = x, Y = y };
+        Assert.False(args.Handled);
+
+        // Focus() relies on TuiWindow which we aren't fully mocking here, so avoid asserting on focus state.
+        // Instead, verify that the mouse event was actually processed/forwarded.
+        pb.OnMouseDown(args);
+
+        Assert.True(args.Handled);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(100, 100)]
+    [InlineData(-5, -5)]
+    public void OnMouseDown_NullInternalTextBox_DoesNotThrow(int x, int y)
+    {
+        var pb = new PasswordBox();
+        pb.Template = null;
+        pb._internalTextBox = null;
+
+        var args = new MouseEventArgs { X = x, Y = y };
+
+        var ex = Record.Exception(() => pb.OnMouseDown(args));
+
+        Assert.Null(ex);
+        Assert.False(args.Handled);
+    }
 }

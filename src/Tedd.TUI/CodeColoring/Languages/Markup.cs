@@ -5,7 +5,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class MarkupLanguage : ILanguage
 {
     public string Id => "markup";
-    public string[] Aliases => new[] { "xml", "html", "mathml", "svg" };
+    public string[] Aliases => [ "xml", "html", "mathml", "svg" ];
 
     public Grammar GetGrammar()
     {

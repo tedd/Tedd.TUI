@@ -13,10 +13,10 @@ public class Grid : Panel
     private List<ColumnDefinition>? _implicitCols;
 
     // Attached Properties
-    public static readonly DependencyProperty RowProperty = DependencyProperty.Register("Row", typeof(int), typeof(Grid), 0);
-    public static readonly DependencyProperty ColumnProperty = DependencyProperty.Register("Column", typeof(int), typeof(Grid), 0);
-    public static readonly DependencyProperty RowSpanProperty = DependencyProperty.Register("RowSpan", typeof(int), typeof(Grid), 1);
-    public static readonly DependencyProperty ColumnSpanProperty = DependencyProperty.Register("ColumnSpan", typeof(int), typeof(Grid), 1);
+    public static readonly DependencyProperty RowProperty = DependencyProperty.RegisterAttached("Row", typeof(int), typeof(Grid), 0);
+    public static readonly DependencyProperty ColumnProperty = DependencyProperty.RegisterAttached("Column", typeof(int), typeof(Grid), 0);
+    public static readonly DependencyProperty RowSpanProperty = DependencyProperty.RegisterAttached("RowSpan", typeof(int), typeof(Grid), 1);
+    public static readonly DependencyProperty ColumnSpanProperty = DependencyProperty.RegisterAttached("ColumnSpan", typeof(int), typeof(Grid), 1);
 
     public static void SetRow(UIElement element, int value) => element.SetValue(RowProperty, value);
     public static int GetRow(UIElement element) => (int)element.GetValue(RowProperty);

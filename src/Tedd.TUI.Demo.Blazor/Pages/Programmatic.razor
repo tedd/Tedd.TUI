@@ -283,20 +283,28 @@
 
         // 4. Custom key selector example for Actions (sort by length of content?)
         // Or just leave unsortable or default string.
-        table.Columns.Add(new TableColumn { Header = "Actions", Width = GridLength.Pixel(10) });
+        table.Columns.Add(new TableColumn { Header = "Actions", Width = GridLength.Pixel(15) });
+
+        // Helper to create Edit Button
+        UIElement CreateEditBtn(string name)
+        {
+            var btn = new Button { Content = "Edit" };
+            btn.Click += (s, e) => { logBox.Items.Add($"Edit Clicked: {name}"); StateHasChanged(); };
+            return btn;
+        }
 
         // Data Source (Simulating Database)
         var allData = new List<object[]>();
-        allData.Add(new object[] { "10", "Alice", "30", "Edit" });
-        allData.Add(new object[] { "2", "Bob", "25", "Edit" });
-        allData.Add(new object[] { "1", "Charlie", "35", "Edit" });
+        allData.Add(new object[] { "10", "Alice", "30", CreateEditBtn("Alice") });
+        allData.Add(new object[] { "2", "Bob", "25", CreateEditBtn("Bob") });
+        allData.Add(new object[] { "1", "Charlie", "35", CreateEditBtn("Charlie") });
         allData.Add(new object[] { "20", "David", "40", new CheckBox { Content = "Active", IsChecked = true } }); // UI Element in cell
-        allData.Add(new object[] { "3", "Eve", "22", "Edit" });
+        allData.Add(new object[] { "3", "Eve", "22", CreateEditBtn("Eve") });
 
         // Add 20 more items as requested
         for (int i = 1; i <= 20; i++)
         {
-            allData.Add(new object[] { $"{100 + i}", $"User {i}", $"{20 + (i % 30)}", "View" });
+            allData.Add(new object[] { $"{100 + i}", $"User {i}", $"{20 + (i % 30)}", CreateEditBtn($"User {i}") });
         }
 
         // Configure Pagination

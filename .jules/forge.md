@@ -109,3 +109,6 @@
 - Implemented `SetTriggerValue`/`ClearTriggerValue` internal methods.
 - Corrected `GetValue()` to accurately evaluate `_triggerValues` and `_localValues`, properly simulating explicit local overrides via `_triggerValues.Remove(dp)` in `SetValue`.
 - Upgraded `Control.EvaluateTriggers` to use these native API paths, removing error-prone internal value caching logic and ensuring WPF-isomorphic resolution.
+## 2026-03-09 - Grid Attached Property Parity Integration
+**Observation:** Discovered an architectural parity deficit where layout container attached properties (such as `Row`, `Column`, `RowSpan`, and `ColumnSpan` on `Grid`) were registered using standard `DependencyProperty.Register` rather than the required `DependencyProperty.RegisterAttached`. While functionally equivalent in the current internal implementation, this deviated from standard WPF/XAML semantics and architectural mapping.
+**Strategic Action:** Modified the property registrations in `Grid.cs` to correctly invoke `DependencyProperty.RegisterAttached`, properly aligning the declarative property models with the structural intent of the `DependencyProperty` system used for attached layout paradigms.
