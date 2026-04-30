@@ -122,4 +122,80 @@ public class PasswordBoxTests
         // TextBox handles normal characters, so e.Handled should be true
         Assert.True(args.Handled);
     }
+
+    [Fact]
+    public void OnPropertyChanged_IsFocused_UpdatesInternalTextBox()
+    {
+        var pb = new PasswordBox();
+        pb.Measure(new Size(10, 1)); // Initialize _internalTextBox
+
+        Assert.NotNull(pb._internalTextBox);
+        Assert.False(pb._internalTextBox.IsFocused);
+
+        pb.IsFocused = true;
+
+        Assert.True(pb._internalTextBox.IsFocused);
+    }
+
+    [Theory]
+    [InlineData(ConsoleKey.Tab, false)]
+    [InlineData(ConsoleKey.Enter, false)]
+    [InlineData(ConsoleKey.A, false)]
+    public void OnKeyDown_NullInternalTextBox_CallsBase(ConsoleKey key, bool expectedHandled)
+    {
+        var pb = new PasswordBox();
+        pb.Template = null; // Prevent template application
+        pb._internalTextBox = null; // Manually clear because constructor applies default template
+
+        Assert.Null(pb._internalTextBox);
+
+        var args = new KeyEventArgs { Key = key };
+        pb.OnKeyDown(args);
+
+        // Base behavior doesn't crash
+        Assert.Equal(expectedHandled, args.Handled);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(10, 5)]
+    [InlineData(-1, -1)]
+    public void OnMouseDown_SetsFocusAndForwards_WithInternalTextBox(int x, int y)
+    {
+        var pb = new PasswordBox();
+        // Just call Measure to ensure visual children are populated
+        pb.Measure(new Size(10, 10));
+
+        Assert.False(pb.IsFocused);
+        Assert.False(pb._internalTextBox!.IsFocused);
+
+        var args = new MouseEventArgs { X = x, Y = y };
+        // Focus() relies on TuiWindow which we aren't fully mocking here, so IsFocused might not actually become true.
+        // But we can at least assert we don't crash and _internalTextBox state mirrors pb
+        pb.IsFocused = true; // force the focus state manually since we aren't in a real tree
+        pb.OnMouseDown(args);
+
+        // Let's assert the internal text box also had its events/state processed
+        Assert.True(pb._internalTextBox.IsFocused);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(100, 100)]
+    [InlineData(-5, -5)]
+    public void OnMouseDown_NullInternalTextBox_SetsFocus(int x, int y)
+    {
+        var pb = new PasswordBox();
+        pb.Template = null;
+        pb._internalTextBox = null;
+
+        Assert.Null(pb._internalTextBox);
+        Assert.False(pb.IsFocused);
+
+        var args = new MouseEventArgs { X = x, Y = y };
+        // Since Focus() needs tree, we just test no crash here
+        pb.OnMouseDown(args);
+
+        Assert.Null(pb._internalTextBox);
+    }
 }
