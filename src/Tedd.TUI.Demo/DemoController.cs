@@ -29,6 +29,7 @@ public class DemoController
     public TextEditor EditorBox;
     public TreeView NavTree;
     public TabControl MainTabs;
+    public ComboBox RenderModeCombo;
 
 
     public void Initialize(TuiApp app, TuiWindow window)
@@ -36,6 +37,16 @@ public class DemoController
         _app = app;
         _window = window;
 
+        // Init RenderModeCombo
+        if (RenderModeCombo != null)
+        {
+            RenderModeCombo.Items.Add("Canvas");
+            RenderModeCombo.Items.Add("Dom");
+            RenderModeCombo.SelectedItem = "Canvas";
+            RenderModeCombo.SelectionChanged += (s, e) => {
+                // Console doesn't support DOM render mode, this is here just to maintain visual parity with Blazor UI
+            };
+        }
 
         // Init Slider logic
         if (FormSlider != null && VolumeLabel != null)

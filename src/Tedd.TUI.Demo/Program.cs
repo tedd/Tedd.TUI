@@ -115,6 +115,20 @@ class Program
             BoxStyle = BoxStyle.Double
         });
 
+        // Mode Switcher (to mirror Blazor programmatic features)
+        var modePanel = new StackPanel { Orientation = Orientation.Horizontal };
+        modePanel.AddChild(new TextBlock { Text = "Render Mode: " });
+        var modeCombo = new ComboBox { Width = 15 };
+        modeCombo.Items.Add("Canvas");
+        modeCombo.Items.Add("Dom");
+        modeCombo.SelectedItem = "Canvas";
+        modeCombo.SelectionChanged += (s, e) =>
+        {
+            // Console does not support dom, but we keep it here to mirror the Blazor logic exactly
+        };
+        modePanel.AddChild(modeCombo);
+        mainStack.AddChild(modePanel);
+
 
         // --- Bifurcated Architecture ---
         var dockPanel = new DockPanel { LastChildFill = true };
