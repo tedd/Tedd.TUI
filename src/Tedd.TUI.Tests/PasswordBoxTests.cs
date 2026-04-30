@@ -127,7 +127,7 @@ public class PasswordBoxTests
     public void OnPropertyChanged_IsFocused_UpdatesInternalTextBox()
     {
         var pb = new PasswordBox();
-        pb.Measure(new Size(10, 1)); // Initialize _internalTextBox
+        // _internalTextBox is set during construction via Control.OnPropertyChanged(TemplateProperty)
 
         Assert.NotNull(pb._internalTextBox);
         Assert.False(pb._internalTextBox.IsFocused);
@@ -153,11 +153,10 @@ public class PasswordBoxTests
     [InlineData(0, 0)]
     [InlineData(10, 5)]
     [InlineData(-1, -1)]
-    public void OnMouseDown_SetsFocusAndForwards_WithInternalTextBox(int x, int y)
+    public void OnMouseDown_ForwardsEvent_WithInternalTextBox(int x, int y)
     {
         var pb = new PasswordBox();
-        // Just call Measure to ensure visual children are populated
-        pb.Measure(new Size(10, 10));
+        // _internalTextBox is set during construction via Control.OnPropertyChanged(TemplateProperty)
 
         Assert.False(pb.IsFocused);
         Assert.False(pb._internalTextBox!.IsFocused);
