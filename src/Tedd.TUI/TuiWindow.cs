@@ -263,7 +263,20 @@ public class TuiWindow : UIElement
             for (int i = count - 1; i >= 0; i--)
             {
                 var child = element.GetVisualChild(i);
-                hitChild = InputHitTestRecursive(child, localX, localY);
+
+                // For a ScrollViewer, the Content child is rendered with a translation
+                // of (-HorizontalOffset, -VerticalOffset). Hit testing must apply the
+                // same translation when descending into Content so coordinates match
+                // what the user sees. Scrollbars / title / status bar are NOT translated.
+                int childX = localX;
+                int childY = localY;
+                if (element is ScrollViewer sv && ReferenceEquals(child, sv.Content))
+                {
+                    childX += sv.HorizontalOffset;
+                    childY += sv.VerticalOffset;
+                }
+
+                hitChild = InputHitTestRecursive(child, childX, childY);
                 if (hitChild != null) return hitChild;
             }
 

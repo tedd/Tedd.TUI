@@ -27,16 +27,29 @@ public class TextBlockTest : TestPage
 
         // 3. Wrapping
         var wrapPanel = new StackPanel { Orientation = Orientation.Vertical };
+        wrapPanel.AddChild(new TextBlock { Text = "TextWrapping.Wrap inside a 20-wide Border:" });
         wrapPanel.AddChild(new Border
         {
             Width = 20,
+            Height = 8,
             BoxStyle = BoxStyle.Single,
             Child = new TextBlock
             {
                 Text = "This is a very long text that should wrap inside this small box hopefully if TextBlock supports wrapping.",
-                // TextWrapping is not standard property in TUI usually unless supported.
-                // Checking TextBlock.cs might be useful.
-                // Assuming it might just clip or wrap. Let's see.
+                TextWrapping = TextWrapping.Wrap
+            }
+        });
+
+        wrapPanel.AddChild(new TextBlock { Text = " " });
+        wrapPanel.AddChild(new TextBlock { Text = "TextWrapping.NoWrap (default) for comparison:" });
+        wrapPanel.AddChild(new Border
+        {
+            Width = 20,
+            Height = 3,
+            BoxStyle = BoxStyle.Single,
+            Child = new TextBlock
+            {
+                Text = "This long text will be clipped because wrapping is off."
             }
         });
 

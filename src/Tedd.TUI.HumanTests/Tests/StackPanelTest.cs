@@ -27,16 +27,24 @@ public class StackPanelTest : TestPage
         AddScenario("Horizontal", hPanel);
 
         // 3. Nested
+        // Outer = Vertical StackPanel. Middle row = Horizontal StackPanel containing
+        // two buttons side-by-side. Buttons A and B SHOULD render side-by-side because
+        // they live inside the inner Horizontal panel.
         var nested = new StackPanel { Orientation = Orientation.Vertical };
-        nested.AddChild(new TextBlock { Text = "Header" });
+        nested.AddChild(new TextBlock { Text = "[Vertical] Header" });
 
         var row = new StackPanel { Orientation = Orientation.Horizontal };
         row.AddChild(new Button { Content = "A" });
         row.AddChild(new TextBlock { Text = " " });
         row.AddChild(new Button { Content = "B" });
 
-        nested.AddChild(row);
-        nested.AddChild(new TextBlock { Text = "Footer" });
+        nested.AddChild(new Border
+        {
+            BoxStyle = BoxStyle.Single,
+            Title = new TextBlock { Text = "[Horizontal] inner row (A and B should be side-by-side)" },
+            Child = row
+        });
+        nested.AddChild(new TextBlock { Text = "[Vertical] Footer" });
 
         AddScenario("Nested", nested);
     }

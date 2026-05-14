@@ -236,6 +236,11 @@ public class TabControl : Selector
     public override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+
+        // Don't switch our tabs when a nested control (e.g. an inner TabControl,
+        // ListBox, etc.) has already consumed the arrow key during the bubble phase.
+        if (e.Handled) return;
+
         if (Items.Count == 0) return;
 
         bool switchTab = false;

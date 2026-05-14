@@ -112,17 +112,21 @@ public class ConsoleInputManager
             var record = buffer[i];
             if (record.EventType == NativeMethods.KEY_EVENT)
             {
-                if (record.KeyEvent.bKeyDown != 0) // bKeyDown is int (BOOL)
+                // Emit both KeyDown and KeyUp so controls relying on release semantics
+                // (e.g. ButtonBase.OnKeyUp triggering OnClick for ClickMode.Release,
+                //  which RadioButton/CheckBox depend on for the Space/Enter activation)
+                // work correctly on the Windows console backend.
+                var routedEvent = record.KeyEvent.bKeyDown != 0
+                    ? UIElement.KeyDownEvent
+                    : UIElement.KeyUpEvent;
+
+                var args = new KeyEventArgs(routedEvent)
                 {
-                    // Map to KeyEventArgs
-                    var args = new KeyEventArgs(UIElement.KeyDownEvent)
-                    {
-                        Key = (ConsoleKey)record.KeyEvent.wVirtualKeyCode,
-                        KeyChar = record.KeyEvent.UnicodeChar,
-                        Modifiers = GetModifiers(record.KeyEvent.dwControlKeyState)
-                    };
-                    _window.ProcessKey(args);
-                }
+                    Key = (ConsoleKey)record.KeyEvent.wVirtualKeyCode,
+                    KeyChar = record.KeyEvent.UnicodeChar,
+                    Modifiers = GetModifiers(record.KeyEvent.dwControlKeyState)
+                };
+                _window.ProcessKey(args);
             }
             else if (record.EventType == NativeMethods.MOUSE_EVENT)
             {

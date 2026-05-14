@@ -212,6 +212,13 @@ public class ComboBox : Selector
         {
             absX += current.RenderSize.X;
             absY += current.RenderSize.Y;
+            // Compensate for any ancestor ScrollViewer scroll offset, otherwise the popup
+            // is placed at the un-scrolled (often offscreen) position of the ComboBox.
+            if (current is ScrollViewer sv)
+            {
+                absX -= sv.HorizontalOffset;
+                absY -= sv.VerticalOffset;
+            }
             current = current.Parent;
         }
 

@@ -72,14 +72,12 @@ public class TextBox : UIElement
         string text = Text ?? "";
         string display = IsPassword ? new string(PasswordChar, text.Length) : text;
 
-        // Simple scrolling if text is longer than width
+        // Simple scrolling if cursor would be past the visible width.
+        // Apply even when text exactly fills the width so the trailing caret stays visible.
         int start = 0;
-        if (display.Length > w)
+        if (_cursorPos >= w)
         {
-            // if focused, ensure cursor is visible
-            // _cursorPos is absolute index in text
-            if (_cursorPos >= w)
-                start = _cursorPos - w + 1;
+            start = _cursorPos - w + 1;
         }
 
         // Draw text area
@@ -113,9 +111,24 @@ public class TextBox : UIElement
     {
         base.OnMouseDown(e);
         Focus();
-        // Move cursor to click position?
-        // int relativeX = e.X - RenderSize.X;
-        // _cursorPos = Math.Min(Text.Length, relativeX);
+
+        // Move caret to click position. e.X is already local to this control. We must
+        // account for horizontal scrolling (start) so a click on the visible char N+start
+        // places the caret on text index N+start.
+        string text = Text ?? "";
+        int w = RenderSize.Width;
+        int start = 0;
+        if (text.Length > w && _cursorPos >= w)
+        {
+            start = _cursorPos - w + 1;
+        }
+
+        int target = start + e.X;
+        if (target < 0) target = 0;
+        if (target > text.Length) target = text.Length;
+        _cursorPos = target;
+        Invalidate();
+
         e.Handled = true;
     }
 

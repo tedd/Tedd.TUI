@@ -324,6 +324,11 @@ public class Border : ScrollViewer
 
         var chars = BoxDrawingChars.Get(BoxStyle);
 
+        // Fill the entire Border rect with Background so the interior picks up the configured
+        // background color (children that render with a transparent/null background will read
+        // this from the buffer via GetPixel).
+        buffer.FillRect(x, y, w, h, ' ', c, bg);
+
         // 1. Draw Border Lines
         // Corners
         buffer.SetPixel(x, y, chars.TopLeft, c, bg);
