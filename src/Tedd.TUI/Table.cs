@@ -100,8 +100,7 @@ public class TableRow : UIElement
         if (table != null && table.ShowVerticalLines)
         {
             int cx = 0;
-            // Use Light Vertical Line usually
-            char vChar = '\u2502';
+            char vChar = Table.TableBoxChars.Get(table.BorderStyle).V;
 
             for (int i = 0; i < table.Columns.Count - 1; i++)
             {
@@ -367,13 +366,15 @@ public class Table : UIElement
         _scrollViewer.Arrange(new Rect(padding, padding + headerBlockHeight, svWidth, bodyHeight));
     }
 
-    private struct TableBoxChars
+    internal struct TableBoxChars
     {
         public char TL, TR, BL, BR, H, V;
         public char TDown, TUp;
         public char TLeft, TRight;
         public char HeaderCross;
         public char BodySepTLeft, BodySepTRight;
+        public char BodySepCross;
+        public char BodySepH;
         public char HeaderSepH;
         public char HeaderInnerV;
 
@@ -385,6 +386,7 @@ public class Table : UIElement
             c.H = b.Horizontal; c.V = b.Vertical;
             c.HeaderInnerV = b.Vertical;
             c.HeaderSepH = b.Horizontal;
+            c.BodySepH = '\u2500';
 
             switch (style)
             {
@@ -396,6 +398,7 @@ public class Table : UIElement
                     c.HeaderCross = '\u254B';
                     c.BodySepTLeft = '\u2520';
                     c.BodySepTRight = '\u2528';
+                    c.BodySepCross = '\u2542'; // ╂ (Heavy Vert, Light Horz)
                     break;
                 case BoxStyle.Double:
                     c.TDown = '\u2566';
@@ -405,6 +408,7 @@ public class Table : UIElement
                     c.HeaderCross = '\u256C';
                     c.BodySepTLeft = '\u255F'; // ╟ (Double Vert, Single Right)
                     c.BodySepTRight = '\u2562'; // ╢ (Double Vert, Single Left)
+                    c.BodySepCross = '\u256B'; // ╫ (Double Vert, Single Horz)
                     break;
                 default:
                     c.TDown = '\u252C';
@@ -414,6 +418,7 @@ public class Table : UIElement
                     c.HeaderCross = '\u253C';
                     c.BodySepTLeft = '\u251C';
                     c.BodySepTRight = '\u2524';
+                    c.BodySepCross = '\u253C';
                     break;
             }
             return c;
@@ -1043,8 +1048,9 @@ internal class TableSeparator : UIElement
         // rather than the infinite horizontal scroll space given by ScrollViewer.
         int width = Math.Min(RenderSize.Width, table.RenderSize.Width);
 
-        char hChar = '\u2500';
-        char crossChar = '\u253C';
+        var chars = Table.TableBoxChars.Get(table.BorderStyle);
+        char hChar = chars.BodySepH;
+        char crossChar = chars.BodySepCross;
 
         buffer.DrawHLine(x, y, width, hChar, ConsoleColor.Gray, ConsoleColor.Black);
 

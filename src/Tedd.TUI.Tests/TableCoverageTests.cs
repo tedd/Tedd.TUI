@@ -334,7 +334,7 @@ public class TableCoverageTests
     [Fact]
     public void Table_Separator_Rendering()
     {
-        var table = new Table { ShowHorizontalLines = true, ShowVerticalLines = true, ShowBorder = true };
+        var table = new Table { ShowHorizontalLines = true, ShowVerticalLines = true, ShowBorder = true, BorderStyle = BoxStyle.Single };
 
         // Two columns to verify cross character
         table.Columns.Add(new TableColumn { Width = new GridLength(3, GridUnitType.Pixel) });
@@ -370,10 +370,10 @@ public class TableCoverageTests
         // X=8: Right Junction (u2528 ┨)
 
         // Verify Row 4
-        Assert.Equal('\u2520', buffer.GetPixel(0, 4).Character);
+        Assert.Equal('\u251C', buffer.GetPixel(0, 4).Character); // Left Junction (Single)
         Assert.Equal('\u2500', buffer.GetPixel(1, 4).Character);
-        Assert.Equal('\u253C', buffer.GetPixel(4, 4).Character); // Cross
+        Assert.Equal('\u253C', buffer.GetPixel(4, 4).Character); // Cross (Single)
         Assert.Equal('\u2500', buffer.GetPixel(5, 4).Character);
-        Assert.Equal('\u2528', buffer.GetPixel(8, 4).Character);
+        Assert.Equal('\u2524', buffer.GetPixel(8, 4).Character); // Right Junction (Single)
     }
 }
