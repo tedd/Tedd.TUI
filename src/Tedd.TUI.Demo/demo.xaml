@@ -69,6 +69,7 @@
                     <TreeViewItem Header="DataGrid" />
                     <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
+                    <TreeViewItem Header="Layouts" />
                 </TreeViewItem>
             </TreeView>
         </Expander>
@@ -212,6 +213,67 @@
                        <StackPanel Orientation="Vertical">
                            <TextBlock Text="None Mode"/>
                            <ProgressBar Width="40" Value="60" LabelMode="None" ProgressColor="Green" />
+                       </StackPanel>
+                   </TabItem>
+               </TabControl>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 10: Layouts -->
+       <TabItem Header="Layouts">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="Layout Panels:"/>
+               <TabControl Width="70" Height="15">
+                   <TabItem Header="Grid">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="Grid Layout"/>
+                           <Grid Width="60" Height="10">
+                               <Grid.RowDefinitions>
+                                   <RowDefinition Height="*"/>
+                                   <RowDefinition Height="*"/>
+                               </Grid.RowDefinitions>
+                               <Grid.ColumnDefinitions>
+                                   <ColumnDefinition Width="*"/>
+                                   <ColumnDefinition Width="*"/>
+                                   <ColumnDefinition Width="*"/>
+                               </Grid.ColumnDefinitions>
+                               <Button Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="0,0 Span 2"/>
+                               <Button Grid.Row="0" Grid.Column="2" Content="0,2"/>
+                               <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Content="1,0 Span 3"/>
+                           </Grid>
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="Wrap">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="WrapPanel Layout"/>
+                           <WrapPanel Width="50" Height="10">
+                               <Button Content="Btn 0"/>
+                               <Button Content="Btn 1"/>
+                               <Button Content="Btn 2"/>
+                               <Button Content="Btn 3"/>
+                               <Button Content="Btn 4"/>
+                               <Button Content="Btn 5"/>
+                               <Button Content="Btn 6"/>
+                               <Button Content="Btn 7"/>
+                               <Button Content="Btn 8"/>
+                               <Button Content="Btn 9"/>
+                               <Button Content="Btn 10"/>
+                               <Button Content="Btn 11"/>
+                               <Button Content="Btn 12"/>
+                               <Button Content="Btn 13"/>
+                               <Button Content="Btn 14"/>
+                           </WrapPanel>
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="Group">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="GroupBox Layout"/>
+                           <GroupBox Header="Settings" Width="40" Height="10">
+                               <StackPanel Orientation="Vertical">
+                                   <CheckBox Content="Enable Feature A"/>
+                                   <CheckBox Content="Enable Feature B"/>
+                               </StackPanel>
+                           </GroupBox>
                        </StackPanel>
                    </TabItem>
                </TabControl>

@@ -64,6 +64,7 @@
                         <TuiTreeViewItem Header="DataGrid" />
                         <TuiTreeViewItem Header="Editor" />
                         <TuiTreeViewItem Header="ProgressBar" />
+                        <TuiTreeViewItem Header="Layouts" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -241,6 +242,33 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 10: Layouts -->
+            <TuiTabItem Header="Layouts">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Layout Panels:" />
+                    <TuiTabControl Width="70" Height="15">
+                        <TuiTabItem Header="Grid">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="Grid Layout" />
+                                <TuiHost Component="@demoGrid" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="Wrap">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="WrapPanel Layout" />
+                                <TuiHost Component="@demoWrap" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="Group">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="GroupBox Layout" />
+                                <TuiHost Component="@demoGroup" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                    </TuiTabControl>
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -269,6 +297,7 @@
                 case "DataGrid": selectedTabIndex = 6; break;
                 case "Editor": selectedTabIndex = 7; break;
                 case "ProgressBar": selectedTabIndex = 8; break;
+                case "Layouts": selectedTabIndex = 9; break;
             }
             StateHasChanged();
         }
@@ -426,6 +455,11 @@
     // Editor Data
     private Tedd.TUI.TextEditor textEditor = new Tedd.TUI.TextEditor { Width = -1, Height = -1 };
 
+    // Layout Data
+    private Tedd.TUI.Grid demoGrid = new Tedd.TUI.Grid { Width = 60, Height = 10 };
+    private Tedd.TUI.WrapPanel demoWrap = new Tedd.TUI.WrapPanel { Width = 50, Height = 10 };
+    private Tedd.TUI.GroupBox demoGroup = new Tedd.TUI.GroupBox { Header = "Settings", Width = 40, Height = 10 };
+
     protected override void OnInitialized()
     {
         // Populate Data
@@ -502,6 +536,40 @@ public void Hello() {
             new Person { Id = 6, Name = "Frank", Age = 28, Role = "Dev" },
         };
         dataGrid.ItemsSource = people;
+
+        // Init Layouts Data
+        demoGrid.RowDefinitions.Add(new Tedd.TUI.RowDefinition { Height = GridLength.Star });
+        demoGrid.RowDefinitions.Add(new Tedd.TUI.RowDefinition { Height = GridLength.Star });
+        demoGrid.ColumnDefinitions.Add(new Tedd.TUI.ColumnDefinition { Width = GridLength.Star });
+        demoGrid.ColumnDefinitions.Add(new Tedd.TUI.ColumnDefinition { Width = GridLength.Star });
+        demoGrid.ColumnDefinitions.Add(new Tedd.TUI.ColumnDefinition { Width = GridLength.Star });
+
+        var gBtn1 = new Tedd.TUI.Button { Content = "0,0 Span 2" };
+        Tedd.TUI.Grid.SetRow(gBtn1, 0);
+        Tedd.TUI.Grid.SetColumn(gBtn1, 0);
+        Tedd.TUI.Grid.SetColumnSpan(gBtn1, 2);
+        demoGrid.AddChild(gBtn1);
+
+        var gBtn2 = new Tedd.TUI.Button { Content = "0,2" };
+        Tedd.TUI.Grid.SetRow(gBtn2, 0);
+        Tedd.TUI.Grid.SetColumn(gBtn2, 2);
+        demoGrid.AddChild(gBtn2);
+
+        var gBtn3 = new Tedd.TUI.Button { Content = "1,0 Span 3" };
+        Tedd.TUI.Grid.SetRow(gBtn3, 1);
+        Tedd.TUI.Grid.SetColumn(gBtn3, 0);
+        Tedd.TUI.Grid.SetColumnSpan(gBtn3, 3);
+        demoGrid.AddChild(gBtn3);
+
+        for (int i = 0; i < 15; i++)
+        {
+            demoWrap.AddChild(new Tedd.TUI.Button { Content = $"Btn {i}" });
+        }
+
+        var groupContent = new Tedd.TUI.StackPanel { Orientation = Orientation.Vertical };
+        groupContent.AddChild(new Tedd.TUI.CheckBox { Content = "Enable Feature A" });
+        groupContent.AddChild(new Tedd.TUI.CheckBox { Content = "Enable Feature B" });
+        demoGroup.Content = groupContent;
     }
 
     private void OnPageChanged()

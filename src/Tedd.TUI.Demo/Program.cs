@@ -151,6 +151,7 @@ class Program
         var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
         var nodeEditor = new TreeViewItem { Header = "Editor" };
         var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
+        var nodeLayouts = new TreeViewItem { Header = "Layouts" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -161,6 +162,7 @@ class Program
         rootNode.Items.Add(nodeDataGrid);
         rootNode.Items.Add(nodeEditor);
         rootNode.Items.Add(nodeProgressBar);
+        rootNode.Items.Add(nodeLayouts);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -184,6 +186,7 @@ class Program
             else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
             else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
+            else if (sel == nodeLayouts) tabs.SelectedIndex = 9;
         };
 
 
@@ -551,6 +554,66 @@ public void Hello() {
 
         progressBarStack.AddChild(progressBarTabs);
         tabs.Items.Add(new TabItem { Header = "ProgressBar", Content = progressBarStack });
+
+        // --- Tab 10: Layouts ---
+        var layoutsStack = new StackPanel { Orientation = Orientation.Vertical };
+        layoutsStack.AddChild(new TextBlock { Text = "Layout Panels:" });
+
+        var layoutsTabs = new TabControl { Width = 70, Height = 15 };
+
+        // Grid Mode
+        var gridStack = new StackPanel { Orientation = Orientation.Vertical };
+        gridStack.AddChild(new TextBlock { Text = "Grid Layout" });
+        var grid = new Grid { Width = 60, Height = 10 };
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+
+        var gBtn1 = new Button { Content = "0,0 Span 2" };
+        Grid.SetRow(gBtn1, 0);
+        Grid.SetColumn(gBtn1, 0);
+        Grid.SetColumnSpan(gBtn1, 2);
+        grid.AddChild(gBtn1);
+
+        var gBtn2 = new Button { Content = "0,2" };
+        Grid.SetRow(gBtn2, 0);
+        Grid.SetColumn(gBtn2, 2);
+        grid.AddChild(gBtn2);
+
+        var gBtn3 = new Button { Content = "1,0 Span 3" };
+        Grid.SetRow(gBtn3, 1);
+        Grid.SetColumn(gBtn3, 0);
+        Grid.SetColumnSpan(gBtn3, 3);
+        grid.AddChild(gBtn3);
+        gridStack.AddChild(grid);
+        layoutsTabs.Items.Add(new TabItem { Header = "Grid", Content = gridStack });
+
+        // WrapPanel Mode
+        var wrapStack = new StackPanel { Orientation = Orientation.Vertical };
+        wrapStack.AddChild(new TextBlock { Text = "WrapPanel Layout" });
+        var wrapPanel = new WrapPanel { Width = 50, Height = 10 };
+        for (int i = 0; i < 15; i++)
+        {
+            wrapPanel.AddChild(new Button { Content = $"Btn {i}" });
+        }
+        wrapStack.AddChild(wrapPanel);
+        layoutsTabs.Items.Add(new TabItem { Header = "Wrap", Content = wrapStack });
+
+        // GroupBox Mode
+        var groupStack = new StackPanel { Orientation = Orientation.Vertical };
+        groupStack.AddChild(new TextBlock { Text = "GroupBox Layout" });
+        var groupBox = new GroupBox { Header = "Settings", Width = 40, Height = 10 };
+        var groupContent = new StackPanel { Orientation = Orientation.Vertical };
+        groupContent.AddChild(new CheckBox { Content = "Enable Feature A" });
+        groupContent.AddChild(new CheckBox { Content = "Enable Feature B" });
+        groupBox.Content = groupContent;
+        groupStack.AddChild(groupBox);
+        layoutsTabs.Items.Add(new TabItem { Header = "Group", Content = groupStack });
+
+        layoutsStack.AddChild(layoutsTabs);
+        tabs.Items.Add(new TabItem { Header = "Layouts", Content = layoutsStack });
 
         // Run App
 
