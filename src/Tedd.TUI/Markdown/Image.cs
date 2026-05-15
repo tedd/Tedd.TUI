@@ -197,8 +197,7 @@ public class Image : UIElement
             return ComputeCellSize(img.Width, img.Height, availableSize);
         }
 
-        // Fallback: legacy alt-text behaviour.
-        string text = string.IsNullOrEmpty(AltText) ? "[Image]" : $"[{AltText}]";
+        string text = BuildAltTextLabel();
         return new Size(text.Length, 1);
     }
 
@@ -235,13 +234,36 @@ public class Image : UIElement
 
     private void RenderAltText(VirtualBuffer buffer, int x, int y, int width)
     {
-        string text = string.IsNullOrEmpty(AltText) ? "[Image]" : $"[{AltText}]";
+        string text = BuildAltTextLabel();
         var bg = Background ?? buffer.GetPixel(x, y).Background;
         int max = Math.Min(text.Length, width);
         for (int i = 0; i < max; i++)
         {
             buffer.SetPixel(x + i, y, text[i], Foreground, bg);
         }
+    }
+
+    /// <summary>
+    /// Builds the textual fallback shown when the image cannot be rendered. Prefers the
+    /// supplied <see cref="AltText"/>, then a filename derived from <see cref="Source"/>
+    /// (so HTTP URLs without alt text don't all collapse to "[Image]"), and finally
+    /// the literal "[Image]" placeholder.
+    /// </summary>
+    private string BuildAltTextLabel()
+    {
+        if (!string.IsNullOrEmpty(AltText)) return $"[{AltText}]";
+
+        string? source = Source;
+        if (!string.IsNullOrEmpty(source))
+        {
+            int q = source.IndexOfAny(['?', '#']);
+            string trimmed = q >= 0 ? source.Substring(0, q) : source;
+            int slash = trimmed.LastIndexOfAny(['/', '\\']);
+            string name = slash >= 0 ? trimmed.Substring(slash + 1) : trimmed;
+            if (!string.IsNullOrEmpty(name)) return $"[{name}]";
+        }
+
+        return "[Image]";
     }
 
     private void RenderAsGraphic(VirtualBuffer buffer, int x, int y, int width, int height)

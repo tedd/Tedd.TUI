@@ -189,19 +189,23 @@ public class Border : ScrollViewer
         // Update styles on measure to ensure they match current properties
         UpdateScrollBarStyle();
 
-        int borderW = 2;
-        int borderH = 2;
+        // BoxStyle.None means no border characters and no border thickness:
+        // the border becomes a transparent container (Title/StatusBar are skipped
+        // because there is no border line to host them).
+        bool noBorder = BoxStyle == BoxStyle.None;
+        int borderW = noBorder ? 0 : 2;
+        int borderH = noBorder ? 0 : 2;
 
         // Measure Title and StatusBar
         // They are constrained by Width - corners
         Size decorationAvailable = new Size(Math.Max(0, availableSize.Width - borderW), 1);
 
-        if (Title != null)
+        if (!noBorder && Title != null)
         {
             Title.Measure(decorationAvailable);
         }
 
-        if (StatusBar != null)
+        if (!noBorder && StatusBar != null)
         {
             StatusBar.Measure(decorationAvailable);
         }
@@ -221,7 +225,9 @@ public class Border : ScrollViewer
         }
 
         // Setup ScrollBars based on Content Size vs Viewport Size
-        if (VerticalScrollBarVisibility)
+        // (skipped entirely when there is no border; with no border line there is
+        // nowhere to put scroll thumbs and the border is meant to be a flat passthrough)
+        if (!noBorder && VerticalScrollBarVisibility)
         {
             int viewport = Math.Max(1, availableSize.Height - borderH);
             int extent = contentSize.Height;
@@ -234,7 +240,7 @@ public class Border : ScrollViewer
             _verticalScrollBar.Measure(new Size(1, vScrollHeight));
         }
 
-        if (HorizontalScrollBarVisibility)
+        if (!noBorder && HorizontalScrollBarVisibility)
         {
             int viewport = Math.Max(1, availableSize.Width - borderW);
             int extent = contentSize.Width;
@@ -259,17 +265,21 @@ public class Border : ScrollViewer
         int w = finalSize.Width;
         int h = finalSize.Height;
 
+        bool noBorder = BoxStyle == BoxStyle.None;
+        int borderEdge = noBorder ? 0 : 1; // offset from border rect to content
+
         // Arrange Content inside border
         if (Content != null)
         {
-            int viewportW = Math.Max(0, w - 2);
-            int viewportH = Math.Max(0, h - 2);
-            // Arrange at (1,1) to account for border thickness.
-            Content.Arrange(new Rect(1, 1, Math.Max(viewportW, Content.DesiredSize.Width), Math.Max(viewportH, Content.DesiredSize.Height)));
+            int viewportW = Math.Max(0, w - 2 * borderEdge);
+            int viewportH = Math.Max(0, h - 2 * borderEdge);
+            Content.Arrange(new Rect(borderEdge, borderEdge,
+                Math.Max(viewportW, Content.DesiredSize.Width),
+                Math.Max(viewportH, Content.DesiredSize.Height)));
         }
 
-        // Arrange Title
-        if (Title != null)
+        // Arrange Title (skipped when there is no border to host it)
+        if (!noBorder && Title != null)
         {
             int titleW = Math.Min(w - 2, Title.DesiredSize.Width);
             int titleX = 1;
@@ -282,29 +292,25 @@ public class Border : ScrollViewer
             Title.Arrange(new Rect(titleX, 0, titleW, 1));
         }
 
-        // Arrange StatusBar
+        // Arrange StatusBar (skipped when there is no border)
         int statusW = 0;
-        if (StatusBar != null)
+        if (!noBorder && StatusBar != null)
         {
             statusW = Math.Min(w - 2, StatusBar.DesiredSize.Width);
             StatusBar.Arrange(new Rect(1, h - 1, statusW, 1));
         }
 
-        // Arrange ScrollBars
-        // Vertical on right edge
-        if (VerticalScrollBarVisibility)
+        // Arrange ScrollBars (no border = no scrollbars; see MeasureOverride)
+        if (!noBorder && VerticalScrollBarVisibility)
         {
             int vTop = 1 + VerticalScrollBarMarginTop;
             int vHeight = Math.Max(0, h - 2 - VerticalScrollBarMarginTop - VerticalScrollBarMarginBottom);
             _verticalScrollBar.Arrange(new Rect(w - 1, vTop, 1, vHeight));
         }
 
-        // Horizontal on bottom edge
-        if (HorizontalScrollBarVisibility)
+        if (!noBorder && HorizontalScrollBarVisibility)
         {
-            // If StatusBar exists, HScroll starts after it
             int hLeft = 1 + HorizontalScrollBarMarginLeft + statusW;
-            // Ensure we don't overlap right corner
             int hWidth = Math.Max(0, w - 1 - hLeft - HorizontalScrollBarMarginRight);
 
             _horizontalScrollBar.Arrange(new Rect(hLeft, h - 1, hWidth, 1));
@@ -319,15 +325,30 @@ public class Border : ScrollViewer
         int y = RenderSize.Y + offsetY;
         ConsoleColor c = BorderColor;
         ConsoleColor bg = Background ?? ConsoleColor.Black;
+        bool noBorder = BoxStyle == BoxStyle.None;
 
-        if (w < 2 || h < 2) return;
-
-        var chars = BoxDrawingChars.Get(BoxStyle);
+        if (w <= 0 || h <= 0) return;
+        // Non-None borders need at least 2x2 to draw all four sides
+        if (!noBorder && (w < 2 || h < 2)) return;
 
         // Fill the entire Border rect with Background so the interior picks up the configured
         // background color (children that render with a transparent/null background will read
         // this from the buffer via GetPixel).
         buffer.FillRect(x, y, w, h, ' ', c, bg);
+
+        if (noBorder)
+        {
+            // No border lines, no decorations -- just render content directly.
+            if (Content != null)
+            {
+                buffer.PushClip(new Rect(x, y, w, h));
+                Content.Render(buffer, x, y);
+                buffer.PopClip();
+            }
+            return;
+        }
+
+        var chars = BoxDrawingChars.Get(BoxStyle);
 
         // 1. Draw Border Lines
         // Corners

@@ -206,4 +206,69 @@ public class BorderTests
         Assert.Equal(1, child.RenderSize.X);
         Assert.Equal(1, child.RenderSize.Y);
     }
+
+    // BoxStyle.None tests: zero thickness, no border drawing
+
+    [Fact]
+    public void Border_None_HasZeroBorderThickness()
+    {
+        var border = new Border { BoxStyle = BoxStyle.None };
+        var child = new MeasuringChild();
+        border.Child = child;
+
+        // Disable scrolling so we can compare strict measure dimensions.
+        border.VerticalScrollBarVisibility = false;
+        border.HorizontalScrollBarVisibility = false;
+
+        border.Measure(new Size(20, 20));
+
+        // With BoxStyle.None there is no border thickness, so the child receives
+        // the full available size (vs 18x18 with a regular border) and the border's
+        // desired size equals the child's.
+        Assert.Equal(20, child.LastMeasureSize.Width);
+        Assert.Equal(20, child.LastMeasureSize.Height);
+        Assert.Equal(10, border.DesiredSize.Width);
+        Assert.Equal(10, border.DesiredSize.Height);
+    }
+
+    [Fact]
+    public void Border_None_PositionsContentAtOrigin()
+    {
+        var border = new Border { BoxStyle = BoxStyle.None };
+        var child = new MeasuringChild();
+        border.Child = child;
+
+        border.VerticalScrollBarVisibility = false;
+        border.HorizontalScrollBarVisibility = false;
+
+        border.Measure(new Size(20, 20));
+        border.Arrange(new Rect(0, 0, 20, 20));
+
+        Assert.Equal(0, child.RenderSize.X);
+        Assert.Equal(0, child.RenderSize.Y);
+    }
+
+    [Fact]
+    public void Border_None_DoesNotDrawBorderCharacters()
+    {
+        var border = new Border { BoxStyle = BoxStyle.None, BorderColor = ConsoleColor.Red };
+        border.VerticalScrollBarVisibility = false;
+        border.HorizontalScrollBarVisibility = false;
+
+        border.Measure(new Size(5, 3));
+        border.Arrange(new Rect(0, 0, 5, 3));
+
+        var buffer = new VirtualBuffer(5, 3);
+        buffer.Clear();
+        border.Render(buffer, 0, 0);
+
+        // Every cell should be a space; no box-drawing characters anywhere.
+        for (int y = 0; y < 3; y++)
+        {
+            for (int x = 0; x < 5; x++)
+            {
+                Assert.Equal(' ', buffer.GetPixel(x, y).Character);
+            }
+        }
+    }
 }

@@ -93,6 +93,14 @@ public class MarkdownTheme
     // Code Syntax Highlighting Theme (for CodeDocument)
     public Tedd.TUI.CodeColoring.Theme CodeTheme { get; set; } = new Tedd.TUI.CodeColoring.Theme();
 
+    /// <summary>
+    /// Language identifier used for fenced code blocks that don't carry one (e.g. plain
+    /// <c>```</c> fences from WordPress-exported markdown). When null or empty, those
+    /// blocks render as plain text without syntax highlighting. Set to e.g. <c>"csharp"</c>
+    /// when the document is known to be in a single language.
+    /// </summary>
+    public string? DefaultCodeLanguage { get; set; }
+
     public MarkdownTheme()
     {
     }

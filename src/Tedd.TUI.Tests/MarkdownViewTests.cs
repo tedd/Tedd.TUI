@@ -64,4 +64,162 @@ public class MarkdownViewTests
         // Expected: "| Line 1 Line 2" (Marker is "| ")
         Assert.Contains("Line 1 Line 2", text);
     }
+
+    // ATX heading parsing: must have a space after the # chars to qualify as a
+    // heading. Otherwise lines like CSS selectors (#myId { ... }) get rendered
+    // as bold magenta H1s, which is what the WordPress-exported markdown looked
+    // like before this fix.
+    //
+    // Both headings and paragraphs are rendered as Paragraph elements; we
+    // distinguish them by the foreground color applied to their text children
+    // (Header1 = Magenta by default, body Paragraph = Gray).
+
+    private static ConsoleColor? FirstTextForeground(UIElement element)
+    {
+        if (element is not Paragraph p) return null;
+        for (int i = 0; i < p.VisualChildrenCount; i++)
+        {
+            if (p.GetVisualChild(i) is TextBlock tb)
+                return tb.Foreground;
+        }
+        return null;
+    }
+
+    [Fact]
+    public void MarkdownView_HashWithoutSpace_IsNotHeading()
+    {
+        var md = new MarkdownView();
+        md.Text = "#arrayTable1 {";
+        md.Refresh();
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        var first = doc.GetVisualChild(0);
+
+        // The default Header1 color is Magenta and body Paragraph is Gray.
+        // The CSS selector must be styled as body text, NOT as a heading.
+        Assert.NotEqual(ConsoleColor.Magenta, FirstTextForeground(first));
+    }
+
+    [Fact]
+    public void MarkdownView_HashWithSpace_IsHeading()
+    {
+        var md = new MarkdownView();
+        md.Text = "# Real Heading";
+        md.Refresh();
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        var first = doc.GetVisualChild(0);
+
+        // Default H1 color is Magenta; verifies the heading style was applied.
+        Assert.Equal(ConsoleColor.Magenta, FirstTextForeground(first));
+    }
+
+    [Fact]
+    public void MarkdownView_SevenHashes_IsNotHeading()
+    {
+        var md = new MarkdownView();
+        // ATX max level is 6; 7 hashes is not a heading.
+        md.Text = "####### nope";
+        md.Refresh();
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        var first = doc.GetVisualChild(0);
+
+        // Should be styled as body text, not any heading color.
+        Assert.NotEqual(ConsoleColor.Magenta, FirstTextForeground(first));
+        Assert.NotEqual(ConsoleColor.Cyan, FirstTextForeground(first));
+        Assert.NotEqual(ConsoleColor.Yellow, FirstTextForeground(first));
+    }
+
+    // Table parsing: WordPress export omits the leading | on every row.
+
+    [Fact]
+    public void MarkdownView_RecognizesTableWithoutLeadingPipe()
+    {
+        var md = new MarkdownView();
+        md.Text = "Method| Mean| Allocated\n---|---|---\nPlainArray| 43.42 ms| 40 B\nJagged| 82.95 ms| 69 B";
+        md.Refresh();
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        var first = doc.GetVisualChild(0);
+
+        // The block must be a Table, not a Paragraph (which would be the bug).
+        Assert.IsType<Table>(first);
+
+        var table = (Table)first;
+        Assert.Equal(3, table.Columns.Count);
+        Assert.Equal("Method", table.Columns[0].Header);
+        Assert.Equal("Mean", table.Columns[1].Header);
+        Assert.Equal("Allocated", table.Columns[2].Header);
+    }
+
+    [Fact]
+    public void MarkdownView_RecognizesGfmStrictTable()
+    {
+        // GFM-strict form (with leading and trailing | on every row) must keep working.
+        var md = new MarkdownView();
+        md.Text = "| Col1 | Col2 |\n|------|------|\n| a    | b    |\n| c    | d    |";
+        md.Refresh();
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        var first = doc.GetVisualChild(0);
+
+        Assert.IsType<Table>(first);
+        var table = (Table)first;
+        Assert.Equal(2, table.Columns.Count);
+        Assert.Equal("Col1", table.Columns[0].Header);
+        Assert.Equal("Col2", table.Columns[1].Header);
+    }
+
+    [Fact]
+    public void MarkdownView_TablePreservesEmptyCells()
+    {
+        // The middle cell is intentionally empty -- must not be silently dropped,
+        // which would shift "c" into the second column.
+        var md = new MarkdownView();
+        md.Text = "| A | B | C |\n|---|---|---|\n| a |   | c |";
+        md.Refresh();
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        var table = (Table)doc.GetVisualChild(0);
+
+        // Row count check
+        Assert.Equal(1, table.Rows.Count);
+        var row = table.Rows[0];
+        Assert.Equal(3, row.Cells.Count);
+    }
+
+    [Fact]
+    public void MarkdownView_TablePadsShortRowsToColumnCount()
+    {
+        // WordPress sometimes drops the trailing empty cell when the source row
+        // ends with `... |   ` -- after trimming, that's a row shorter than the
+        // header by one cell. The parser pads with empty strings so columns
+        // line up.
+        var md = new MarkdownView();
+        md.Text = "Port| Protocol| Name| Notes\n---|---|---|---\n53| TCP| DNS|";
+        md.Refresh();
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        var table = (Table)doc.GetVisualChild(0);
+
+        Assert.Equal(4, table.Columns.Count);
+        Assert.Equal(1, table.Rows.Count);
+        Assert.Equal(4, table.Rows[0].Cells.Count);
+    }
+
+    [Fact]
+    public void MarkdownView_LineWithSinglePipe_IsNotTable()
+    {
+        // A paragraph that happens to contain a pipe (e.g. shell command syntax)
+        // must not be hijacked into the table parser.
+        var md = new MarkdownView();
+        md.Text = "Run `cmd | grep foo` to filter output.";
+        md.Refresh();
+
+        var doc = (FlowDocument)md.GetVisualChild(0);
+        var first = doc.GetVisualChild(0);
+
+        Assert.IsNotType<Table>(first);
+    }
 }

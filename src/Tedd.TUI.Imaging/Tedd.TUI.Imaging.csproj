@@ -10,7 +10,7 @@
     <!-- NuGet Metadata -->
     <PackageId>Tedd.TUI.Imaging</PackageId>
     <Authors>Tedd</Authors>
-    <Description>Image decoding and resolution adapters for Tedd.TUI (uses SixLabors.ImageSharp).</Description>
+    <Description>Image decoding and resolution adapters for Tedd.TUI (uses Magick.NET).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>tui;console;terminal;markdown;image;ascii</PackageTags>
     <RepositoryUrl>https://github.com/Tedd/Tedd.TUI</RepositoryUrl>
@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.13.0" />
   </ItemGroup>
 
 </Project>

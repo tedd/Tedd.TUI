@@ -1,7 +1,8 @@
 namespace Tedd.TUI;
 
 /// <summary>
-/// Box drawing style: single (light), double lines, or heavy lines (Unicode U+2500–U+25FF).
+/// Box drawing style: single (light), double lines, heavy lines (Unicode U+2500–U+25FF),
+/// or none (no border drawn at all).
 /// </summary>
 public enum BoxStyle
 {
@@ -12,7 +13,14 @@ public enum BoxStyle
     Double,
 
     /// <summary>Heavy single-line box drawing (━ ┃ ┏ ┓ ┗ ┛).</summary>
-    Heavy
+    Heavy,
+
+    /// <summary>
+    /// No border lines and zero border thickness. Consumers should treat this as
+    /// "draw no border characters and reserve no border space". For controls like
+    /// <see cref="Button"/> this produces a flat label-style appearance.
+    /// </summary>
+    None
 }
 
 /// <summary>
@@ -53,6 +61,7 @@ public readonly struct BoxDrawingChars
                 '\u2554', '\u2557', '\u255A', '\u255D', '\u2550', '\u2551'),
             BoxStyle.Heavy => new BoxDrawingChars(
                 '\u250F', '\u2513', '\u2517', '\u251B', '\u2501', '\u2503'),
+            BoxStyle.None => new BoxDrawingChars(' ', ' ', ' ', ' ', ' ', ' '),
             _ => Get(BoxStyle.Single)
         };
     }
