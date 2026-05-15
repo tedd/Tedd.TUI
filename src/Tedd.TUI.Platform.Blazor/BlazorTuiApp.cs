@@ -59,6 +59,10 @@ public class BlazorTuiApp : IDisposable
         _inputManager.CharWidth = metrics.CharWidth;
         _inputManager.CharHeight = metrics.CharHeight;
 
+        // Surface a capability profile so graphics-aware controls can pick the right path.
+        _window.Capabilities = (_renderer as ICapabilityProvider)?.Capabilities
+                              ?? SurfaceCapabilities.TextOnly;
+
         _running = true;
         _ = LoopAsync();
     }
@@ -95,6 +99,8 @@ public class BlazorTuiApp : IDisposable
                     _window.Measure(new Size(_width, _height));
                     _window.Arrange(new Rect(0, 0, _width, _height));
 
+                    bool supportsGraphics = _window.Capabilities.SupportsGraphics;
+
                     // Render
                     if (_renderer is ILayeredRenderer layeredRenderer)
                     {
@@ -102,6 +108,7 @@ public class BlazorTuiApp : IDisposable
 
                         // Layer 0: Main Content
                         var contentBuffer = new VirtualBuffer(_width, _height);
+                        if (supportsGraphics) contentBuffer.Graphics = new System.Collections.Generic.List<GraphicPlacement>();
                         if (_window.Content != null)
                         {
                             _window.Content.Render(contentBuffer, 0, 0);
@@ -120,6 +127,7 @@ public class BlazorTuiApp : IDisposable
                             if (ovW > 0 && ovH > 0)
                             {
                                 var overlayBuffer = new VirtualBuffer(ovW, ovH);
+                                if (supportsGraphics) overlayBuffer.Graphics = new System.Collections.Generic.List<GraphicPlacement>();
                                 // Render relative to itself (0,0 in its buffer)
                                 overlay.Render(overlayBuffer, -ovX, -ovY);
 
@@ -133,6 +141,7 @@ public class BlazorTuiApp : IDisposable
                     {
                         // Fallback / Canvas
                         var buffer = new VirtualBuffer(_width, _height);
+                        if (supportsGraphics) buffer.Graphics = new System.Collections.Generic.List<GraphicPlacement>();
                         _window.Render(buffer);
                         await _renderer.RenderAsync(buffer);
                     }

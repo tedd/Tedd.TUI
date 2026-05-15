@@ -13,6 +13,12 @@ public class MarkdownParser
 {
     private readonly MarkdownTheme _theme;
 
+    /// <summary>
+    /// Directory used by <see cref="Image"/> elements to resolve relative <c>Source</c> paths.
+    /// Forwarded onto every <see cref="Image"/> the parser creates.
+    /// </summary>
+    public string? BaseDirectory { get; set; }
+
     public MarkdownParser(MarkdownTheme theme)
     {
         _theme = theme;
@@ -232,12 +238,22 @@ public class MarkdownParser
             }
             else if (token is ImageToken it)
             {
+                var imgStyle = _theme.Image;
                 var img = new Image
                 {
                     AltText = it.AltText,
                     Source = it.Url,
-                    Foreground = _theme.Image.Foreground ?? ConsoleColor.Green
+                    Foreground = imgStyle.Foreground ?? ConsoleColor.Green,
+                    MaxCellWidth = imgStyle.MaxCellWidth,
+                    MaxCellHeight = imgStyle.MaxCellHeight,
+                    RenderMode = imgStyle.RenderMode,
+                    AsciiRenderer = imgStyle.AsciiRenderer,
+                    BaseDirectory = BaseDirectory
                 };
+                if (imgStyle.Background.HasValue)
+                {
+                    img.Background = imgStyle.Background;
+                }
                 p.AddChild(img);
             }
         }
@@ -278,12 +294,20 @@ public class MarkdownParser
             {
                 if (currentBlock != null) { blocks.Add(currentBlock); currentBlock = null; }
 
-                var lang = trimmed.Trim('`', '~').Trim();
+                char fenceChar = trimmed[0];
+                int fenceLen = 0;
+                while (fenceLen < trimmed.Length && trimmed[fenceLen] == fenceChar) fenceLen++;
+                var lang = trimmed.Substring(fenceLen).Trim();
+
                 var codeLines = new List<string>();
                 i++; // Skip fence
                 while (i < lines.Count)
                 {
-                    if (lines[i].Trim().StartsWith("```") || lines[i].Trim().StartsWith("~~~"))
+                    string innerTrimmed = lines[i].Trim();
+                    // Closing fence must consist entirely of the same fence character and be
+                    // at least as long as the opening fence. This prevents lines inside the
+                    // code block that merely start with ``` from ending the block prematurely.
+                    if (innerTrimmed.Length >= fenceLen && innerTrimmed.All(c => c == fenceChar))
                         break;
                     codeLines.Add(lines[i]);
                     i++;

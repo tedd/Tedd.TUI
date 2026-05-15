@@ -6,12 +6,24 @@ using Tedd.TUI;
 
 namespace Tedd.TUI.Platform.Blazor;
 
-public class DomRenderer : IRendererAsync, ILayeredRenderer
+public class DomRenderer : IRendererAsync, ILayeredRenderer, ICapabilityProvider
 {
     public event Action? OnRender;
     public List<RenderLayer>? Layers { get; private set; }
     public int CharWidth { get; private set; } = 10;
     public int CharHeight { get; private set; } = 18;
+
+    /// <summary>
+    /// The DOM surface composes bitmaps over the character grid via absolutely-positioned
+    /// &lt;img&gt; elements emitted by <c>TuiDomGrid</c>. Reported pixel-per-cell values track
+    /// the measured DOM metrics so graphics-aware controls size correctly.
+    /// </summary>
+    public SurfaceCapabilities Capabilities => new SurfaceCapabilities
+    {
+        SupportsGraphics = true,
+        CharPixelWidth = CharWidth,
+        CharPixelHeight = CharHeight
+    };
 
     // For backward compatibility (single layer)
     public VirtualBuffer? CurrentBuffer => Layers?.Count > 0 ? Layers[0].Buffer : null;
