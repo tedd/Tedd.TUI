@@ -12,7 +12,7 @@ namespace Tedd.TUI.Platform.Console;
 /// <remarks>
 /// <para>Probing happens once per process and is deliberately cheap: it inspects a
 /// handful of environment variables (<c>$TERM</c>, <c>$COLORTERM</c>, <c>$WT_SESSION</c>,
-/// <c>$LC_TERMINAL</c>, <c>$KITTY_WINDOW_ID</c>, <c>$TERM_PROGRAM</c>) plus the host
+/// <c>$WT_PROFILE_ID</c>, <c>$LC_TERMINAL</c>, <c>$KITTY_WINDOW_ID</c>, <c>$TERM_PROGRAM</c>) plus the host
 /// OS. It deliberately avoids the more elaborate DA1 / DA2 / XTSMGRAPHICS round-trips,
 /// because those require taking over the input stream, which doesn't compose well
 /// with the existing input manager. Callers that want the heavy probing path will be
@@ -23,7 +23,7 @@ public sealed class TerminalProfile
     /// <summary>True when the host announces 24-bit color support (<c>COLORTERM=truecolor</c> etc.).</summary>
     public bool SupportsTrueColor { get; init; }
 
-    /// <summary>True when the host is Windows Terminal (any version that sets <c>$WT_SESSION</c>).</summary>
+    /// <summary>True when the host is Windows Terminal (sets <c>WT_SESSION</c> and/or <c>WT_PROFILE_ID</c>).</summary>
     public bool IsWindowsTerminal { get; init; }
 
     /// <summary>True when the host is the legacy Windows console (conhost).</summary>

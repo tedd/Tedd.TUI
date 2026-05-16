@@ -29,6 +29,15 @@ public class MarkdownTableStyle
     public bool ShowVerticalLines { get; set; } = true;
     public bool ShowHorizontalLines { get; set; } = true;
     public BoxStyle BorderStyle { get; set; } = BoxStyle.Heavy;
+
+    /// <summary>When set, applied to <see cref="Table.HeaderBackground"/> so header, borders, and body cells share the same fill.</summary>
+    public TuiColor? HeaderBackground { get; set; }
+
+    /// <summary>Data-cell text foreground. When null, uses the same foreground as the table header (<see cref="MarkdownTheme.Header4"/>).</summary>
+    public TuiColor? CellForeground { get; set; }
+
+    /// <summary>Data-cell text background. When null, uses <see cref="Table.HeaderBackground"/> after optional <see cref="HeaderBackground"/> override.</summary>
+    public TuiColor? CellBackground { get; set; }
 }
 
 /// <summary>

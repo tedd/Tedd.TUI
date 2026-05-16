@@ -38,6 +38,11 @@ public class TuiApp
         _inputManager = _platform.CreateInputManager(window);
         _legacyPlatform = platform as LegacyConsolePlatform;
 
+        // Controls (e.g. Markdown.Image) read capabilities via TuiWindow.GetCapabilities().
+        // Without this sync the window stayed on SurfaceCapabilities.TextOnly even when
+        // the platform advertised Sixel/Kitty/graphics, so bitmap paths never activated.
+        _window.Capabilities = _platform.Capabilities;
+
         _window.VisualChanged += (s, e) => _renderWaitHandle.Set();
         if (_inputManager != null)
         {

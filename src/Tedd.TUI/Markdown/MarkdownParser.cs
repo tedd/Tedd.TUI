@@ -126,6 +126,15 @@ public class MarkdownParser
             table.ShowHorizontalLines = _theme.Table.ShowHorizontalLines;
             table.BorderStyle = _theme.Table.BorderStyle;
 
+            if (_theme.Table.HeaderBackground.HasValue)
+                table.HeaderBackground = _theme.Table.HeaderBackground.Value;
+
+            // Body cells must carry an explicit background; otherwise TextBlock samples the
+            // buffer (often black) and no longer matches the table chrome (header / borders).
+            var cellMarkdownStyle = new MarkdownStyle(
+                foreground: _theme.Table.CellForeground ?? _theme.Header4.Foreground ?? TuiColor.White,
+                background: _theme.Table.CellBackground ?? table.HeaderBackground);
+
             // Define Columns
             if (tableBlock.Headers != null)
             {
@@ -148,7 +157,7 @@ public class MarkdownParser
                     // Usually cells don't wrap in simple tables, or they do?
                     // Let's use Paragraph for cell content to support links etc.
                     var cellP = new Paragraph();
-                    AddInlineContent(cellP, cellText, _theme.Paragraph);
+                    AddInlineContent(cellP, cellText, cellMarkdownStyle);
                     row.AddCell(cellP);
                 }
                 table.AddRow(row);
@@ -239,6 +248,8 @@ public class MarkdownParser
                     Url = lt.Url,
                     Foreground = _theme.Link.Foreground ?? TuiColor.Blue
                 };
+                if (baseStyle.Background.HasValue)
+                    link.Background = baseStyle.Background.Value;
                 // Ensure space handling? Links usually distinctive.
                 p.AddChild(link);
             }

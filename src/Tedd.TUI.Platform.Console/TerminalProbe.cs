@@ -33,13 +33,16 @@ public static class TerminalProbe
         string? term = Environment.GetEnvironmentVariable("TERM");
         string? colorTerm = Environment.GetEnvironmentVariable("COLORTERM");
         string? wtSession = Environment.GetEnvironmentVariable("WT_SESSION");
+        // Windows Terminal also sets WT_PROFILE_ID; some hosts only expose one of the two.
+        string? wtProfileId = Environment.GetEnvironmentVariable("WT_PROFILE_ID");
         string? lcTerminal = Environment.GetEnvironmentVariable("LC_TERMINAL");
         string? termProgram = Environment.GetEnvironmentVariable("TERM_PROGRAM");
         string? kittyId = Environment.GetEnvironmentVariable("KITTY_WINDOW_ID");
 
         bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         bool isUnix = !isWindows;
-        bool isWindowsTerminal = !string.IsNullOrEmpty(wtSession);
+        bool isWindowsTerminal =
+            !string.IsNullOrEmpty(wtSession) || !string.IsNullOrEmpty(wtProfileId);
 
         // COLORTERM=truecolor / 24bit is the only widely-honored signal.
         bool trueColor = false;
