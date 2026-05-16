@@ -146,7 +146,7 @@
                <ScrollBar Name="VScroll" Orientation="Vertical" Height="10" Minimum="0" Maximum="50" ViewportSize="10"/>
 
                <TextBlock Text="ScrollViewer:"/>
-               <ScrollViewer Width="40" Height="10" HorizontalScrollBarVisibility="True" VerticalScrollBarVisibility="True">
+               <ScrollViewer Width="40" Height="10" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
                    <StackPanel Orientation="Vertical" Name="ScrollStackPanel"/>
                </ScrollViewer>
            </StackPanel>
@@ -156,7 +156,7 @@
        <TabItem Header="Code">
           <StackPanel Orientation="Vertical">
               <TextBlock Text="Code Coloring Demo"/>
-              <ScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="True" HorizontalScrollBarVisibility="True">
+              <ScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible">
                   <CodeDocument Name="CodeDoc"/>
               </ScrollViewer>
           </StackPanel>
@@ -166,7 +166,7 @@
        <TabItem Header="Markdown">
           <StackPanel Orientation="Vertical">
               <TextBlock Text="Markdown View:"/>
-              <ScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="True">
+              <ScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="Visible">
                   <MarkdownView Name="MdView"/>
               </ScrollViewer>
           </StackPanel>

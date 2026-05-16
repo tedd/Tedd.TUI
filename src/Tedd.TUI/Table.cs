@@ -177,8 +177,10 @@ public class Table : UIElement
         _scrollViewer = new ScrollViewer
         {
             Content = _rowStack,
-            VerticalScrollBarVisibility = true,
-            HorizontalScrollBarVisibility = true
+            // Auto so the bars (and the row/column they consume) only appear when the
+            // body actually overflows, instead of always sitting above the bottom border.
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto
         };
         _scrollViewer.Parent = this;
     }
@@ -291,7 +293,11 @@ public class Table : UIElement
 
         int padding = ShowBorder ? 1 : 0;
         int availableWidthForCols = Math.Max(0, availableSize.Width - 2 * padding);
-        if (_scrollViewer.VerticalScrollBarVisibility) availableWidthForCols--;
+        // Conservatively reserve a column when the vertical scrollbar might appear (Auto or
+        // Visible). Skipping the reservation for Auto would risk star columns spilling past
+        // the viewport on the frame the scrollbar first becomes visible. Disabled means we
+        // can use the full width for columns.
+        if (_scrollViewer.VerticalScrollBarVisibility != ScrollBarVisibility.Disabled) availableWidthForCols--;
 
         foreach (var child in _rowStack.Children)
         {

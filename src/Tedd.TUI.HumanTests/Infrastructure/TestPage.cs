@@ -59,8 +59,8 @@ public abstract class TestPage
         {
             Width = 20,
             Height = 5,
-            HorizontalScrollBarVisibility = true,
-            VerticalScrollBarVisibility = true
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Visible,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible
         };
         // Put a large stack inside scroll
         var largeContent = new StackPanel { Orientation = Orientation.Vertical };

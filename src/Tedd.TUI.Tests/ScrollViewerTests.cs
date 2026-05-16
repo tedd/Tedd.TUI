@@ -17,6 +17,72 @@ public class ScrollViewerTests
         }
     }
 
+    private sealed class WideDesireChild : UIElement
+    {
+        public int DesiredWidth { get; init; } = 100;
+        public int DesiredHeight { get; init; } = 5;
+        public Size LastArrangeSize { get; private set; }
+
+        protected override Size MeasureOverride(Size availableSize) => new Size(DesiredWidth, DesiredHeight);
+
+        protected override void ArrangeOverride(Size finalSize)
+        {
+            LastArrangeSize = finalSize;
+        }
+    }
+
+    [Fact]
+    public void ScrollViewer_Auto_HScroll_Shows_When_Content_Overflows_Width()
+    {
+        var sv = new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        var child = new WideDesireChild { DesiredWidth = 100, DesiredHeight = 5 };
+        sv.Content = child;
+
+        sv.Measure(new Size(50, 50));
+
+        Assert.True(sv.IsHorizontalScrollBarShown);
+        Assert.False(sv.IsVerticalScrollBarShown);
+    }
+
+    [Fact]
+    public void ScrollViewer_Auto_HScroll_Hides_When_Content_Fits()
+    {
+        var sv = new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        var child = new WideDesireChild { DesiredWidth = 10, DesiredHeight = 5 };
+        sv.Content = child;
+
+        sv.Measure(new Size(50, 50));
+
+        Assert.False(sv.IsHorizontalScrollBarShown);
+    }
+
+    [Fact]
+    public void ScrollViewer_With_HScrollDisabled_Clamps_Arrange_Width_To_Viewport()
+    {
+        // Mirror of the BorderTests regression case: Disabled axis must clamp the arrange
+        // width even when the content reports a larger DesiredSize.Width.
+        var sv = new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        var child = new WideDesireChild { DesiredWidth = 100, DesiredHeight = 5 };
+        sv.Content = child;
+
+        sv.Measure(new Size(20, 20));
+        sv.Arrange(new Rect(0, 0, 20, 20));
+
+        Assert.Equal(20, child.LastArrangeSize.Width);
+    }
+
     [Fact]
     public void ScrollViewer_Constraints_Child_When_Scroll_Disabled()
     {
@@ -25,9 +91,9 @@ public class ScrollViewerTests
         sv.Content = child;
 
         // Disable Horizontal Scroll (should constrain width)
-        sv.HorizontalScrollBarVisibility = false;
+        sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
         // Enable Vertical Scroll (should unconstrain height)
-        sv.VerticalScrollBarVisibility = true;
+        sv.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         // Measure ScrollViewer with fixed size
         sv.Measure(new Size(50, 50));
@@ -46,8 +112,8 @@ public class ScrollViewerTests
         var child = new MeasuringChild();
         sv.Content = child;
 
-        sv.HorizontalScrollBarVisibility = false;
-        sv.VerticalScrollBarVisibility = false;
+        sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        sv.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
         sv.Measure(new Size(50, 50));
 
@@ -63,8 +129,8 @@ public class ScrollViewerTests
         var child = new MeasuringChild();
         sv.Content = child;
 
-        sv.HorizontalScrollBarVisibility = true;
-        sv.VerticalScrollBarVisibility = true;
+        sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+        sv.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         sv.Measure(new Size(50, 50));
 

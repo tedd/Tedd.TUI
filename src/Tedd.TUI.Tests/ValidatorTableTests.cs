@@ -35,8 +35,8 @@ public class ValidatorTableTests
         var sv = table.GetVisualChild(0) as ScrollViewer;
         if (sv != null)
         {
-            sv.VerticalScrollBarVisibility = false;
-            sv.HorizontalScrollBarVisibility = false;
+            sv.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
         }
 
         table.Measure(new Size(12, 8));
@@ -100,7 +100,7 @@ public class ValidatorTableTests
 
         Grid.SetColumn(table, 0);
 
-        var rightBorder = new Border { BoxStyle = BoxStyle.Double, VerticalScrollBarVisibility = false, HorizontalScrollBarVisibility = false };
+        var rightBorder = new Border { BoxStyle = BoxStyle.Double, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
         Grid.SetColumn(rightBorder, 1);
 
         rootGrid.Children.Add(table);
@@ -237,8 +237,8 @@ public class ValidatorTableTests
         var sv = table.GetVisualChild(0) as ScrollViewer;
         if (sv != null)
         {
-            sv.VerticalScrollBarVisibility = false;
-            sv.HorizontalScrollBarVisibility = false;
+            sv.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
         }
 
         table.Measure(new Size(10, 5));

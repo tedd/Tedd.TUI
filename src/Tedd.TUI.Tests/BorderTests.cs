@@ -23,6 +23,84 @@ public class BorderTests
         }
     }
 
+    private sealed class WideDesireChild : UIElement
+    {
+        public int DesiredWidth { get; init; } = 100;
+        public Size LastMeasureSize { get; private set; }
+        public Size LastArrangeSize { get; private set; }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            LastMeasureSize = availableSize;
+            return new Size(DesiredWidth, 5);
+        }
+
+        protected override void ArrangeOverride(Size finalSize)
+        {
+            LastArrangeSize = finalSize;
+        }
+    }
+
+    [Fact]
+    public void Border_With_HScrollDisabled_Clamps_Arrange_Width_To_Viewport_Even_When_Child_Is_Wider()
+    {
+        // Repro for the paragraph-wrap-on-resize regression: a non-wrapping sibling
+        // (e.g. CodeDocument with a long line) reports a DesiredSize.Width larger than
+        // the viewport. The old Border.ArrangeOverride forwarded that wider width to
+        // wrappable children and they re-flowed to it, overflowing the viewport.
+        // With HScroll = Disabled, the arrange width must be clamped to the viewport.
+        var border = new Border
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        var child = new WideDesireChild { DesiredWidth = 100 };
+        border.Content = child;
+
+        border.Measure(new Size(20, 20));
+        border.Arrange(new Rect(0, 0, 20, 20));
+
+        // viewport = 20 - 2 (border) = 18. With HScroll = Disabled, arrange must clamp to 18.
+        Assert.Equal(18, child.LastArrangeSize.Width);
+    }
+
+    [Fact]
+    public void Border_With_HScrollAuto_Allows_Arrange_Width_To_Match_Wide_Content()
+    {
+        // With Auto, the scrollbar is allowed to appear and content is arranged at its
+        // natural width so it can be scrolled into view.
+        var border = new Border
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        var child = new WideDesireChild { DesiredWidth = 100 };
+        border.Content = child;
+
+        border.Measure(new Size(20, 20));
+        border.Arrange(new Rect(0, 0, 20, 20));
+
+        Assert.Equal(100, child.LastArrangeSize.Width);
+        Assert.True(border.IsHorizontalScrollBarShown);
+    }
+
+    [Fact]
+    public void Border_With_HScrollAuto_Hides_Bar_When_Content_Fits()
+    {
+        var border = new Border
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        var child = new WideDesireChild { DesiredWidth = 5 };
+        border.Content = child;
+
+        border.Measure(new Size(20, 20));
+        border.Arrange(new Rect(0, 0, 20, 20));
+
+        Assert.False(border.IsHorizontalScrollBarShown);
+    }
+
     [Fact]
     public void Border_Is_ScrollViewer()
     {
@@ -51,8 +129,8 @@ public class BorderTests
         border.Child = child;
 
         // Disable scrolling to test constraints
-        border.VerticalScrollBarVisibility = false;
-        border.HorizontalScrollBarVisibility = false;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
         // Border size 20x20. Border thickness 1 (implicit).
         // Available for child: 20 - 2 = 18.
@@ -86,8 +164,8 @@ public class BorderTests
         border.Child = child;
 
         // Enable both scrollbars
-        border.VerticalScrollBarVisibility = true;
-        border.HorizontalScrollBarVisibility = true;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         // If standard ScrollViewer logic applied, width would be 20 - 2 (border) - 1 (vscroll) = 17?
         // But Border ScrollBars are embedded in border.
@@ -104,8 +182,8 @@ public class BorderTests
         // But we can check that if HScroll is FALSE, and VScroll is TRUE:
         // Width is 18 (not 17).
 
-        border.HorizontalScrollBarVisibility = false;
-        border.VerticalScrollBarVisibility = true;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         border.Measure(new Size(20, 20));
 
@@ -217,8 +295,8 @@ public class BorderTests
         border.Child = child;
 
         // Disable scrolling so we can compare strict measure dimensions.
-        border.VerticalScrollBarVisibility = false;
-        border.HorizontalScrollBarVisibility = false;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
         border.Measure(new Size(20, 20));
 
@@ -238,8 +316,8 @@ public class BorderTests
         var child = new MeasuringChild();
         border.Child = child;
 
-        border.VerticalScrollBarVisibility = false;
-        border.HorizontalScrollBarVisibility = false;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
         border.Measure(new Size(20, 20));
         border.Arrange(new Rect(0, 0, 20, 20));
@@ -252,8 +330,8 @@ public class BorderTests
     public void Border_None_DoesNotDrawBorderCharacters()
     {
         var border = new Border { BoxStyle = BoxStyle.None, BorderColor = ConsoleColor.Red };
-        border.VerticalScrollBarVisibility = false;
-        border.HorizontalScrollBarVisibility = false;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
         border.Measure(new Size(5, 3));
         border.Arrange(new Rect(0, 0, 5, 3));

@@ -25,9 +25,18 @@ public class StackPanel : Panel
     {
         Size stackSize = new Size(0, 0);
 
+        // WPF-faithful: pass infinity along the stack axis so children report
+        // their natural/desired size on that axis. Stretch on the stack axis
+        // therefore has no effect (matches WPF). Use int.MaxValue as the TUI
+        // equivalent of double.PositiveInfinity (the same convention used by
+        // Border for scroll viewports).
+        Size childAvailable = Orientation == Orientation.Vertical
+            ? new Size(availableSize.Width, int.MaxValue)
+            : new Size(int.MaxValue, availableSize.Height);
+
         foreach (var child in Children)
         {
-            child.Measure(availableSize);
+            child.Measure(childAvailable);
             Size childSize = child.DesiredSize;
 
             if (Orientation == Orientation.Vertical)

@@ -210,12 +210,13 @@ public class Border : ScrollViewer
             StatusBar.Measure(decorationAvailable);
         }
 
-        // Measure Content
-        // Content area is inside the border.
+        // Border scrollbars overlay the border line itself, so unlike ScrollViewer they
+        // do not steal a row/column from the content area. Allow content to overflow in
+        // any axis that is not Disabled so we can detect it for Auto resolution.
         Size contentAvailable = new Size(Math.Max(0, availableSize.Width - borderW), Math.Max(0, availableSize.Height - borderH));
 
-        if (VerticalScrollBarVisibility) contentAvailable.Height = int.MaxValue;
-        if (HorizontalScrollBarVisibility) contentAvailable.Width = int.MaxValue;
+        if (VerticalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Height = int.MaxValue;
+        if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Width = int.MaxValue;
 
         Size contentSize = new Size(0, 0);
         if (Content != null)
@@ -224,10 +225,28 @@ public class Border : ScrollViewer
             contentSize = Content.DesiredSize;
         }
 
-        // Setup ScrollBars based on Content Size vs Viewport Size
-        // (skipped entirely when there is no border; with no border line there is
-        // nowhere to put scroll thumbs and the border is meant to be a flat passthrough)
-        if (!noBorder && VerticalScrollBarVisibility)
+        int viewportContentW = Math.Max(0, availableSize.Width - borderW);
+        int viewportContentH = Math.Max(0, availableSize.Height - borderH);
+
+        // With no border there are no border lines to host scrollbars, so neither axis is
+        // shown regardless of the property setting. This keeps the "border is a flat
+        // passthrough container" intent intact.
+        bool showVertical = !noBorder && VerticalScrollBarVisibility switch
+        {
+            ScrollBarVisibility.Visible => true,
+            ScrollBarVisibility.Auto => contentSize.Height > viewportContentH,
+            _ => false
+        };
+        bool showHorizontal = !noBorder && HorizontalScrollBarVisibility switch
+        {
+            ScrollBarVisibility.Visible => true,
+            ScrollBarVisibility.Auto => contentSize.Width > viewportContentW,
+            _ => false
+        };
+
+        SetResolvedScrollBarVisibility(showVertical, showHorizontal);
+
+        if (showVertical)
         {
             int viewport = Math.Max(1, availableSize.Height - borderH);
             int extent = contentSize.Height;
@@ -235,12 +254,11 @@ public class Border : ScrollViewer
             _verticalScrollBar.Maximum = Math.Max(0, extent - viewport);
             _verticalScrollBar.Minimum = 0;
 
-            // Measure ScrollBar with margins taken into account
             int vScrollHeight = Math.Max(0, availableSize.Height - borderH - VerticalScrollBarMarginTop - VerticalScrollBarMarginBottom);
             _verticalScrollBar.Measure(new Size(1, vScrollHeight));
         }
 
-        if (!noBorder && HorizontalScrollBarVisibility)
+        if (showHorizontal)
         {
             int viewport = Math.Max(1, availableSize.Width - borderW);
             int extent = contentSize.Width;
@@ -248,7 +266,6 @@ public class Border : ScrollViewer
             _horizontalScrollBar.Maximum = Math.Max(0, extent - viewport);
             _horizontalScrollBar.Minimum = 0;
 
-            // Measure ScrollBar with margins taken into account
             int hScrollWidth = Math.Max(0, availableSize.Width - borderW - HorizontalScrollBarMarginLeft - HorizontalScrollBarMarginRight);
             _horizontalScrollBar.Measure(new Size(hScrollWidth, 1));
         }
@@ -273,9 +290,18 @@ public class Border : ScrollViewer
         {
             int viewportW = Math.Max(0, w - 2 * borderEdge);
             int viewportH = Math.Max(0, h - 2 * borderEdge);
-            Content.Arrange(new Rect(borderEdge, borderEdge,
-                Math.Max(viewportW, Content.DesiredSize.Width),
-                Math.Max(viewportH, Content.DesiredSize.Height)));
+
+            // When an axis is Disabled we clamp the content's arrange rect to the viewport
+            // so wrappable children (e.g. Paragraph) don't reflow against an oversized
+            // arrange width pulled from a non-wrapping sibling like CodeDocument.
+            int arrangeW = (HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled)
+                ? viewportW
+                : Math.Max(viewportW, Content.DesiredSize.Width);
+            int arrangeH = (VerticalScrollBarVisibility == ScrollBarVisibility.Disabled)
+                ? viewportH
+                : Math.Max(viewportH, Content.DesiredSize.Height);
+
+            Content.Arrange(new Rect(borderEdge, borderEdge, arrangeW, arrangeH));
         }
 
         // Arrange Title (skipped when there is no border to host it)
@@ -300,15 +326,15 @@ public class Border : ScrollViewer
             StatusBar.Arrange(new Rect(1, h - 1, statusW, 1));
         }
 
-        // Arrange ScrollBars (no border = no scrollbars; see MeasureOverride)
-        if (!noBorder && VerticalScrollBarVisibility)
+        // Arrange ScrollBars only when we resolved them as shown in MeasureOverride.
+        if (IsVerticalScrollBarShown)
         {
             int vTop = 1 + VerticalScrollBarMarginTop;
             int vHeight = Math.Max(0, h - 2 - VerticalScrollBarMarginTop - VerticalScrollBarMarginBottom);
             _verticalScrollBar.Arrange(new Rect(w - 1, vTop, 1, vHeight));
         }
 
-        if (!noBorder && HorizontalScrollBarVisibility)
+        if (IsHorizontalScrollBarShown)
         {
             int hLeft = 1 + HorizontalScrollBarMarginLeft + statusW;
             int hWidth = Math.Max(0, w - 1 - hLeft - HorizontalScrollBarMarginRight);
@@ -383,11 +409,11 @@ public class Border : ScrollViewer
             StatusBar.Render(buffer, x, y);
         }
 
-        // ScrollBars (on border lines)
-        if (VerticalScrollBarVisibility)
+        // ScrollBars (on border lines) -- only when resolved as shown in MeasureOverride.
+        if (IsVerticalScrollBarShown)
             _verticalScrollBar.Render(buffer, x, y);
 
-        if (HorizontalScrollBarVisibility)
+        if (IsHorizontalScrollBarShown)
             _horizontalScrollBar.Render(buffer, x, y);
 
         // Content (inside border)

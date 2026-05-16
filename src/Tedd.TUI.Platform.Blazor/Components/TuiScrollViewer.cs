@@ -9,8 +9,8 @@ public class TuiScrollViewer : TuiComponentBase
     private ScrollViewer _scrollViewer = new ScrollViewer();
     public override UIElement Element => _scrollViewer;
 
-    [Parameter] public bool HorizontalScrollBarVisibility { get; set; } = false;
-    [Parameter] public bool VerticalScrollBarVisibility { get; set; } = true;
+    [Parameter] public ScrollBarVisibility HorizontalScrollBarVisibility { get; set; } = ScrollBarVisibility.Disabled;
+    [Parameter] public ScrollBarVisibility VerticalScrollBarVisibility { get; set; } = ScrollBarVisibility.Visible;
 
     protected override void ApplyProperties()
     {
