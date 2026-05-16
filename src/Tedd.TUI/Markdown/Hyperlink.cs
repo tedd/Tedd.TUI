@@ -31,7 +31,7 @@ public class Hyperlink : UIElement
         // Actually, we should set default Foreground here or rely on Theme?
         // But UIElement doesn't know about MarkdownTheme.
         // We will likely set Foreground when creating this control in MarkdownRenderer.
-        Foreground = ConsoleColor.Blue;
+        Foreground = TuiColor.Blue;
     }
 
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
@@ -53,7 +53,7 @@ public class Hyperlink : UIElement
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
-        var fg = IsFocused ? ConsoleColor.Cyan : Foreground;
+        var fg = IsFocused ? TuiColor.Cyan : Foreground;
         var bg = Background ?? buffer.GetPixel(x, y).Background;
 
         for (int i = 0; i < text.Length; i++)

@@ -33,7 +33,7 @@ public class TableRow : UIElement
 
     public void AddCell(string text)
     {
-        AddCell(new TextBlock { Text = text, Foreground = ConsoleColor.White });
+        AddCell(new TextBlock { Text = text, Foreground = TuiColor.White });
     }
 
     public override int VisualChildrenCount => _cells.Count;
@@ -106,7 +106,7 @@ public class TableRow : UIElement
             for (int i = 0; i < table.Columns.Count - 1; i++)
             {
                 cx += table.Columns[i].ActualWidth;
-                buffer.DrawVLine(x + cx, y, RenderSize.Height, vChar, ConsoleColor.Gray, ConsoleColor.Black);
+                buffer.DrawVLine(x + cx, y, RenderSize.Height, vChar, TuiColor.Gray, TuiColor.Black);
                 cx++;
             }
         }
@@ -128,8 +128,8 @@ public class Table : UIElement
     private readonly StackPanel _rowStack;
 
     public bool ShowHeader { get; set; } = true;
-    public ConsoleColor HeaderForeground { get; set; } = ConsoleColor.Yellow;
-    public ConsoleColor HeaderBackground { get; set; } = ConsoleColor.DarkGray;
+    public TuiColor HeaderForeground { get; set; } = TuiColor.Yellow;
+    public TuiColor HeaderBackground { get; set; } = TuiColor.DarkGray;
 
     // Style Properties
     public bool ShowBorder { get; set; } = false;
@@ -1005,7 +1005,7 @@ public class Table : UIElement
         int w = RenderSize.Width;
         int y = RenderSize.Height - 1;
 
-        buffer.DrawHLine(RenderSize.X + offsetX, RenderSize.Y + offsetY + y, w, ' ', ConsoleColor.Gray, ConsoleColor.Black);
+        buffer.DrawHLine(RenderSize.X + offsetX, RenderSize.Y + offsetY + y, w, ' ', TuiColor.Gray, TuiColor.Black);
 
         Span<char> textBuffer = stackalloc char[256];
         int len = GetPaginationString(textBuffer, w, totalPages, CurrentPage);
@@ -1015,7 +1015,7 @@ public class Table : UIElement
         int absX = RenderSize.X + offsetX + startX;
         int absY = RenderSize.Y + offsetY + y;
 
-        buffer.DrawString(absX, absY, text, ConsoleColor.Gray, ConsoleColor.Black);
+        buffer.DrawString(absX, absY, text, TuiColor.Gray, TuiColor.Black);
     }
 }
 
@@ -1052,7 +1052,7 @@ internal class TableSeparator : UIElement
         char hChar = '\u2500';
         char crossChar = '\u253C';
 
-        buffer.DrawHLine(x, y, width, hChar, ConsoleColor.Gray, ConsoleColor.Black);
+        buffer.DrawHLine(x, y, width, hChar, TuiColor.Gray, TuiColor.Black);
 
         if (table.ShowVerticalLines)
         {
@@ -1060,7 +1060,7 @@ internal class TableSeparator : UIElement
             for (int i = 0; i < table.Columns.Count - 1; i++)
             {
                 cx += table.Columns[i].ActualWidth;
-                buffer.SetPixel(x + cx, y, crossChar, ConsoleColor.Gray, ConsoleColor.Black);
+                buffer.SetPixel(x + cx, y, crossChar, TuiColor.Gray, TuiColor.Black);
                 cx++;
             }
         }

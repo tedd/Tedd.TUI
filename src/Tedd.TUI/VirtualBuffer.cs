@@ -4,22 +4,56 @@ using System.Runtime.CompilerServices;
 
 namespace Tedd.TUI;
 
-public struct Cell
+/// <summary>
+/// A single character cell in the rendering grid. Stores the glyph plus a 32-bit RGBA
+/// foreground and background <see cref="TuiColor"/>. Backwards-compatible
+/// <see cref="ConsoleColor"/> overloads convert implicitly via <see cref="TuiColor"/>.
+/// </summary>
+public struct Cell : IEquatable<Cell>
 {
     public char Character;
-    public ConsoleColor Foreground;
-    public ConsoleColor Background;
+    public TuiColor Foreground;
+    public TuiColor Background;
 
-    public Cell(char character, ConsoleColor foreground, ConsoleColor background)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Cell(char character, TuiColor foreground, TuiColor background)
     {
         Character = character;
         Foreground = foreground;
         Background = background;
     }
+
+    /// <summary>
+    /// Convenience constructor preserving the original <see cref="ConsoleColor"/>
+    /// signature so callers that haven't migrated yet keep compiling.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Cell(char character, ConsoleColor foreground, ConsoleColor background)
+        : this(character, TuiColor.FromConsole(foreground), TuiColor.FromConsole(background))
+    {
+    }
+
+    /// <summary>
+    /// Returns true when both cells are visually identical. Compares the glyph and the
+    /// packed color words directly rather than enum-by-enum so the diff loop costs the
+    /// same as the old <see cref="ConsoleColor"/> path.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Equals(Cell other) =>
+        Character == other.Character &&
+        Foreground.Packed == other.Foreground.Packed &&
+        Background.Packed == other.Background.Packed;
+
+    public override bool Equals(object? obj) => obj is Cell c && Equals(c);
+    public override int GetHashCode() => HashCode.Combine(Character, Foreground.Packed, Background.Packed);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(Cell a, Cell b) => a.Equals(b);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(Cell a, Cell b) => !a.Equals(b);
 }
 
 // Intent: Optimize VirtualBuffer using linear arrays and Span for better runtime performance
-// Why: 
+// Why:
 // - Removing multidimensional arrays eliminates consecutive bounds checking overhead.
 // - Flattening array layout maps efficiently to memory for predictable access.
 // - Inlining hot paths like SetPixel/GetPixel removes call frame overhead during rendering.
@@ -115,11 +149,24 @@ public class VirtualBuffer
         _clipStack.Clear();
         _currentClip = new Rect(0, 0, Width, Height);
         _isClipped = false;
-        _buffer.AsSpan().Fill(new Cell(' ', ConsoleColor.White, ConsoleColor.Black));
+        _buffer.AsSpan().Fill(new Cell(' ', TuiColor.White, TuiColor.Black));
+    }
+
+    /// <summary>
+    /// Clears the buffer to the given background color. Useful for layer buffers that
+    /// want a fully transparent default so blank cells don't paint over lower layers.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(TuiColor background)
+    {
+        _clipStack.Clear();
+        _currentClip = new Rect(0, 0, Width, Height);
+        _isClipped = false;
+        _buffer.AsSpan().Fill(new Cell(' ', TuiColor.White, background));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetPixel(int x, int y, char c, ConsoleColor fg, ConsoleColor bg)
+    public void SetPixel(int x, int y, char c, TuiColor fg, TuiColor bg)
     {
         if ((uint)x >= (uint)Width || (uint)y >= (uint)Height)
         {
@@ -138,6 +185,50 @@ public class VirtualBuffer
         _buffer[y * Width + x] = new Cell(c, fg, bg);
     }
 
+    // ConsoleColor compatibility trampoline.
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetPixel(int x, int y, char c, ConsoleColor fg, ConsoleColor bg) =>
+        SetPixel(x, y, c, TuiColor.FromConsole(fg), TuiColor.FromConsole(bg));
+
+    /// <summary>
+    /// Alpha-aware pixel write: composes (fg, bg) over the existing cell using
+    /// Porter-Duff "over". When either incoming channel is opaque the corresponding
+    /// channel is written verbatim; when the glyph is a space the original glyph stays.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BlendPixel(int x, int y, char c, TuiColor fg, TuiColor bg)
+    {
+        if ((uint)x >= (uint)Width || (uint)y >= (uint)Height) return;
+        if (_isClipped)
+        {
+            if (x < _currentClip.X || x >= _currentClip.X + _currentClip.Width || y < _currentClip.Y || y >= _currentClip.Y + _currentClip.Height) return;
+        }
+
+        int idx = y * Width + x;
+        ref Cell dst = ref _buffer[idx];
+
+        TuiColor newBg = bg.IsOpaque ? bg : bg.Blend(dst.Background);
+        TuiColor newFg;
+        char newChar;
+
+        if (c == ' ' || c == '\0')
+        {
+            // Pure background paint: keep the existing glyph and tint the foreground.
+            newChar = dst.Character;
+            newFg = fg.IsTransparent ? dst.Foreground : fg.Blend(dst.Foreground);
+        }
+        else
+        {
+            newChar = c;
+            // The new glyph is rendered against the freshly composited background.
+            newFg = fg.IsOpaque ? fg : fg.Blend(newBg);
+        }
+
+        dst.Character = newChar;
+        dst.Foreground = newFg;
+        dst.Background = newBg;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Cell GetPixel(int x, int y)
     {
@@ -145,17 +236,23 @@ public class VirtualBuffer
         {
             return _buffer[y * Width + x];
         }
-        return new Cell(' ', ConsoleColor.White, ConsoleColor.Black);
+        return new Cell(' ', TuiColor.White, TuiColor.Black);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawString(int x, int y, string text, ConsoleColor fg, ConsoleColor bg)
-    {
+    public void DrawString(int x, int y, string text, TuiColor fg, TuiColor bg) =>
         DrawString(x, y, text.AsSpan(), fg, bg);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawString(int x, int y, ReadOnlySpan<char> text, ConsoleColor fg, ConsoleColor bg)
+    public void DrawString(int x, int y, string text, ConsoleColor fg, ConsoleColor bg) =>
+        DrawString(x, y, text.AsSpan(), TuiColor.FromConsole(fg), TuiColor.FromConsole(bg));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawString(int x, int y, ReadOnlySpan<char> text, ConsoleColor fg, ConsoleColor bg) =>
+        DrawString(x, y, text, TuiColor.FromConsole(fg), TuiColor.FromConsole(bg));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawString(int x, int y, ReadOnlySpan<char> text, TuiColor fg, TuiColor bg)
     {
         if ((uint)y >= (uint)Height) return;
 
@@ -208,7 +305,7 @@ public class VirtualBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawHLine(int x, int y, int length, char c, ConsoleColor fg, ConsoleColor bg)
+    public void DrawHLine(int x, int y, int length, char c, TuiColor fg, TuiColor bg)
     {
         if ((uint)y >= (uint)Height) return;
 
@@ -236,7 +333,11 @@ public class VirtualBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawVLine(int x, int y, int length, char c, ConsoleColor fg, ConsoleColor bg)
+    public void DrawHLine(int x, int y, int length, char c, ConsoleColor fg, ConsoleColor bg) =>
+        DrawHLine(x, y, length, c, TuiColor.FromConsole(fg), TuiColor.FromConsole(bg));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawVLine(int x, int y, int length, char c, TuiColor fg, TuiColor bg)
     {
         if ((uint)x >= (uint)Width) return;
 
@@ -269,7 +370,11 @@ public class VirtualBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void FillRect(int x, int y, int width, int height, char c, ConsoleColor fg, ConsoleColor bg)
+    public void DrawVLine(int x, int y, int length, char c, ConsoleColor fg, ConsoleColor bg) =>
+        DrawVLine(x, y, length, c, TuiColor.FromConsole(fg), TuiColor.FromConsole(bg));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillRect(int x, int y, int width, int height, char c, TuiColor fg, TuiColor bg)
     {
         int startX = x;
         int startY = y;
@@ -302,4 +407,8 @@ public class VirtualBuffer
             _buffer.AsSpan(idx, rowWidth).Fill(cell);
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillRect(int x, int y, int width, int height, char c, ConsoleColor fg, ConsoleColor bg) =>
+        FillRect(x, y, width, height, c, TuiColor.FromConsole(fg), TuiColor.FromConsole(bg));
 }

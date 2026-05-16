@@ -187,24 +187,24 @@ public class TabControl : Selector
 
             string header = $" {headerText} ";
 
-            ConsoleColor bg, fg;
+            TuiColor bg, fg;
             if (i == SelectedIndex)
             {
                 if (IsFocused)
                 {
-                    fg = ConsoleColor.Yellow;
-                    bg = ConsoleColor.DarkBlue;
+                    fg = TuiColor.Yellow;
+                    bg = TuiColor.DarkBlue;
                 }
                 else
                 {
-                    fg = ConsoleColor.Black;
-                    bg = ConsoleColor.Gray;
+                    fg = TuiColor.Black;
+                    bg = TuiColor.Gray;
                 }
             }
             else
             {
-                fg = ConsoleColor.White;
-                bg = ConsoleColor.Black;
+                fg = TuiColor.White;
+                bg = TuiColor.Black;
             }
 
             for (int k = 0; k < header.Length; k++)
@@ -217,7 +217,7 @@ public class TabControl : Selector
         // Draw Content Border line
         char hChar = BoxDrawingChars.Get(BoxStyle).Horizontal;
         for (int i = 0; i < w; i++)
-            buffer.SetPixel(x + i, y + 1, hChar, ConsoleColor.Gray, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y + 1, hChar, TuiColor.Gray, TuiColor.Black);
 
         // Draw Selected Content
         if (SelectedIndex >= 0 && SelectedIndex < Items.Count)

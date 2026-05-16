@@ -32,5 +32,15 @@ public enum ButtonShadowStyle
     /// Turbo Vision behavior where the underlying dialog content "shows through" but is
     /// dimmed, giving a translucent shadow effect.
     /// </summary>
-    Cast
+    Cast,
+
+    /// <summary>
+    /// Truecolor alpha-aware drop shadow: blends a semi-transparent
+    /// <see cref="Button.ShadowBackground"/> over each underlying cell using Porter-Duff
+    /// "over" so the original glyph and color remain visible but darkened. Use this on
+    /// truecolor surfaces (Windows Terminal, modern Linux terminals, Blazor DOM) where
+    /// per-cell alpha is honored end-to-end. Falls back gracefully on 16-color renderers
+    /// because the blended color is quantized to the nearest <see cref="ConsoleColor"/>.
+    /// </summary>
+    Translucent
 }

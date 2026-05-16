@@ -62,11 +62,11 @@ public class TextBox : UIElement
         int y = RenderSize.Y + offsetY;
         int w = RenderSize.Width;
 
-        var fg = IsFocused ? ConsoleColor.Yellow : ConsoleColor.White;
+        var fg = IsFocused ? TuiColor.Yellow : TuiColor.White;
         // Default to provided Background, or transparent (existing buffer background) if null
         // However, existing behavior was hardcoded Black when not focused.
         // We want to support transparency if Background is null.
-        var effectiveBg = IsFocused ? ConsoleColor.DarkBlue : (Background ?? buffer.GetPixel(x, y).Background);
+        var effectiveBg = IsFocused ? TuiColor.DarkBlue : (Background ?? buffer.GetPixel(x, y).Background);
         var bg = effectiveBg;
 
         string text = Text ?? "";
@@ -93,8 +93,8 @@ public class TextBox : UIElement
 
             if (IsFocused && textIdx == _cursorPos)
             {
-                cellBg = ConsoleColor.Gray;
-                cellFg = ConsoleColor.Black;
+                cellBg = TuiColor.Gray;
+                cellFg = TuiColor.Black;
             }
 
             buffer.SetPixel(x + i, y, c, cellFg, cellBg);
@@ -103,7 +103,7 @@ public class TextBox : UIElement
         // Draw cursor at end if needed
         if (IsFocused && _cursorPos == display.Length && display.Length - start < w)
         {
-            buffer.SetPixel(x + (display.Length - start), y, ' ', ConsoleColor.Black, ConsoleColor.Gray);
+            buffer.SetPixel(x + (display.Length - start), y, ' ', TuiColor.Black, TuiColor.Gray);
         }
     }
 

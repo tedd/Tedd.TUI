@@ -62,9 +62,12 @@ public class ConsoleRendererLegacy : IRenderer
             for (int x = 0; x < bufW; x++)
             {
                 var cell = buffer.GetPixel(x, y);
+                // Legacy benchmark renderer quantizes TuiColor → ConsoleColor for the 16-color path.
+                int fg = (int)cell.Foreground.ToNearestConsoleColor();
+                int bg = (int)cell.Background.ToNearestConsoleColor();
 
                 // Flush buffer if color changes
-                if ((int)cell.Foreground != lastFg || (int)cell.Background != lastBg)
+                if (fg != lastFg || bg != lastBg)
                 {
                     if (sb.Length > 0)
                     {
@@ -72,15 +75,15 @@ public class ConsoleRendererLegacy : IRenderer
                         sb.Clear();
                     }
 
-                    if ((int)cell.Foreground != lastFg)
+                    if (fg != lastFg)
                     {
-                        _console.ForegroundColor = cell.Foreground;
-                        lastFg = (int)cell.Foreground;
+                        _console.ForegroundColor = (ConsoleColor)fg;
+                        lastFg = fg;
                     }
-                    if ((int)cell.Background != lastBg)
+                    if (bg != lastBg)
                     {
-                        _console.BackgroundColor = cell.Background;
-                        lastBg = (int)cell.Background;
+                        _console.BackgroundColor = (ConsoleColor)bg;
+                        lastBg = bg;
                     }
                 }
 

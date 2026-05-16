@@ -5,77 +5,78 @@ namespace Tedd.TUI.CodeColoring;
 
 public class Theme
 {
-    public ConsoleColor DefaultForeground { get; set; } = ConsoleColor.White;
-    public ConsoleColor DefaultBackground { get; set; } = ConsoleColor.Black;
+    public TuiColor DefaultForeground { get; set; } = TuiColor.White;
+    public TuiColor DefaultBackground { get; set; } = TuiColor.Black;
 
     public static Theme Default { get; set; } = new Theme();
 
-    public Dictionary<string, ConsoleColor> TokenColors { get; } = [];
+    public Dictionary<string, TuiColor> TokenColors { get; } = [];
 
     public Theme()
     {
-        // Default mappings based on PrismJS Default Theme (adapted for ConsoleColor)
+        // Default mappings based on PrismJS Default Theme (adapted for TuiColor parity
+        // with the legacy 16-color palette).
 
         // Comments, blocks
-        TokenColors["comment"] = ConsoleColor.DarkGray; // slategray
-        TokenColors["prolog"] = ConsoleColor.DarkGray;
-        TokenColors["doctype"] = ConsoleColor.DarkGray;
-        TokenColors["cdata"] = ConsoleColor.DarkGray;
-        TokenColors["punctuation"] = ConsoleColor.DarkGray; // #999
+        TokenColors["comment"] = TuiColor.DarkGray; // slategray
+        TokenColors["prolog"] = TuiColor.DarkGray;
+        TokenColors["doctype"] = TuiColor.DarkGray;
+        TokenColors["cdata"] = TuiColor.DarkGray;
+        TokenColors["punctuation"] = TuiColor.DarkGray; // #999
 
         // Namespace
-        TokenColors["namespace"] = ConsoleColor.DarkGray; // opacity .7
+        TokenColors["namespace"] = TuiColor.DarkGray; // opacity .7
 
         // Properties, Tags, Numbers, Booleans, Constants, Symbols, Deleted
-        TokenColors["property"] = ConsoleColor.Magenta; // #905
-        TokenColors["tag"] = ConsoleColor.Magenta;
-        TokenColors["boolean"] = ConsoleColor.Magenta;
-        TokenColors["number"] = ConsoleColor.Magenta;
-        TokenColors["constant"] = ConsoleColor.Magenta;
-        TokenColors["symbol"] = ConsoleColor.Magenta;
-        TokenColors["deleted"] = ConsoleColor.Red; // #905 but deleted usually red
-        TokenColors["deleted-sign"] = ConsoleColor.Red;
-        TokenColors["deleted-arrow"] = ConsoleColor.Red;
+        TokenColors["property"] = TuiColor.Magenta; // #905
+        TokenColors["tag"] = TuiColor.Magenta;
+        TokenColors["boolean"] = TuiColor.Magenta;
+        TokenColors["number"] = TuiColor.Magenta;
+        TokenColors["constant"] = TuiColor.Magenta;
+        TokenColors["symbol"] = TuiColor.Magenta;
+        TokenColors["deleted"] = TuiColor.Red; // #905 but deleted usually red
+        TokenColors["deleted-sign"] = TuiColor.Red;
+        TokenColors["deleted-arrow"] = TuiColor.Red;
 
         // Selectors, Attr Names, Strings, Chars, Builtins, Inserted
-        TokenColors["selector"] = ConsoleColor.DarkGreen; // #690 (Olive) -> DarkGreen/DarkYellow?
-        TokenColors["attr-name"] = ConsoleColor.DarkGreen;
-        TokenColors["string"] = ConsoleColor.DarkGreen; // Usually strings are green or yellow.
-        TokenColors["char"] = ConsoleColor.DarkGreen;
-        TokenColors["builtin"] = ConsoleColor.DarkGreen;
-        TokenColors["inserted"] = ConsoleColor.Green; // #690 but inserted usually green
-        TokenColors["inserted-sign"] = ConsoleColor.Green;
-        TokenColors["inserted-arrow"] = ConsoleColor.Green;
+        TokenColors["selector"] = TuiColor.DarkGreen; // #690 (Olive)
+        TokenColors["attr-name"] = TuiColor.DarkGreen;
+        TokenColors["string"] = TuiColor.DarkGreen;
+        TokenColors["char"] = TuiColor.DarkGreen;
+        TokenColors["builtin"] = TuiColor.DarkGreen;
+        TokenColors["inserted"] = TuiColor.Green;
+        TokenColors["inserted-sign"] = TuiColor.Green;
+        TokenColors["inserted-arrow"] = TuiColor.Green;
 
         // Operators, Entities, URLs
-        TokenColors["operator"] = ConsoleColor.DarkYellow; // #9a6e3a (Brown)
-        TokenColors["entity"] = ConsoleColor.DarkYellow;
-        TokenColors["url"] = ConsoleColor.DarkYellow;
+        TokenColors["operator"] = TuiColor.DarkYellow;
+        TokenColors["entity"] = TuiColor.DarkYellow;
+        TokenColors["url"] = TuiColor.DarkYellow;
 
         // At-rules, Attr Values, Keywords
-        TokenColors["atrule"] = ConsoleColor.Cyan; // #07a (Blue) -> Cyan for readability on black
-        TokenColors["attr-value"] = ConsoleColor.Cyan;
-        TokenColors["keyword"] = ConsoleColor.Cyan;
+        TokenColors["atrule"] = TuiColor.Cyan;
+        TokenColors["attr-value"] = TuiColor.Cyan;
+        TokenColors["keyword"] = TuiColor.Cyan;
 
         // Functions, Class Names
-        TokenColors["function"] = ConsoleColor.Red; // #DD4A68 (Pink) -> Red? Or Magenta?
-        TokenColors["class-name"] = ConsoleColor.Red;
+        TokenColors["function"] = TuiColor.Red;
+        TokenColors["class-name"] = TuiColor.Red;
 
         // Regex, Important, Variables
-        TokenColors["regex"] = ConsoleColor.Yellow; // #e90 (Orange)
-        TokenColors["important"] = ConsoleColor.Yellow;
-        TokenColors["variable"] = ConsoleColor.Yellow;
+        TokenColors["regex"] = TuiColor.Yellow;
+        TokenColors["important"] = TuiColor.Yellow;
+        TokenColors["variable"] = TuiColor.Yellow;
 
         // Styles
-        TokenColors["bold"] = ConsoleColor.White;
-        TokenColors["italic"] = ConsoleColor.Gray;
+        TokenColors["bold"] = TuiColor.White;
+        TokenColors["italic"] = TuiColor.Gray;
 
         // Diff specific
-        TokenColors["coord"] = ConsoleColor.DarkBlue;
-        TokenColors["diff"] = ConsoleColor.DarkGray; // Bold?
+        TokenColors["coord"] = TuiColor.DarkBlue;
+        TokenColors["diff"] = TuiColor.DarkGray;
     }
 
-    public ConsoleColor GetColor(string tokenType)
+    public TuiColor GetColor(string tokenType)
     {
         if (TokenColors.TryGetValue(tokenType, out var color))
         {

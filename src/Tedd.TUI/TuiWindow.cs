@@ -61,13 +61,84 @@ public class TuiWindow : UIElement
         // If we need to support resizing updates for overlays, we'd iterate _overlays here.
     }
 
+    /// <summary>
+    /// Composites the window content and any pushed overlays into <paramref name="buffer"/>.
+    /// Each overlay is rendered through the layered pipeline so transparent shadows or
+    /// translucent dialogs blend correctly against whatever lies below them.
+    /// </summary>
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        // Base content lives directly on the destination buffer to avoid an extra allocation.
         Content?.Render(buffer, offsetX, offsetY);
-        // Render Overlays
-        foreach (var overlay in _overlays)
-            overlay.Render(buffer, offsetX, offsetY);
+
+        if (_overlays.Count == 0) return;
+
+        // Each overlay gets its own transparent layer buffer; the compositor blends them
+        // back onto the destination so per-cell alpha (button shadows, semi-opaque dialog
+        // backgrounds, …) survives.
+        var layers = AcquireOverlayLayers(buffer.Width, buffer.Height);
+        try
+        {
+            for (int i = 0; i < _overlays.Count; i++)
+            {
+                var overlay = _overlays[i];
+                if (overlay == null || !overlay.Visibility) continue;
+
+                var layer = layers[i];
+                layer.Buffer.Clear(TuiColor.Transparent);
+                overlay.Render(layer.Buffer, offsetX, offsetY);
+            }
+
+            LayerCompositor.Flatten(layers, buffer);
+        }
+        finally
+        {
+            ReleaseOverlayLayers(layers);
+        }
     }
+
+    private RenderLayer[] _overlayLayerPool = Array.Empty<RenderLayer>();
+    private int _overlayLayerPoolWidth;
+    private int _overlayLayerPoolHeight;
+
+    private RenderLayer[] AcquireOverlayLayers(int width, int height)
+    {
+        int count = _overlays.Count;
+
+        // Re-allocate when the surface size changes; the pool is per-window so this is rare.
+        if (_overlayLayerPoolWidth != width || _overlayLayerPoolHeight != height)
+        {
+            _overlayLayerPool = Array.Empty<RenderLayer>();
+            _overlayLayerPoolWidth = width;
+            _overlayLayerPoolHeight = height;
+        }
+
+        if (_overlayLayerPool.Length < count)
+        {
+            var grown = new RenderLayer[count];
+            Array.Copy(_overlayLayerPool, grown, _overlayLayerPool.Length);
+            for (int i = _overlayLayerPool.Length; i < count; i++)
+            {
+                grown[i] = new RenderLayer(width, height, 1000 + i);
+            }
+            _overlayLayerPool = grown;
+        }
+
+        // Build a fresh array sized to the current overlay count so the compositor only
+        // touches active layers (and so the array we hand it matches IReadOnlyList semantics).
+        var slice = new RenderLayer[count];
+        for (int i = 0; i < count; i++)
+        {
+            slice[i] = _overlayLayerPool[i];
+            slice[i].OffsetX = 0;
+            slice[i].OffsetY = 0;
+            slice[i].Opacity = 1f;
+            slice[i].IsVisible = true;
+        }
+        return slice;
+    }
+
+    private static void ReleaseOverlayLayers(RenderLayer[] _) { /* layers stay pooled */ }
 
     private readonly List<UIElement> _overlays = new();
 

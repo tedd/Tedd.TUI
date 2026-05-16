@@ -104,7 +104,7 @@ public class GridSplitter : Thumb
 
     public GridSplitter()
     {
-        Background = ConsoleColor.DarkGray;
+        Background = TuiColor.DarkGray;
         DragDelta += OnDragDelta;
     }
 
@@ -237,8 +237,8 @@ public class GridSplitter : Thumb
         // We will just draw a filled block for the splitter if no template is defined.
         if (TemplateRoot == null)
         {
-            ConsoleColor bg = Background ?? ConsoleColor.DarkGray;
-            ConsoleColor fg = Foreground;
+            TuiColor bg = Background ?? TuiColor.DarkGray;
+            TuiColor fg = Foreground;
 
             for (int j = 0; j < RenderSize.Height; j++)
             {

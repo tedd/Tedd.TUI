@@ -67,8 +67,8 @@ public class MenuItem : UIElement
         //   - MenuBar: Gray Background, Black Text (inherited/default)
         //   - Popup: Gray Background, Black Text (inherited from Border)
 
-        var bg = isActive ? ConsoleColor.Green : (Parent is MenuBar ? (ConsoleColor?)null : ConsoleColor.Gray);
-        var fg = ConsoleColor.Black; // Always black text
+        var bg = isActive ? TuiColor.Green : (Parent is MenuBar ? (TuiColor?)null : TuiColor.Gray);
+        var fg = TuiColor.Black; // Always black text
 
         // Draw background
         for (int i = 0; i < RenderSize.Width; i++)
@@ -100,7 +100,7 @@ public class MenuItem : UIElement
         // Draw sub-menu arrow indicator if needed
         if (Items.Count > 0 && !(Parent is MenuBar))
         {
-            buffer.SetPixel(x + RenderSize.Width - 1, y, '\u25BA', fg, bg ?? ConsoleColor.Gray); // Arrow
+            buffer.SetPixel(x + RenderSize.Width - 1, y, '\u25BA', fg, bg ?? TuiColor.Gray); // Arrow
         }
     }
 
@@ -300,8 +300,8 @@ public class MenuItem : UIElement
         _popupBorder = new MenuPopupBorder
         {
             Child = stackPanel,
-            BorderColor = ConsoleColor.Black,
-            Background = ConsoleColor.Gray,
+            BorderColor = TuiColor.Black,
+            Background = TuiColor.Gray,
             BoxStyle = BoxStyle.Single,
             Owner = this
         };

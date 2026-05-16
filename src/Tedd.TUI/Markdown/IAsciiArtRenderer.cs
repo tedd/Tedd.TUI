@@ -19,5 +19,5 @@ public interface IAsciiArtRenderer
     /// <param name="cellWidth">Target width in character cells.</param>
     /// <param name="cellHeight">Target height in character cells.</param>
     /// <param name="fallbackBackground">Background color used for fully transparent pixels.</param>
-    Cell[] Render(RgbaImage image, int cellWidth, int cellHeight, ConsoleColor fallbackBackground);
+    Cell[] Render(RgbaImage image, int cellWidth, int cellHeight, TuiColor fallbackBackground);
 }

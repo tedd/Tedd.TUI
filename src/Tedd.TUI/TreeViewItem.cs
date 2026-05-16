@@ -97,13 +97,13 @@ public class TreeViewItem : HeaderedItemsControl
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
-        var bg = IsSelected ? ConsoleColor.Blue : (Background ?? ConsoleColor.Black);
-        var fg = IsSelected ? ConsoleColor.White : (Header is UIElement ? ConsoleColor.White : ConsoleColor.Gray);
+        var bg = IsSelected ? TuiColor.Blue : (Background ?? TuiColor.Black);
+        var fg = IsSelected ? TuiColor.White : (Header is UIElement ? TuiColor.White : TuiColor.Gray);
 
         // Indentation
         for (int i = 0; i < Level * 2; i++)
         {
-            buffer.SetPixel(x + i, y, ' ', fg, ConsoleColor.Black);
+            buffer.SetPixel(x + i, y, ' ', fg, TuiColor.Black);
         }
 
         int contentX = x + Level * 2;
@@ -111,9 +111,9 @@ public class TreeViewItem : HeaderedItemsControl
         if (HasItems)
         {
             char c = IsExpanded ? '-' : '+';
-            buffer.SetPixel(contentX, y, '[', ConsoleColor.DarkGray, bg);
-            buffer.SetPixel(contentX + 1, y, c, ConsoleColor.White, bg);
-            buffer.SetPixel(contentX + 2, y, ']', ConsoleColor.DarkGray, bg);
+            buffer.SetPixel(contentX, y, '[', TuiColor.DarkGray, bg);
+            buffer.SetPixel(contentX + 1, y, c, TuiColor.White, bg);
+            buffer.SetPixel(contentX + 2, y, ']', TuiColor.DarkGray, bg);
         }
         else
         {

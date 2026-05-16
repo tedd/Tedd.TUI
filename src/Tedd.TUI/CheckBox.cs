@@ -10,29 +10,29 @@ public class CheckBox : ToggleButton
     }
 
     public static readonly DependencyProperty FocusedForegroundProperty =
-        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Yellow);
+        DependencyProperty.Register("FocusedForeground", typeof(TuiColor), typeof(CheckBox), TuiColor.Yellow);
 
-    public ConsoleColor FocusedForeground
+    public TuiColor FocusedForeground
     {
-        get => (ConsoleColor)GetValue(FocusedForegroundProperty);
+        get => (TuiColor)GetValue(FocusedForegroundProperty);
         set => SetValue(FocusedForegroundProperty, value);
     }
 
     public static readonly DependencyProperty CheckColorProperty =
-        DependencyProperty.Register("CheckColor", typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Green);
+        DependencyProperty.Register("CheckColor", typeof(TuiColor), typeof(CheckBox), TuiColor.Green);
 
-    public ConsoleColor CheckColor
+    public TuiColor CheckColor
     {
-        get => (ConsoleColor)GetValue(CheckColorProperty);
+        get => (TuiColor)GetValue(CheckColorProperty);
         set => SetValue(CheckColorProperty, value);
     }
 
     public static readonly DependencyProperty BracketColorProperty =
-        DependencyProperty.Register("BracketColor", typeof(ConsoleColor), typeof(CheckBox), ConsoleColor.Gray);
+        DependencyProperty.Register("BracketColor", typeof(TuiColor), typeof(CheckBox), TuiColor.Gray);
 
-    public ConsoleColor BracketColor
+    public TuiColor BracketColor
     {
-        get => (ConsoleColor)GetValue(BracketColorProperty);
+        get => (TuiColor)GetValue(BracketColorProperty);
         set => SetValue(BracketColorProperty, value);
     }
 

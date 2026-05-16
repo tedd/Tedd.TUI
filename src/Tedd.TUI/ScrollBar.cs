@@ -101,8 +101,8 @@ public class ScrollBar : UIElement
         char trackChar = TrackChar;
         char thumbChar = ThumbChar;
 
-        ConsoleColor fg = Foreground;
-        ConsoleColor bg = Background ?? buffer.GetPixel(x, y).Background;
+        TuiColor fg = Foreground;
+        TuiColor bg = Background ?? buffer.GetPixel(x, y).Background;
 
         int trackLen = (Orientation == Orientation.Vertical) ? h : w;
 
@@ -269,6 +269,6 @@ public class ScrollBar : UIElement
         e.Handled = true;
     }
 
-    public new ConsoleColor Foreground { get; set; } = ConsoleColor.White;
+    public new TuiColor Foreground { get; set; } = TuiColor.White;
 
 }

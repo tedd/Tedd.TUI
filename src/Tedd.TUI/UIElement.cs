@@ -79,20 +79,20 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty BackgroundProperty =
-        DependencyProperty.Register("Background", typeof(ConsoleColor?), typeof(UIElement), null);
+        DependencyProperty.Register("Background", typeof(TuiColor?), typeof(UIElement), null);
 
-    public ConsoleColor? Background
+    public TuiColor? Background
     {
-        get => (ConsoleColor?)GetValue(BackgroundProperty);
+        get => (TuiColor?)GetValue(BackgroundProperty);
         set => SetValue(BackgroundProperty, value);
     }
 
     public static readonly DependencyProperty ForegroundProperty =
-        DependencyProperty.Register("Foreground", typeof(ConsoleColor), typeof(UIElement), ConsoleColor.White, isInherited: true);
+        DependencyProperty.Register("Foreground", typeof(TuiColor), typeof(UIElement), TuiColor.White, isInherited: true);
 
-    public ConsoleColor Foreground
+    public TuiColor Foreground
     {
-        get => (ConsoleColor)GetValue(ForegroundProperty);
+        get => (TuiColor)GetValue(ForegroundProperty);
         set => SetValue(ForegroundProperty, value);
     }
 

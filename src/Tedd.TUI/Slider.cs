@@ -94,29 +94,29 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty TrackColorProperty =
-        DependencyProperty.Register(nameof(TrackColor), typeof(ConsoleColor), typeof(Slider), ConsoleColor.DarkGray);
+        DependencyProperty.Register(nameof(TrackColor), typeof(TuiColor), typeof(Slider), TuiColor.DarkGray);
 
-    public ConsoleColor TrackColor
+    public TuiColor TrackColor
     {
-        get => (ConsoleColor)GetValue(TrackColorProperty);
+        get => (TuiColor)GetValue(TrackColorProperty);
         set => SetValue(TrackColorProperty, value);
     }
 
     public static readonly DependencyProperty ThumbColorProperty =
-        DependencyProperty.Register(nameof(ThumbColor), typeof(ConsoleColor), typeof(Slider), ConsoleColor.White);
+        DependencyProperty.Register(nameof(ThumbColor), typeof(TuiColor), typeof(Slider), TuiColor.White);
 
-    public ConsoleColor ThumbColor
+    public TuiColor ThumbColor
     {
-        get => (ConsoleColor)GetValue(ThumbColorProperty);
+        get => (TuiColor)GetValue(ThumbColorProperty);
         set => SetValue(ThumbColorProperty, value);
     }
 
     public static readonly DependencyProperty FocusedThumbColorProperty =
-        DependencyProperty.Register(nameof(FocusedThumbColor), typeof(ConsoleColor), typeof(Slider), ConsoleColor.Yellow);
+        DependencyProperty.Register(nameof(FocusedThumbColor), typeof(TuiColor), typeof(Slider), TuiColor.Yellow);
 
-    public ConsoleColor FocusedThumbColor
+    public TuiColor FocusedThumbColor
     {
-        get => (ConsoleColor)GetValue(FocusedThumbColorProperty);
+        get => (TuiColor)GetValue(FocusedThumbColorProperty);
         set => SetValue(FocusedThumbColorProperty, value);
     }
 
@@ -147,8 +147,8 @@ public class Slider : UIElement
         if (val < 0) val = 0;
         if (val > range) val = range;
 
-        ConsoleColor thumbColor = IsFocused ? FocusedThumbColor : ThumbColor;
-        ConsoleColor bg = Background ?? ConsoleColor.Black;
+        TuiColor thumbColor = IsFocused ? FocusedThumbColor : ThumbColor;
+        TuiColor bg = Background ?? TuiColor.Black;
 
         if (Orientation == Orientation.Horizontal)
         {

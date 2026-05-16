@@ -97,7 +97,10 @@ public class ConsoleRendererArchive : IRenderer
                 // Update backbuffer
                 _backBuffer[idx] = newCell;
 
-                bool colorChanged = (int)newCell.Foreground != lastFg || (int)newCell.Background != lastBg;
+                // Archive renderer quantizes to the legacy ConsoleColor palette via ToNearestConsoleColor.
+                int newFg = (int)newCell.Foreground.ToNearestConsoleColor();
+                int newBg = (int)newCell.Background.ToNearestConsoleColor();
+                bool colorChanged = newFg != lastFg || newBg != lastBg;
 
                 if (sb.Length > 0)
                 {
@@ -112,8 +115,8 @@ public class ConsoleRendererArchive : IRenderer
                         // Start new chunk
                         pendingX = x;
                         pendingY = y;
-                        lastFg = (int)newCell.Foreground;
-                        lastBg = (int)newCell.Background;
+                        lastFg = newFg;
+                        lastBg = newBg;
                         sb.Append(newCell.Character);
                     }
                     else
@@ -127,8 +130,8 @@ public class ConsoleRendererArchive : IRenderer
                     // Start new pending chunk
                     pendingX = x;
                     pendingY = y;
-                    lastFg = (int)newCell.Foreground;
-                    lastBg = (int)newCell.Background;
+                    lastFg = newFg;
+                    lastBg = newBg;
                     sb.Append(newCell.Character);
                 }
             }

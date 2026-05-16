@@ -76,7 +76,7 @@ public class MarkdownParser
                 var bullet = new TextBlock
                 {
                     Text = _theme.BulletCharacter + " ",
-                    Foreground = _theme.List.Foreground ?? ConsoleColor.White
+                    Foreground = _theme.List.Foreground ?? TuiColor.White
                 };
                 itemPanel.AddChild(bullet);
 
@@ -109,7 +109,7 @@ public class MarkdownParser
         {
             var p = new Paragraph();
             // Add quote marker
-            var marker = new TextBlock { Text = "│ ", Foreground = _theme.Quote.Foreground ?? ConsoleColor.DarkGray };
+            var marker = new TextBlock { Text = "│ ", Foreground = _theme.Quote.Foreground ?? TuiColor.DarkGray };
             p.AddChild(marker);
 
             AddInlineContent(p, quote.Text.ToString(), _theme.Quote);
@@ -119,7 +119,7 @@ public class MarkdownParser
         {
             var table = new Table();
             table.ShowHeader = true;
-            table.HeaderForeground = _theme.Header4.Foreground ?? ConsoleColor.White;
+            table.HeaderForeground = _theme.Header4.Foreground ?? TuiColor.White;
 
             table.ShowBorder = _theme.Table.ShowBorder;
             table.ShowVerticalLines = _theme.Table.ShowVerticalLines;
@@ -219,7 +219,7 @@ public class MarkdownParser
                     // Apply style mixing?
                     // tt.Style (from inline) vs baseStyle (from block)
                     // Inline wins.
-                    var fg = tt.Style?.Foreground ?? baseStyle.Foreground ?? ConsoleColor.Gray;
+                    var fg = tt.Style?.Foreground ?? baseStyle.Foreground ?? TuiColor.Gray;
                     var bg = tt.Style?.Background ?? baseStyle.Background;
 
                     var tb = new TextBlock
@@ -237,7 +237,7 @@ public class MarkdownParser
                 {
                     Text = lt.Text,
                     Url = lt.Url,
-                    Foreground = _theme.Link.Foreground ?? ConsoleColor.Blue
+                    Foreground = _theme.Link.Foreground ?? TuiColor.Blue
                 };
                 // Ensure space handling? Links usually distinctive.
                 p.AddChild(link);
@@ -249,7 +249,7 @@ public class MarkdownParser
                 {
                     AltText = it.AltText,
                     Source = it.Url,
-                    Foreground = imgStyle.Foreground ?? ConsoleColor.Green,
+                    Foreground = imgStyle.Foreground ?? TuiColor.Green,
                     MaxCellWidth = imgStyle.MaxCellWidth,
                     MaxCellHeight = imgStyle.MaxCellHeight,
                     RenderMode = imgStyle.RenderMode,

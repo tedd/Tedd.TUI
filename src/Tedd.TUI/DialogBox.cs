@@ -48,11 +48,11 @@ public class DialogBox : UIElement
     /// Border color for the dialog box frame.
     /// </summary>
     public static readonly DependencyProperty BorderColorProperty =
-        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.White);
+        DependencyProperty.Register("BorderColor", typeof(TuiColor), typeof(DialogBox), TuiColor.White);
 
-    public ConsoleColor BorderColor
+    public TuiColor BorderColor
     {
-        get => (ConsoleColor)GetValue(BorderColorProperty);
+        get => (TuiColor)GetValue(BorderColorProperty);
         set => SetValue(BorderColorProperty, value);
     }
 
@@ -60,11 +60,11 @@ public class DialogBox : UIElement
     /// Title bar foreground color.
     /// </summary>
     public static readonly DependencyProperty TitleColorProperty =
-        DependencyProperty.Register("TitleColor", typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.Yellow);
+        DependencyProperty.Register("TitleColor", typeof(TuiColor), typeof(DialogBox), TuiColor.Yellow);
 
-    public ConsoleColor TitleColor
+    public TuiColor TitleColor
     {
-        get => (ConsoleColor)GetValue(TitleColorProperty);
+        get => (TuiColor)GetValue(TitleColorProperty);
         set => SetValue(TitleColorProperty, value);
     }
 
@@ -72,11 +72,11 @@ public class DialogBox : UIElement
     /// Background color of the dialog.
     /// </summary>
     public static readonly DependencyProperty BackgroundColorProperty =
-        DependencyProperty.Register("BackgroundColor", typeof(ConsoleColor), typeof(DialogBox), ConsoleColor.Black);
+        DependencyProperty.Register("BackgroundColor", typeof(TuiColor), typeof(DialogBox), TuiColor.Black);
 
-    public ConsoleColor BackgroundColor
+    public TuiColor BackgroundColor
     {
-        get => (ConsoleColor)GetValue(BackgroundColorProperty);
+        get => (TuiColor)GetValue(BackgroundColorProperty);
         set => SetValue(BackgroundColorProperty, value);
     }
 
@@ -175,7 +175,7 @@ public class DialogBox : UIElement
         {
             for (int col = 1; col < w - 1; col++)
             {
-                buffer.SetPixel(x + col, y + row, ' ', ConsoleColor.White, bgColor);
+                buffer.SetPixel(x + col, y + row, ' ', TuiColor.White, bgColor);
             }
         }
 

@@ -25,11 +25,11 @@ public class Control : UIElement
     }
 
     public static readonly DependencyProperty BorderBrushProperty =
-        DependencyProperty.Register("BorderBrush", typeof(ConsoleColor), typeof(Control), ConsoleColor.Gray);
+        DependencyProperty.Register("BorderBrush", typeof(TuiColor), typeof(Control), TuiColor.Gray);
 
-    public ConsoleColor BorderBrush
+    public TuiColor BorderBrush
     {
-        get => (ConsoleColor)GetValue(BorderBrushProperty);
+        get => (TuiColor)GetValue(BorderBrushProperty);
         set => SetValue(BorderBrushProperty, value);
     }
 

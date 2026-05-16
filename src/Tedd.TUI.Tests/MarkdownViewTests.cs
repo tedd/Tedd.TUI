@@ -74,7 +74,7 @@ public class MarkdownViewTests
     // distinguish them by the foreground color applied to their text children
     // (Header1 = Magenta by default, body Paragraph = Gray).
 
-    private static ConsoleColor? FirstTextForeground(UIElement element)
+    private static TuiColor? FirstTextForeground(UIElement element)
     {
         if (element is not Paragraph p) return null;
         for (int i = 0; i < p.VisualChildrenCount; i++)
@@ -97,7 +97,7 @@ public class MarkdownViewTests
 
         // The default Header1 color is Magenta and body Paragraph is Gray.
         // The CSS selector must be styled as body text, NOT as a heading.
-        Assert.NotEqual(ConsoleColor.Magenta, FirstTextForeground(first));
+        Assert.NotEqual<TuiColor?>(TuiColor.Magenta, FirstTextForeground(first));
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class MarkdownViewTests
         var first = doc.GetVisualChild(0);
 
         // Default H1 color is Magenta; verifies the heading style was applied.
-        Assert.Equal(ConsoleColor.Magenta, FirstTextForeground(first));
+        Assert.Equal<TuiColor?>(TuiColor.Magenta, FirstTextForeground(first));
     }
 
     [Fact]
@@ -126,9 +126,9 @@ public class MarkdownViewTests
         var first = doc.GetVisualChild(0);
 
         // Should be styled as body text, not any heading color.
-        Assert.NotEqual(ConsoleColor.Magenta, FirstTextForeground(first));
-        Assert.NotEqual(ConsoleColor.Cyan, FirstTextForeground(first));
-        Assert.NotEqual(ConsoleColor.Yellow, FirstTextForeground(first));
+        Assert.NotEqual<TuiColor?>(TuiColor.Magenta, FirstTextForeground(first));
+        Assert.NotEqual<TuiColor?>(TuiColor.Cyan, FirstTextForeground(first));
+        Assert.NotEqual<TuiColor?>(TuiColor.Yellow, FirstTextForeground(first));
     }
 
     // Table parsing: WordPress export omits the leading | on every row.

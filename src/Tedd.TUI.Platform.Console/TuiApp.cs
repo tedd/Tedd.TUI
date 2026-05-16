@@ -1,13 +1,22 @@
 using System;
 using System.Threading;
+using Tedd.TUI;
 
 namespace Tedd.TUI.Platform.Console;
 
+/// <summary>
+/// Hosts a <see cref="TuiWindow"/> on top of an <see cref="ITuiPlatform"/>. By default
+/// the auto-detecting <see cref="PlatformLoader"/> picks the best available backend
+/// (Windows Terminal / Linux terminal / legacy 16-color) but callers can force a
+/// specific one by passing it explicitly.
+/// </summary>
 public class TuiApp
 {
     private readonly TuiWindow _window;
-    private readonly ConsoleRenderer _renderer;
-    private readonly ConsoleInputManager _inputManager;
+    private readonly ITuiPlatform _platform;
+    private readonly IRenderer _renderer;
+    private readonly ITuiInputManager? _inputManager;
+    private readonly LegacyConsolePlatform? _legacyPlatform;
     private bool _running = true;
 
     private readonly AutoResetEvent _renderWaitHandle = new AutoResetEvent(false);
@@ -16,81 +25,94 @@ public class TuiApp
     private int _lastHeight;
     private VirtualBuffer? _buffer;
 
-    public TuiApp(TuiWindow window)
+    public TuiApp(TuiWindow window) : this(window, PlatformLoader.Load())
+    {
+    }
+
+    public TuiApp(TuiWindow window, ITuiPlatform platform)
     {
         _window = window;
-        _renderer = new ConsoleRenderer();
-        _inputManager = new ConsoleInputManager(window);
+        _platform = platform ?? throw new ArgumentNullException(nameof(platform));
+        _platform.Initialize();
+        _renderer = _platform.CreateRenderer();
+        _inputManager = _platform.CreateInputManager(window);
+        _legacyPlatform = platform as LegacyConsolePlatform;
+
         _window.VisualChanged += (s, e) => _renderWaitHandle.Set();
-        _inputManager.WindowResized += (s, e) => _renderWaitHandle.Set();
+        if (_inputManager != null)
+        {
+            _inputManager.WindowResized += (s, e) => _renderWaitHandle.Set();
+        }
     }
+
+    /// <summary>Capabilities advertised by the active platform.</summary>
+    public SurfaceCapabilities Capabilities => _platform.Capabilities;
 
     public void Run()
     {
-        // Initial setup
         System.Console.Clear();
-        _inputManager.Start();
+        _inputManager?.Start();
 
-        // Use array for WaitHandle? No, WaitForMultipleObjects takes IntPtr array.
-        // We have:
-        // 1. Console Input Handle (Windows)
-        // 2. Render Wait Handle (Event)
+        // The legacy console path participates in the dual-handle wait loop (input
+        // signal + render signal) on Windows so input doesn't depend on the polling
+        // tick. Other platforms can supply richer pumping later; for now we drive
+        // them via the same wait pattern.
+        IntPtr[]? winHandles = null;
+        WaitHandle[]? unixHandles = null;
+        ConsoleInputManager? legacyInput = (_inputManager as LegacyInputAdapter)?.Inner;
 
-        IntPtr[] winHandles = null;
-        WaitHandle[] unixHandles = null;
-
-        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        if (legacyInput != null)
         {
-            winHandles = new IntPtr[] { _inputManager.InputHandle, _renderWaitHandle.SafeWaitHandle.DangerousGetHandle() };
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            {
+                winHandles = new IntPtr[] { legacyInput.InputHandle, _renderWaitHandle.SafeWaitHandle.DangerousGetHandle() };
+            }
+            else
+            {
+                unixHandles = new WaitHandle[] { legacyInput.InputWaitHandle, _renderWaitHandle };
+            }
         }
         else
         {
-            unixHandles = new WaitHandle[] { _inputManager.InputWaitHandle, _renderWaitHandle };
+            // Non-legacy backend without our wait handles: spin off a render-only loop driven by the render signal.
+            unixHandles = new WaitHandle[] { _renderWaitHandle };
         }
 
-        // Initial Layout & Render
         UpdateAndRender();
 
-        // Main Loop
         while (_running)
         {
             if (winHandles != null)
             {
-                // Wait for Input or Render Request
                 uint result = NativeMethods.WaitForMultipleObjects((uint)winHandles.Length, winHandles, false, NativeMethods.INFINITE);
 
-                if (result == NativeMethods.WAIT_OBJECT_0) // Input
+                if (result == NativeMethods.WAIT_OBJECT_0)
                 {
-                    _inputManager.ProcessInput();
+                    legacyInput!.ProcessInput();
                 }
-                else if (result == NativeMethods.WAIT_OBJECT_0 + 1) // Render Notified
+                else if (result == NativeMethods.WAIT_OBJECT_0 + 1)
                 {
                     UpdateAndRender();
                 }
                 else
                 {
-                    // Failed
                     Thread.Sleep(16);
                 }
             }
-            else
+            else if (unixHandles != null)
             {
-                // Non-Windows fallback: Blocking Wait
-                // 0 = Input, 1 = Render
-                // Timeout 500ms to poll for resize
                 int result = WaitHandle.WaitAny(unixHandles, 500);
 
-                if (result == 0) // Input
+                if (legacyInput != null && result == 0)
                 {
-                    _inputManager.ProcessInput();
+                    legacyInput.ProcessInput();
                 }
-                else if (result == 1) // Render
+                else if ((legacyInput != null && result == 1) || (legacyInput == null && result == 0))
                 {
                     UpdateAndRender();
                 }
                 else if (result == WaitHandle.WaitTimeout)
                 {
-                    // Check for resize
                     if (System.Console.WindowWidth != _lastWidth || System.Console.WindowHeight != _lastHeight)
                     {
                         UpdateAndRender();
@@ -102,7 +124,6 @@ public class TuiApp
 
     private void UpdateAndRender()
     {
-        // Ensure focus is set (e.g. first focusable in selected tab) so Tab and keys work
         _window.EnsureInitialFocus();
 
         var w = System.Console.WindowWidth;
@@ -112,8 +133,6 @@ public class TuiApp
         {
             try
             {
-                // Sync buffer size to window size to prevent scrolling/skewing artifacts
-                // and ensure (0,0) remains the top-left of the viewport.
                 if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
                 {
                     if (System.Console.BufferWidth != w || System.Console.BufferHeight != h)
@@ -128,18 +147,21 @@ public class TuiApp
         _lastWidth = w;
         _lastHeight = h;
 
-        // Measure & Arrange (Layout)
         _window.Measure(new Size(w, h));
         _window.Arrange(new Rect(0, 0, w, h));
 
-        // Render
         if (_buffer == null || _buffer.Width != w || _buffer.Height != h)
         {
             _buffer = new VirtualBuffer(w, h);
+            if (_platform.Capabilities.SupportsGraphics)
+            {
+                _buffer.Graphics = new System.Collections.Generic.List<GraphicPlacement>();
+            }
         }
         else
         {
             _buffer.Clear();
+            _buffer.Graphics?.Clear();
         }
 
         _window.Render(_buffer);
@@ -149,9 +171,11 @@ public class TuiApp
     public void Stop()
     {
         _running = false;
-        _renderWaitHandle.Set(); // Wake up loop
+        _renderWaitHandle.Set();
 
-        // Restore Console State
+        try { _inputManager?.Stop(); } catch { }
+        try { _platform.Shutdown(); } catch { }
+
         System.Console.Write("\x1b[?1000l\x1b[?1006l");
         System.Console.CursorVisible = true;
         System.Console.ResetColor();

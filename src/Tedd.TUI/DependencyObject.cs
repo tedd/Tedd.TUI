@@ -74,6 +74,10 @@ public class DependencyObject : INotifyPropertyChanged
 
     public void SetValue(DependencyProperty dp, object? value)
     {
+        // Auto-coerce ConsoleColor -> TuiColor / TuiColor? for triggers, XAML, and other
+        // boxed value paths where the compile-time implicit operator can't run.
+        value = CoerceLegacyColor(dp, value);
+
         // Basic type validation
         if (value != null && !dp.PropertyType.IsInstanceOfType(value))
         {
@@ -116,6 +120,11 @@ public class DependencyObject : INotifyPropertyChanged
 
     internal void SetTriggerValue(DependencyProperty dp, object? value)
     {
+        // Trigger setters and XAML attribute parsers frequently hand us a raw ConsoleColor
+        // boxed value for a TuiColor / TuiColor? property; promote it transparently so the
+        // legacy DPs stay source-compatible.
+        value = CoerceLegacyColor(dp, value);
+
         // Basic type validation
         if (value != null && !dp.PropertyType.IsInstanceOfType(value))
         {
@@ -125,6 +134,16 @@ public class DependencyObject : INotifyPropertyChanged
         _triggerValues[dp] = value ?? null!;
 
         OnPropertyChanged(dp);
+    }
+
+    private static object? CoerceLegacyColor(DependencyProperty dp, object? value)
+    {
+        if (value is ConsoleColor cc)
+        {
+            if (dp.PropertyType == typeof(TuiColor) || dp.PropertyType == typeof(TuiColor?))
+                return TuiColor.FromConsole(cc);
+        }
+        return value;
     }
 
     internal void ClearTriggerValue(DependencyProperty dp)

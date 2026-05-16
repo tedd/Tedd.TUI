@@ -14,11 +14,11 @@ public class GroupBox : HeaderedContentControl
     }
 
     public static readonly DependencyProperty BorderColorProperty =
-        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(GroupBox), ConsoleColor.Gray);
+        DependencyProperty.Register("BorderColor", typeof(TuiColor), typeof(GroupBox), TuiColor.Gray);
 
-    public ConsoleColor BorderColor
+    public TuiColor BorderColor
     {
-        get => (ConsoleColor)GetValue(BorderColorProperty);
+        get => (TuiColor)GetValue(BorderColorProperty);
         set => SetValue(BorderColorProperty, value);
     }
 

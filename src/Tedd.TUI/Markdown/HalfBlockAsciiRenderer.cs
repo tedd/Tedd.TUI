@@ -13,8 +13,9 @@ namespace Tedd.TUI.Markdown;
 /// Algorithm:
 /// 1. Bilinear-resample the source image to (cellWidth, cellHeight * 2) pixels.
 /// 2. For each cell (x, y), pick the top sample at (x, 2y) and the bottom at (x, 2y+1).
-/// 3. Map each sample to the nearest <see cref="ConsoleColor"/> via <see cref="RgbColorPalette"/>.
-/// 4. Emit a half-block cell. Fully-transparent samples fall back to the supplied background.
+/// 3. Emit the sample's full 24-bit RGB as a <see cref="TuiColor"/>; the active renderer
+///    decides whether to send truecolor SGR or quantize to the 16-color palette.
+/// 4. Fully-transparent samples (alpha &lt; 16) fall back to the supplied background.
 /// </remarks>
 public sealed class HalfBlockAsciiRenderer : IAsciiArtRenderer
 {
@@ -23,7 +24,7 @@ public sealed class HalfBlockAsciiRenderer : IAsciiArtRenderer
 
     private const char UpperHalfBlock = '\u2580';
 
-    public Cell[] Render(RgbaImage image, int cellWidth, int cellHeight, ConsoleColor fallbackBackground)
+    public Cell[] Render(RgbaImage image, int cellWidth, int cellHeight, TuiColor fallbackBackground)
     {
         if (cellWidth <= 0 || cellHeight <= 0)
             return Array.Empty<Cell>();
@@ -59,8 +60,8 @@ public sealed class HalfBlockAsciiRenderer : IAsciiArtRenderer
                 byte bb = resampled[botIdx + 2];
                 byte ba = resampled[botIdx + 3];
 
-                ConsoleColor topColor = ta < 16 ? fallbackBackground : RgbColorPalette.Nearest(tr, tg, tb);
-                ConsoleColor botColor = ba < 16 ? fallbackBackground : RgbColorPalette.Nearest(br, bg, bb);
+                TuiColor topColor = ta < 16 ? fallbackBackground : new TuiColor(tr, tg, tb);
+                TuiColor botColor = ba < 16 ? fallbackBackground : new TuiColor(br, bg, bb);
 
                 cells[y * cellWidth + x] = new Cell(UpperHalfBlock, topColor, botColor);
             }
@@ -68,11 +69,11 @@ public sealed class HalfBlockAsciiRenderer : IAsciiArtRenderer
         return cells;
     }
 
-    private static Cell[] FilledWith(int cellWidth, int cellHeight, ConsoleColor bg)
+    private static Cell[] FilledWith(int cellWidth, int cellHeight, TuiColor bg)
     {
         var cells = new Cell[cellWidth * cellHeight];
         for (int i = 0; i < cells.Length; i++)
-            cells[i] = new Cell(' ', ConsoleColor.White, bg);
+            cells[i] = new Cell(' ', TuiColor.White, bg);
         return cells;
     }
 }

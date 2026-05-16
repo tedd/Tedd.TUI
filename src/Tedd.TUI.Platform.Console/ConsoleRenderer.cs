@@ -59,9 +59,10 @@ public class ConsoleRenderer : IRenderer
             _backBufferWidth = bufW;
             _backBufferHeight = bufH;
             _backBuffer = new Cell[bufW * bufH];
-            // Initialize with invalid cells to force full redraw
-            // Using a color that is unlikely to match default (e.g. -1 cast)
-            Array.Fill(_backBuffer, new Cell('\0', (ConsoleColor)(-1), (ConsoleColor)(-1)));
+            // Initialize with cells whose packed color is guaranteed not to match any TuiColor
+            // produced by user code (alpha=0 but R/G/B != 0). Forces a full redraw on first frame.
+            var sentinel = TuiColor.FromArgb(0x00010203u);
+            Array.Fill(_backBuffer, new Cell('\0', sentinel, sentinel));
 
             // Invalidate cursor tracking on resize/reset
             _consoleCursorX = -1;
@@ -103,10 +104,10 @@ public class ConsoleRenderer : IRenderer
                 ref Cell newCell = ref Unsafe.Add(ref bufferRef, sourceRowOffset + x);
                 ref Cell backCell = ref Unsafe.Add(ref backBufferRef, idx);
 
-                // Inline IsSame comparison for speed
+                // Inline same-cell comparison: a single packed uint equality per channel.
                 if (newCell.Character == backCell.Character &&
-                    newCell.Foreground == backCell.Foreground &&
-                    newCell.Background == backCell.Background)
+                    newCell.Foreground.Packed == backCell.Foreground.Packed &&
+                    newCell.Background.Packed == backCell.Background.Packed)
                 {
                     // If we were accumulating a chunk, flush it now because we hit a gap (unchanged cell)
                     if (_charBufferPos > 0)
@@ -119,8 +120,11 @@ public class ConsoleRenderer : IRenderer
                 // Update backbuffer
                 backCell = newCell;
 
-                int newFg = (int)newCell.Foreground;
-                int newBg = (int)newCell.Background;
+                // Quantize to the legacy 16-color palette for the System.Console output API.
+                // Truecolor terminals are handled by the dedicated platform renderers; this
+                // path remains the safe lowest-common-denominator fallback.
+                int newFg = (int)newCell.Foreground.ToNearestConsoleColor();
+                int newBg = (int)newCell.Background.ToNearestConsoleColor();
                 bool colorChanged = newFg != lastFg || newBg != lastBg;
 
                 if (_charBufferPos > 0)

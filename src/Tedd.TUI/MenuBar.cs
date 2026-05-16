@@ -7,7 +7,7 @@ public class MenuBar : StackPanel
     public MenuBar()
     {
         Orientation = Orientation.Horizontal;
-        Background = ConsoleColor.Gray;
+        Background = TuiColor.Gray;
         VerticalAlignment = VerticalAlignment.Top;
     }
 
@@ -23,7 +23,7 @@ public class MenuBar : StackPanel
             {
                 for (int j = 0; j < RenderSize.Height; j++)
                 {
-                    buffer.SetPixel(x + i, y + j, ' ', ConsoleColor.Black, Background.Value);
+                    buffer.SetPixel(x + i, y + j, ' ', TuiColor.Black, Background.Value);
                 }
             }
         }

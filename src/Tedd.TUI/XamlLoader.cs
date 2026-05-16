@@ -428,6 +428,21 @@ public static class XamlLoader
             return Enum.Parse(typeof(ConsoleColor), value);
         }
 
+        // TuiColor supports the full CSS-style color grammar plus the legacy ConsoleColor names.
+        if (targetType == typeof(TuiColor))
+        {
+            return TuiColor.FromHex(value);
+        }
+
+        if (targetType == typeof(TuiColor?))
+        {
+            if (string.IsNullOrWhiteSpace(value)
+                || value.Equals("null", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("transparent", StringComparison.OrdinalIgnoreCase))
+                return (TuiColor?)null;
+            return (TuiColor?)TuiColor.FromHex(value);
+        }
+
         // Fallback
         return Convert.ChangeType(value, targetType);
     }

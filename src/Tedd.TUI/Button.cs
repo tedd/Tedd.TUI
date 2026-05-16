@@ -80,49 +80,49 @@ public class Button : ButtonBase
     }
 
     public static readonly DependencyProperty BorderColorProperty =
-        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Gray);
+        DependencyProperty.Register("BorderColor", typeof(TuiColor), typeof(Button), TuiColor.Gray);
 
-    public ConsoleColor BorderColor
+    public TuiColor BorderColor
     {
-        get => (ConsoleColor)GetValue(BorderColorProperty);
+        get => (TuiColor)GetValue(BorderColorProperty);
         set => SetValue(BorderColorProperty, value);
     }
 
     public static readonly DependencyProperty FocusedForegroundProperty =
-        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(Button), ConsoleColor.Yellow);
+        DependencyProperty.Register("FocusedForeground", typeof(TuiColor), typeof(Button), TuiColor.Yellow);
 
-    public ConsoleColor FocusedForeground
+    public TuiColor FocusedForeground
     {
-        get => (ConsoleColor)GetValue(FocusedForegroundProperty);
+        get => (TuiColor)GetValue(FocusedForegroundProperty);
         set => SetValue(FocusedForegroundProperty, value);
     }
 
     public static readonly DependencyProperty FocusedBorderColorProperty =
-        DependencyProperty.Register("FocusedBorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Yellow);
+        DependencyProperty.Register("FocusedBorderColor", typeof(TuiColor), typeof(Button), TuiColor.Yellow);
 
-    public ConsoleColor FocusedBorderColor
+    public TuiColor FocusedBorderColor
     {
-        get => (ConsoleColor)GetValue(FocusedBorderColorProperty);
+        get => (TuiColor)GetValue(FocusedBorderColorProperty);
         set => SetValue(FocusedBorderColorProperty, value);
     }
 
     // Internal "Effective" properties for Template Binding
 
     public static readonly DependencyProperty EffectiveBorderColorProperty =
-        DependencyProperty.Register("EffectiveBorderColor", typeof(ConsoleColor), typeof(Button), ConsoleColor.Gray);
+        DependencyProperty.Register("EffectiveBorderColor", typeof(TuiColor), typeof(Button), TuiColor.Gray);
 
-    public ConsoleColor EffectiveBorderColor
+    public TuiColor EffectiveBorderColor
     {
-        get => (ConsoleColor)GetValue(EffectiveBorderColorProperty);
+        get => (TuiColor)GetValue(EffectiveBorderColorProperty);
         private set => SetValue(EffectiveBorderColorProperty, value);
     }
 
     public static readonly DependencyProperty EffectiveForegroundProperty =
-        DependencyProperty.Register("EffectiveForeground", typeof(ConsoleColor), typeof(Button), ConsoleColor.White);
+        DependencyProperty.Register("EffectiveForeground", typeof(TuiColor), typeof(Button), TuiColor.White);
 
-    public ConsoleColor EffectiveForeground
+    public TuiColor EffectiveForeground
     {
-        get => (ConsoleColor)GetValue(EffectiveForegroundProperty);
+        get => (TuiColor)GetValue(EffectiveForegroundProperty);
         private set => SetValue(EffectiveForegroundProperty, value);
     }
 
@@ -143,29 +143,29 @@ public class Button : ButtonBase
     }
 
     public static readonly DependencyProperty ShadowForegroundProperty =
-        DependencyProperty.Register("ShadowForeground", typeof(ConsoleColor), typeof(Button), ConsoleColor.DarkGray);
+        DependencyProperty.Register("ShadowForeground", typeof(TuiColor), typeof(Button), TuiColor.DarkGray);
 
     /// <summary>
     /// Foreground color used when rendering shaded shadow characters
     /// (<see cref="ButtonShadowStyle.Light"/>, <see cref="ButtonShadowStyle.Medium"/>,
     /// <see cref="ButtonShadowStyle.Dark"/>, <see cref="ButtonShadowStyle.Cast"/>).
     /// </summary>
-    public ConsoleColor ShadowForeground
+    public TuiColor ShadowForeground
     {
-        get => (ConsoleColor)GetValue(ShadowForegroundProperty);
+        get => (TuiColor)GetValue(ShadowForegroundProperty);
         set => SetValue(ShadowForegroundProperty, value);
     }
 
     public static readonly DependencyProperty ShadowBackgroundProperty =
-        DependencyProperty.Register("ShadowBackground", typeof(ConsoleColor), typeof(Button), ConsoleColor.Black);
+        DependencyProperty.Register("ShadowBackground", typeof(TuiColor), typeof(Button), TuiColor.Black);
 
     /// <summary>
     /// Background color of the shadow cells. The classic DOS look uses
-    /// <see cref="ConsoleColor.Black"/> to produce a solid void shadow.
+    /// <see cref="TuiColor.Black"/> to produce a solid void shadow.
     /// </summary>
-    public ConsoleColor ShadowBackground
+    public TuiColor ShadowBackground
     {
-        get => (ConsoleColor)GetValue(ShadowBackgroundProperty);
+        get => (TuiColor)GetValue(ShadowBackgroundProperty);
         set => SetValue(ShadowBackgroundProperty, value);
     }
 
@@ -294,6 +294,7 @@ public class Button : ButtonBase
 
         char ch;
         bool castMode = false;
+        bool translucentMode = false;
         switch (ShadowStyle)
         {
             case ButtonShadowStyle.Solid: ch = ' '; break;
@@ -303,6 +304,10 @@ public class Button : ButtonBase
             case ButtonShadowStyle.Cast:
                 ch = ' ';
                 castMode = true;
+                break;
+            case ButtonShadowStyle.Translucent:
+                ch = ' ';
+                translucentMode = true;
                 break;
             default:
                 return;
@@ -326,6 +331,14 @@ public class Button : ButtonBase
             CastShadow(buffer, rightX, rightY, sx, rightH, fg, bg);
             CastShadow(buffer, bottomX, bottomY, bottomW, sy, fg, bg);
         }
+        else if (translucentMode)
+        {
+            // Blend a semi-transparent black over the existing content. The compositor /
+            // BlendPixel pipeline handles alpha → fall-through palette on legacy surfaces.
+            var shadowOver = new TuiColor(bg.R, bg.G, bg.B, 128);
+            TranslucentShadow(buffer, rightX, rightY, sx, rightH, shadowOver);
+            TranslucentShadow(buffer, bottomX, bottomY, bottomW, sy, shadowOver);
+        }
         else
         {
             if (sx > 0 && rightH > 0)
@@ -335,8 +348,21 @@ public class Button : ButtonBase
         }
     }
 
+    private static void TranslucentShadow(VirtualBuffer buffer, int x, int y, int w, int h, TuiColor shadow)
+    {
+        if (w <= 0 || h <= 0) return;
+        for (int row = 0; row < h; row++)
+        {
+            for (int col = 0; col < w; col++)
+            {
+                var cell = buffer.GetPixel(x + col, y + row);
+                buffer.BlendPixel(x + col, y + row, cell.Character, cell.Foreground, shadow);
+            }
+        }
+    }
+
     private static void CastShadow(VirtualBuffer buffer, int x, int y, int w, int h,
-        ConsoleColor fg, ConsoleColor bg)
+        TuiColor fg, TuiColor bg)
     {
         // Re-render existing buffer cells with the shadow palette so whatever lies
         // beneath the button (typically the parent's background fill) "shows through"

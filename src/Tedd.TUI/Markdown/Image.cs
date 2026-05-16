@@ -221,11 +221,11 @@ public class Image : UIElement
         bool wantGraphic = RenderMode != ImageRenderMode.Ascii
                            && caps.SupportsGraphics
                            && buffer.Graphics != null
-                           && _resolvedBytes != null;
+                           && (_resolvedBytes != null || (img.Pixels != null && img.Width > 0 && img.Height > 0));
 
         if (wantGraphic)
         {
-            RenderAsGraphic(buffer, x, y, w, h);
+            RenderAsGraphic(buffer, img, x, y, w, h);
             return;
         }
 
@@ -266,8 +266,11 @@ public class Image : UIElement
         return "[Image]";
     }
 
-    private void RenderAsGraphic(VirtualBuffer buffer, int x, int y, int width, int height)
+    private void RenderAsGraphic(VirtualBuffer buffer, RgbaImage img, int x, int y, int width, int height)
     {
+        // Punch transparent / background-coloured cells under the placement so any text
+        // that lives behind the image area gets cleared in surfaces that only honor the
+        // text grid. The actual bitmap is composited on top by the surface renderer.
         var bg = Background ?? buffer.GetPixel(x, y).Background;
         for (int row = 0; row < height; row++)
         {
@@ -277,6 +280,10 @@ public class Image : UIElement
             }
         }
 
+        // Carry both representations on the placement: surfaces that only need an
+        // <img src="data:..."> (HTML DOM, Kitty PNG-mode, iTerm2) consume ImageData;
+        // surfaces that need raw pixels (Sixel quantizer, Canvas pixel blitter) consume
+        // the decoded RGBA buffer without re-running the codec.
         buffer.Graphics!.Add(new GraphicPlacement
         {
             CharX = x,
@@ -285,6 +292,9 @@ public class Image : UIElement
             CharHeight = height,
             ImageData = _resolvedBytes,
             MediaType = _resolvedMediaType,
+            Pixels = img.Pixels,
+            PixelWidth = img.Width,
+            PixelHeight = img.Height,
             Source = Source
         });
     }
@@ -294,7 +304,7 @@ public class Image : UIElement
         var renderer = AsciiRenderer ?? DefaultAsciiRenderer ?? HalfBlockAsciiRenderer.Instance;
         var bg = Background ?? buffer.GetPixel(x, y).Background;
 
-        string key = $"{Source}|{width}x{height}|{renderer.GetType().FullName}|{(int)bg}";
+        string key = $"{Source}|{width}x{height}|{renderer.GetType().FullName}|{bg.Packed:X8}";
         if (_asciiCells == null
             || _asciiKey != key
             || _asciiCellWidth != width

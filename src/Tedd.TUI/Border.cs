@@ -55,11 +55,11 @@ public class Border : ScrollViewer
     }
 
     public static readonly DependencyProperty BorderColorProperty =
-        DependencyProperty.Register("BorderColor", typeof(ConsoleColor), typeof(Border), ConsoleColor.White);
+        DependencyProperty.Register("BorderColor", typeof(TuiColor), typeof(Border), TuiColor.White);
 
-    public ConsoleColor BorderColor
+    public TuiColor BorderColor
     {
-        get => (ConsoleColor)GetValue(BorderColorProperty);
+        get => (TuiColor)GetValue(BorderColorProperty);
         set => SetValue(BorderColorProperty, value);
     }
 
@@ -349,8 +349,8 @@ public class Border : ScrollViewer
         int h = RenderSize.Height;
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
-        ConsoleColor c = BorderColor;
-        ConsoleColor bg = Background ?? ConsoleColor.Black;
+        TuiColor c = BorderColor;
+        TuiColor bg = Background ?? TuiColor.Black;
         bool noBorder = BoxStyle == BoxStyle.None;
 
         if (w <= 0 || h <= 0) return;

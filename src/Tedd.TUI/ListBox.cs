@@ -36,38 +36,38 @@ public class ListBox : Selector
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     public static readonly DependencyProperty SelectionForegroundProperty =
-        DependencyProperty.Register("SelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Black);
+        DependencyProperty.Register("SelectionForeground", typeof(TuiColor), typeof(ListBox), TuiColor.Black);
 
-    public ConsoleColor SelectionForeground
+    public TuiColor SelectionForeground
     {
-        get => (ConsoleColor)GetValue(SelectionForegroundProperty);
+        get => (TuiColor)GetValue(SelectionForegroundProperty);
         set => SetValue(SelectionForegroundProperty, value);
     }
 
     public static readonly DependencyProperty SelectionBackgroundProperty =
-        DependencyProperty.Register("SelectionBackground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
+        DependencyProperty.Register("SelectionBackground", typeof(TuiColor), typeof(ListBox), TuiColor.White);
 
-    public ConsoleColor SelectionBackground
+    public TuiColor SelectionBackground
     {
-        get => (ConsoleColor)GetValue(SelectionBackgroundProperty);
+        get => (TuiColor)GetValue(SelectionBackgroundProperty);
         set => SetValue(SelectionBackgroundProperty, value);
     }
 
     public static readonly DependencyProperty FocusedSelectionForegroundProperty =
-        DependencyProperty.Register("FocusedSelectionForeground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.White);
+        DependencyProperty.Register("FocusedSelectionForeground", typeof(TuiColor), typeof(ListBox), TuiColor.White);
 
-    public ConsoleColor FocusedSelectionForeground
+    public TuiColor FocusedSelectionForeground
     {
-        get => (ConsoleColor)GetValue(FocusedSelectionForegroundProperty);
+        get => (TuiColor)GetValue(FocusedSelectionForegroundProperty);
         set => SetValue(FocusedSelectionForegroundProperty, value);
     }
 
     public static readonly DependencyProperty FocusedSelectionBackgroundProperty =
-        DependencyProperty.Register("FocusedSelectionBackground", typeof(ConsoleColor), typeof(ListBox), ConsoleColor.Blue);
+        DependencyProperty.Register("FocusedSelectionBackground", typeof(TuiColor), typeof(ListBox), TuiColor.Blue);
 
-    public ConsoleColor FocusedSelectionBackground
+    public TuiColor FocusedSelectionBackground
     {
-        get => (ConsoleColor)GetValue(FocusedSelectionBackgroundProperty);
+        get => (TuiColor)GetValue(FocusedSelectionBackgroundProperty);
         set => SetValue(FocusedSelectionBackgroundProperty, value);
     }
 
@@ -172,7 +172,7 @@ public class ListBox : Selector
             for (int dx = 0; dx < effectiveW; dx++)
             {
                 var pixelBg = Background ?? buffer.GetPixel(x + dx, y + i).Background;
-                buffer.SetPixel(x + dx, y + i, ' ', ConsoleColor.White, pixelBg);
+                buffer.SetPixel(x + dx, y + i, ' ', TuiColor.White, pixelBg);
             }
 
             if (itemIndex < Items.Count)

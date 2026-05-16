@@ -59,56 +59,56 @@ public class ProgressBar : UIElement
     }
 
     public static readonly DependencyProperty ProgressColorProperty =
-        DependencyProperty.Register("ProgressColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.Green);
+        DependencyProperty.Register("ProgressColor", typeof(TuiColor), typeof(ProgressBar), TuiColor.Green);
 
-    public ConsoleColor ProgressColor
+    public TuiColor ProgressColor
     {
-        get => (ConsoleColor)GetValue(ProgressColorProperty);
+        get => (TuiColor)GetValue(ProgressColorProperty);
         set => SetValue(ProgressColorProperty, value);
     }
 
     public static readonly DependencyProperty EmptyColorProperty =
-        DependencyProperty.Register("EmptyColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.DarkGray);
+        DependencyProperty.Register("EmptyColor", typeof(TuiColor), typeof(ProgressBar), TuiColor.DarkGray);
 
-    public ConsoleColor EmptyColor
+    public TuiColor EmptyColor
     {
-        get => (ConsoleColor)GetValue(EmptyColorProperty);
+        get => (TuiColor)GetValue(EmptyColorProperty);
         set => SetValue(EmptyColorProperty, value);
     }
 
     public static readonly DependencyProperty LabelFilledColorProperty =
-        DependencyProperty.Register("LabelFilledColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.Black);
+        DependencyProperty.Register("LabelFilledColor", typeof(TuiColor), typeof(ProgressBar), TuiColor.Black);
 
-    public ConsoleColor LabelFilledColor
+    public TuiColor LabelFilledColor
     {
-        get => (ConsoleColor)GetValue(LabelFilledColorProperty);
+        get => (TuiColor)GetValue(LabelFilledColorProperty);
         set => SetValue(LabelFilledColorProperty, value);
     }
 
     public static readonly DependencyProperty LabelFilledBackgroundProperty =
-        DependencyProperty.Register("LabelFilledBackground", typeof(ConsoleColor?), typeof(ProgressBar), null);
+        DependencyProperty.Register("LabelFilledBackground", typeof(TuiColor?), typeof(ProgressBar), null);
 
-    public ConsoleColor? LabelFilledBackground
+    public TuiColor? LabelFilledBackground
     {
-        get => (ConsoleColor?)GetValue(LabelFilledBackgroundProperty);
+        get => (TuiColor?)GetValue(LabelFilledBackgroundProperty);
         set => SetValue(LabelFilledBackgroundProperty, value);
     }
 
     public static readonly DependencyProperty LabelEmptyColorProperty =
-        DependencyProperty.Register("LabelEmptyColor", typeof(ConsoleColor), typeof(ProgressBar), ConsoleColor.White);
+        DependencyProperty.Register("LabelEmptyColor", typeof(TuiColor), typeof(ProgressBar), TuiColor.White);
 
-    public ConsoleColor LabelEmptyColor
+    public TuiColor LabelEmptyColor
     {
-        get => (ConsoleColor)GetValue(LabelEmptyColorProperty);
+        get => (TuiColor)GetValue(LabelEmptyColorProperty);
         set => SetValue(LabelEmptyColorProperty, value);
     }
 
     public static readonly DependencyProperty LabelEmptyBackgroundProperty =
-        DependencyProperty.Register("LabelEmptyBackground", typeof(ConsoleColor?), typeof(ProgressBar), null);
+        DependencyProperty.Register("LabelEmptyBackground", typeof(TuiColor?), typeof(ProgressBar), null);
 
-    public ConsoleColor? LabelEmptyBackground
+    public TuiColor? LabelEmptyBackground
     {
-        get => (ConsoleColor?)GetValue(LabelEmptyBackgroundProperty);
+        get => (TuiColor?)GetValue(LabelEmptyBackgroundProperty);
         set => SetValue(LabelEmptyBackgroundProperty, value);
     }
 
@@ -171,7 +171,7 @@ public class ProgressBar : UIElement
                 }
                 else
                 {
-                    buffer.SetPixel(x + i, y, '█', ProgressColor, ConsoleColor.Black);
+                    buffer.SetPixel(x + i, y, '█', ProgressColor, TuiColor.Black);
                 }
             }
             else
@@ -179,11 +179,11 @@ public class ProgressBar : UIElement
                 // Empty section
                 if (isTextChar)
                 {
-                    buffer.SetPixel(x + i, y, charToRender, LabelEmptyColor, LabelEmptyBackground ?? ConsoleColor.Black);
+                    buffer.SetPixel(x + i, y, charToRender, LabelEmptyColor, LabelEmptyBackground ?? TuiColor.Black);
                 }
                 else
                 {
-                    buffer.SetPixel(x + i, y, '░', EmptyColor, ConsoleColor.Black);
+                    buffer.SetPixel(x + i, y, '░', EmptyColor, TuiColor.Black);
                 }
             }
         }

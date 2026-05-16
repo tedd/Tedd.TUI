@@ -32,18 +32,18 @@ public class DialogBoxCoverageTests
 
         // BorderColor
         dialog.BorderColor = ConsoleColor.Red;
-        Assert.Equal(ConsoleColor.Red, dialog.BorderColor);
-        Assert.Equal(ConsoleColor.Red, dialog.GetValue(DialogBox.BorderColorProperty));
+        Assert.Equal(TuiColor.Red, dialog.BorderColor);
+        Assert.Equal(TuiColor.Red, dialog.GetValue(DialogBox.BorderColorProperty));
 
         // TitleColor
         dialog.TitleColor = ConsoleColor.Green;
-        Assert.Equal(ConsoleColor.Green, dialog.TitleColor);
-        Assert.Equal(ConsoleColor.Green, dialog.GetValue(DialogBox.TitleColorProperty));
+        Assert.Equal(TuiColor.Green, dialog.TitleColor);
+        Assert.Equal(TuiColor.Green, dialog.GetValue(DialogBox.TitleColorProperty));
 
         // BackgroundColor
         dialog.BackgroundColor = ConsoleColor.Blue;
-        Assert.Equal(ConsoleColor.Blue, dialog.BackgroundColor);
-        Assert.Equal(ConsoleColor.Blue, dialog.GetValue(DialogBox.BackgroundColorProperty));
+        Assert.Equal(TuiColor.Blue, dialog.BackgroundColor);
+        Assert.Equal(TuiColor.Blue, dialog.GetValue(DialogBox.BackgroundColorProperty));
 
         // BoxStyle
         dialog.BoxStyle = BoxStyle.Single;

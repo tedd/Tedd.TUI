@@ -14,74 +14,74 @@ public class ComboBox : Selector
     public new static readonly DependencyProperty ForegroundProperty = UIElement.ForegroundProperty;
 
     public static readonly DependencyProperty FocusedForegroundProperty =
-        DependencyProperty.Register("FocusedForeground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
+        DependencyProperty.Register("FocusedForeground", typeof(TuiColor), typeof(ComboBox), TuiColor.Yellow);
 
-    public ConsoleColor FocusedForeground
+    public TuiColor FocusedForeground
     {
-        get => (ConsoleColor)GetValue(FocusedForegroundProperty);
+        get => (TuiColor)GetValue(FocusedForegroundProperty);
         set => SetValue(FocusedForegroundProperty, value);
     }
 
     public static readonly DependencyProperty FocusedTextBackgroundColorProperty =
-        DependencyProperty.Register("FocusedTextBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
+        DependencyProperty.Register("FocusedTextBackgroundColor", typeof(TuiColor), typeof(ComboBox), TuiColor.DarkGray);
 
-    public ConsoleColor FocusedTextBackgroundColor
+    public TuiColor FocusedTextBackgroundColor
     {
-        get => (ConsoleColor)GetValue(FocusedTextBackgroundColorProperty);
+        get => (TuiColor)GetValue(FocusedTextBackgroundColorProperty);
         set => SetValue(FocusedTextBackgroundColorProperty, value);
     }
 
     public static readonly DependencyProperty ArrowColorProperty =
-        DependencyProperty.Register("ArrowColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
+        DependencyProperty.Register("ArrowColor", typeof(TuiColor), typeof(ComboBox), TuiColor.Black);
 
-    public ConsoleColor ArrowColor
+    public TuiColor ArrowColor
     {
-        get => (ConsoleColor)GetValue(ArrowColorProperty);
+        get => (TuiColor)GetValue(ArrowColorProperty);
         set => SetValue(ArrowColorProperty, value);
     }
 
     public static readonly DependencyProperty ArrowBackgroundColorProperty =
-        DependencyProperty.Register("ArrowBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Gray);
+        DependencyProperty.Register("ArrowBackgroundColor", typeof(TuiColor), typeof(ComboBox), TuiColor.Gray);
 
-    public ConsoleColor ArrowBackgroundColor
+    public TuiColor ArrowBackgroundColor
     {
-        get => (ConsoleColor)GetValue(ArrowBackgroundColorProperty);
+        get => (TuiColor)GetValue(ArrowBackgroundColorProperty);
         set => SetValue(ArrowBackgroundColorProperty, value);
     }
 
     public static readonly DependencyProperty FocusedArrowColorProperty =
-        DependencyProperty.Register("FocusedArrowColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Yellow);
+        DependencyProperty.Register("FocusedArrowColor", typeof(TuiColor), typeof(ComboBox), TuiColor.Yellow);
 
-    public ConsoleColor FocusedArrowColor
+    public TuiColor FocusedArrowColor
     {
-        get => (ConsoleColor)GetValue(FocusedArrowColorProperty);
+        get => (TuiColor)GetValue(FocusedArrowColorProperty);
         set => SetValue(FocusedArrowColorProperty, value);
     }
 
     public static readonly DependencyProperty FocusedArrowBackgroundColorProperty =
-        DependencyProperty.Register("FocusedArrowBackgroundColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.DarkGray);
+        DependencyProperty.Register("FocusedArrowBackgroundColor", typeof(TuiColor), typeof(ComboBox), TuiColor.DarkGray);
 
-    public ConsoleColor FocusedArrowBackgroundColor
+    public TuiColor FocusedArrowBackgroundColor
     {
-        get => (ConsoleColor)GetValue(FocusedArrowBackgroundColorProperty);
+        get => (TuiColor)GetValue(FocusedArrowBackgroundColorProperty);
         set => SetValue(FocusedArrowBackgroundColorProperty, value);
     }
 
     public static readonly DependencyProperty PopupBackgroundProperty =
-        DependencyProperty.Register("PopupBackground", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.Black);
+        DependencyProperty.Register("PopupBackground", typeof(TuiColor), typeof(ComboBox), TuiColor.Black);
 
-    public ConsoleColor PopupBackground
+    public TuiColor PopupBackground
     {
-        get => (ConsoleColor)GetValue(PopupBackgroundProperty);
+        get => (TuiColor)GetValue(PopupBackgroundProperty);
         set => SetValue(PopupBackgroundProperty, value);
     }
 
     public static readonly DependencyProperty PopupBorderColorProperty =
-        DependencyProperty.Register("PopupBorderColor", typeof(ConsoleColor), typeof(ComboBox), ConsoleColor.White);
+        DependencyProperty.Register("PopupBorderColor", typeof(TuiColor), typeof(ComboBox), TuiColor.White);
 
-    public ConsoleColor PopupBorderColor
+    public TuiColor PopupBorderColor
     {
-        get => (ConsoleColor)GetValue(PopupBorderColorProperty);
+        get => (TuiColor)GetValue(PopupBorderColorProperty);
         set => SetValue(PopupBorderColorProperty, value);
     }
 
@@ -103,7 +103,7 @@ public class ComboBox : Selector
         int w = RenderSize.Width;
 
         // Draw text area
-        var textBg = IsFocused && !_arrowFocused ? FocusedTextBackgroundColor : (Background ?? ConsoleColor.Black);
+        var textBg = IsFocused && !_arrowFocused ? FocusedTextBackgroundColor : (Background ?? TuiColor.Black);
         var textFg = IsFocused && !_arrowFocused ? FocusedForeground : Foreground;
 
         string text = GetItemText(SelectedItem);

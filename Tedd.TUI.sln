@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.7.11811.120 insiders
+VisualStudioVersion = 18.7.11811.120
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI", "src\Tedd.TUI\Tedd.TUI.csproj", "{30BC7C5D-C611-4095-B3C6-AA89B606C1E9}"
 EndProject
@@ -18,6 +18,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Benchmarks", "src\Tedd.TUI.Benchmarks\Tedd.TUI.Benchmarks.csproj", "{CB5779C5-653A-4791-BF3F-66A39FFDFF1D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Imaging", "src\Tedd.TUI.Imaging\Tedd.TUI.Imaging.csproj", "{67A57B00-0A3B-41AB-9A47-15707EE43BDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.WindowsTerminal", "src\Tedd.TUI.Platform.WindowsTerminal\Tedd.TUI.Platform.WindowsTerminal.csproj", "{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.LinuxTerminal", "src\Tedd.TUI.Platform.LinuxTerminal\Tedd.TUI.Platform.LinuxTerminal.csproj", "{FD6B65E6-4631-4793-8004-CDAC98819982}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -113,6 +117,30 @@ Global
 		{67A57B00-0A3B-41AB-9A47-15707EE43BDA}.Release|x64.Build.0 = Release|Any CPU
 		{67A57B00-0A3B-41AB-9A47-15707EE43BDA}.Release|x86.ActiveCfg = Release|Any CPU
 		{67A57B00-0A3B-41AB-9A47-15707EE43BDA}.Release|x86.Build.0 = Release|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Debug|x64.Build.0 = Debug|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Debug|x86.Build.0 = Debug|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Release|x64.ActiveCfg = Release|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Release|x64.Build.0 = Release|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Release|x86.ActiveCfg = Release|Any CPU
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65}.Release|x86.Build.0 = Release|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Debug|x64.Build.0 = Debug|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Debug|x86.Build.0 = Debug|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Release|x64.ActiveCfg = Release|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Release|x64.Build.0 = Release|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Release|x86.ActiveCfg = Release|Any CPU
+		{FD6B65E6-4631-4793-8004-CDAC98819982}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -125,5 +153,7 @@ Global
 		{08C7E106-8848-468F-9A77-C3BBF8D76768} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{CB5779C5-653A-4791-BF3F-66A39FFDFF1D} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{67A57B00-0A3B-41AB-9A47-15707EE43BDA} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{3734A0C0-DD42-4268-8CBB-DF6EC14B5D65} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{FD6B65E6-4631-4793-8004-CDAC98819982} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

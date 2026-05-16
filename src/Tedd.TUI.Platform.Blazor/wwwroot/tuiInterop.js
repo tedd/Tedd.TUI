@@ -4,24 +4,17 @@ window.tuiInterop = {
     charWidth: 10,
     charHeight: 18,
     font: '16px Consolas, monospace',
-    colors: [
-        '#000000', // Black
-        '#00008B', // DarkBlue
-        '#006400', // DarkGreen
-        '#008B8B', // DarkCyan
-        '#8B0000', // DarkRed
-        '#8B008B', // DarkMagenta
-        '#BDB76B', // DarkYellow (using a dimmer yellow)
-        '#C0C0C0', // Gray
-        '#808080', // DarkGray
-        '#0000FF', // Blue
-        '#00FF00', // Green
-        '#00FFFF', // Cyan
-        '#FF0000', // Red
-        '#FF00FF', // Magenta
-        '#FFFF00', // Yellow
-        '#FFFFFF'  // White
-    ],
+
+    // Convert a packed 0xAARRGGBB integer (as sent from BlazorRenderer) to a CSS rgba() string.
+    // Bit layout matches Tedd.TUI.TuiColor.Packed exactly.
+    packedToRgba: function (packed) {
+        // JS bitwise ops are signed 32-bit; use unsigned shift for the alpha byte.
+        const a = (packed >>> 24) & 0xff;
+        const r = (packed >>> 16) & 0xff;
+        const g = (packed >>> 8) & 0xff;
+        const b = packed & 0xff;
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + (a / 255) + ')';
+    },
 
     init: function (canvasId, width, height) {
         const canvas = document.getElementById(canvasId);
@@ -100,7 +93,6 @@ window.tuiInterop = {
 
         const cw = this.charWidth;
         const ch = this.charHeight;
-        const colors = this.colors;
 
         let ptr = 0;
         for (let y = 0; y < height; y++) {
@@ -110,14 +102,56 @@ window.tuiInterop = {
                 const bg = data[ptr++];
 
                 // Draw background
-                ctx.fillStyle = colors[bg];
+                ctx.fillStyle = this.packedToRgba(bg);
                 ctx.fillRect(x * cw, y * ch, cw, ch);
 
                 // Draw foreground char
                 if (charCode !== 32) { // Skip space
-                    ctx.fillStyle = colors[fg];
+                    ctx.fillStyle = this.packedToRgba(fg);
                     ctx.fillText(String.fromCharCode(charCode), x * cw, y * ch);
                 }
+            }
+        }
+    },
+
+    // Browser-side cache of decoded HTMLImageElements keyed by stable identity (the
+    // .NET side hands us `Key`, typically the original Source URL or a hash code).
+    // Drawing is otherwise allocation-free per frame: we just look up + drawImage.
+    imageCache: {},
+
+    renderGraphics: function (canvasId, cw, ch, placements) {
+        const ctx = this.canvasContexts[canvasId];
+        if (!ctx) return;
+
+        const cache = this.imageCache;
+        for (let i = 0; i < placements.length; i++) {
+            const p = placements[i];
+            const key = p.key || p.src;
+            if (!key || !p.src) continue;
+
+            let entry = cache[key];
+            if (!entry || entry.src !== p.src) {
+                const img = new Image();
+                entry = { img: img, src: p.src, loaded: false };
+                cache[key] = entry;
+                img.onload = (function (entryRef, canvasId, ctxRef, px, py, pw, ph, cww, chh) {
+                    return function () {
+                        entryRef.loaded = true;
+                        // Once the image decodes we draw it once at the placement we
+                        // captured at request time. Subsequent frames that re-request
+                        // the same image hit the cache and draw synchronously below.
+                        try {
+                            ctxRef.drawImage(entryRef.img, px * cww, py * chh, pw * cww, ph * chh);
+                        } catch (e) { /* canvas may have been resized */ }
+                    };
+                })(entry, canvasId, ctx, p.x, p.y, p.w, p.h, cw, ch);
+                img.src = p.src;
+            }
+
+            if (entry.loaded) {
+                try {
+                    ctx.drawImage(entry.img, p.x * cw, p.y * ch, p.w * cw, p.h * ch);
+                } catch (e) { /* ignore intermittent canvas state errors */ }
             }
         }
     },
@@ -128,7 +162,6 @@ window.tuiInterop = {
 
         const cw = this.charWidth;
         const ch = this.charHeight;
-        const colors = this.colors;
 
         let ptr = 0;
         const len = data.length;
@@ -141,12 +174,12 @@ window.tuiInterop = {
             const bg = data[ptr++];
 
             // Draw background
-            ctx.fillStyle = colors[bg];
+            ctx.fillStyle = this.packedToRgba(bg);
             ctx.fillRect(x * cw, y * ch, cw, ch);
 
             // Draw foreground char
             if (charCode !== 32) { // Skip space
-                ctx.fillStyle = colors[fg];
+                ctx.fillStyle = this.packedToRgba(fg);
                 ctx.fillText(String.fromCharCode(charCode), x * cw, y * ch);
             }
         }

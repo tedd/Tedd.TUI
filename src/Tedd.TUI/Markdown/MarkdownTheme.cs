@@ -7,14 +7,14 @@ namespace Tedd.TUI.Markdown;
 
 public class MarkdownStyle
 {
-    public ConsoleColor? Foreground { get; set; }
-    public ConsoleColor? Background { get; set; }
+    public TuiColor? Foreground { get; set; }
+    public TuiColor? Background { get; set; }
     public bool IsBold { get; set; }
     public bool IsUnderline { get; set; }
 
     public MarkdownStyle() { }
 
-    public MarkdownStyle(ConsoleColor? foreground = null, ConsoleColor? background = null, bool isBold = false, bool isUnderline = false)
+    public MarkdownStyle(TuiColor? foreground = null, TuiColor? background = null, bool isBold = false, bool isUnderline = false)
     {
         Foreground = foreground;
         Background = background;
@@ -56,7 +56,7 @@ public class MarkdownImageStyle : MarkdownStyle
 
     public MarkdownImageStyle() : base() { }
 
-    public MarkdownImageStyle(ConsoleColor? foreground)
+    public MarkdownImageStyle(TuiColor? foreground)
         : base(foreground)
     {
     }

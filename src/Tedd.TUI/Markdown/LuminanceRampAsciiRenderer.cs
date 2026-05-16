@@ -64,7 +64,7 @@ public sealed class LuminanceRampAsciiRenderer : IAsciiArtRenderer
     public bool UseColor { get; init; } = true;
 
     /// <summary>Foreground color used when <see cref="UseColor"/> is false.</summary>
-    public ConsoleColor Foreground { get; init; } = ConsoleColor.Gray;
+    public TuiColor Foreground { get; init; } = TuiColor.Gray;
 
     /// <summary>Alpha threshold below which the pixel renders as a transparent space (0–255). Defaults to 16.</summary>
     public int AlphaThreshold { get; init; } = 16;
@@ -82,7 +82,7 @@ public sealed class LuminanceRampAsciiRenderer : IAsciiArtRenderer
         UseColor = useColor;
     }
 
-    public Cell[] Render(RgbaImage image, int cellWidth, int cellHeight, ConsoleColor fallbackBackground)
+    public Cell[] Render(RgbaImage image, int cellWidth, int cellHeight, TuiColor fallbackBackground)
     {
         if (cellWidth <= 0 || cellHeight <= 0)
             return Array.Empty<Cell>();
@@ -129,7 +129,7 @@ public sealed class LuminanceRampAsciiRenderer : IAsciiArtRenderer
                 if (Inverted) rampIdx = rampLen - 1 - rampIdx;
 
                 char glyph = ramp[rampIdx];
-                ConsoleColor fg = UseColor ? RgbColorPalette.Nearest(r, g, b) : Foreground;
+                TuiColor fg = UseColor ? new TuiColor(r, g, b) : Foreground;
 
                 cells[y * cellWidth + x] = new Cell(glyph, fg, fallbackBackground);
             }

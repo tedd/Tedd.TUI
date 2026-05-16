@@ -111,8 +111,8 @@ public class TextEditor : UIElement
 
         if (w <= 0 || h <= 0) return;
 
-        var fg = IsFocused ? ConsoleColor.Yellow : ConsoleColor.White;
-        var bg = IsFocused ? ConsoleColor.DarkBlue : (Background ?? buffer.GetPixel(x, y).Background);
+        var fg = IsFocused ? TuiColor.Yellow : TuiColor.White;
+        var bg = IsFocused ? TuiColor.DarkBlue : (Background ?? buffer.GetPixel(x, y).Background);
 
         for (int row = 0; row < h; row++)
         {
@@ -130,8 +130,8 @@ public class TextEditor : UIElement
 
                 if (IsFocused && lineIdx == _cursorRow && charIdx == _cursorCol)
                 {
-                    cellFg = ConsoleColor.Black;
-                    cellBg = ConsoleColor.Gray;
+                    cellFg = TuiColor.Black;
+                    cellBg = TuiColor.Gray;
                 }
 
                 buffer.SetPixel(x + col, y + row, c, cellFg, cellBg);
@@ -139,7 +139,7 @@ public class TextEditor : UIElement
 
             if (IsFocused && lineIdx == _cursorRow && _cursorCol == lineText.Length && _cursorCol - _scrollX < w)
             {
-                buffer.SetPixel(x + (_cursorCol - _scrollX), y + row, ' ', ConsoleColor.Black, ConsoleColor.Gray);
+                buffer.SetPixel(x + (_cursorCol - _scrollX), y + row, ' ', TuiColor.Black, TuiColor.Gray);
             }
         }
     }
