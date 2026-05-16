@@ -2,11 +2,29 @@ using System;
 
 namespace Tedd.TUI;
 
+/// <summary>
+/// Controls when a scrollbar is shown by <see cref="ScrollViewer"/> (or <see cref="Border"/>).
+/// </summary>
+public enum ScrollBarVisibility
+{
+    /// <summary>Never show the scrollbar; content is clamped to the viewport in this axis.</summary>
+    Disabled,
+    /// <summary>Show the scrollbar (and reserve a row/column for it) only when the content overflows.</summary>
+    Auto,
+    /// <summary>Always show the scrollbar; always reserve a row/column for it.</summary>
+    Visible,
+}
+
 public class ScrollViewer : UIElement
 {
     protected readonly ScrollBar _verticalScrollBar;
     protected readonly ScrollBar _horizontalScrollBar;
     private UIElement? _content;
+
+    // Resolved by MeasureOverride; consumed by ArrangeOverride/Render/HitTest/etc.
+    // Necessary because Auto-mode visibility depends on the content's measured size.
+    private bool _showVertical;
+    private bool _showHorizontal;
 
     public UIElement? Content
     {
@@ -25,8 +43,33 @@ public class ScrollViewer : UIElement
         }
     }
 
-    public bool HorizontalScrollBarVisibility { get; set; } = false; // By default hidden? Or Auto? Let's say explicit for now.
-    public bool VerticalScrollBarVisibility { get; set; } = true;
+    public ScrollBarVisibility HorizontalScrollBarVisibility { get; set; } = ScrollBarVisibility.Disabled;
+    public ScrollBarVisibility VerticalScrollBarVisibility { get; set; } = ScrollBarVisibility.Visible;
+
+    /// <summary>
+    /// True when the vertical scrollbar is currently shown. Resolved during the
+    /// last <see cref="MeasureOverride"/>; consumers (e.g. <see cref="Table"/>)
+    /// read this to know whether to reserve space for it.
+    /// </summary>
+    public bool IsVerticalScrollBarShown => _showVertical;
+
+    /// <summary>
+    /// True when the horizontal scrollbar is currently shown. Resolved during the
+    /// last <see cref="MeasureOverride"/>.
+    /// </summary>
+    public bool IsHorizontalScrollBarShown => _showHorizontal;
+
+    /// <summary>
+    /// Sets the resolved scrollbar visibility flags. Used by subclasses (e.g.
+    /// <see cref="Border"/>) that override <see cref="MeasureOverride"/> with their own
+    /// resolution logic but need <see cref="VisualChildrenCount"/>, <see cref="GetVisualChild"/>,
+    /// and the <c>IsXxxScrollBarShown</c> properties to reflect the same decision.
+    /// </summary>
+    protected void SetResolvedScrollBarVisibility(bool showVertical, bool showHorizontal)
+    {
+        _showVertical = showVertical;
+        _showHorizontal = showHorizontal;
+    }
 
     public ScrollViewer()
     {
@@ -66,28 +109,29 @@ public class ScrollViewer : UIElement
         {
             int count = 0;
             if (_content != null) count++;
-            if (VerticalScrollBarVisibility) count++;
-            if (HorizontalScrollBarVisibility) count++;
+            if (_showVertical) count++;
+            if (_showHorizontal) count++;
             return count;
         }
     }
 
     public override UIElement GetVisualChild(int index)
     {
-        // Simple mapping, order: Content, VScroll, HScroll
+        // Order: Content, VScroll, HScroll. Mirrors the order used in Render so
+        // hit-testing visits the visible scrollbars only when they are shown.
         if (_content != null)
         {
             if (index == 0) return _content;
             index--;
         }
 
-        if (VerticalScrollBarVisibility)
+        if (_showVertical)
         {
             if (index == 0) return _verticalScrollBar;
             index--;
         }
 
-        if (HorizontalScrollBarVisibility)
+        if (_showHorizontal)
         {
             if (index == 0) return _horizontalScrollBar;
         }
@@ -97,33 +141,9 @@ public class ScrollViewer : UIElement
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        // 1. Measure content with infinite space in scrolling directions
-        // If Vertical scroll enabled, height is infinite.
-        // If Horizontal scroll enabled, width is infinite.
+        ResolveScrollBarsAndMeasureContent(availableSize, out int vScrollWidth, out int hScrollHeight, out Size contentSize);
 
-        Size contentAvailable = availableSize;
-        if (VerticalScrollBarVisibility) contentAvailable.Height = int.MaxValue;
-        if (HorizontalScrollBarVisibility) contentAvailable.Width = int.MaxValue;
-
-        // Reserve space for scrollbars if they are going to be visible?
-        // Basic logic: Measure content, see if it fits. If not, show scrollbars.
-        // For now, simple logic: If Visibility is True, reserve space.
-
-        int vScrollWidth = VerticalScrollBarVisibility ? 1 : 0;
-        int hScrollHeight = HorizontalScrollBarVisibility ? 1 : 0;
-
-        contentAvailable.Width = Math.Max(0, contentAvailable.Width - vScrollWidth);
-        contentAvailable.Height = Math.Max(0, contentAvailable.Height - hScrollHeight);
-
-        Size contentSize = new Size(0, 0);
-        if (_content != null)
-        {
-            _content.Measure(contentAvailable);
-            contentSize = _content.DesiredSize;
-        }
-
-        // 2. Setup ScrollBars
-        if (VerticalScrollBarVisibility)
+        if (_showVertical)
         {
             int viewport = Math.Max(1, availableSize.Height - hScrollHeight);
             int extent = contentSize.Height;
@@ -133,7 +153,7 @@ public class ScrollViewer : UIElement
             _verticalScrollBar.Measure(new Size(vScrollWidth, viewport));
         }
 
-        if (HorizontalScrollBarVisibility)
+        if (_showHorizontal)
         {
             int viewport = Math.Max(1, availableSize.Width - vScrollWidth);
             int extent = contentSize.Width;
@@ -150,10 +170,89 @@ public class ScrollViewer : UIElement
         );
     }
 
+    /// <summary>
+    /// Resolves <see cref="_showVertical"/>/<see cref="_showHorizontal"/> for the given
+    /// available size and measures the content with the appropriate constraints.
+    ///
+    /// Two-pass logic: first reserve space only for forced-Visible scrollbars and measure.
+    /// Then promote any Auto axis to "shown" if its content overflows. Finally, if showing
+    /// one scrollbar made the other axis overflow, re-promote (only once -- the second pass
+    /// can't change the answer because reserving space only ever shrinks the viewport).
+    /// </summary>
+    private void ResolveScrollBarsAndMeasureContent(Size availableSize, out int vScrollWidth, out int hScrollHeight, out Size contentSize)
+    {
+        bool vForced = VerticalScrollBarVisibility == ScrollBarVisibility.Visible;
+        bool hForced = HorizontalScrollBarVisibility == ScrollBarVisibility.Visible;
+        bool vAuto = VerticalScrollBarVisibility == ScrollBarVisibility.Auto;
+        bool hAuto = HorizontalScrollBarVisibility == ScrollBarVisibility.Auto;
+
+        bool showV = vForced;
+        bool showH = hForced;
+
+        // Pass 1: measure with reservations only for forced-Visible scrollbars.
+        contentSize = MeasureContent(availableSize, showV, showH);
+
+        // Pass 2: promote Auto axes to "shown" if content overflows the viewport.
+        if (vAuto && contentSize.Height > Math.Max(0, availableSize.Height - (showH ? 1 : 0)))
+            showV = true;
+        if (hAuto && contentSize.Width > Math.Max(0, availableSize.Width - (showV ? 1 : 0)))
+            showH = true;
+
+        // Pass 3: showing one scrollbar may have caused the other axis to start overflowing.
+        // Re-measure and re-check Auto axes once. (Reserving space only shrinks the
+        // viewport, so a single iteration is sufficient.)
+        if (showV != vForced || showH != hForced)
+        {
+            contentSize = MeasureContent(availableSize, showV, showH);
+            if (vAuto && !showV && contentSize.Height > Math.Max(0, availableSize.Height - (showH ? 1 : 0)))
+            {
+                showV = true;
+                contentSize = MeasureContent(availableSize, showV, showH);
+            }
+            if (hAuto && !showH && contentSize.Width > Math.Max(0, availableSize.Width - (showV ? 1 : 0)))
+            {
+                showH = true;
+                contentSize = MeasureContent(availableSize, showV, showH);
+            }
+        }
+
+        _showVertical = showV;
+        _showHorizontal = showH;
+
+        vScrollWidth = showV ? 1 : 0;
+        hScrollHeight = showH ? 1 : 0;
+    }
+
+    /// <summary>
+    /// Measures <see cref="_content"/> for a given resolved scrollbar configuration.
+    /// When an axis is allowed to scroll (Auto or Visible), the content is given
+    /// <see cref="int.MaxValue"/> in that axis so it can report its natural extent.
+    /// When an axis is Disabled, the content is clamped to the viewport.
+    /// </summary>
+    private Size MeasureContent(Size availableSize, bool showV, bool showH)
+    {
+        if (_content == null) return new Size(0, 0);
+
+        int vScrollWidth = showV ? 1 : 0;
+        int hScrollHeight = showH ? 1 : 0;
+
+        Size contentAvailable = new Size(
+            Math.Max(0, availableSize.Width - vScrollWidth),
+            Math.Max(0, availableSize.Height - hScrollHeight));
+
+        if (VerticalScrollBarVisibility != ScrollBarVisibility.Disabled)
+            contentAvailable.Height = int.MaxValue;
+        if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled)
+            contentAvailable.Width = int.MaxValue;
+
+        _content.Measure(contentAvailable);
+        return _content.DesiredSize;
+    }
+
     protected override void ArrangeOverride(Size finalSize)
     {
-        int vScrollWidth = VerticalScrollBarVisibility ? 1 : 0;
-        int hScrollHeight = HorizontalScrollBarVisibility ? 1 : 0;
+        int vScrollWidth = _showVertical ? 1 : 0;
+        int hScrollHeight = _showHorizontal ? 1 : 0;
 
         int viewportW = Math.Max(0, finalSize.Width - vScrollWidth);
         int viewportH = Math.Max(0, finalSize.Height - hScrollHeight);
@@ -161,14 +260,14 @@ public class ScrollViewer : UIElement
         // Update ScrollBars max/viewport based on final arranged viewport
         if (_content != null)
         {
-            if (VerticalScrollBarVisibility)
+            if (_showVertical)
             {
                 int extent = _content.DesiredSize.Height;
                 _verticalScrollBar.ViewportSize = Math.Max(1, viewportH);
                 _verticalScrollBar.Maximum = Math.Max(0, extent - viewportH);
             }
 
-            if (HorizontalScrollBarVisibility)
+            if (_showHorizontal)
             {
                 int extent = _content.DesiredSize.Width;
                 _horizontalScrollBar.ViewportSize = Math.Max(1, viewportW);
@@ -176,32 +275,27 @@ public class ScrollViewer : UIElement
             }
         }
 
-        // Arrange Content
-        // We arrange it at (0,0) relative to us?
-        // Or do we modify render offset?
-        // Typically Arrange sets the slot. 
-        // If we want clipping, we Arrange it to its DesiredSize (larger than viewport).
-        // Then in Render, we use clip and offset.
         if (_content != null)
         {
-            // Give it what it wants, so it renders fully (internally) or as much as it wants.
-            // But we must place it.
-            // We can place it at -ScrollOffset?
-            // No, Arrange expects relative coordinates to Parent.
-            // If we place at negative coords, they might be clipped by system if system clipped parent?
-            // TUI Layout: Render uses x = RenderSize.X + offsetX.
-            // If we Arrange at (0,0), RenderSize.X is 0.
-            // In Render(), we will pass (x - ScrollValues, y - ScrollValues).
-            _content.Arrange(new Rect(0, 0, Math.Max(viewportW, _content.DesiredSize.Width), Math.Max(viewportH, _content.DesiredSize.Height)));
+            // When an axis is Disabled, clamp the content's arrange rect to the viewport
+            // so wrappable children (e.g. Paragraph) don't reflow against an oversized
+            // arrange width pulled from a non-wrapping sibling like CodeDocument.
+            int arrangeW = (HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled)
+                ? viewportW
+                : Math.Max(viewportW, _content.DesiredSize.Width);
+            int arrangeH = (VerticalScrollBarVisibility == ScrollBarVisibility.Disabled)
+                ? viewportH
+                : Math.Max(viewportH, _content.DesiredSize.Height);
+
+            _content.Arrange(new Rect(0, 0, arrangeW, arrangeH));
         }
 
-        // Arrange ScrollBars
-        if (VerticalScrollBarVisibility)
+        if (_showVertical)
         {
             _verticalScrollBar.Arrange(new Rect(finalSize.Width - vScrollWidth, 0, vScrollWidth, viewportH));
         }
 
-        if (HorizontalScrollBarVisibility)
+        if (_showHorizontal)
         {
             _horizontalScrollBar.Arrange(new Rect(0, finalSize.Height - hScrollHeight, viewportW, hScrollHeight));
         }
@@ -212,83 +306,29 @@ public class ScrollViewer : UIElement
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
-        int vScrollWidth = VerticalScrollBarVisibility ? 1 : 0;
-        int hScrollHeight = HorizontalScrollBarVisibility ? 1 : 0;
+        int vScrollWidth = _showVertical ? 1 : 0;
+        int hScrollHeight = _showHorizontal ? 1 : 0;
         int viewportW = Math.Max(0, RenderSize.Width - vScrollWidth);
         int viewportH = Math.Max(0, RenderSize.Height - hScrollHeight);
 
-        // Render Content with Clip
         if (_content != null)
         {
-            // Push Clip
             buffer.PushClip(new Rect(x, y, viewportW, viewportH));
 
-            int contentX = x - _horizontalScrollBar.Value;
-            int contentY = y - _verticalScrollBar.Value;
-
-            // We need to render the content at shifted position.
-            // But _content.Render uses its RenderSize.X/Y which we set to 0 in Arrange.
-            // So _content.Render(buffer, contentX, contentY) works if Arrange X,Y were 0.
-            // Note: Render(buffer, offX, offY) calculates pos = RenderSize.X + offX.
-            // Since RenderSize.X is 0 (relative to ScrollViewer), pos becomes 0 + contentX.
-            // Correct.
-
-            // We pass the global offset (x, y) adjusted by scroll.
-            // Wait, Render(buffer, offsetX, offsetY).
-            // Parent calls ScrollViewer.Render(buffer, parentX, parentY).
-            // ScrollViewer.Render calls _content.Render(..., x - scroll, y - scroll).
-            // _content.Render adds its RenderSize.X (0).
-            // Result: parentX + (x - scroll) = wrong?
-            // x IS (RenderSize.X + offsetX). i.e. Absolute X of ScrollViewer.
-            // We want absolute X of content to be AbsoluteX_SV - Scroll.
-            // Param of Render is "offsetX".
-            // _content.Render(buffer, currentOffsetX, currentOffsetY).
-            // absolute = _content.RenderSize.X + currentOffsetX.
-            // We want absolute = x - scroll.
-            // 0 + currentOffsetX = x - scroll.
-            // currentOffsetX = x - scroll.
-            // So we pass (x - scroll, y - scroll).
-
-            // X is absolute position of ScrollViewer TopLeft.
-            // So we pass that absolute position minus scroll.
-
-            // Wait, does Render take "Offset from Parent" or "Absolute Offset"?
-            // TUIWindow.Render calls Content.Render(buffer, 0, 0).
-            // UIElement.Render calculates x = RenderSize.X + offsetX.
-            // If TuiWindow.Content is at 0,0. x = 0+0 = 0.
-            // If TuiWindow calls Render(buffer, 10, 10). x = 0+10 = 10.
-            // So offsetX/Y are cumulative offsets (usually 0 if RenderSize is absolute?).
-            // If RenderSize is relative to Parent, then offsetX/Y must be absolute position of Parent?
-            // Check TUIWindow.Arrange: Content.Arrange(0,0...).
-            // ScrollViewer.Arrange: Content.Arrange(0,0...).
-
-            // So RenderSize is relative to Parent.
-            // UIElement.Render(buffer, offsetX, offsetY) -> x = RelativeX + offsetX.
-            // Meaning offsetX must be "Absolute position of Parent".
-            // Yes.
-
-            // So inside ScrollViewer.Render:
-            // x (Absolute SV X) = RenderSize.X (Relative SV X) + offsetX (Absolute Parent X).
-            // We want to verify this.
-
-            // So for Child Content:
-            // We call _content.Render(buffer, absolute_SV_X - scrollX, absolute_SV_Y - scrollY).
-            // Then child calculates: child_abs_X = child.RentX (0) + (absolute_SV_X - scrollX).
-            // = absolute_SV_X - scrollX. Correct.
-
+            // Pass the absolute position of this ScrollViewer minus scroll offset.
+            // The child's RenderSize.X/Y is 0 (we Arrange it at origin), so its absolute
+            // render position becomes (x - hOffset, y - vOffset).
             _content.Render(buffer, x - _horizontalScrollBar.Value, y - _verticalScrollBar.Value);
 
             buffer.PopClip();
         }
 
-        // Render ScrollBars (no scroll offset, no clip usually, or clip to SV bounds)
-        if (VerticalScrollBarVisibility)
+        if (_showVertical)
         {
-            // They are children, so they need Absolute Parent X (which is x).
             _verticalScrollBar.Render(buffer, x, y);
         }
 
-        if (HorizontalScrollBarVisibility)
+        if (_showHorizontal)
         {
             _horizontalScrollBar.Render(buffer, x, y);
         }
@@ -296,69 +336,10 @@ public class ScrollViewer : UIElement
 
     public override void OnMouseDown(MouseEventArgs e)
     {
-        // Hit test and dispatch?
-        // UIElement.OnMouseDown is called if this element was hit.
-        // But InputHitTest logic usually finds the deepest leaf.
-        // If we added ScrollBars as children (GetVisualChild), HitTestRecursive might find them.
-        // If it finds ScrollBar, it calls ScrollBar.OnMouseDown directly.
-        // If it finds Content, it calls Content.OnMouseDown.
-
-        // HOWEVER, TuiWindow.InputHitTestRecursive likely returns ScrollViewer if Content doesn't handle it?
-        // Or if we are the container.
-
-        // If the user clicks on ScrollBar, TuiWindow should route it there IF we exposed them in GetVisualChild.
-        // We did expose them.
-
-        // So we might not need to do anything here if HitTest works.
-        // But wait, if Content is clipped, HitTest must respect clip!
-        // TuiWindow.HitTestRecursive:
-        // if (x >= element.RenderSize.X ... )
-
-        // It does NOT respect clipping automatically.
-        // We need to override HitTest or rely on TuiWindow being smart? TuiWindow is simple.
-        // If we click outside the viewport (on a scrolled out button),
-        // The button's RenderSize/X/Y relative to ScrollViewer might be negative or huge.
-        // HitTest logic:
-        // localX = x - element.RenderSize.X.
-        // If Button is at (0, -10) relative to SV.
-        // Click at (5, 5) relative to SV.
-        // Button HitTest: localX = 5 - 0 = 5. localY = 5 - (-10) = 15.
-        // If Button contains (5, 15), it returns Button.
-        // BUT visually it is clipped.
-        // We MUST prevent HitTest from finding clipped items.
-
-        // We can't easily interface with HitTest since it's in TuiWindow (or recursive).
-        // Check TuiWindow.InputHitTestRecursive:
-        // It iterates children.
-
-        // Ideally ScrollViewer should override HitTest or we update TuiWindow to respect Valid/Clipped area?
-        // OR, simpler:
-        // We assume HitTest finds the child.
-        // But if the child is outside the ScrollViewer bounds, we shouldn't interact.
-        // But HitTest starts at Root.
-        // If I click at (100, 100), and ScrollViewer is at (0,0) sized 50x50.
-        // InputHitTestRecursive checks ScrollViewer bounds.
-        // If (100,100) is outside SV, it returns null (or checks siblings).
-        // So global clip is handled by Parent check.
-
-        // But checking children INSIDE ScrollViewer:
-        // SV is 50x50. Child is at (0, 0) size 50x200.
-        // Click at (10, 40). Inside SV. Check Child.
-        // Child at (0,0) contains (10,40). Return Child.
-        // Click at (10, 60). Outside SV.
-        // SV check: y=60 > height=50. SV returns null.
-        // So Child is not checked.
-
-        // ISSUE: If Child is at (0, -20).
-        // Click at (10, 10). Inside SV.
-        // Check Child. localY = 10 - (-20) = 30.
-        // Child contains (10, 30).
-        // Visually: The point (10,30) of Child is at screen (10,10). Visible.
-        // Correct.
-
-        // So standard HitTest works fine for "Clipped by Parent Bounds" logic.
-        // Because Parent Bounds check happens before checking children.
-
+        // Hit-test routing for our scrollbars and content children is handled by the
+        // standard tree walk in TuiWindow. Parent-bounds check there already prevents
+        // clipped descendants of Content from being hit when the click is outside the
+        // ScrollViewer's RenderSize, so no extra logic is needed here.
         base.OnMouseDown(e);
     }
 }

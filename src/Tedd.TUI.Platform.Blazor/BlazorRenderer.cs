@@ -5,17 +5,30 @@ using Tedd.TUI;
 
 namespace Tedd.TUI.Platform.Blazor;
 
-public class BlazorRenderer : IRenderer, IRendererAsync
+public class BlazorRenderer : IRenderer, IRendererAsync, ICapabilityProvider
 {
     private readonly IJSRuntime _js;
     private readonly string _canvasId;
     private Cell[,]? _lastBuffer;
+    private int _charWidth = 10;
+    private int _charHeight = 18;
 
     public BlazorRenderer(IJSRuntime js, string canvasId)
     {
         _js = js;
         _canvasId = canvasId;
     }
+
+    /// <summary>
+    /// The &lt;canvas&gt; renderer currently only draws character cells. Graphic overlays for
+    /// the canvas surface are out of scope for this iteration, so we report text-only.
+    /// </summary>
+    public SurfaceCapabilities Capabilities => new SurfaceCapabilities
+    {
+        SupportsGraphics = false,
+        CharPixelWidth = _charWidth,
+        CharPixelHeight = _charHeight
+    };
 
     public void Render(VirtualBuffer buffer)
     {
@@ -114,6 +127,8 @@ public class BlazorRenderer : IRenderer, IRendererAsync
     public async Task<(int CharWidth, int CharHeight)> InitAsync(int width, int height)
     {
         var res = await _js.InvokeAsync<MetricResult>("tuiInterop.init", _canvasId, width, height);
+        _charWidth = res.CharWidth;
+        _charHeight = res.CharHeight;
         return (res.CharWidth, res.CharHeight);
     }
 

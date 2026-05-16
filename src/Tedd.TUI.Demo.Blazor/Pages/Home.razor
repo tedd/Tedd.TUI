@@ -164,7 +164,7 @@
                     <TuiScrollBar Orientation="Orientation.Vertical" Height="10" Minimum="0" Maximum="50" ViewportSize="10" Value="@vScrollValue" ValueChanged="OnVScrollChanged" />
 
                     <TuiLabel Text="ScrollViewer:" />
-                    <TuiScrollViewer Width="40" Height="10" HorizontalScrollBarVisibility="true" VerticalScrollBarVisibility="true">
+                    <TuiScrollViewer Width="40" Height="10" HorizontalScrollBarVisibility="ScrollBarVisibility.Visible" VerticalScrollBarVisibility="ScrollBarVisibility.Visible">
                         <TuiStackPanel Orientation="Orientation.Vertical">
                             @for (int i = 0; i < 20; i++)
                             {
@@ -179,7 +179,7 @@
             <TuiTabItem Header="Code">
                 <TuiStackPanel Orientation="Orientation.Vertical">
                     <TuiLabel Text="Code Coloring Demo" />
-                    <TuiScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="true" HorizontalScrollBarVisibility="true">
+                    <TuiScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="ScrollBarVisibility.Visible" HorizontalScrollBarVisibility="ScrollBarVisibility.Visible">
                         <TuiHost Component="@codeDoc" />
                     </TuiScrollViewer>
                 </TuiStackPanel>
@@ -189,7 +189,7 @@
             <TuiTabItem Header="Markdown">
                 <TuiStackPanel Orientation="Orientation.Vertical">
                     <TuiLabel Text="Markdown View:" />
-                    <TuiScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="true">
+                    <TuiScrollViewer Width="70" Height="15" VerticalScrollBarVisibility="ScrollBarVisibility.Visible">
                         <TuiHost Component="@mdView" />
                     </TuiScrollViewer>
                 </TuiStackPanel>

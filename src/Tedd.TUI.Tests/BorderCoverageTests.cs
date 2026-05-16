@@ -149,12 +149,12 @@ public class BorderCoverageTests
     public void ArrangeOverride_WithHorizontalScrollBar()
     {
         var border = new Border();
-        border.HorizontalScrollBarVisibility = true;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
         border.Measure(new Size(20, 20));
         border.Arrange(new Rect(0, 0, 20, 20));
 
         // Horizontal scrollbar should be arranged
-        Assert.True(border.HorizontalScrollBarVisibility);
+        Assert.Equal(ScrollBarVisibility.Visible, border.HorizontalScrollBarVisibility);
     }
 
     [Fact]
@@ -164,8 +164,8 @@ public class BorderCoverageTests
         border.Title = new TextBlock { Text = "Title" };
         border.StatusBar = new TextBlock { Text = "Status" };
         border.Content = new TextBlock { Text = "Content" };
-        border.VerticalScrollBarVisibility = true;
-        border.HorizontalScrollBarVisibility = true;
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+        border.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         border.Measure(new Size(20, 20));
         border.Arrange(new Rect(0, 0, 20, 20));
@@ -174,8 +174,8 @@ public class BorderCoverageTests
         border.Render(buffer, 0, 0);
 
         // We aren't testing exact pixel output here, just executing the branches
-        Assert.True(border.VerticalScrollBarVisibility);
-        Assert.True(border.HorizontalScrollBarVisibility);
+        Assert.Equal(ScrollBarVisibility.Visible, border.VerticalScrollBarVisibility);
+        Assert.Equal(ScrollBarVisibility.Visible, border.HorizontalScrollBarVisibility);
         Assert.NotNull(border.Title);
         Assert.NotNull(border.StatusBar);
         Assert.NotNull(border.Content);

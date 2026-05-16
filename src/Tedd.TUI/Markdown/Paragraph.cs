@@ -37,6 +37,17 @@ public class Paragraph : UIElement
             child.Measure(new Size(int.MaxValue, availableSize.Height));
             Size childSize = child.DesiredSize;
 
+            // If the natural size is wider than the line, re-measure with the line
+            // width so children that can resize (e.g. Image, which scales preserving
+            // aspect ratio) shrink to fit. Children that don't honor the width
+            // constraint (e.g. TextBlock with NoWrap) simply return their natural
+            // size again, so this is a safe no-op for them.
+            if (maxWidth > 0 && maxWidth < int.MaxValue && childSize.Width > maxWidth)
+            {
+                child.Measure(new Size(maxWidth, availableSize.Height));
+                childSize = child.DesiredSize;
+            }
+
             // Check if wrapping is needed
             // If currentX > 0 (not at start of line) AND adding child exceeds maxWidth
             if (currentX > 0 && currentX + childSize.Width > maxWidth)
@@ -50,7 +61,10 @@ public class Paragraph : UIElement
             // Update current row stats
             currentX += childSize.Width;
             currentRowHeight = Math.Max(currentRowHeight, childSize.Height);
-            maxLineWidth = Math.Max(maxLineWidth, currentX);
+            // Cap reported width at maxWidth so that a word wider than the line width
+            // does not cause Border.ArrangeOverride to give the content a wider arrange
+            // rect than it received during Measure, which would change the wrap decisions.
+            maxLineWidth = Math.Max(maxLineWidth, Math.Min(currentX, maxWidth));
         }
 
         // Add height of last row

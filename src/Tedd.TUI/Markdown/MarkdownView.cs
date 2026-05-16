@@ -7,6 +7,7 @@ public class MarkdownView : UIElement
 {
     private FlowDocument _document;
     private MarkdownParser _parser;
+    private string? _baseDirectory;
 
     public static readonly DependencyProperty TextProperty =
         DependencyProperty.Register("Text", typeof(string), typeof(MarkdownView), string.Empty);
@@ -24,6 +25,24 @@ public class MarkdownView : UIElement
         {
             field = value;
             Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Directory used to resolve relative image sources (e.g. <c>![alt](photo.png)</c>).
+    /// Typically set to the directory of the markdown document. Forwarded to every
+    /// <see cref="Image"/> created from this view.
+    /// </summary>
+    public string? BaseDirectory
+    {
+        get => _baseDirectory;
+        set
+        {
+            if (_baseDirectory != value)
+            {
+                _baseDirectory = value;
+                Refresh();
+            }
         }
     }
 
@@ -53,8 +72,8 @@ public class MarkdownView : UIElement
             return;
         }
 
-        // Create parser with current theme
-        _parser = new MarkdownParser(Theme);
+        // Create parser with current theme and base directory.
+        _parser = new MarkdownParser(Theme) { BaseDirectory = _baseDirectory };
 
         // Parse and populate
         var doc = _parser.Parse(Text);

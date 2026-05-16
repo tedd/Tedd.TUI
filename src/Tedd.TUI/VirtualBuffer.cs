@@ -40,6 +40,15 @@ public class VirtualBuffer
     // Direct access to buffer for optimized rendering
     public ReadOnlySpan<Cell> Cells => _buffer;
 
+    /// <summary>
+    /// Optional bitmap-graphic overlay channel. When non-null, the surface hosting this buffer
+    /// supports compositing bitmaps over the character grid; graphics-aware controls (e.g.
+    /// <see cref="Tedd.TUI.Markdown.Image"/>) append <see cref="GraphicPlacement"/> entries here
+    /// during render, and the surface renderer draws them after the text cells. When null the
+    /// surface is text-only and controls fall back to character-based rendering.
+    /// </summary>
+    public IList<GraphicPlacement>? Graphics { get; set; }
+
     private Stack<Rect> _clipStack = new Stack<Rect>();
     private Rect _currentClip;
     private bool _isClipped;

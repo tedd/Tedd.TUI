@@ -12,7 +12,7 @@ public class ScrollViewerTest : TestPage
     {
         // 1. Functionality Test
         var funcPanel = new StackPanel { Orientation = Orientation.Vertical };
-        var sv = new ScrollViewer { Width = 40, Height = 10, VerticalScrollBarVisibility = true, HorizontalScrollBarVisibility = true };
+        var sv = new ScrollViewer { Width = 40, Height = 10, VerticalScrollBarVisibility = ScrollBarVisibility.Visible, HorizontalScrollBarVisibility = ScrollBarVisibility.Visible };
 
         var content = new StackPanel { Orientation = Orientation.Vertical };
         for (int i = 0; i < 30; i++)
@@ -28,8 +28,8 @@ public class ScrollViewerTest : TestPage
 
         // 2. Nested Scroll (Not recommended but possible)
         // Usually ScrollViewer inside ScrollViewer is confusing, but valid to test clipping.
-        var outerSv = new ScrollViewer { Width = 30, Height = 15, VerticalScrollBarVisibility = true };
-        var innerSv = new ScrollViewer { Width = 20, Height = 8, VerticalScrollBarVisibility = true };
+        var outerSv = new ScrollViewer { Width = 30, Height = 15, VerticalScrollBarVisibility = ScrollBarVisibility.Visible };
+        var innerSv = new ScrollViewer { Width = 20, Height = 8, VerticalScrollBarVisibility = ScrollBarVisibility.Visible };
 
         var innerContent = new StackPanel { Orientation = Orientation.Vertical };
         for (int i = 0; i < 20; i++) innerContent.AddChild(new TextBlock { Text = $"Inner {i}" });

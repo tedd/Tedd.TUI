@@ -393,7 +393,7 @@ class Program
         scrollStack.AddChild(vScroll);
 
         scrollStack.AddChild(new TextBlock { Text = "ScrollViewer:" });
-        var sv = new ScrollViewer { Width = 40, Height = 10, HorizontalScrollBarVisibility = true, VerticalScrollBarVisibility = true };
+        var sv = new ScrollViewer { Width = 40, Height = 10, HorizontalScrollBarVisibility = ScrollBarVisibility.Visible, VerticalScrollBarVisibility = ScrollBarVisibility.Visible };
         var largeStack = new StackPanel { Orientation = Orientation.Vertical };
         for (int i = 0; i < 20; i++)
         {
@@ -437,7 +437,7 @@ public class Test
 }";
         codeDoc.SetCode(sampleCode, "csharp");
 
-        var scrollCode = new ScrollViewer { Width = 70, Height = 15, VerticalScrollBarVisibility = true, HorizontalScrollBarVisibility = true };
+        var scrollCode = new ScrollViewer { Width = 70, Height = 15, VerticalScrollBarVisibility = ScrollBarVisibility.Visible, HorizontalScrollBarVisibility = ScrollBarVisibility.Visible };
         scrollCode.Content = codeDoc;
 
         codeStack.AddChild(scrollCode);
@@ -448,7 +448,7 @@ public class Test
         var mdStack = new StackPanel { Orientation = Orientation.Vertical };
         mdStack.AddChild(new TextBlock { Text = "Markdown View:" });
 
-        var mdScrollViewer = new ScrollViewer { Width = 70, Height = 15, VerticalScrollBarVisibility = true };
+        var mdScrollViewer = new ScrollViewer { Width = 70, Height = 15, VerticalScrollBarVisibility = ScrollBarVisibility.Visible };
         var mdView = new MarkdownView();
         string mdText = @"# Markdown Demo
 

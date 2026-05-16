@@ -12,7 +12,7 @@
   - **WrapPanel:** Sequential layout with line/column wrapping.
   - **DockPanel:** Edge-docking arrangements using the `Dock` attached property.
   - **Canvas:** Absolute positioning via `Canvas.Left` and `Canvas.Top` attached properties.
-  - **ScrollViewer:** Unbounded layout constraints allowing `Panel` contents to evaluate bounds up to `int.MaxValue`, coupled with `ScrollBar` for navigation. Scrollbar visibility is managed deterministically via boolean properties (`HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility`) rather than a `ScrollBarVisibility` enum.
+  - **ScrollViewer:** Unbounded layout constraints allowing `Panel` contents to evaluate bounds up to `int.MaxValue`, coupled with `ScrollBar` for navigation. Scrollbar visibility is configured through the `ScrollBarVisibility` enum (`Disabled`, `Auto`, `Visible`) on both `HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility`. `Disabled` clamps the content to the viewport in that axis (so wrappable children re-flow to fit on resize); `Auto` resolves visibility per-frame from the measured content extent and reserves a row/column only when the bar is actually shown; `Visible` always shows the bar and reserves space.
   - **Border:** Decorative borders with box-drawing characters.
 - **Rich Control Suite:**
   - **DataGrid:** Supports `ItemsSource` binding, `AutoGenerateColumns`, selection, and pagination.

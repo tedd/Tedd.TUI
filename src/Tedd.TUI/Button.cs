@@ -126,6 +126,231 @@ public class Button : ButtonBase
         private set => SetValue(EffectiveForegroundProperty, value);
     }
 
+    // Shadow Properties (DOS Turbo Pascal / Quick Basic style drop shadow)
+
+    public static readonly DependencyProperty ShadowStyleProperty =
+        DependencyProperty.Register("ShadowStyle", typeof(ButtonShadowStyle), typeof(Button), ButtonShadowStyle.None);
+
+    /// <summary>
+    /// The visual style for the drop shadow. Defaults to <see cref="ButtonShadowStyle.None"/>
+    /// for backward compatibility. Set to <see cref="ButtonShadowStyle.Solid"/> for an
+    /// authentic DOS dialog look.
+    /// </summary>
+    public ButtonShadowStyle ShadowStyle
+    {
+        get => (ButtonShadowStyle)GetValue(ShadowStyleProperty);
+        set => SetValue(ShadowStyleProperty, value);
+    }
+
+    public static readonly DependencyProperty ShadowForegroundProperty =
+        DependencyProperty.Register("ShadowForeground", typeof(ConsoleColor), typeof(Button), ConsoleColor.DarkGray);
+
+    /// <summary>
+    /// Foreground color used when rendering shaded shadow characters
+    /// (<see cref="ButtonShadowStyle.Light"/>, <see cref="ButtonShadowStyle.Medium"/>,
+    /// <see cref="ButtonShadowStyle.Dark"/>, <see cref="ButtonShadowStyle.Cast"/>).
+    /// </summary>
+    public ConsoleColor ShadowForeground
+    {
+        get => (ConsoleColor)GetValue(ShadowForegroundProperty);
+        set => SetValue(ShadowForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty ShadowBackgroundProperty =
+        DependencyProperty.Register("ShadowBackground", typeof(ConsoleColor), typeof(Button), ConsoleColor.Black);
+
+    /// <summary>
+    /// Background color of the shadow cells. The classic DOS look uses
+    /// <see cref="ConsoleColor.Black"/> to produce a solid void shadow.
+    /// </summary>
+    public ConsoleColor ShadowBackground
+    {
+        get => (ConsoleColor)GetValue(ShadowBackgroundProperty);
+        set => SetValue(ShadowBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty ShadowOffsetXProperty =
+        DependencyProperty.Register("ShadowOffsetX", typeof(int), typeof(Button), 2);
+
+    /// <summary>
+    /// Horizontal extent of the shadow in character cells. Defaults to 2 because
+    /// terminal cells are taller than wide; a 2-cell-wide right shadow visually
+    /// matches a 1-cell-tall bottom shadow, mirroring Turbo Vision dialogs.
+    /// </summary>
+    public int ShadowOffsetX
+    {
+        get => (int)GetValue(ShadowOffsetXProperty);
+        set => SetValue(ShadowOffsetXProperty, value);
+    }
+
+    public static readonly DependencyProperty ShadowOffsetYProperty =
+        DependencyProperty.Register("ShadowOffsetY", typeof(int), typeof(Button), 1);
+
+    /// <summary>
+    /// Vertical extent of the shadow in character cells. Defaults to 1
+    /// (DOS-authentic).
+    /// </summary>
+    public int ShadowOffsetY
+    {
+        get => (int)GetValue(ShadowOffsetYProperty);
+        set => SetValue(ShadowOffsetYProperty, value);
+    }
+
+    private int ShadowExtentX => ShadowStyle == ButtonShadowStyle.None ? 0 : Math.Max(0, ShadowOffsetX);
+    private int ShadowExtentY => ShadowStyle == ButtonShadowStyle.None ? 0 : Math.Max(0, ShadowOffsetY);
+
+    // When BoxStyle is None the button is rendered as a flat label with one space
+    // before and after the content (DOS dialog "[ OK ]" look without brackets) and
+    // no extra rows above/below. Border itself reserves zero space in this mode,
+    // so the button reserves the side-padding here.
+    private int BorderlessInsetX => BoxStyle == BoxStyle.None ? 2 : 0;
+    private int BorderlessInsetY => 0;
+
+    // Layout & Render overrides to reserve shadow + borderless side-padding
+
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        if (TemplateRoot == null)
+            return base.MeasureOverride(availableSize);
+
+        int sx = ShadowExtentX;
+        int sy = ShadowExtentY;
+        int bx = BorderlessInsetX;
+        int by = BorderlessInsetY;
+
+        if (sx == 0 && sy == 0 && bx == 0 && by == 0)
+            return base.MeasureOverride(availableSize);
+
+        var padding = Padding;
+        int paddingW = padding.Left + padding.Right;
+        int paddingH = padding.Top + padding.Bottom;
+
+        int reservedW = sx + bx + paddingW;
+        int reservedH = sy + by + paddingH;
+
+        var innerAvailable = new Size(
+            Math.Max(0, availableSize.Width - reservedW),
+            Math.Max(0, availableSize.Height - reservedH));
+
+        TemplateRoot.Measure(innerAvailable);
+
+        return new Size(
+            TemplateRoot.DesiredSize.Width + reservedW,
+            TemplateRoot.DesiredSize.Height + reservedH);
+    }
+
+    protected override void ArrangeOverride(Size finalSize)
+    {
+        if (TemplateRoot == null) return;
+
+        int sx = ShadowExtentX;
+        int sy = ShadowExtentY;
+        int bx = BorderlessInsetX;
+        int by = BorderlessInsetY;
+
+        if (sx == 0 && sy == 0 && bx == 0 && by == 0)
+        {
+            base.ArrangeOverride(finalSize);
+            return;
+        }
+
+        var padding = Padding;
+        int paddingW = padding.Left + padding.Right;
+        int paddingH = padding.Top + padding.Bottom;
+
+        int innerWidth = Math.Max(0, finalSize.Width - sx - bx - paddingW);
+        int innerHeight = Math.Max(0, finalSize.Height - sy - by - paddingH);
+
+        // Borderless inset is centered (1 char each side); shadow is right/bottom only.
+        int leftOffset = padding.Left + bx / 2;
+        int topOffset = padding.Top + by / 2;
+
+        TemplateRoot.Arrange(new Rect(leftOffset, topOffset, innerWidth, innerHeight));
+    }
+
+    public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
+    {
+        int sx = ShadowExtentX;
+        int sy = ShadowExtentY;
+
+        if ((sx > 0 || sy > 0) && ShadowStyle != ButtonShadowStyle.None)
+        {
+            int x = RenderSize.X + offsetX;
+            int y = RenderSize.Y + offsetY;
+            int btnW = Math.Max(0, RenderSize.Width - sx);
+            int btnH = Math.Max(0, RenderSize.Height - sy);
+            RenderShadow(buffer, x, y, btnW, btnH, sx, sy);
+        }
+
+        base.Render(buffer, offsetX, offsetY);
+    }
+
+    private void RenderShadow(VirtualBuffer buffer, int x, int y, int btnW, int btnH, int sx, int sy)
+    {
+        // L-shaped drop shadow: a right strip and a bottom strip, offset by (sx, sy)
+        // so neither piece overlaps the button rectangle itself. The corner where the
+        // two strips meet (bottom-right of the button's bounding box) is part of the
+        // bottom strip; this matches the look used by Turbo Pascal / Quick Basic.
+
+        char ch;
+        bool castMode = false;
+        switch (ShadowStyle)
+        {
+            case ButtonShadowStyle.Solid: ch = ' '; break;
+            case ButtonShadowStyle.Light: ch = '\u2591'; break;
+            case ButtonShadowStyle.Medium: ch = '\u2592'; break;
+            case ButtonShadowStyle.Dark: ch = '\u2593'; break;
+            case ButtonShadowStyle.Cast:
+                ch = ' ';
+                castMode = true;
+                break;
+            default:
+                return;
+        }
+
+        var fg = ShadowForeground;
+        var bg = ShadowBackground;
+
+        // Right strip: starts sy rows below the button top so it doesn't sit above the button
+        int rightX = x + btnW;
+        int rightY = y + sy;
+        int rightH = btnH;
+
+        // Bottom strip: starts sx columns right of the button left so it doesn't sit left of the button
+        int bottomX = x + sx;
+        int bottomY = y + btnH;
+        int bottomW = btnW + sx; // include the corner under the right strip
+
+        if (castMode)
+        {
+            CastShadow(buffer, rightX, rightY, sx, rightH, fg, bg);
+            CastShadow(buffer, bottomX, bottomY, bottomW, sy, fg, bg);
+        }
+        else
+        {
+            if (sx > 0 && rightH > 0)
+                buffer.FillRect(rightX, rightY, sx, rightH, ch, fg, bg);
+            if (sy > 0 && bottomW > 0)
+                buffer.FillRect(bottomX, bottomY, bottomW, sy, ch, fg, bg);
+        }
+    }
+
+    private static void CastShadow(VirtualBuffer buffer, int x, int y, int w, int h,
+        ConsoleColor fg, ConsoleColor bg)
+    {
+        // Re-render existing buffer cells with the shadow palette so whatever lies
+        // beneath the button (typically the parent's background fill) "shows through"
+        // dimmed -- the classic translucent Turbo Vision effect.
+        for (int row = 0; row < h; row++)
+        {
+            for (int col = 0; col < w; col++)
+            {
+                var cell = buffer.GetPixel(x + col, y + row);
+                buffer.SetPixel(x + col, y + row, cell.Character, fg, bg);
+            }
+        }
+    }
+
     // Logic
 
     protected override void OnPropertyChanged(DependencyProperty dp)

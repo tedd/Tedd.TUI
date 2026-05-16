@@ -13,6 +13,12 @@ public class MarkdownParser
 {
     private readonly MarkdownTheme _theme;
 
+    /// <summary>
+    /// Directory used by <see cref="Image"/> elements to resolve relative <c>Source</c> paths.
+    /// Forwarded onto every <see cref="Image"/> the parser creates.
+    /// </summary>
+    public string? BaseDirectory { get; set; }
+
     public MarkdownParser(MarkdownTheme theme)
     {
         _theme = theme;
@@ -84,14 +90,20 @@ public class MarkdownParser
         {
             var cd = new CodeDocument();
             cd.Theme = _theme.CodeTheme;
-            cd.SetCode(code.Code, code.Language);
-
-            // Wrap in a Border? Theme has CodeBlock style (colors).
-            // CodeDocument doesn't support Border/Padding natively yet (it inherits StackPanel).
-            // We can wrap it in a border if we had one.
-            // Or just set background? CodeDocument constructs lines.
-            // Let's return cd for now.
+            // Fall back to the theme-level default language when the fence omitted one.
+            // Useful for blog content where ``` fences carry no language tag and the
+            // surrounding context implies a single language (e.g. C# for a .NET blog).
+            string effectiveLanguage = string.IsNullOrEmpty(code.Language)
+                ? (_theme.DefaultCodeLanguage ?? "")
+                : code.Language;
+            cd.SetCode(code.Code, effectiveLanguage);
             return cd;
+        }
+        else if (block is SpacerBlock)
+        {
+            // A single-row blank acts as a paragraph separator. Width=1 keeps StackPanel
+            // from collapsing the element to zero height (empty Text measures to 0,0).
+            return new TextBlock { Text = " " };
         }
         else if (block is QuoteBlock quote)
         {
@@ -232,12 +244,22 @@ public class MarkdownParser
             }
             else if (token is ImageToken it)
             {
+                var imgStyle = _theme.Image;
                 var img = new Image
                 {
                     AltText = it.AltText,
                     Source = it.Url,
-                    Foreground = _theme.Image.Foreground ?? ConsoleColor.Green
+                    Foreground = imgStyle.Foreground ?? ConsoleColor.Green,
+                    MaxCellWidth = imgStyle.MaxCellWidth,
+                    MaxCellHeight = imgStyle.MaxCellHeight,
+                    RenderMode = imgStyle.RenderMode,
+                    AsciiRenderer = imgStyle.AsciiRenderer,
+                    BaseDirectory = BaseDirectory
                 };
+                if (imgStyle.Background.HasValue)
+                {
+                    img.Background = imgStyle.Background;
+                }
                 p.AddChild(img);
             }
         }
@@ -252,11 +274,15 @@ public class MarkdownParser
     private class CodeBlock : Block { public string Code; public string Language; }
     private class QuoteBlock : Block { public StringBuilder Text = new StringBuilder(); }
     private class TableBlock : Block { public List<string> Headers; public List<List<string>> Rows = new List<List<string>>(); }
+    /// <summary>Marks a vertical spacer (one rendered blank row) caused by one or more
+    /// blank lines in the source. Coalesced so a run of N blank lines yields one spacer.</summary>
+    private class SpacerBlock : Block { }
 
     private List<Block> ParseBlocks(List<string> lines)
     {
         var blocks = new List<Block>();
         Block? currentBlock = null;
+        bool inBlankRun = false;
 
         for (int i = 0; i < lines.Count; i++)
         {
@@ -270,36 +296,105 @@ public class MarkdownParser
                     blocks.Add(currentBlock);
                     currentBlock = null;
                 }
+                // Coalesce consecutive blank lines into a single spacer block, but only
+                // when there's already preceding content. This produces visual paragraph
+                // spacing without growing the gap with each extra blank line in source.
+                if (!inBlankRun && blocks.Count > 0 && blocks[blocks.Count - 1] is not SpacerBlock)
+                {
+                    blocks.Add(new SpacerBlock());
+                }
+                inBlankRun = true;
                 continue;
             }
+            inBlankRun = false;
 
             // Code Block (Fence)
             if (trimmed.StartsWith("```") || trimmed.StartsWith("~~~"))
             {
                 if (currentBlock != null) { blocks.Add(currentBlock); currentBlock = null; }
 
-                var lang = trimmed.Trim('`', '~').Trim();
+                char fenceChar = trimmed[0];
+                int fenceLen = 0;
+                while (fenceLen < trimmed.Length && trimmed[fenceLen] == fenceChar) fenceLen++;
+                string fenceStr = new string(fenceChar, fenceLen);
+
+                string afterFence = trimmed.Substring(fenceLen);
+
+                // Heuristic: spec-compliant fences put the language identifier directly after
+                // the fence chars (e.g. ```csharp). WordPress-style exports use ``` like inline
+                // code spans (e.g. ``` some code ```), where any text following a space is
+                // actually content. Use the leading space as the discriminator.
+                bool firstLineIsContent = afterFence.Length > 0 && afterFence[0] == ' ';
+
+                // Single-line code block: same line contains both an opening and a closing
+                // fence (e.g. ``` foo ```). Take the text between them as the code.
+                int inlineCloseIdx = afterFence.LastIndexOf(fenceStr, StringComparison.Ordinal);
+                if (inlineCloseIdx >= 0)
+                {
+                    string inlineContent = afterFence.Substring(0, inlineCloseIdx).Trim();
+                    blocks.Add(new CodeBlock { Language = "", Code = inlineContent });
+                    continue;
+                }
+
+                string lang = firstLineIsContent ? "" : afterFence.Trim();
                 var codeLines = new List<string>();
-                i++; // Skip fence
+                if (firstLineIsContent)
+                {
+                    string firstLine = afterFence.Trim();
+                    if (firstLine.Length > 0) codeLines.Add(firstLine);
+                }
+
+                i++; // Skip opening fence line
                 while (i < lines.Count)
                 {
-                    if (lines[i].Trim().StartsWith("```") || lines[i].Trim().StartsWith("~~~"))
+                    string contentLine = lines[i];
+                    string contentTrimmed = contentLine.Trim();
+
+                    // Spec-compliant closing fence: line consists entirely of fence chars
+                    // (length >= the opening fence). Prevents content lines that merely
+                    // start with ``` from ending the block prematurely.
+                    if (contentTrimmed.Length >= fenceLen && contentTrimmed.All(c => c == fenceChar))
+                    {
                         break;
-                    codeLines.Add(lines[i]);
+                    }
+
+                    // Lenient closing fence: a content line that ends with ``` (common in
+                    // WordPress-exported markdown). Strip the trailing fence and keep the
+                    // preceding text as the last line of code.
+                    if (contentTrimmed.EndsWith(fenceStr, StringComparison.Ordinal))
+                    {
+                        int idx = contentLine.LastIndexOf(fenceStr, StringComparison.Ordinal);
+                        string lastLine = idx >= 0 ? contentLine.Substring(0, idx).TrimEnd() : contentLine;
+                        if (lastLine.Length > 0) codeLines.Add(lastLine);
+                        i++;
+                        break;
+                    }
+
+                    codeLines.Add(contentLine);
                     i++;
                 }
+
                 blocks.Add(new CodeBlock { Language = lang, Code = string.Join("\n", codeLines) });
                 continue;
             }
 
-            // Header
+            // Header (CommonMark ATX: 1-6 # chars followed by space or end-of-line).
+            // Requiring a space after the # rejects CSS selectors and other lines that
+            // happen to start with '#' (e.g. WordPress-exported `#arrayTable1 {` blocks).
             if (trimmed.StartsWith("#"))
             {
-                if (currentBlock != null) { blocks.Add(currentBlock); currentBlock = null; }
                 int level = 0;
                 while (level < trimmed.Length && trimmed[level] == '#') level++;
-                blocks.Add(new HeaderBlock { Level = level, Text = trimmed.Substring(level).Trim() });
-                continue;
+                bool isAtxHeading = level >= 1 && level <= 6
+                    && (level == trimmed.Length || trimmed[level] == ' ');
+
+                if (isAtxHeading)
+                {
+                    if (currentBlock != null) { blocks.Add(currentBlock); currentBlock = null; }
+                    blocks.Add(new HeaderBlock { Level = level, Text = trimmed.Substring(level).Trim() });
+                    continue;
+                }
+                // else: not a heading -- fall through to paragraph handling below.
             }
 
             // List
@@ -333,28 +428,40 @@ public class MarkdownParser
                 continue;
             }
 
-            // Table
-            if (trimmed.StartsWith("|"))
+            // Table.
+            //
+            // Two acceptable header forms:
+            //   GFM-strict:  | Col1 | Col2 |    (leading + trailing pipe)
+            //   WordPress:   Col1 | Col2 | Col3 (no leading pipe, optional trailing)
+            //
+            // Detection rule: current line contains at least one '|' AND the next
+            // line is a separator row (only '-', '|', ':', whitespace; with at
+            // least one '-' and one '|'). Continuation rows are any subsequent
+            // lines that contain '|'.
+            if (currentBlock == null
+                && trimmed.Contains('|')
+                && i + 1 < lines.Count
+                && IsTableSeparator(lines[i + 1]))
             {
-                // Check if it's a table start (header + separator)
-                // We need to look ahead for separator `|---|`
-                if (currentBlock == null && i + 1 < lines.Count && lines[i + 1].Trim().StartsWith("|") && lines[i + 1].Contains("-"))
+                var table = new TableBlock();
+                table.Headers = ParseTableLine(line);
+                int columnCount = table.Headers.Count;
+
+                i++; // skip header
+                i++; // skip separator
+
+                while (i < lines.Count && lines[i].Trim().Contains('|'))
                 {
-                    var table = new TableBlock();
-                    table.Headers = ParseTableLine(line);
-                    i++; // Skip header
-                    i++; // Skip separator (assumed exists)
-                    // Read rows
-                    while (i < lines.Count && lines[i].Trim().StartsWith("|"))
-                    {
-                        table.Rows.Add(ParseTableLine(lines[i]));
-                        i++;
-                    }
-                    i--; // Backtrack one since loop overshot
-                    blocks.Add(table);
-                    continue;
+                    var cells = ParseTableLine(lines[i]);
+                    // Pad short rows so every row has the same column count
+                    // (WordPress sometimes drops the trailing empty cell).
+                    while (cells.Count < columnCount) cells.Add(string.Empty);
+                    table.Rows.Add(cells);
+                    i++;
                 }
-                // If not a valid table start, treat as paragraph?
+                i--; // backtrack so the outer loop's i++ lands on the next line
+                blocks.Add(table);
+                continue;
             }
 
             // Paragraph
@@ -376,26 +483,58 @@ public class MarkdownParser
         return blocks;
     }
 
+    /// <summary>
+    /// True when <paramref name="line"/> is a markdown table separator row -- one
+    /// composed only of '-', '|', ':', and whitespace, with at least one '-' and
+    /// one '|'. Allows e.g. <c>|---|---|</c>, <c>---|---|---</c>, or <c>:---:</c>.
+    /// </summary>
+    private static bool IsTableSeparator(string line)
+    {
+        string trimmed = line.Trim();
+        if (trimmed.Length == 0) return false;
+        bool hasDash = false;
+        bool hasPipe = false;
+        for (int i = 0; i < trimmed.Length; i++)
+        {
+            char c = trimmed[i];
+            if (c == '-') hasDash = true;
+            else if (c == '|') hasPipe = true;
+            else if (c != ':' && c != ' ' && c != '\t') return false;
+        }
+        return hasDash && hasPipe;
+    }
+
+    /// <summary>
+    /// Splits a markdown table row into cells. Strips a single optional leading
+    /// and trailing '|' (GFM-strict syntax) but preserves empty cells in between
+    /// so that `| a |  | c |` correctly produces three cells (`a`, ``, `c`).
+    /// </summary>
     private List<string> ParseTableLine(string line)
     {
-        // Split by | but ignore escaped? Simple split for now.
-        // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
-        ReadOnlySpan<char> span = line.AsSpan();
-        var result = new List<string>();
+        // Trim trailing whitespace (covers the WordPress two-trailing-spaces line
+        // break) but keep leading whitespace -- it's part of cell content if the
+        // line starts inside a cell.
+        ReadOnlySpan<char> span = line.AsSpan().TrimEnd();
         int start = 0;
-        while (start < span.Length)
+        int end = span.Length;
+
+        // Strip optional leading/trailing pipe (the GFM border characters).
+        if (start < end && span[start] == '|') start++;
+        if (end > start && span[end - 1] == '|') end--;
+
+        var result = new List<string>();
+        int cellStart = start;
+        for (int i = start; i < end; i++)
         {
-            int end = span.Slice(start).IndexOf('|');
-            if (end == -1)
+            if (span[i] == '|')
             {
-                var p = span.Slice(start);
-                if (!p.IsWhiteSpace()) result.Add(p.Trim().ToString());
-                break;
+                result.Add(span.Slice(cellStart, i - cellStart).Trim().ToString());
+                cellStart = i + 1;
             }
-            var p2 = span.Slice(start, end);
-            if (!p2.IsWhiteSpace()) result.Add(p2.Trim().ToString());
-            start += end + 1;
         }
+        // Final cell (always added, even if empty -- it's a real cell position).
+        result.Add(span.Slice(cellStart, end - cellStart).Trim().ToString());
+
         return result;
     }
 

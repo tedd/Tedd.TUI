@@ -6,6 +6,14 @@ namespace Tedd.TUI;
 
 public class TuiWindow : UIElement
 {
+    /// <summary>
+    /// Capabilities of the surface this window is rendered on. Controls call
+    /// <see cref="UIElement.GetCapabilities"/> to read this. Defaults to
+    /// <see cref="SurfaceCapabilities.TextOnly"/>; renderers should set their own profile
+    /// (e.g. <see cref="SurfaceCapabilities.SupportsGraphics"/> = true for HTML surfaces).
+    /// </summary>
+    public SurfaceCapabilities Capabilities { get; set; } = SurfaceCapabilities.TextOnly;
+
     public UIElement Content
     {
         get => field;

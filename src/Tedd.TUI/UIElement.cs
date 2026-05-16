@@ -608,6 +608,17 @@ public abstract class UIElement : DependencyObject
         return current;
     }
 
+    /// <summary>
+    /// Walks to the root visual and returns the surface capabilities of the hosting
+    /// <see cref="TuiWindow"/>, or <see cref="SurfaceCapabilities.TextOnly"/> when no
+    /// window is attached. Graphics-aware controls use this to pick between bitmap and
+    /// text/ASCII rendering paths.
+    /// </summary>
+    public SurfaceCapabilities GetCapabilities()
+    {
+        return (GetRoot() as TuiWindow)?.Capabilities ?? SurfaceCapabilities.TextOnly;
+    }
+
     public virtual void Invalidate()
     {
         if (Parent != null) Parent.Invalidate();

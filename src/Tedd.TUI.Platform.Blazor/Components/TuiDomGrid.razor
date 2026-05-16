@@ -1,8 +1,9 @@
+@using System
+@using System.Collections.Generic
 @using Tedd.TUI
 @using Tedd.TUI.Platform.Blazor
 @implements IDisposable
 
-@using System.Text
 @using System.Text
 @{
     var cw = Renderer?.CharWidth ?? 10;
@@ -42,6 +43,19 @@
                                 }
                             }
                         </div>
+                    }
+
+                    if (buffer.Graphics != null)
+                    {
+                        foreach (var g in buffer.Graphics)
+                        {
+                            var src = GetImageSrc(g);
+                            if (!string.IsNullOrEmpty(src))
+                            {
+                                <img src="@src" alt=""
+                                     style="position:absolute; left:@(g.CharX * cw)px; top:@(g.CharY * ch)px; width:@(g.CharWidth * cw)px; height:@(g.CharHeight * ch)px; pointer-events:none; image-rendering:auto;" />
+                            }
+                        }
                     }
                 }
             </div>
@@ -114,6 +128,35 @@
             ConsoleColor.White => "#FFFFFF",
             _ => "#000000"
         };
+    }
+
+    // Keyed by the byte[] reference identity so the cache only invalidates when the
+    // underlying image data changes. Base64 encoding is otherwise quadratic across frames.
+    private readonly Dictionary<byte[], string> _imageSrcCache = new(ReferenceEqualityComparer.Instance);
+
+    private string GetImageSrc(GraphicPlacement g)
+    {
+        if (g.ImageData != null && g.ImageData.Length > 0)
+        {
+            if (!_imageSrcCache.TryGetValue(g.ImageData, out var cached))
+            {
+                var media = string.IsNullOrEmpty(g.MediaType) ? "application/octet-stream" : g.MediaType;
+                cached = $"data:{media};base64,{Convert.ToBase64String(g.ImageData)}";
+                _imageSrcCache[g.ImageData] = cached;
+            }
+            return cached;
+        }
+
+        // No bytes resolved but a URL-style source: let the browser fetch it directly.
+        if (!string.IsNullOrEmpty(g.Source) &&
+            (g.Source.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+             || g.Source.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+             || g.Source.StartsWith("data:", StringComparison.OrdinalIgnoreCase)
+             || g.Source.StartsWith("/")))
+        {
+            return g.Source;
+        }
+        return string.Empty;
     }
 
     public void Dispose()
