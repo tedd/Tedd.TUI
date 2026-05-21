@@ -16,7 +16,7 @@ public sealed class HttpImageResolver : IImageResolver
 {
     private readonly HttpClient _httpClient;
     private readonly Dictionary<string, CacheEntry> _cache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object _gate = new();
+    private readonly System.Threading.Lock _gate = new();
 
     /// <summary>Maximum time to wait for a single download. Defaults to 5 seconds.</summary>
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(5);
