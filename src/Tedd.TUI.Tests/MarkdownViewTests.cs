@@ -184,7 +184,7 @@ public class MarkdownViewTests
         var table = (Table)doc.GetVisualChild(0);
 
         // Row count check
-        Assert.Equal(1, table.Rows.Count);
+        Assert.Single(table.Rows);
         var row = table.Rows[0];
         Assert.Equal(3, row.Cells.Count);
     }
@@ -204,7 +204,7 @@ public class MarkdownViewTests
         var table = (Table)doc.GetVisualChild(0);
 
         Assert.Equal(4, table.Columns.Count);
-        Assert.Equal(1, table.Rows.Count);
+        Assert.Single(table.Rows);
         Assert.Equal(4, table.Rows[0].Cells.Count);
     }
 

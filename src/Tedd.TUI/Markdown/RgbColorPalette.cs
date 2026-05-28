@@ -23,22 +23,22 @@ public static class RgbColorPalette
         PaletteB = new byte[16];
 
         // Mirrors tuiInterop.colors / TuiDomGrid.ToHtmlColor.
-        Set(ConsoleColor.Black,       0x00, 0x00, 0x00);
-        Set(ConsoleColor.DarkBlue,    0x00, 0x00, 0x8B);
-        Set(ConsoleColor.DarkGreen,   0x00, 0x64, 0x00);
-        Set(ConsoleColor.DarkCyan,    0x00, 0x8B, 0x8B);
-        Set(ConsoleColor.DarkRed,     0x8B, 0x00, 0x00);
+        Set(ConsoleColor.Black, 0x00, 0x00, 0x00);
+        Set(ConsoleColor.DarkBlue, 0x00, 0x00, 0x8B);
+        Set(ConsoleColor.DarkGreen, 0x00, 0x64, 0x00);
+        Set(ConsoleColor.DarkCyan, 0x00, 0x8B, 0x8B);
+        Set(ConsoleColor.DarkRed, 0x8B, 0x00, 0x00);
         Set(ConsoleColor.DarkMagenta, 0x8B, 0x00, 0x8B);
-        Set(ConsoleColor.DarkYellow,  0xBD, 0xB7, 0x6B);
-        Set(ConsoleColor.Gray,        0xC0, 0xC0, 0xC0);
-        Set(ConsoleColor.DarkGray,    0x80, 0x80, 0x80);
-        Set(ConsoleColor.Blue,        0x00, 0x00, 0xFF);
-        Set(ConsoleColor.Green,       0x00, 0xFF, 0x00);
-        Set(ConsoleColor.Cyan,        0x00, 0xFF, 0xFF);
-        Set(ConsoleColor.Red,         0xFF, 0x00, 0x00);
-        Set(ConsoleColor.Magenta,     0xFF, 0x00, 0xFF);
-        Set(ConsoleColor.Yellow,      0xFF, 0xFF, 0x00);
-        Set(ConsoleColor.White,       0xFF, 0xFF, 0xFF);
+        Set(ConsoleColor.DarkYellow, 0xBD, 0xB7, 0x6B);
+        Set(ConsoleColor.Gray, 0xC0, 0xC0, 0xC0);
+        Set(ConsoleColor.DarkGray, 0x80, 0x80, 0x80);
+        Set(ConsoleColor.Blue, 0x00, 0x00, 0xFF);
+        Set(ConsoleColor.Green, 0x00, 0xFF, 0x00);
+        Set(ConsoleColor.Cyan, 0x00, 0xFF, 0xFF);
+        Set(ConsoleColor.Red, 0xFF, 0x00, 0x00);
+        Set(ConsoleColor.Magenta, 0xFF, 0x00, 0xFF);
+        Set(ConsoleColor.Yellow, 0xFF, 0xFF, 0x00);
+        Set(ConsoleColor.White, 0xFF, 0xFF, 0xFF);
     }
 
     private static void Set(ConsoleColor color, byte r, byte g, byte b)

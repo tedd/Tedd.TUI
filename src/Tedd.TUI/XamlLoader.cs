@@ -296,7 +296,7 @@ public static class XamlLoader
             if (p.Length == 2)
             {
                 object val = ConvertValue(value, p[1].ParameterType);
-                method.Invoke(null, [ instance, val  ]);
+                method.Invoke(null, [instance, val]);
             }
         }
     }

@@ -57,8 +57,8 @@ public class TableRow : UIElement
         var table = FindAncestor<Table>();
         if (table != null && table.Columns.Count > 0)
         {
-             foreach (var col in table.Columns) totalWidth += col.ActualWidth;
-             if (table.ShowVerticalLines) totalWidth += table.Columns.Count - 1;
+            foreach (var col in table.Columns) totalWidth += col.ActualWidth;
+            if (table.ShowVerticalLines) totalWidth += table.Columns.Count - 1;
         }
 
         return new Size(totalWidth, maxHeight > 0 ? maxHeight : 1);

@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tedd.TUI;
+namespace Tedd.TUI.Archive;
 
-public enum TextWrapping
+internal enum TextWrappingLegacy
 {
     NoWrap,
     Wrap
 }
 
-public class TextBlock : UIElement
+public class TextBlockLegacy : UIElement
 {
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register("Text", typeof(string), typeof(TextBlock), string.Empty);
+        DependencyProperty.Register("Text", typeof(string), typeof(TextBlockLegacy), string.Empty);
 
     public string Text
     {
@@ -21,11 +21,11 @@ public class TextBlock : UIElement
     }
 
     public static readonly DependencyProperty TextWrappingProperty =
-        DependencyProperty.Register("TextWrapping", typeof(TextWrapping), typeof(TextBlock), TextWrapping.NoWrap);
+        DependencyProperty.Register("TextWrapping", typeof(Tedd.TUI.TextWrapping), typeof(TextBlockLegacy), Tedd.TUI.TextWrapping.NoWrap);
 
-    public TextWrapping TextWrapping
+    public Tedd.TUI.TextWrapping TextWrapping
     {
-        get => (TextWrapping)GetValue(TextWrappingProperty);
+        get => (Tedd.TUI.TextWrapping)GetValue(TextWrappingProperty);
         set => SetValue(TextWrappingProperty, value);
     }
 
@@ -42,7 +42,7 @@ public class TextBlock : UIElement
         if (string.IsNullOrEmpty(text))
             return new Size(0, 0);
 
-        if (TextWrapping == TextWrapping.NoWrap || availableSize.Width <= 0)
+        if (TextWrapping == Tedd.TUI.TextWrapping.NoWrap || availableSize.Width <= 0)
         {
             _cachedLines = null;
             _cachedWrapWidth = -1;
@@ -71,7 +71,7 @@ public class TextBlock : UIElement
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
-        if (TextWrapping == TextWrapping.NoWrap)
+        if (TextWrapping == Tedd.TUI.TextWrapping.NoWrap)
         {
             RenderLine(buffer, x, y, text);
             return;
@@ -142,18 +142,16 @@ public class TextBlock : UIElement
 
         int i = 0;
         int n = line.Length;
-        Span<char> current = stackalloc char[maxWidth];
-        int currentLen = 0;
-        ReadOnlySpan<char> span = line.AsSpan();
+        var current = new System.Text.StringBuilder(maxWidth);
 
         while (i < n)
         {
             // Consume leading whitespace at start of line (skip), elsewhere keep one space between words.
-            if (span[i] == ' ')
+            if (line[i] == ' ')
             {
-                if (currentLen > 0 && currentLen < maxWidth)
+                if (current.Length > 0 && current.Length < maxWidth)
                 {
-                    current[currentLen++] = ' ';
+                    current.Append(' ');
                 }
                 i++;
                 continue;
@@ -161,40 +159,39 @@ public class TextBlock : UIElement
 
             // Read next word.
             int wordStart = i;
-            while (i < n && span[i] != ' ') i++;
+            while (i < n && line[i] != ' ') i++;
             int wordLen = i - wordStart;
 
             if (wordLen > maxWidth)
             {
                 // Hard-break a word that's too long for the line width.
-                if (currentLen > 0)
+                if (current.Length > 0)
                 {
-                    output.Add(new string(current.Slice(0, currentLen).TrimEnd()));
-                    currentLen = 0;
+                    output.Add(current.ToString().TrimEnd());
+                    current.Clear();
                 }
                 int pos = wordStart;
                 while (pos < wordStart + wordLen)
                 {
                     int take = Math.Min(maxWidth, wordStart + wordLen - pos);
-                    output.Add(new string(span.Slice(pos, take)));
+                    output.Add(line.Substring(pos, take));
                     pos += take;
                 }
                 continue;
             }
 
-            if (currentLen + wordLen > maxWidth)
+            if (current.Length + wordLen > maxWidth)
             {
-                output.Add(new string(current.Slice(0, currentLen).TrimEnd()));
-                currentLen = 0;
+                output.Add(current.ToString().TrimEnd());
+                current.Clear();
             }
 
-            span.Slice(wordStart, wordLen).CopyTo(current.Slice(currentLen));
-            currentLen += wordLen;
+            current.Append(line, wordStart, wordLen);
         }
 
-        if (currentLen > 0)
+        if (current.Length > 0)
         {
-            output.Add(new string(current.Slice(0, currentLen).TrimEnd()));
+            output.Add(current.ToString().TrimEnd());
         }
     }
 }
