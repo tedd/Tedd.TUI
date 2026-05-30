@@ -1049,8 +1049,9 @@ internal class TableSeparator : UIElement
         // rather than the infinite horizontal scroll space given by ScrollViewer.
         int width = Math.Min(RenderSize.Width, table.RenderSize.Width);
 
-        char hChar = '\u2500';
-        char crossChar = '\u253C';
+        var interior = BoxDrawingChars.GetInterior(table.BorderStyle);
+        char hChar = interior.Horizontal;
+        char crossChar = BoxDrawingChars.GetInteriorCross(table.BorderStyle);
 
         buffer.DrawHLine(x, y, width, hChar, TuiColor.Gray, TuiColor.Black);
 

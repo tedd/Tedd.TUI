@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using Tedd.TUI;
 using Tedd.TUI.Platform.Console;
 
@@ -21,6 +22,8 @@ public sealed class WindowsTerminalPlatform : ITuiPlatform
     private uint _previousInputMode;
     private bool _outputModePatched;
     private bool _inputModePatched;
+    private Encoding? _previousOutputEncoding;
+    private bool _outputEncodingPatched;
 
     /// <summary>Profile observed by <see cref="TerminalProbe"/> at construction time.</summary>
     public TerminalProfile Profile { get; }
@@ -73,6 +76,19 @@ public sealed class WindowsTerminalPlatform : ITuiPlatform
 
         try
         {
+            _previousOutputEncoding = System.Console.OutputEncoding;
+            System.Console.OutputEncoding = Encoding.UTF8;
+            _outputEncodingPatched = true;
+        }
+        catch
+        {
+            // Some hosts (redirected stdout, certain test runners) refuse this.
+            // We fall through; output will still render but heavy box-drawing
+            // glyphs may be transcoded by the OEM codepage.
+        }
+
+        try
+        {
             var outHandle = Win32.GetStdHandle(Win32.STD_OUTPUT_HANDLE);
             if (Win32.GetConsoleMode(outHandle, out _previousOutputMode))
             {
@@ -108,6 +124,11 @@ public sealed class WindowsTerminalPlatform : ITuiPlatform
 
         try
         {
+            if (_outputEncodingPatched && _previousOutputEncoding != null)
+            {
+                System.Console.OutputEncoding = _previousOutputEncoding;
+                _outputEncodingPatched = false;
+            }
             if (_outputModePatched)
             {
                 Win32.SetConsoleMode(Win32.GetStdHandle(Win32.STD_OUTPUT_HANDLE), _previousOutputMode);
