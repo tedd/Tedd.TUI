@@ -1,8 +1,11 @@
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
 using Tedd.TUI;
 using Tedd.TUI.Archive;
+using System.Reflection;
 
 namespace Tedd.TUI.Benchmarks;
+
 [MemoryDiagnoser]
 public class TextBlockBenchmark
 {
