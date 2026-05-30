@@ -47,3 +47,7 @@
 ## 2025-05-18 - Parameter Optimization and Collection Expressions
 **Observation:** The codebase contained numerous legacy array initializations using explicit types like `new string[0]`, `new[] { ... }`, and `new object[] { ... }` in files such as language definitions in `CodeColoring/Languages`, `XamlLoader.cs`, and tests.
 **Strategic Action:** Upgraded to C# 12 collection expressions (`[]`) across the codebase to reduce syntactic boilerplate and, for empty-array cases, avoid unnecessary allocations without compromising semantic integrity. Applied explicit array casts `(Grammar[])` where necessary for interface targets.
+
+## 2025-02-19 - C# 13 System.Threading.Lock Modernization
+**Observation:** The codebase contained legacy lock statements utilizing an arbitrary object (`object _gate`) for synchronization in `HttpImageResolver.cs`, an obsolete pattern that lacks explicit thread safety semantics compared to modern alternatives.
+**Strategic Action:** Transitioned the synchronization mechanism to use the C# 13 `System.Threading.Lock` type (`System.Threading.Lock _gate = new();`) to enforce deterministic thread safety and structural clarity.

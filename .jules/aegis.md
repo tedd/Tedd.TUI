@@ -201,3 +201,17 @@ Implemented coverage expanding into dynamic memory allocations ensuring observab
 ## 2025-02-14 - PasswordBox Event Handling and Focus Synchronization
 **Observation:** Coverage analysis on `PasswordBox` revealed untested logical branches in `OnPropertyChanged`, `OnKeyDown`, and `OnMouseDown`, specifically regarding the propagation of `IsFocused` state to the inner templated `TextBox` and fallback logic when the internal `TextBox` is uninitialized.
 **Strategic Action:** Added parameterized unit tests that explicitly test both initialized (`Measure` called) and uninitialized states, validating null-coalescing fallbacks and event bubbling routing to ensure deterministic execution limits in the character UI logic.
+## 2026-05-21 - TextBlock and CodeDocument Coverage Expansion
+
+**Observation:**
+Analysis identified that `Tedd.TUI.TextBlock` lacked branch and line coverage specifically around layout bounds checking, line-wrapping algorithms, rendering edges cases, and zero-width/height scenarios. `Tedd.TUI.CodeColoring.CodeDocument` similarly lacked tests regarding Theme default states and nested token hierarchy rendering logic.
+
+**Strategic Action:**
+Developed parameterized testing for both components.
+- `TextBlockCoverageTests.cs`: Verified text wrapping states via `MeasureOverride` using edge case string bounds (long strings vs short constraints, explicit newlines vs empty text).
+- Verified `TextBlock.Render` behavior mapping boundaries across multiple coordinate offsets to enforce caching variables.
+- `CodeDocumentCoverageTests.cs`: Instantiated token trees via `xml` and `csharp` proxy languages to evaluate layout parsing. Added edge case vectors involving unknown languages string propagation.
+
+**Metrics:**
+- Increased `Tedd.TUI.TextBlock` coverage from 30.9% to 90.4%.
+- Increased `Tedd.TUI.CodeColoring.CodeDocument` coverage from 65.7% to 94.7%.

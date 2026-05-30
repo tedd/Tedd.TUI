@@ -334,7 +334,7 @@ public class TableCoverageTests
     [Fact]
     public void Table_Separator_Rendering()
     {
-        var table = new Table { ShowHorizontalLines = true, ShowVerticalLines = true, ShowBorder = true };
+        var table = new Table { ShowHorizontalLines = true, ShowVerticalLines = true, ShowBorder = true, BorderStyle = BoxStyle.Single };
 
         // Two columns to verify cross character
         table.Columns.Add(new TableColumn { Width = new GridLength(3, GridUnitType.Pixel) });

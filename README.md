@@ -6,7 +6,7 @@
 
 - **WPF-Inspired Core:** Built on a `UIElement` base with a lightweight `DependencyProperty` system and hierarchical Visual Tree.
 - **Advanced Layout Engine:** Implements a comprehensive two-pass `Measure` and `Arrange` protocol.
-  - **Grid:** Supports `RowDefinition`, `ColumnDefinition`, `Star` (*) sizing, and `Auto` sizing.
+  - **Grid:** Supports `RowDefinition`, `ColumnDefinition`, `Star` (*) sizing, and `Auto` sizing. The `Grid` component layout performance is optimized by caching attached properties (`Row`, `Column`, `RowSpan`, `ColumnSpan`) into a `GridChildInfo` struct and `Span<T>` during `MeasureOverride` and `ArrangeOverride` to minimize `DependencyObject.GetValue` dictionary lookup overhead.
   - **UniformGrid:** Symmetrical grid layouts via `Rows` and `Columns` dependency properties.
   - **StackPanel:** Vertical and horizontal stacking.
   - **WrapPanel:** Sequential layout with line/column wrapping.
@@ -16,14 +16,15 @@
   - **Border:** Decorative borders with box-drawing characters.
 - **Rich Control Suite:**
   - **DataGrid:** Supports `ItemsSource` binding, `AutoGenerateColumns`, selection, and pagination.
-  - **Table:** Manual row management with sorting, pagination, and header customization. Supports structural customization via properties such as `ShowBorder`, `ShowHeader`, `ShowVerticalLines`, `ShowHorizontalLines`, and `BorderStyle` (e.g., `BoxStyle.Heavy`, which requires exact Unicode matching for borders like `\u2533` TDown and `\u253B` TUp), while its columns are defined via `TableColumn` utilizing `GridLength` for widths.
+  - **Table:** Manual row management with sorting, pagination, and header customization. In `Table`, performance is optimized by caching the `TotalWidth` in the Table and a per-column `Offset` in `TableColumn` during `MeasureOverride`, reducing layout and rendering complexity from O(Rows * Columns) to O(Rows + Columns). Supports structural customization via properties such as `ShowBorder`, `ShowHeader`, `ShowVerticalLines`, `ShowHorizontalLines`, and `BorderStyle` (e.g., `BoxStyle.Heavy`, which requires exact Unicode matching for borders like `\u2533` TDown and `\u253B` TUp), while its columns are defined via `TableColumn` utilizing `GridLength` for widths.
   - **MarkdownView:** Renders Markdown content with theming support.
+  - **CodeDocument:** Renders syntax-highlighted source code utilizing the internal CodeColoring engine and customizable themes.
   - **Standard Controls:** `Button`, `TextBox`, `PasswordBox`, `TextEditor`, `CheckBox`, `RadioButton`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `GroupBox`, `TreeView`, `TreeViewItem`, `HeaderedItemsControl`, `Expander`, `DialogBox`, `UniformGrid`, `ScrollViewer`, `ScrollBar`, `Thumb`, `Slider`, `GridSplitter`, `MenuBar`.
   - **ListBox:** Achieves WPF architectural isomorphism by utilizing a `ControlTemplate` wrapping an `ItemsPresenter` within a `ScrollViewer`, removing custom `MeasureOverride` and `Render` logic and deferring layout to standard XAML paradigms. The generated container, `ListBoxItem`, inherits from `ContentControl` and manages its visual state via the `IsSelected` dependency property and `Selected`/`Unselected` bubbling routed events.
   - **Slider:** Inherits from `UIElement` and exposes a bubbling `ValueChanged` routed event (`ValueChangedEvent`) that is raised from `OnPropertyChanged` when `ValueProperty` changes; the `Value` property setter performs clamping and change guarding without directly invoking the event, preserving WPF-style routed event semantics.
   - **Thumb:** Inherits from `Control` and acts as a primitive drag control. It provides standard WPF-equivalent bubbling routed events for drag lifecycles (`DragStarted`, `DragDelta`, and `DragCompleted`). The coordinate properties in specialized event arguments like `DragDeltaEventArgs.HorizontalChange` use `double` to maintain API parity with WPF, despite underlying integer mouse coordinates.
   - **GridSplitter:** Inherits from `Thumb` and dynamically adjusts the `GridLength` of adjacent `RowDefinition` and `ColumnDefinition` elements via the `DragDelta` routed event, implicitly modifying adjacent definitions (e.g., `c - 1` and `c + 1`) when occupying its own dedicated cell index.
-  - **MenuBar:** Inherits from `StackPanel` to provide a horizontal menu strip (typically aligned at the top) for `MenuItem` elements, establishing layout and visual defaults (orientation, background, alignment) and rendering the background; submenu and open/close behavior is implemented by `MenuItem`.
+  - **MenuBar:** Inherits from `StackPanel` to provide a horizontal menu strip (typically aligned at the top) for `MenuItem` elements, establishing layout and visual defaults (orientation, background, alignment) and rendering the background; submenu and open/close behavior is implemented by `MenuItem`. `MenuItem.OpenSubMenu` automatically triggers a layout pass (`Measure` and `Arrange`) on the root `TuiWindow` if the window has a valid size (using `RenderSize` or `Width`/`Height` properties), ensuring correct popup positioning without manual intervention.
   - **ItemsControl:** Inherits from `Control` and utilizes an `ItemsPanel` property (`ItemsPanelTemplate`) alongside an `ItemsPresenter` to generate and populate its visual layout panel, aligning with WPF logical separation. It supports dynamic data mapping via `ItemTemplate` (`DataTemplate`), automatically propagating the ambient data object to a generated `ContentPresenter` during `PrepareContainerForItemOverride`.
   - **Expander:** Inherits from `HeaderedContentControl`, utilizing the `IsExpanded` dependency property and `Expanded`/`Collapsed` bubbling routed events to toggle `ContentPresenter.Visibility` for progressive disclosure.
   - **GroupBox:** Subclasses `HeaderedContentControl` and leverages the `ControlTemplate` engine to map its `Header` and `Content` into a visual `Border`, establishing structural parity with standard WPF grouping conventions.
@@ -205,9 +206,21 @@ Rendering is decoupled from the platform implementation.
 - **Zero-Allocation:** Heavy use of `Span<char>` and `stackalloc` ensures that the rendering loop generates minimal garbage, maintaining high throughput and low latency.
 - **Event-Driven Loop:** The `TuiApp` loop uses OS primitives (`WaitForMultipleObjects` on Windows, `WaitHandle.WaitAny` on *nix) to sleep efficiently until input is received or a visual update is requested, ensuring near-zero CPU usage when idle.
 
+
+### Blazor Integration
+The `Tedd.TUI.Platform.Blazor` library provides wrappers for integrating TUI components into Blazor applications.
+- **Two-way Binding:** Implementing two-way binding for wrapper components (like `TuiSlider` or `TuiPasswordBox`) requires creating an internal nested subclass of the target control (e.g., `ListeningSlider : Slider`) that overrides `OnPropertyChanged` to detect `DependencyProperty` changes and invoke the parent component's `EventCallback`.
+- **Raw UIElement Integration:** Raw `UIElement` components that lack dedicated Blazor wrappers (like `CodeDocument` or `DataGrid`) can be integrated into `.razor` files by wrapping them with the generic `<TuiHost Component="@element" />` component.
+
 ### Platform Abstraction
 - **Tedd.TUI (Core):** Contains the framework logic (`UIElement`, `Grid`, `Table`, etc.) and is platform-agnostic.
 - **Tedd.TUI.Platform.Console:** Provides the concrete implementation of `IConsole`, the input manager, and the `TuiApp` host for terminal environments.
+
+
+### Planned Future Enhancements (Hypotheses)
+The framework's current iteration achieves robust WPF structural parity. However, the following concepts remain hypotheses under investigation and are not yet functionally implemented:
+- **C# 14 `allows ref struct`:** Upgrading generic constraints to support `ref struct` types in fundamental inheritance hierarchies.
+- **Speculative Performance Refactoring:** Additional elimination of `AsSpan()` allocations beyond the verified string search method upgrades.
 
 ## XAML Support
 
