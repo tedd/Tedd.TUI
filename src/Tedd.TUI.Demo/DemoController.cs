@@ -76,6 +76,35 @@ public class DemoController
                     }
                 }
             };
+
+            MainTabs.SelectionChanged += (s, e) =>
+            {
+                if (MainTabs.SelectedIndex >= 0)
+                {
+                    string? targetHeader = MainTabs.SelectedIndex switch
+                    {
+                        0 => "Form",
+                        1 => "Lists",
+                        2 => "Table",
+                        3 => "Scroll",
+                        4 => "Code",
+                        5 => "Markdown",
+                        6 => "DataGrid",
+                        7 => "Editor",
+                        8 => "ProgressBar",
+                        9 => "Layouts",
+                        _ => null
+                    };
+                    if (targetHeader != null)
+                    {
+                        var foundItem = FindTreeViewItemByHeader(NavTree.Items, targetHeader);
+                        if (foundItem != null)
+                        {
+                            NavTree.SelectedItem = foundItem;
+                        }
+                    }
+                }
+            };
         }
 
         // Init Country Combo
@@ -312,5 +341,19 @@ public void Hello() {
     {
         if (ScrollLabel != null && HScroll != null && VScroll != null)
             ScrollLabel.Text = $"H: {HScroll.Value}, V: {VScroll.Value}";
+    }
+
+    private TreeViewItem? FindTreeViewItemByHeader(System.Collections.IEnumerable items, string header)
+    {
+        foreach (var obj in items)
+        {
+            if (obj is TreeViewItem item)
+            {
+                if (item.Header?.ToString() == header) return item;
+                var childResult = FindTreeViewItemByHeader(item.Items, header);
+                if (childResult != null) return childResult;
+            }
+        }
+        return null;
     }
 }
