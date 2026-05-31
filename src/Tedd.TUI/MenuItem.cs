@@ -303,6 +303,7 @@ public class MenuItem : UIElement
             BorderColor = TuiColor.Black,
             Background = TuiColor.Gray,
             BoxStyle = BoxStyle.Single,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Owner = this
         };
 
@@ -398,7 +399,7 @@ public class MenuItem : UIElement
         current.CloseSubMenu();
     }
 
-    private class MenuPopupBorder : Border
+    internal class MenuPopupBorder : Border
     {
         public required MenuItem Owner { get; set; }
     }
