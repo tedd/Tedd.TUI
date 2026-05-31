@@ -46,6 +46,16 @@ public class XamlLoaderTests
     }
 
     [Fact]
+    public void TestLoad_RadioButton_IsChecked_NullableBool()
+    {
+        string xaml = "<RadioButton Content='Male' GroupName='Gender' IsChecked='True' />";
+        var element = XamlLoader.Load(xaml);
+
+        var rb = Assert.IsType<RadioButton>(element);
+        Assert.True(rb.IsChecked);
+    }
+
+    [Fact]
     public void TestLoadNested()
     {
         string xaml = @"

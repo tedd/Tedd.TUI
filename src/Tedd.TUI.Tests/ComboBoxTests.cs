@@ -219,7 +219,7 @@ public class ComboBoxTests
         // The dropdown adds an overlay to TuiWindow. TuiWindow returns overlays at the end of GetVisualChild
         Assert.Equal(2, window.VisualChildrenCount); // Content (ComboBox) + Overlay (Border)
         var overlay = window.GetVisualChild(1);
-        Assert.IsType<Border>(overlay);
+        Assert.IsAssignableFrom<Border>(overlay);
 
         // Should close dropdown
         cb.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });

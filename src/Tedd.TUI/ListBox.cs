@@ -234,8 +234,13 @@ public class ListBox : Selector
         }
     }
 
+    // Bug: Clicking nested focusable child inside ListBox item causes focus to be stolen by ListBox.
+    // Root cause: ListBox.OnMouseDown unconditionally calls Focus() on bubbling mouse down.
+    // Fix: Return early if the mouse down event has already been handled.
+    // Regression: Covered by FocusOverlayTests & general focus routing
     public override void OnMouseDown(MouseEventArgs e)
     {
+        if (e.Handled) return;
         base.OnMouseDown(e);
         Focus();
 

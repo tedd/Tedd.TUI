@@ -370,4 +370,84 @@ public class TreeViewCoverageTests
         // This relies on the InheritanceParent override propagating DataContext down logically.
         Assert.Equal("ParentContext", child.DataContext);
     }
+
+    [Fact]
+    public void TreeViewItem_OnMouseDown_SelectsAndExpands()
+    {
+        // Arrange
+        var window = new TuiWindow();
+        var tree = new TreeView();
+        var root = new TreeViewItem { Header = "Root" };
+        var child = new TreeViewItem { Header = "Child" };
+        root.Items.Add(child);
+        tree.Items.Add(root);
+        window.Content = tree;
+
+        window.Measure(new Size(80, 25));
+        window.Arrange(new Rect(0, 0, 80, 25));
+
+        Assert.False(root.IsExpanded);
+        Assert.Null(tree.SelectedItem);
+
+        // Act: Click on the expand/collapse indicator (which is at X=1 for Level=0)
+        var mouseDownArgs = new MouseEventArgs(UIElement.MouseDownEvent, root)
+        {
+            GlobalX = 1,
+            GlobalY = 0,
+            X = 1,
+            Y = 0
+        };
+        root.RaiseEvent(mouseDownArgs);
+
+        // Assert
+        Assert.True(mouseDownArgs.Handled);
+        Assert.Equal(root, tree.SelectedItem);
+        Assert.True(root.IsExpanded);
+
+        // Verify focus was set on TreeView
+        var focused = typeof(TuiWindow)
+            .GetField("_focusedElement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.GetValue(window) as UIElement;
+        Assert.Equal(tree, focused);
+    }
+
+    [Fact]
+    public void TreeView_ClickEmptySpace_FocusesTreeView()
+    {
+        // Arrange
+        var window = new TuiWindow();
+        var mainPanel = new StackPanel { Orientation = Orientation.Vertical };
+        var btn = new Button { Content = "Button" };
+        var tree = new TreeView();
+        mainPanel.AddChild(btn);
+        mainPanel.AddChild(tree);
+        window.Content = mainPanel;
+
+        window.Measure(new Size(80, 25));
+        window.Arrange(new Rect(0, 0, 80, 25));
+
+        // Focus the button initially
+        window.SetFocus(btn);
+        var focused = typeof(TuiWindow)
+            .GetField("_focusedElement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.GetValue(window) as UIElement;
+        Assert.Equal(btn, focused);
+
+        // Act: Click on the TreeView empty space
+        var mouseDownArgs = new MouseEventArgs(UIElement.MouseDownEvent, tree)
+        {
+            GlobalX = 0,
+            GlobalY = 5,
+            X = 0,
+            Y = 4
+        };
+        tree.RaiseEvent(mouseDownArgs);
+
+        // Assert
+        Assert.True(mouseDownArgs.Handled);
+        focused = typeof(TuiWindow)
+            .GetField("_focusedElement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.GetValue(window) as UIElement;
+        Assert.Equal(tree, focused);
+    }
 }

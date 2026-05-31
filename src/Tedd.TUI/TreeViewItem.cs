@@ -130,4 +130,28 @@ public class TreeViewItem : HeaderedItemsControl
             buffer.SetPixel(contentX + i, y, text[i], fg, bg);
         }
     }
+
+    // Bug: Clicking a TreeViewItem does not focus the TreeView, change selection, or expand/collapse the node.
+    // Root cause: TreeViewItem lacked OnMouseDown override, letting click events bubble unhandled to containers.
+    // Fix: Add OnMouseDown to focus the parent TreeView, set SelectedItem, toggle expansion if clicked on indicator, and set Handled.
+    // Regression: TreeViewCoverageTests.TreeViewItem_OnMouseDown_SelectsAndExpands
+    public override void OnMouseDown(MouseEventArgs e)
+    {
+        if (e.Handled) return;
+        base.OnMouseDown(e);
+
+        var tree = FindAncestor<TreeView>();
+        if (tree != null)
+        {
+            tree.Focus();
+            tree.SelectedItem = this;
+        }
+
+        if (HasItems && e.X >= Level * 2 && e.X < Level * 2 + 3)
+        {
+            IsExpanded = !IsExpanded;
+        }
+
+        e.Handled = true;
+    }
 }

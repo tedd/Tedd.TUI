@@ -84,8 +84,13 @@ public class PasswordBox : Control
         }
     }
 
+    // Bug: Clicking inside PasswordBox causes redundant focus calls and handler invocation.
+    // Root cause: PasswordBox.OnMouseDown unconditionally invokes base, focuses parent, and manually delegates to child TextBox.
+    // Fix: Return early if the mouse down event has already been handled (e.g. by the internal TextBox during bubbling).
+    // Regression: Covered by FocusOverlayTests & general focus routing
     public override void OnMouseDown(MouseEventArgs e)
     {
+        if (e.Handled) return;
         base.OnMouseDown(e);
         Focus();
         if (_internalTextBox != null)

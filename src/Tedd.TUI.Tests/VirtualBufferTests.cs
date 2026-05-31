@@ -192,6 +192,35 @@ namespace Tedd.TUI.Tests
         }
 
         [Fact]
+        public void FillRect_WithClipBeyondBuffer_DoesNotThrow()
+        {
+            var buffer = new VirtualBuffer(10, 10);
+            // Clip extends past the buffer (as ScrollViewer can push with absolute layout coords).
+            buffer.PushClip(new Rect(0, 0, 20, 20));
+
+            var ex = Record.Exception(() =>
+                buffer.FillRect(-5, -5, 30, 30, '#', TuiColor.White, TuiColor.Black));
+
+            Assert.Null(ex);
+            Assert.Equal('#', buffer.GetPixel(0, 0).Character);
+            Assert.Equal('#', buffer.GetPixel(9, 9).Character);
+        }
+
+        [Fact]
+        public void DrawHLine_WithClipBeyondBuffer_DoesNotThrow()
+        {
+            var buffer = new VirtualBuffer(10, 10);
+            buffer.PushClip(new Rect(0, 0, 20, 20));
+
+            var ex = Record.Exception(() =>
+                buffer.DrawHLine(-2, 5, 20, '-', TuiColor.White, TuiColor.Black));
+
+            Assert.Null(ex);
+            Assert.Equal('-', buffer.GetPixel(0, 5).Character);
+            Assert.Equal('-', buffer.GetPixel(9, 5).Character);
+        }
+
+        [Fact]
         public void TestClear_ResetsClipStack()
         {
             var buffer = new VirtualBuffer(10, 10);
