@@ -334,7 +334,7 @@ public class TableCoverageTests
     [Fact]
     public void Table_Separator_Rendering()
     {
-        var table = new Table { ShowHorizontalLines = true, ShowVerticalLines = true, ShowBorder = true, BorderStyle = BoxStyle.Single };
+        var table = new Table { ShowHorizontalLines = true, ShowVerticalLines = true, ShowBorder = true, BorderStyle = BoxStyle.Heavy };
 
         // Two columns to verify cross character
         table.Columns.Add(new TableColumn { Width = new GridLength(3, GridUnitType.Pixel) });
@@ -375,5 +375,69 @@ public class TableCoverageTests
         Assert.Equal('\u254B', buffer.GetPixel(4, 4).Character); // Cross
         Assert.Equal('\u2501', buffer.GetPixel(5, 4).Character);
         Assert.Equal('\u2528', buffer.GetPixel(8, 4).Character);
+    }
+
+    [Fact]
+    public void Table_Pagination_Respects_Border()
+    {
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = false,
+            PageSize = 2,
+            BorderStyle = BoxStyle.Single
+        };
+        // Add 3 rows so pagination actually appears (TotalPages = 2)
+        table.AddRow("Row 1");
+        table.AddRow("Row 2");
+        table.AddRow("Row 3");
+
+        // Set dimensions: Width = 12, Height = 6.
+        // Row 0: Top Border (┌──────────┐)
+        // Row 1: "Row 1      "
+        // Row 2: "Row 2      "
+        // Row 3: Empty separator space / background.
+        // Row 4: Pagination (< 1 of 2 >) inside borders
+        // Row 5: Bottom Border (└──────────┘)
+        table.Measure(new Size(12, 6));
+        table.Arrange(new Rect(0, 0, 12, 6));
+
+        var buffer = new VirtualBuffer(12, 6);
+        table.Render(buffer, 0, 0);
+
+        // Verify bottom border is still rendered at Row 5
+        // BoxStyle.Single bottom-left corner is '└' (U+2514)
+        // bottom-right corner is '┘' (U+2518)
+        // horizontal border is '─' (U+2500)
+        Assert.Equal('\u2514', buffer.GetPixel(0, 5).Character);
+        Assert.Equal('\u2518', buffer.GetPixel(11, 5).Character);
+        Assert.Equal('\u2500', buffer.GetPixel(5, 5).Character);
+
+        // Verify that side borders are preserved on the pagination row (Row 4)
+        Assert.Equal('│', buffer.GetPixel(0, 4).Character);
+        Assert.Equal('│', buffer.GetPixel(11, 4).Character);
+
+        // Verify pagination is rendered on Row 4 (Height - 2)
+        // It contains '<' and '>' and '1 of 2' (since width 12 has 10 columns interior space)
+        string row4Text = "";
+        for (int x = 0; x < 12; x++)
+        {
+            row4Text += buffer.GetPixel(x, 4).Character;
+        }
+        Assert.Contains("< 1 of 2 >", row4Text);
+
+        // Verify that clicking on Row 4 triggers pagination (changing CurrentPage), but clicking on Row 5 does not.
+        // CurrentPage starts at 0
+        Assert.Equal(0, table.CurrentPage);
+
+        // Click next-page ">" on Row 4 (pagination bar is "│ < 1 of 2 > │", index of '>' is 10)
+        var argsClickPage = new MouseEventArgs { X = 10, Y = 4, Handled = false };
+        table.OnMouseDown(argsClickPage);
+        Assert.Equal(1, table.CurrentPage); // page should change to 1
+
+        // Click at the same X but on Row 5 (bottom border)
+        var argsClickBorder = new MouseEventArgs { X = 10, Y = 5, Handled = false };
+        table.OnMouseDown(argsClickBorder);
+        Assert.Equal(1, table.CurrentPage); // page should NOT change (remain 1)
     }
 }
