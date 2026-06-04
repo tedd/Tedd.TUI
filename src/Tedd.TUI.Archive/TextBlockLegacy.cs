@@ -3,11 +3,6 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.Archive;
 
-internal enum TextWrappingLegacy
-{
-    NoWrap,
-    Wrap
-}
 
 public class TextBlockLegacy : UIElement
 {
