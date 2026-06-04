@@ -3,6 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Tedd.TUI\Tedd.TUI.csproj" />
     <ProjectReference Include="..\Tedd.TUI.Platform.Console\Tedd.TUI.Platform.Console.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Platform.WindowsTerminal\Tedd.TUI.Platform.WindowsTerminal.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Platform.LinuxTerminal\Tedd.TUI.Platform.LinuxTerminal.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

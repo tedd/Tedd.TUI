@@ -443,6 +443,15 @@ public static class XamlLoader
             return (TuiColor?)TuiColor.FromHex(value);
         }
 
+        Type? underlyingNullable = Nullable.GetUnderlyingType(targetType);
+        if (underlyingNullable != null)
+        {
+            if (string.IsNullOrWhiteSpace(value)
+                || value.Equals("null", StringComparison.OrdinalIgnoreCase))
+                return null;
+            return ConvertValue(value, underlyingNullable);
+        }
+
         // Fallback
         return Convert.ChangeType(value, targetType);
     }

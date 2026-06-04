@@ -29,7 +29,11 @@ public class GroupBox : HeaderedContentControl
         Template = new ControlTemplate(parent =>
         {
             var groupBox = (GroupBox)parent;
-            var border = new Border();
+            var border = new Border
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+            };
             border.TemplatedParent = groupBox;
 
             var boxStyleBinding = new Binding("BoxStyle");

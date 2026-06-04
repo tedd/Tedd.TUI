@@ -133,16 +133,34 @@ public class TreeView : UIElement
         RebuildVisualTree();
     }
 
+    // Intent: Coordinate initial and subsequent item selection in TreeView to ensure only one item is selected and selection changes propagate correctly.
+    // Why:
+    // - Initial selected items added to the TreeView were not registered as the SelectedItem, leading to multiple items showing as selected.
+    // - Checking selection status on subscribe and subscribing to Unselected event keeps TreeView.SelectedItem in sync with item states.
+    // Constraints/Invariants:
+    // - TreeView.SelectedItem must remain in sync with the actual TreeViewItem whose IsSelected is true.
+    // Failure modes:
+    // - If multiple items are marked IsSelected initially, only the last one remains selected; others will have IsSelected set to false.
+    // Verification:
+    // - TreeViewTests.InitialSelectionIsCoordinated
+    // - TreeViewTests.ItemUnselectionClearsSelectedItem
     private void SubscribeItem(TreeViewItem item)
     {
         item.Expanded += OnItemExpanded;
         item.Collapsed += OnItemCollapsed;
         item.Selected += OnItemSelected;
+        item.Unselected += OnItemUnselected;
         // Recursively subscribe children if they exist?
         // Only if they are already in Items collection of the item.
         foreach (var sub in item.Items)
         {
             if (sub is TreeViewItem tvi) SubscribeItem(tvi);
+        }
+
+        // If the item is already selected when subscribed, synchronize with TreeView's SelectedItem.
+        if (item.IsSelected)
+        {
+            SelectedItem = item;
         }
 
         // Also need to listen to sub-items collection change?
@@ -170,6 +188,7 @@ public class TreeView : UIElement
         item.Expanded -= OnItemExpanded;
         item.Collapsed -= OnItemCollapsed;
         item.Selected -= OnItemSelected;
+        item.Unselected -= OnItemUnselected;
         foreach (var sub in item.Items)
         {
             if (sub is TreeViewItem tvi) UnsubscribeItem(tvi);
@@ -184,6 +203,14 @@ public class TreeView : UIElement
         if (sender is TreeViewItem item)
         {
             SelectedItem = item;
+        }
+    }
+
+    private void OnItemUnselected(object? sender, EventArgs e)
+    {
+        if (sender is TreeViewItem item && SelectedItem == item)
+        {
+            SelectedItem = null;
         }
     }
 
@@ -395,5 +422,17 @@ public class TreeView : UIElement
         {
             _scrollViewer.ScrollToVerticalOffset(itemY - viewportH + 1);
         }
+    }
+
+    // Bug: Clicking empty space in TreeView does not focus it or keep its focus.
+    // Root cause: TreeView lacked OnMouseDown, causing clicks on empty space to bubble to parent containers which steal focus.
+    // Fix: Add OnMouseDown to TreeView to focus itself and mark handled.
+    // Regression: TreeViewCoverageTests.TreeView_ClickEmptySpace_FocusesTreeView
+    public override void OnMouseDown(MouseEventArgs e)
+    {
+        if (e.Handled) return;
+        base.OnMouseDown(e);
+        Focus();
+        e.Handled = true;
     }
 }

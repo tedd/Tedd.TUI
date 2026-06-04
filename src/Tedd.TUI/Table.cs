@@ -111,7 +111,20 @@ public class TableRow : UIElement
         }
     }
 }
-
+// Intent: Fix table bottom and side borders around pagination by preventing overwrites and dynamic layout budgeting.
+// Why:
+// - Pagination was hardcoded to draw on the bottom-most row, overwriting the bottom border when ShowBorder was true.
+// - Side borders were overwritten with spaces because the pagination bar filled the full width including margins.
+// - A blank row was reserved for pagination even when only 1 page was active.
+// Constraints/Invariants:
+// - The bottom border must always render on the bottom-most row (Height - 1) of the Table when ShowBorder is true.
+// - The pagination control must sit inside the borders and not overwrite the side vertical borders.
+// - No pagination space is reserved when TotalPages <= 1.
+// Failure modes:
+// - Bottom or side borders are missing or cut when pagination is active.
+// - Empty line remains at the bottom of the table when there is only one page of items.
+// Verification:
+// - Verified by TableCoverageTests.Table_Pagination_Respects_Border.
 public class Table : UIElement
 {
     public List<TableColumn> Columns { get; } = new List<TableColumn>();
@@ -349,7 +362,7 @@ public class Table : UIElement
         }
 
         int headerBlockHeight = ShowHeader ? 2 : 0;
-        int footerHeight = PageSize > 0 ? 1 : 0;
+        int footerHeight = (PageSize > 0 && TotalPages > 1) ? 1 : 0;
         int verticalPadding = ShowBorder ? 2 : 0;
 
         int bodyHeight = Math.Max(0, availableSize.Height - headerBlockHeight - footerHeight - verticalPadding);
@@ -365,7 +378,7 @@ public class Table : UIElement
         int padding = ShowBorder ? 1 : 0;
         int headerBlockHeight = ShowHeader ? 2 : 0;
         int verticalPadding = ShowBorder ? 2 : 0;
-        int footerHeight = PageSize > 0 ? 1 : 0;
+        int footerHeight = (PageSize > 0 && TotalPages > 1) ? 1 : 0;
         int bodyHeight = Math.Max(0, finalSize.Height - headerBlockHeight - footerHeight - verticalPadding);
         int svWidth = Math.Max(0, finalSize.Width - 2 * padding);
 
@@ -713,8 +726,13 @@ public class Table : UIElement
         return val?.ToString() ?? "";
     }
 
+    // Bug: Clicking nested focusable child inside Table cells causes row selection logic to run incorrectly.
+    // Root cause: Table.OnMouseDown unconditionally invokes selection logic on bubbling mouse down.
+    // Fix: Return early if the mouse down event has already been handled.
+    // Regression: Covered by FocusOverlayTests & general focus routing
     public override void OnMouseDown(MouseEventArgs e)
     {
+        if (e.Handled) return;
         base.OnMouseDown(e);
 
         int borderOffset = ShowBorder ? 1 : 0;
@@ -737,7 +755,11 @@ public class Table : UIElement
             return;
         }
 
-        if (PageSize > 0 && e.Y == RenderSize.Height - 1)
+        // Bug: Clicking the pagination bar when ShowBorder is true registers as clicking the bottom border.
+        // Root cause: The hit test for pagination was hardcoded to RenderSize.Height - 1.
+        // Fix: Offset the pagination click check by 1 row when ShowBorder is true.
+        // Regression: Covered by Table_Pagination_Respects_Border test.
+        if (PageSize > 0 && TotalPages > 1 && e.Y == RenderSize.Height - 1 - borderOffset)
         {
             HandlePaginationClick(e.X);
             e.Handled = true;
@@ -840,11 +862,14 @@ public class Table : UIElement
         int totalPages = TotalPages;
         if (totalPages <= 1) return;
 
+        int borderOffset = ShowBorder ? 1 : 0;
+        int drawW = Math.Max(0, w - 2 * borderOffset);
+
         Span<char> buffer = stackalloc char[256];
-        int len = GetPaginationString(buffer, w, totalPages, CurrentPage);
+        int len = GetPaginationString(buffer, drawW, totalPages, CurrentPage);
         var text = buffer.Slice(0, len);
 
-        int startX = (w - len) / 2;
+        int startX = borderOffset + (drawW - len) / 2;
         if (localX < startX || localX >= startX + len) return;
 
         int charIdx = localX - startX;
@@ -1008,15 +1033,18 @@ public class Table : UIElement
         if (totalPages <= 1) return;
 
         int w = RenderSize.Width;
-        int y = RenderSize.Height - 1;
+        int y = RenderSize.Height - 1 - (ShowBorder ? 1 : 0);
 
-        buffer.DrawHLine(RenderSize.X + offsetX, RenderSize.Y + offsetY + y, w, ' ', TuiColor.Gray, TuiColor.Black);
+        int borderOffset = ShowBorder ? 1 : 0;
+        int drawW = Math.Max(0, w - 2 * borderOffset);
+
+        buffer.DrawHLine(RenderSize.X + offsetX + borderOffset, RenderSize.Y + offsetY + y, drawW, ' ', TuiColor.Gray, TuiColor.Black);
 
         Span<char> textBuffer = stackalloc char[256];
-        int len = GetPaginationString(textBuffer, w, totalPages, CurrentPage);
+        int len = GetPaginationString(textBuffer, drawW, totalPages, CurrentPage);
         var text = textBuffer.Slice(0, len);
 
-        int startX = (w - len) / 2;
+        int startX = borderOffset + (drawW - len) / 2;
         int absX = RenderSize.X + offsetX + startX;
         int absY = RenderSize.Y + offsetY + y;
 
@@ -1054,9 +1082,9 @@ internal class TableSeparator : UIElement
         // rather than the infinite horizontal scroll space given by ScrollViewer.
         int width = Math.Min(RenderSize.Width, table.RenderSize.Width);
 
-        var chars = Table.TableBoxChars.Get(table.BorderStyle);
-        char hChar = chars.BodySepH;
-        char crossChar = chars.BodySepCross;
+        var interior = BoxDrawingChars.GetInterior(table.BorderStyle);
+        char hChar = interior.Horizontal;
+        char crossChar = BoxDrawingChars.GetInteriorCross(table.BorderStyle);
 
         buffer.DrawHLine(x, y, width, hChar, TuiColor.Gray, TuiColor.Black);
 

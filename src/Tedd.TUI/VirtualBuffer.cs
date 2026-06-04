@@ -162,7 +162,7 @@ public class VirtualBuffer
         _clipStack.Clear();
         _currentClip = new Rect(0, 0, Width, Height);
         _isClipped = false;
-        _buffer.AsSpan().Fill(new Cell(' ', TuiColor.White, background));
+        _buffer.AsSpan().Fill(new Cell(' ', background.IsTransparent ? TuiColor.Transparent : TuiColor.White, background));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -211,7 +211,11 @@ public class VirtualBuffer
         TuiColor newFg;
         char newChar;
 
-        if (c == ' ' || c == '\0')
+        // Bug: Underlying characters bleed through menu items and overlay borders when spaces are rendered with an opaque background.
+        // Root cause: BlendPixel treats space (' ') and null ('\0') as "background only" paints, preserving the destination cell character even if the source background color is completely opaque.
+        // Fix: Only treat space/null as background-only paints when the background is semi-transparent or transparent (not opaque).
+        // Regression: Addressed by verifying that space characters drawn with opaque backgrounds overwrite the underlying characters.
+        if ((c == ' ' || c == '\0') && !bg.IsOpaque)
         {
             // Pure background paint: keep the existing glyph and tint the foreground.
             newChar = dst.Character;
@@ -280,21 +284,20 @@ public class VirtualBuffer
                     text = text.Slice(0, visibleLen);
             }
         }
-        else
+        else if (startX < 0)
         {
-            if (startX < 0)
-            {
-                int diff = -startX;
-                if (diff >= text.Length) return;
-                text = text.Slice(diff);
-                startX = 0;
-            }
-            if (startX + text.Length > Width)
-            {
-                int visibleLen = Width - startX;
-                if (visibleLen <= 0) return;
+            int diff = -startX;
+            if (diff >= text.Length) return;
+            text = text.Slice(diff);
+            startX = 0;
+        }
+
+        if (startX + text.Length > Width)
+        {
+            int visibleLen = Width - startX;
+            if (visibleLen <= 0) return;
+            if (visibleLen < text.Length)
                 text = text.Slice(0, visibleLen);
-            }
         }
 
         int bufferIdx = y * Width + startX;
@@ -318,11 +321,9 @@ public class VirtualBuffer
             startX = Math.Max(startX, _currentClip.X);
             endX = Math.Min(endX, _currentClip.X + _currentClip.Width);
         }
-        else
-        {
-            startX = Math.Max(startX, 0);
-            endX = Math.Min(endX, Width);
-        }
+
+        startX = Math.Max(startX, 0);
+        endX = Math.Min(endX, Width);
 
         if (endX <= startX) return;
 
@@ -350,11 +351,9 @@ public class VirtualBuffer
             startY = Math.Max(startY, _currentClip.Y);
             endY = Math.Min(endY, _currentClip.Y + _currentClip.Height);
         }
-        else
-        {
-            startY = Math.Max(startY, 0);
-            endY = Math.Min(endY, Height);
-        }
+
+        startY = Math.Max(startY, 0);
+        endY = Math.Min(endY, Height);
 
         if (endY <= startY) return;
 
@@ -388,13 +387,11 @@ public class VirtualBuffer
             endX = Math.Min(endX, _currentClip.X + _currentClip.Width);
             endY = Math.Min(endY, _currentClip.Y + _currentClip.Height);
         }
-        else
-        {
-            startX = Math.Max(startX, 0);
-            startY = Math.Max(startY, 0);
-            endX = Math.Min(endX, Width);
-            endY = Math.Min(endY, Height);
-        }
+
+        startX = Math.Max(startX, 0);
+        startY = Math.Max(startY, 0);
+        endX = Math.Min(endX, Width);
+        endY = Math.Min(endY, Height);
 
         if (endX <= startX || endY <= startY) return;
 

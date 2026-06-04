@@ -67,6 +67,44 @@ public class TreeViewTests
         Assert.False(item1.IsSelected);
     }
 
+    [Fact]
+    public void InitialSelectionIsCoordinated()
+    {
+        var tree = new TreeView();
+        var root = new TreeViewItem { Header = "Root" };
+        var child1 = new TreeViewItem { Header = "Child1", IsSelected = true };
+        var child2 = new TreeViewItem { Header = "Child2" };
+
+        root.Items.Add(child1);
+        root.Items.Add(child2);
+        tree.Items.Add(root);
+
+        // Verify initial selection coordinates correctly
+        Assert.Equal(child1, tree.SelectedItem);
+        Assert.True(child1.IsSelected);
+        Assert.False(child2.IsSelected);
+
+        // Selecting child2 should clear child1's selection
+        tree.SelectedItem = child2;
+        Assert.Equal(child2, tree.SelectedItem);
+        Assert.True(child2.IsSelected);
+        Assert.False(child1.IsSelected);
+    }
+
+    [Fact]
+    public void ItemUnselectionClearsSelectedItem()
+    {
+        var tree = new TreeView();
+        var item1 = new TreeViewItem { Header = "Root" };
+        tree.Items.Add(item1);
+
+        item1.IsSelected = true;
+        Assert.Equal(item1, tree.SelectedItem);
+
+        item1.IsSelected = false;
+        Assert.Null(tree.SelectedItem);
+    }
+
     class Node
     {
         public string Name { get; set; }

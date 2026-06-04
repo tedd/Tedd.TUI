@@ -128,8 +128,13 @@ public class Expander : HeaderedContentControl
         }
     }
 
+    // Bug: Clicking nested focusable child inside Expander content causes focus to be stolen by Expander.
+    // Root cause: Expander.OnMouseDown unconditionally invokes base.OnMouseDown and continues evaluation.
+    // Fix: Return early if the mouse down event has already been handled.
+    // Regression: Covered by FocusOverlayTests & general focus routing
     public override void OnMouseDown(MouseEventArgs e)
     {
+        if (e.Handled) return;
         base.OnMouseDown(e);
 
         // Evaluate if the input interaction lands within the boundaries of the header container.

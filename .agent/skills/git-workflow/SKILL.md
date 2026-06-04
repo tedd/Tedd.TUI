@@ -1,55 +1,72 @@
+````markdown
 ---
 name: git-workflow
-description: Handles git operations including commit with locking and syncing with remote. Use for committing changes or syncing with origin.
+description: Handles git operations including committing changes and syncing with remote. Use for committing changes or syncing with origin.
 ---
 
 # Git Workflow
 
-This skill handles git operations securely using mutex locking for commits to prevent concurrency issues.
+This skill handles git operations for committing task-specific changes and syncing with the remote repository.
 
 ## 1. Commit Changes
 
 ### Context
-- **Locking**: Uses `.git-commit.lock` to ensure exclusive access.
-- **Scope**: commits should only include files changed in the current task.
+
+- **Scope**: Commits should only include files changed in the current task/conversation.
+- **Commit operation**: `git add` and `git commit` must be executed in a single line.
+- **Do not touch**: Do not touch other files not related to this task/conversation. Do not attempt to revert git or delete files unrelated to this commit.
 
 ### Instructions
 
-1. **Acquire Lock**:
+1. **Review Changes**:
    ```powershell
-   .\.agent\skills\git-workflow\scripts\acquire-commit-lock.ps1
-   if ($LASTEXITCODE -ne 0) { throw "Failed to acquire commit lock" }
+   git status
+   git diff
+````
+
+2. **Commit Changes**:
+
+   ```powershell
+   git add <files>; git commit -m "<commit message>"
    ```
 
-2. **Analyze Changes**:
-   - Verify status and diffs.
-   - Stage ONLY relevant files (don't use `git add .`).
+   Use explicit file paths whenever possible:
 
-3. **Execute Commit**:
    ```powershell
-   # Single Line
-   .\.agent\skills\git-workflow\scripts\execute-git-commit.ps1 -Files @("file1", "file2") -Message "Commit message."
-   
-   # Multi Line
-   .\.agent\skills\git-workflow\scripts\execute-git-commit.ps1 -Files @("file1", "file2") -Message "Title" -AdditionalMessages @("Details")
+   git add path/to/file1 path/to/file2; git commit -m "<commit message>"
    ```
 
 ## 2. Sync with Remote
 
 ### Instructions
 
-1. **Check State**: `git status`, `git log`
-2. **Pre-Sync**: Ensure clean working tree (commit or stash).
+1. **Check State**:
+
+   ```powershell
+   git status
+   git log
+   ```
+
+2. **Pre-Sync**: Ensure the working tree is clean. Commit or stash local changes before syncing.
+
 3. **Fetch & Pull**:
+
    ```powershell
    git fetch origin
    git pull --rebase origin main
    ```
+
 4. **Push**:
+
    ```powershell
    git push origin main
    ```
-5. **Combined (Quick)**:
+
+5. **Combined Quick Sync**:
+
    ```powershell
-   git fetch origin && git pull --rebase origin main && git push origin main
+   git fetch origin; git pull --rebase origin main; git push origin main
    ```
+
+```
+```

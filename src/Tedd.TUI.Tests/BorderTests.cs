@@ -144,10 +144,11 @@ public class BorderTests
     public void Border_Measures_Content_With_Scrolling_Enabled()
     {
         var border = new Border();
+        border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
         var child = new MeasuringChild();
         border.Child = child;
 
-        // Default: VScroll=True, HScroll=False.
+        // Enabled: VScroll=Visible, HScroll=Disabled.
         // Expect: Width constrained to 18. Height infinite.
 
         border.Measure(new Size(20, 20));

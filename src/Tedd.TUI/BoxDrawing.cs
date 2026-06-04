@@ -65,4 +65,23 @@ public readonly struct BoxDrawingChars
             _ => Get(BoxStyle.Single)
         };
     }
+
+    /// <summary>
+    /// Cross / four-way junction for interior grid lines (e.g. table row separators).
+    /// Matches the weight of <see cref="Get"/> for Single, Double, and Heavy.
+    /// </summary>
+    public static char GetInteriorCross(BoxStyle style) => style switch
+    {
+        BoxStyle.Single => '\u253C', // ┼
+        BoxStyle.Double => '\u256C', // ╬
+        BoxStyle.Heavy => '\u254B', // ╋
+        _ => '\u253C'
+    };
+
+    /// <summary>
+    /// Box-drawing chars for interior rules when <paramref name="style"/> is <see cref="BoxStyle.None"/>
+    /// (falls back to light single so grid lines still render).
+    /// </summary>
+    public static BoxDrawingChars GetInterior(BoxStyle style) =>
+        Get(style == BoxStyle.None ? BoxStyle.Single : style);
 }

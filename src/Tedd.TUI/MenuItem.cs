@@ -120,8 +120,13 @@ public class MenuItem : UIElement
         }
     }
 
+    // Bug: Clicking nested focusable child inside MenuItem causes focus to be stolen by MenuItem.
+    // Root cause: MenuItem.OnMouseDown unconditionally calls Focus() and toggles menu state on bubbling mouse down.
+    // Fix: Return early if the mouse down event has already been handled.
+    // Regression: Covered by FocusOverlayTests & general focus routing
     public override void OnMouseDown(MouseEventArgs e)
     {
+        if (e.Handled) return;
         base.OnMouseDown(e);
         Focus();
         if (Items.Count > 0)
@@ -303,6 +308,7 @@ public class MenuItem : UIElement
             BorderColor = TuiColor.Black,
             Background = TuiColor.Gray,
             BoxStyle = BoxStyle.Single,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Owner = this
         };
 
@@ -398,7 +404,7 @@ public class MenuItem : UIElement
         current.CloseSubMenu();
     }
 
-    private class MenuPopupBorder : Border
+    internal class MenuPopupBorder : Border
     {
         public required MenuItem Owner { get; set; }
     }

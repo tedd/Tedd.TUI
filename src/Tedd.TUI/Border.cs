@@ -126,6 +126,8 @@ public class Border : ScrollViewer
 
     public Border()
     {
+        VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
         UpdateScrollBarStyle();
     }
 

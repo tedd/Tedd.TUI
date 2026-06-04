@@ -17,3 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic Data Binding support.
 - Unit tests for core functionality.
 - CI/CD workflows using GitHub Actions.
+
+### Fixed
+- Fixed a bug where underlying characters bled through menu items and overlay borders when spaces were rendered with an opaque background.
+- Fixed an issue where popup borders for menus and comboboxes always showed a vertical scrollbar by default, by configuring their vertical scrollbar visibility to `Auto`.

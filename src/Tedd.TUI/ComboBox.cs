@@ -7,7 +7,7 @@ namespace Tedd.TUI;
 public class ComboBox : Selector
 {
     private ListBox _popupListBox;
-    private Border? _popupBorder;
+    private ComboBoxPopupBorder? _popupBorder;
     private bool _isDroppedDown = false;
     private bool _arrowFocused = false; // True when focus is on the dropdown arrow
 
@@ -246,13 +246,15 @@ public class ComboBox : Selector
         _popupListBox.Background = PopupBackground;
 
         // Create a Border for the popup
-        _popupBorder = new Border
+        _popupBorder = new ComboBoxPopupBorder
         {
             Width = RenderSize.Width,
             Height = _popupListBox.Height + 2,
             Child = _popupListBox,
             BorderColor = PopupBorderColor,
-            BoxStyle = BoxStyle.Single
+            BoxStyle = BoxStyle.Single,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            Owner = this
         };
 
         // Measure and arrange the popup (border)
@@ -272,7 +274,7 @@ public class ComboBox : Selector
         CloseDropdown();
     }
 
-    public void CloseDropdown()
+    public void CloseDropdown(bool restoreFocus = true)
     {
         var root = GetRoot() as TuiWindow;
         if (root != null)
@@ -282,7 +284,10 @@ public class ComboBox : Selector
                 root.RemoveOverlay(_popupBorder);
                 _popupBorder = null;
             }
-            root.SetFocus(this);
+            if (restoreFocus)
+            {
+                root.SetFocus(this);
+            }
 
             // Sync selection back
             if (_popupListBox.SelectedIndex >= 0 && _popupListBox.SelectedIndex < Items.Count)
@@ -291,5 +296,10 @@ public class ComboBox : Selector
             }
         }
         _isDroppedDown = false;
+    }
+
+    internal class ComboBoxPopupBorder : Border
+    {
+        public required ComboBox Owner { get; set; }
     }
 }

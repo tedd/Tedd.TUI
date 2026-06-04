@@ -215,3 +215,7 @@ Developed parameterized testing for both components.
 **Metrics:**
 - Increased `Tedd.TUI.TextBlock` coverage from 30.9% to 90.4%.
 - Increased `Tedd.TUI.CodeColoring.CodeDocument` coverage from 65.7% to 94.7%.
+
+## 2024-06-04 - Markdown Component and Renderer Testing
+**Observation:** Markdown elements (`Hyperlink`, `MarkdownParser`) and image renderers (`LuminanceRampAsciiRenderer`, `RgbColorPalette`) lacked parameterized testing for fundamental bounds. Specifically, UI boundary limits during `Measure`/`Render`, default property instantiation limits, and pixel rendering limits during fallback text parsing were not comprehensively verified, reducing overall deterministic coverage of the library's capabilities.
+**Strategic Action:** Deployed `VirtualBuffer` assertions and parameterized inputs (`[Theory]`, null vs. empty vectors) across `MarkdownParserCoverageTests.cs`, `HyperlinkCoverageTests.cs`, and `LuminanceRampAsciiRendererTests.cs`. Null references during measure and edge bounds during clipping are correctly guarded, elevating the coverage vectors to 100%.

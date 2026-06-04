@@ -252,9 +252,118 @@ public class TuiWindow : UIElement
 
     private UIElement _focusedElement;
 
+    public override void OnPreviewMouseDown(MouseEventArgs e)
+    {
+        base.OnPreviewMouseDown(e);
+
+        var hit = InputHitTest(e.GlobalX, e.GlobalY);
+        if (hit != null)
+        {
+            // Bug: Menus and ComboBox dropdowns do not close when clicking outside them.
+            // Root cause: No automatic click-outside detection exists for active overlays.
+            // Fix: Detect clicks outside active menu/combobox popups and close them.
+            // Regression: Verified by checking if hit element is within the active popup hierarchies.
+            CloseMenusIfClickOutside(hit.Element);
+            CloseComboBoxesIfClickOutside(hit.Element);
+        }
+    }
+
+    private void CloseMenusIfClickOutside(UIElement? clickedElement)
+    {
+        bool hasMenuOverlay = false;
+        for (int i = 0; i < _overlays.Count; i++)
+        {
+            if (_overlays[i] is MenuItem.MenuPopupBorder)
+            {
+                hasMenuOverlay = true;
+                break;
+            }
+        }
+
+        if (hasMenuOverlay)
+        {
+            bool insideMenu = false;
+            var current = clickedElement;
+            while (current != null)
+            {
+                if (current is MenuItem.MenuPopupBorder || current is MenuItem || current is MenuBar)
+                {
+                    insideMenu = true;
+                    break;
+                }
+                current = current.Parent;
+            }
+
+            if (!insideMenu)
+            {
+                var popupBorders = new List<MenuItem.MenuPopupBorder>();
+                for (int i = 0; i < _overlays.Count; i++)
+                {
+                    if (_overlays[i] is MenuItem.MenuPopupBorder mpb)
+                    {
+                        popupBorders.Add(mpb);
+                    }
+                }
+
+                foreach (var mpb in popupBorders)
+                {
+                    mpb.Owner.CloseSubMenu();
+                }
+            }
+        }
+    }
+
+    private void CloseComboBoxesIfClickOutside(UIElement? clickedElement)
+    {
+        var cbPopups = new List<ComboBox.ComboBoxPopupBorder>();
+        for (int i = 0; i < _overlays.Count; i++)
+        {
+            if (_overlays[i] is ComboBox.ComboBoxPopupBorder cbp)
+            {
+                cbPopups.Add(cbp);
+            }
+        }
+
+        foreach (var cbp in cbPopups)
+        {
+            bool insideComboBox = false;
+            var current = clickedElement;
+            while (current != null)
+            {
+                if (current == cbp || current == cbp.Owner)
+                {
+                    insideComboBox = true;
+                    break;
+                }
+                current = current.Parent;
+            }
+
+            if (!insideComboBox)
+            {
+                cbp.Owner.CloseDropdown(restoreFocus: false);
+            }
+        }
+    }
+
+    private void CloseMenusIfFocusLost(UIElement? newFocus)
+    {
+        CloseMenusIfClickOutside(newFocus);
+    }
+
+    private void CloseComboBoxesIfFocusLost(UIElement? newFocus)
+    {
+        CloseComboBoxesIfClickOutside(newFocus);
+    }
+
     public bool SetFocus(UIElement element)
     {
         if (element == _focusedElement) return true;
+
+        // Bug: Menus and ComboBox dropdowns do not close when focus changes (e.g. via Tab).
+        // Root cause: No focus-lost detection exists to close the active overlays.
+        // Fix: Check if focus is moving outside the menu or combobox dropdown bounds, and auto-close them.
+        CloseMenusIfFocusLost(element);
+        CloseComboBoxesIfFocusLost(element);
 
         _focusedElement?.OnLostFocus();
         _focusedElement = element;
@@ -411,8 +520,11 @@ public class TuiWindow : UIElement
 
         _focusedElement.RaiseEvent(e);
 
-        // Tab Navigation
-        if (!e.Handled && e.Key == System.ConsoleKey.Tab)
+        // Bug: Tab navigation runs twice on Windows console (moving focus away immediately).
+        // Root cause: ProcessKey is called for both KeyDown and KeyUp events, but does not check the event type before tabbing.
+        // Fix: Restrict Tab navigation to KeyDown events only.
+        // Regression: Handled by checking e.RoutedEvent == UIElement.KeyDownEvent.
+        if (!e.Handled && e.RoutedEvent == UIElement.KeyDownEvent && e.Key == System.ConsoleKey.Tab)
             MoveFocus(e.Modifiers.HasFlag(System.ConsoleModifiers.Shift) ? -1 : 1);
     }
 

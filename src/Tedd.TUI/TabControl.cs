@@ -267,8 +267,13 @@ public class TabControl : Selector
         }
     }
 
+    // Bug: Clicking TextBox or TextEditor inside TabControl doesn't focus or loses focus.
+    // Root cause: TabControl.OnMouseDown unconditionally calls Focus() and steals focus back on bubbling mouse down.
+    // Fix: Return early if the mouse down event has already been handled.
+    // Regression: TabControlTests.TabControl_ClickChild_KeepsChildFocus
     public override void OnMouseDown(MouseEventArgs e)
     {
+        if (e.Handled) return;
         base.OnMouseDown(e);
         Focus();
 
