@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class UriLanguage : ILanguage
 {
     public string Id => "uri";
-    public string[] Aliases => [ "url"  ];
+    public string[] Aliases => ["url"];
 
     public Grammar GetGrammar()
     {
