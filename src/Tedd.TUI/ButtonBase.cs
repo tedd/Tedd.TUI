@@ -51,6 +51,26 @@ public abstract class ButtonBase : ContentControl
     }
 
     private ICommand? _currentCommand;
+    private bool? _preCommandIsEnabled;
+
+    protected override void OnParentChanged()
+    {
+        base.OnParentChanged();
+        if (Parent == null)
+        {
+            if (_currentCommand != null)
+            {
+                _currentCommand.CanExecuteChanged -= OnCanExecuteChanged;
+            }
+        }
+        else
+        {
+            if (_currentCommand != null)
+            {
+                _currentCommand.CanExecuteChanged += OnCanExecuteChanged;
+            }
+        }
+    }
 
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
@@ -65,17 +85,51 @@ public abstract class ButtonBase : ContentControl
                 {
                     _currentCommand.CanExecuteChanged -= OnCanExecuteChanged;
                 }
+                else
+                {
+                    // Command is being set, snapshot the current local value of IsEnabled if we haven't already
+                    if (!_preCommandIsEnabled.HasValue)
+                    {
+                        _preCommandIsEnabled = IsEnabled;
+                    }
+                }
+
                 _currentCommand = newCommand;
+
                 if (_currentCommand != null)
                 {
-                    _currentCommand.CanExecuteChanged += OnCanExecuteChanged;
+                    if (Parent != null) // Only hook if attached to logical tree
+                    {
+                        _currentCommand.CanExecuteChanged += OnCanExecuteChanged;
+                    }
+                }
+                else
+                {
+                    // Command is removed, restore the snapshot if it exists
+                    if (_preCommandIsEnabled.HasValue)
+                    {
+                        IsEnabled = _preCommandIsEnabled.Value;
+                        _preCommandIsEnabled = null;
+                    }
+                    else
+                    {
+                        ClearValue(IsEnabledProperty);
+                    }
                 }
             }
-            UpdateCanExecute();
+            if (_currentCommand != null)
+            {
+                UpdateCanExecute();
+            }
         }
         else if (dp == CommandParameterProperty)
         {
             UpdateCanExecute();
+        }
+        else if (dp == IsEnabledProperty && _currentCommand == null)
+        {
+            // If IsEnabled changes while NO command is active, update our future snapshot potential
+            _preCommandIsEnabled = null;
         }
     }
 
@@ -89,17 +143,21 @@ public abstract class ButtonBase : ContentControl
         if (Command != null)
         {
             bool canExecute = Command.CanExecute(CommandParameter);
-            IsEnabled = canExecute;
-        }
-        else
-        {
-            // If command is removed, revert to enabled state
-            ClearValue(IsEnabledProperty);
+
+            // If the user explicitly disabled the button BEFORE applying the command, it should stay disabled.
+            // WPF coerces IsEnabled. We emulate this by checking the base snapshot.
+            bool baseEnabled = _preCommandIsEnabled ?? true;
+
+            IsEnabled = baseEnabled && canExecute;
         }
     }
 
     protected virtual void OnClick()
     {
+        // Don't act clickable if disabled
+        if (!IsEnabled)
+            return;
+
         RaiseEvent(new RoutedEventArgs(ClickEvent, this));
 
         if (Command != null && Command.CanExecute(CommandParameter))
@@ -110,6 +168,7 @@ public abstract class ButtonBase : ContentControl
 
     public override void OnMouseDown(MouseEventArgs e)
     {
+        if (!IsEnabled) return;
         base.OnMouseDown(e);
         Focus();
 
@@ -124,6 +183,7 @@ public abstract class ButtonBase : ContentControl
 
     public override void OnMouseUp(MouseEventArgs e)
     {
+        if (!IsEnabled) return;
         base.OnMouseUp(e);
 
         if (IsPressed)
@@ -142,6 +202,7 @@ public abstract class ButtonBase : ContentControl
 
     public override void OnKeyDown(KeyEventArgs e)
     {
+        if (!IsEnabled) return;
         base.OnKeyDown(e);
         if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter)
         {
@@ -156,6 +217,7 @@ public abstract class ButtonBase : ContentControl
 
     public override void OnKeyUp(KeyEventArgs e)
     {
+        if (!IsEnabled) return;
         base.OnKeyUp(e);
         if (e.Key == ConsoleKey.Spacebar || e.Key == ConsoleKey.Enter)
         {
