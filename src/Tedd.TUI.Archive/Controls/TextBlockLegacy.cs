@@ -3,12 +3,6 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.Archive.Controls;
 
-public enum TextWrapping
-{
-    NoWrap,
-    Wrap
-}
-
 public class TextBlockLegacy
 {
     // Keeping a stripped down version of WrapSingleLine for benchmarking.
