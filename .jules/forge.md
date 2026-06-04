@@ -112,3 +112,10 @@
 ## 2026-03-09 - Grid Attached Property Parity Integration
 **Observation:** Discovered an architectural parity deficit where layout container attached properties (such as `Row`, `Column`, `RowSpan`, and `ColumnSpan` on `Grid`) were registered using standard `DependencyProperty.Register` rather than the required `DependencyProperty.RegisterAttached`. While functionally equivalent in the current internal implementation, this deviated from standard WPF/XAML semantics and architectural mapping.
 **Strategic Action:** Modified the property registrations in `Grid.cs` to correctly invoke `DependencyProperty.RegisterAttached`, properly aligning the declarative property models with the structural intent of the `DependencyProperty` system used for attached layout paradigms.
+## 2026-03-09 - ICommand Integration
+**Observation:** The TUI framework lacked support for the standard `ICommand` interface, preventing declarative MVVM command bindings (e.g. executing business logic without code-behind event handlers). Controls derived from `ButtonBase` relied exclusively on the imperative `Click` routed event.
+**Strategic Action:**
+- Engineered the `ICommand` interface in `Tedd.TUI.Input`.
+- Integrated `Command` and `CommandParameter` dependency properties into `ButtonBase`.
+- Wired property change handlers to automatically subscribe to `CanExecuteChanged` and coerce `IsEnabled` based on `CanExecute`.
+- Modified `OnClick` logic to invoke `Command.Execute()` after dispatching the standard `Click` event, successfully achieving WPF behavioral isomorphism for declarative interactions.
