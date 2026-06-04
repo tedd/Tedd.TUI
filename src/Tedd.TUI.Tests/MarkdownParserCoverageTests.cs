@@ -141,7 +141,6 @@ namespace Tedd.TUI.Tests
             var doc = parser.Parse("``` foo ```"); // inline block
             Assert.Single(doc.Children);
             var cd = Assert.IsType<CodeDocument>(doc.Children[0]);
-            // Language should be empty, code should be foo
         }
 
         [Fact]

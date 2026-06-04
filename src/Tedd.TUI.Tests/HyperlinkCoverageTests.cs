@@ -13,7 +13,7 @@ namespace Tedd.TUI.Tests
         [InlineData("")]
         public void Measure_EmptyText_ReturnsZero(string? text)
         {
-            var hyperlink = new Hyperlink { Text = text ?? string.Empty };
+            var hyperlink = new Hyperlink { Text = text! };
             hyperlink.Measure(new Size(100, 100));
             Assert.Equal(0, hyperlink.DesiredSize.Width);
             Assert.Equal(0, hyperlink.DesiredSize.Height);
