@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Input;
 
 namespace Tedd.TUI;
 
@@ -31,9 +32,80 @@ public abstract class ButtonBase : ContentControl
         protected set => SetValue(IsPressedProperty, value);
     }
 
+    public static readonly DependencyProperty CommandProperty =
+        DependencyProperty.Register("Command", typeof(ICommand), typeof(ButtonBase), null);
+
+    public ICommand? Command
+    {
+        get => (ICommand?)GetValue(CommandProperty);
+        set => SetValue(CommandProperty, value);
+    }
+
+    public static readonly DependencyProperty CommandParameterProperty =
+        DependencyProperty.Register("CommandParameter", typeof(object), typeof(ButtonBase), null);
+
+    public object? CommandParameter
+    {
+        get => GetValue(CommandParameterProperty);
+        set => SetValue(CommandParameterProperty, value);
+    }
+
+    private ICommand? _currentCommand;
+
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        base.OnPropertyChanged(dp);
+
+        if (dp == CommandProperty)
+        {
+            var newCommand = Command;
+            if (_currentCommand != newCommand)
+            {
+                if (_currentCommand != null)
+                {
+                    _currentCommand.CanExecuteChanged -= OnCanExecuteChanged;
+                }
+                _currentCommand = newCommand;
+                if (_currentCommand != null)
+                {
+                    _currentCommand.CanExecuteChanged += OnCanExecuteChanged;
+                }
+            }
+            UpdateCanExecute();
+        }
+        else if (dp == CommandParameterProperty)
+        {
+            UpdateCanExecute();
+        }
+    }
+
+    private void OnCanExecuteChanged(object? sender, EventArgs e)
+    {
+        UpdateCanExecute();
+    }
+
+    private void UpdateCanExecute()
+    {
+        if (Command != null)
+        {
+            bool canExecute = Command.CanExecute(CommandParameter);
+            IsEnabled = canExecute;
+        }
+        else
+        {
+            // If command is removed, revert to enabled state
+            ClearValue(IsEnabledProperty);
+        }
+    }
+
     protected virtual void OnClick()
     {
         RaiseEvent(new RoutedEventArgs(ClickEvent, this));
+
+        if (Command != null && Command.CanExecute(CommandParameter))
+        {
+            Command.Execute(CommandParameter);
+        }
     }
 
     public override void OnMouseDown(MouseEventArgs e)
