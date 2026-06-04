@@ -132,7 +132,7 @@ public class TextBlock : UIElement
         return result;
     }
 
-    private static void WrapSingleLine(string line, int maxWidth, List<string> output)
+    internal static void WrapSingleLine(string line, int maxWidth, List<string> output)
     {
         if (line.Length == 0)
         {
@@ -142,56 +142,85 @@ public class TextBlock : UIElement
 
         int i = 0;
         int n = line.Length;
-        var current = new System.Text.StringBuilder(maxWidth);
 
-        while (i < n)
+        // Optimization: Replaced System.Text.StringBuilder with stackalloc Span<char> and ArrayPool<char>.
+        // Time Complexity: O(N) where N is the length of the string line.
+        // Space Complexity: O(M) where M is the maxWidth, utilizing stack memory for normal cases (<= 2048).
+        // If maxWidth is extremely large, fallback to array to avoid StackOverflow, but TUI widths are typically < 1000.
+        char[]? arrayPoolBuffer = null;
+
+        try
         {
-            // Consume leading whitespace at start of line (skip), elsewhere keep one space between words.
-            if (line[i] == ' ')
+            Span<char> current = maxWidth <= 2048 ? stackalloc char[maxWidth] : (arrayPoolBuffer = System.Buffers.ArrayPool<char>.Shared.Rent(maxWidth)).AsSpan(0, maxWidth);
+
+            int currentLen = 0;
+            ReadOnlySpan<char> lineSpan = line.AsSpan();
+
+            while (i < n)
             {
-                if (current.Length > 0 && current.Length < maxWidth)
+                // Consume leading whitespace at start of line (skip), elsewhere keep one space between words.
+                if (lineSpan[i] == ' ')
                 {
-                    current.Append(' ');
+                    if (currentLen > 0 && currentLen < maxWidth)
+                    {
+                        current[currentLen++] = ' ';
+                    }
+                    i++;
+                    continue;
                 }
-                i++;
-                continue;
+
+                // Read next word.
+                int wordStart = i;
+                while (i < n && lineSpan[i] != ' ') i++;
+                int wordLen = i - wordStart;
+
+                if (wordLen > maxWidth)
+                {
+                    // Hard-break a word that's too long for the line width.
+                    if (currentLen > 0)
+                    {
+                        // TrimEnd
+                        int trimLen = currentLen;
+                        while (trimLen > 0 && char.IsWhiteSpace(current[trimLen - 1])) trimLen--;
+                        output.Add(new string(current.Slice(0, trimLen)));
+                        currentLen = 0;
+                    }
+
+                    int pos = wordStart;
+                    while (pos < wordStart + wordLen)
+                    {
+                        int take = Math.Min(maxWidth, wordStart + wordLen - pos);
+                        output.Add(new string(lineSpan.Slice(pos, take)));
+                        pos += take;
+                    }
+                    continue;
+                }
+
+                if (currentLen + wordLen > maxWidth)
+                {
+                    int trimLen = currentLen;
+                    while (trimLen > 0 && char.IsWhiteSpace(current[trimLen - 1])) trimLen--;
+                    output.Add(new string(current.Slice(0, trimLen)));
+                    currentLen = 0;
+                }
+
+                lineSpan.Slice(wordStart, wordLen).CopyTo(current.Slice(currentLen));
+                currentLen += wordLen;
             }
 
-            // Read next word.
-            int wordStart = i;
-            while (i < n && line[i] != ' ') i++;
-            int wordLen = i - wordStart;
-
-            if (wordLen > maxWidth)
+            if (currentLen > 0)
             {
-                // Hard-break a word that's too long for the line width.
-                if (current.Length > 0)
-                {
-                    output.Add(current.ToString().TrimEnd());
-                    current.Clear();
-                }
-                int pos = wordStart;
-                while (pos < wordStart + wordLen)
-                {
-                    int take = Math.Min(maxWidth, wordStart + wordLen - pos);
-                    output.Add(line.Substring(pos, take));
-                    pos += take;
-                }
-                continue;
+                int trimLen = currentLen;
+                while (trimLen > 0 && char.IsWhiteSpace(current[trimLen - 1])) trimLen--;
+                output.Add(new string(current.Slice(0, trimLen)));
             }
-
-            if (current.Length + wordLen > maxWidth)
-            {
-                output.Add(current.ToString().TrimEnd());
-                current.Clear();
-            }
-
-            current.Append(line, wordStart, wordLen);
         }
-
-        if (current.Length > 0)
+        finally
         {
-            output.Add(current.ToString().TrimEnd());
+            if (arrayPoolBuffer != null)
+            {
+                System.Buffers.ArrayPool<char>.Shared.Return(arrayPoolBuffer);
+            }
         }
     }
 }

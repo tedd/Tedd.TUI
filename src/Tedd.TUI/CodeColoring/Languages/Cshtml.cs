@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class CshtmlLanguage : ILanguage
 {
     public string Id => "cshtml";
-    public string[] Aliases => [ "razor" ];
+    public string[] Aliases => ["razor"];
 
     public Grammar GetGrammar()
     {
