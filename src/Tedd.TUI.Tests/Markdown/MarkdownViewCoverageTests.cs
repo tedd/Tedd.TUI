@@ -65,13 +65,12 @@ public class MarkdownViewCoverageTests
 
     [Theory]
     [InlineData(10, 10, 0, 0)]
-    public void MarkdownView_Render_NullDoc_DoesNotThrow(int width, int height, int offsetX, int offsetY)
+    public void MarkdownView_Render_DoesNotThrow(int width, int height, int offsetX, int offsetY)
     {
         var md = new MarkdownView();
         var buf = new VirtualBuffer(width, height);
 
-        // This validates that an empty control doesn't throw during a render call.
-        md.Render(buf, offsetX, offsetY);
-        Assert.NotNull(buf);
+        var ex = Record.Exception(() => md.Render(buf, offsetX, offsetY));
+        Assert.Null(ex);
     }
 }
