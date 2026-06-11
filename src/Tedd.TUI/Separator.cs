@@ -22,13 +22,20 @@ public class Separator : Control
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        if (TemplateRoot != null)
+        {
+            base.Render(buffer, offsetX, offsetY);
+            return;
+        }
+
         Thickness padding = Padding;
+
+        int width = Math.Max(0, RenderSize.Width - padding.Left - padding.Right);
+        int height = Math.Max(0, RenderSize.Height - padding.Top - padding.Bottom);
+        if (width <= 0 || height <= 0) return;
 
         int x = RenderSize.X + offsetX + padding.Left;
         int y = RenderSize.Y + offsetY + padding.Top;
-
-        int width = Math.Max(0, RenderSize.Width - padding.Left - padding.Right);
-        if (width <= 0 || RenderSize.Height <= 0) return;
 
         // Draw a line across the width
         char c = '\u2500'; // light horizontal line
