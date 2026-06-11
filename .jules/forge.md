@@ -119,3 +119,11 @@
 - Integrated `Command` and `CommandParameter` dependency properties into `ButtonBase`.
 - Wired property change handlers to automatically subscribe to `CanExecuteChanged` and coerce `IsEnabled` based on `CanExecute`.
 - Modified `OnClick` logic to invoke `Command.Execute()` after dispatching the standard `Click` event, successfully achieving WPF behavioral isomorphism for declarative interactions.
+
+## 2026-03-09 - Separator Integration
+**Observation:** The TUI framework lacked a native generic `Separator` component inheriting from `Control`. Specifically, menus (`MenuItem`) needed a structural element to delineate groups of items without stealing focus or responding to input, a standard paradigm in WPF and other client frameworks.
+**Strategic Action:**
+- Engineered the `Separator` control inheriting from `Control`.
+- Enforced `Focusable = false` by default.
+- Implemented a default template producing a simple `Border` with `BoxStyle.None` and 1-cell height.
+- Overrode `Render` to draw a strict horizontal line (`\u2500`) constrained by `RenderSize.Width`, completing an architectural gap in standard menu layout syntax.
