@@ -139,24 +139,6 @@
             StateHasChanged();
         };
 
-        tabs.SelectionChanged += (s, e) =>
-        {
-            switch (tabs.SelectedIndex)
-            {
-                case 0: navTree.SelectedItem = nodeForm; break;
-                case 1: navTree.SelectedItem = nodeLists; break;
-                case 2: navTree.SelectedItem = nodeTable; break;
-                case 3: navTree.SelectedItem = nodeScroll; break;
-                case 4: navTree.SelectedItem = nodeCode; break;
-                case 5: navTree.SelectedItem = nodeMarkdown; break;
-                case 6: navTree.SelectedItem = nodeDataGrid; break;
-                case 7: navTree.SelectedItem = nodeEditor; break;
-                case 8: navTree.SelectedItem = nodeProgressBar; break;
-                case 9: navTree.SelectedItem = nodeLayouts; break;
-            }
-            // StateHasChanged(); // navTree.SelectionChanged already triggers a render
-        };
-
 
         // --- Tab 1: Form Controls ---
         var formStack = new StackPanel { Orientation = Orientation.Vertical };

@@ -55,16 +55,16 @@
             <TuiExpander Dock="Dock.Left" Header="Navigation" IsExpanded="true">
                 <TuiTreeView SelectedItemChanged="OnNavSelected">
                     <TuiTreeViewItem Header="Controls" IsExpanded="true">
-                        <TuiTreeViewItem Header="Form" @bind-IsSelected="isFormSelected" />
-                        <TuiTreeViewItem Header="Lists" @bind-IsSelected="isListsSelected" />
-                        <TuiTreeViewItem Header="Table" @bind-IsSelected="isTableSelected" />
-                        <TuiTreeViewItem Header="Scroll" @bind-IsSelected="isScrollSelected" />
-                        <TuiTreeViewItem Header="Code" @bind-IsSelected="isCodeSelected" />
-                        <TuiTreeViewItem Header="Markdown" @bind-IsSelected="isMarkdownSelected" />
-                        <TuiTreeViewItem Header="DataGrid" @bind-IsSelected="isDataGridSelected" />
-                        <TuiTreeViewItem Header="Editor" @bind-IsSelected="isEditorSelected" />
-                        <TuiTreeViewItem Header="ProgressBar" @bind-IsSelected="isProgressBarSelected" />
-                        <TuiTreeViewItem Header="Layouts" @bind-IsSelected="isLayoutsSelected" />
+                        <TuiTreeViewItem Header="Form" IsSelected="true" />
+                        <TuiTreeViewItem Header="Lists" />
+                        <TuiTreeViewItem Header="Table" />
+                        <TuiTreeViewItem Header="Scroll" />
+                        <TuiTreeViewItem Header="Code" />
+                        <TuiTreeViewItem Header="Markdown" />
+                        <TuiTreeViewItem Header="DataGrid" />
+                        <TuiTreeViewItem Header="Editor" />
+                        <TuiTreeViewItem Header="ProgressBar" />
+                        <TuiTreeViewItem Header="Layouts" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -280,48 +280,7 @@
     private TuiRenderMode currentMode = TuiRenderMode.Canvas;
     
 
-    private int _selectedTabIndex = 0;
-    private int selectedTabIndex
-    {
-        get => _selectedTabIndex;
-        set
-        {
-            if (_selectedTabIndex != value)
-            {
-                _selectedTabIndex = value;
-                UpdateNavTreeSelection();
-            }
-        }
-    }
-
-    // (removed unused navTreeRef)
-
-    // We bind IsSelected of each tree item to these booleans to keep them in sync
-    private bool isFormSelected = true;
-    private bool isListsSelected = false;
-    private bool isTableSelected = false;
-    private bool isScrollSelected = false;
-    private bool isCodeSelected = false;
-    private bool isMarkdownSelected = false;
-    private bool isDataGridSelected = false;
-    private bool isEditorSelected = false;
-    private bool isProgressBarSelected = false;
-    private bool isLayoutsSelected = false;
-
-    private void UpdateNavTreeSelection()
-    {
-        isFormSelected = _selectedTabIndex == 0;
-        isListsSelected = _selectedTabIndex == 1;
-        isTableSelected = _selectedTabIndex == 2;
-        isScrollSelected = _selectedTabIndex == 3;
-        isCodeSelected = _selectedTabIndex == 4;
-        isMarkdownSelected = _selectedTabIndex == 5;
-        isDataGridSelected = _selectedTabIndex == 6;
-        isEditorSelected = _selectedTabIndex == 7;
-        isProgressBarSelected = _selectedTabIndex == 8;
-        isLayoutsSelected = _selectedTabIndex == 9;
-        StateHasChanged();
-    }
+    private int selectedTabIndex = 0;
 
     private void OnNavSelected(object? selectedItem)
     {
