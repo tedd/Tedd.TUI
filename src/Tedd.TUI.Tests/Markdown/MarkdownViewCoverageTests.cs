@@ -50,7 +50,8 @@ public class MarkdownViewCoverageTests
         var md = new MarkdownView();
         md.Text = input;
         md.Refresh();
-        Assert.Equal(1, md.VisualChildrenCount);
+        var doc = Assert.IsType<FlowDocument>(md.GetVisualChild(0));
+        Assert.Equal(0, doc.VisualChildrenCount);
     }
 
     [Theory]
