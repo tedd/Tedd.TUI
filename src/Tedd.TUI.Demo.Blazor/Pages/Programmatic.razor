@@ -154,7 +154,7 @@
                 case 8: navTree.SelectedItem = nodeProgressBar; break;
                 case 9: navTree.SelectedItem = nodeLayouts; break;
             }
-            StateHasChanged();
+            // StateHasChanged(); // navTree.SelectionChanged already triggers a render
         };
 
 
