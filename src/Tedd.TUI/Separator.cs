@@ -7,17 +7,7 @@ public class Separator : Control
     public Separator()
     {
         Focusable = false;
-        // Default template draws a horizontal line
-        Template = new ControlTemplate(parent =>
-        {
-            var border = new Border
-            {
-                BoxStyle = BoxStyle.None, // No outer border
-                Height = 1,
-            };
-
-            return border;
-        });
+        Height = 1;
     }
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
