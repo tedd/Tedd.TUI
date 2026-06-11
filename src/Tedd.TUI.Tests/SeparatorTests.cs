@@ -25,10 +25,16 @@ namespace Tedd.TUI.Tests
             sep.Arrange(new Rect(0, 0, 10, 1));
 
             var buffer = new VirtualBuffer(10, 5);
+            buffer.FillRect(0, 0, 10, 5, ' ', TuiColor.White, TuiColor.Red);
+
             sep.Render(buffer, 0, 0);
 
-            // Check that it rendered a horizontal line
-            Assert.Equal('\u2500', buffer.GetPixel(5, 0).Character);
+            for (int x = 0; x < 10; x++)
+            {
+                var cell = buffer.GetPixel(x, 0);
+                Assert.Equal('\u2500', cell.Character);
+                Assert.Equal(TuiColor.Red, cell.Background);
+            }
         }
     }
 }
