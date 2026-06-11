@@ -119,3 +119,6 @@
 - Integrated `Command` and `CommandParameter` dependency properties into `ButtonBase`.
 - Wired property change handlers to automatically subscribe to `CanExecuteChanged` and coerce `IsEnabled` based on `CanExecute`.
 - Modified `OnClick` logic to invoke `Command.Execute()` after dispatching the standard `Click` event, successfully achieving WPF behavioral isomorphism for declarative interactions.
+## 2026-03-09 - ScrollViewer ScrollBarVisibility Attached Properties
+**Observation:** Discovered a parity deficit where `ScrollViewer.HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility` were implemented as standard C# properties rather than dependency properties, and specifically, they were not attached properties. This violates WPF architecture where scroll bar visibility is a canonical attached property used widely in templates and styles on elements containing a ScrollViewer (such as ListBox).
+**Strategic Action:** Refactored `HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility` to be registered via `DependencyProperty.RegisterAttached`, implementing the required static `Get...` and `Set...` methods while maintaining instance property wrappers, bringing it into strict 1:1 behavioral and structural mapping with WPF standard API.
