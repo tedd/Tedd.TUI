@@ -130,3 +130,9 @@
 ## 2026-03-09 - ScrollViewer ScrollBarVisibility Attached Properties
 **Observation:** Discovered a parity deficit where `ScrollViewer.HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility` were implemented as standard C# properties rather than dependency properties, and specifically, they were not attached properties. This violates WPF architecture where scroll bar visibility is a canonical attached property used widely in templates and styles on elements containing a ScrollViewer (such as ListBox).
 **Strategic Action:** Refactored `HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility` to be registered via `DependencyProperty.RegisterAttached`, implementing the required static `Get...` and `Set...` methods while maintaining instance property wrappers, bringing it into strict 1:1 behavioral and structural mapping with WPF standard API.
+## 2026-03-09 - DataContext Propagation Parity Integration
+**Observation:** Discovered a core architectural deficit where layout container controls (e.g., `Border`, `DialogBox`, `Table`, `TuiWindow`, `Grid`) were manually overriding `OnDataContextChanged` to explicitly assign a local `DataContext` value onto their content or child elements. This manual set operation inadvertently overwrote and masked standard logical/visual tree inheritance tracking, breaking WPF/XAML isomorphism by treating inherited context mutations as local overrides.
+**Strategic Action:**
+- Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
+- Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
+- Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.

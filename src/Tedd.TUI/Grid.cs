@@ -30,24 +30,6 @@ public class Grid : Panel
     public static void SetColumnSpan(UIElement element, int value) => element.SetValue(ColumnSpanProperty, value);
     public static int GetColumnSpan(UIElement element) => (int)element.GetValue(ColumnSpanProperty);
 
-    protected override void OnDataContextChanged(object newValue)
-    {
-        base.OnDataContextChanged(newValue);
-        foreach (var child in Children)
-        {
-            // If child doesn't have a local DataContext, it inherits.
-            // The base UIElement implementation usually handles this if we implement VisualChildrenCount correctly.
-            // But base implementation says:
-            /*
-            if (dp.IsInherited) {
-               // ... iterates children ...
-            }
-            */
-            // Since DataContext is inherited, base.OnPropertyChanged(DataContextProperty) will call OnPropertyChanged on children.
-            // So we don't need to do anything manual here provided VisualChildrenCount is correct.
-        }
-    }
-
     protected override Size MeasureOverride(Size availableSize)
     {
         // 1. Initialize Definitions if empty (default to 1x1)
