@@ -255,6 +255,125 @@ public class ValidatorTableTests
     }
 
     [Fact]
+    public void Table_CoordinatePreciseCharacterAssertion_SingleStyle()
+    {
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = true,
+            ShowVerticalLines = true,
+            ShowHorizontalLines = true,
+            BorderStyle = BoxStyle.Single,
+            Width = 12,
+            Height = 8
+        };
+
+        var col1 = new TableColumn { Header = "ID", Width = new GridLength(3, GridUnitType.Pixel) };
+        var col2 = new TableColumn { Header = "Name", Width = new GridLength(4, GridUnitType.Pixel) };
+        table.Columns.Add(col1);
+        table.Columns.Add(col2);
+
+        table.AddRow("1", "Bob");
+        table.AddRow("2", "Alice");
+
+        var sv = table.GetVisualChild(0) as ScrollViewer;
+        if (sv != null)
+        {
+            sv.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        }
+
+        table.Measure(new Size(12, 8));
+        table.Arrange(new Rect(0, 0, 12, 8));
+
+        var buffer = new VirtualBuffer(12, 8);
+        table.Render(buffer, 0, 0);
+
+        // Single Top-Left
+        Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
+        // Single Top-Right
+        Assert.Equal('\u2510', buffer.GetPixel(11, 0).Character);
+        // Single Bottom-Left
+        Assert.Equal('\u2514', buffer.GetPixel(0, 7).Character);
+        // Single Bottom-Right
+        Assert.Equal('\u2518', buffer.GetPixel(11, 7).Character);
+
+        // Header Junctions
+        // Single Left T-Junction for Header Separator
+        Assert.Equal('\u251C', buffer.GetPixel(0, 2).Character);
+        // Single Right T-Junction for Header Separator
+        Assert.Equal('\u2524', buffer.GetPixel(11, 2).Character);
+
+        // Header inner cross junction (between headers)
+        // At X = 1 (Border) + 3 (Col1) = 4
+        Assert.Equal('\u253C', buffer.GetPixel(4, 2).Character);
+
+        // Single Top T-Junction (TDown) at X=4, Y=0
+        Assert.Equal('\u252C', buffer.GetPixel(4, 0).Character);
+
+        // Single Bottom T-Junction (TUp) at X=4, Y=7
+        Assert.Equal('\u2534', buffer.GetPixel(4, 7).Character);
+    }
+
+    [Fact]
+    public void Table_CoordinatePreciseCharacterAssertion_DoubleStyle()
+    {
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = true,
+            ShowVerticalLines = true,
+            ShowHorizontalLines = true,
+            BorderStyle = BoxStyle.Double,
+            Width = 12,
+            Height = 8
+        };
+
+        var col1 = new TableColumn { Header = "ID", Width = new GridLength(3, GridUnitType.Pixel) };
+        var col2 = new TableColumn { Header = "Name", Width = new GridLength(4, GridUnitType.Pixel) };
+        table.Columns.Add(col1);
+        table.Columns.Add(col2);
+
+        table.AddRow("1", "Bob");
+        table.AddRow("2", "Alice");
+
+        // Force disable scrollbars for exact rendering tests without layout anomalies
+        var sv = table.GetVisualChild(0) as ScrollViewer;
+        if (sv != null)
+        {
+            sv.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        }
+
+        table.Measure(new Size(12, 8));
+        table.Arrange(new Rect(0, 0, 12, 8));
+
+        var buffer = new VirtualBuffer(12, 8);
+        table.Render(buffer, 0, 0);
+
+        // Explicit requirements based on Trace Memory
+        // TDown
+        Assert.Equal('\u2566', buffer.GetPixel(4, 0).Character);
+        // TUp
+        Assert.Equal('\u2569', buffer.GetPixel(4, 7).Character);
+        // TLeft (Header separator left junction)
+        Assert.Equal('\u2560', buffer.GetPixel(0, 2).Character);
+        // TRight (Header separator right junction)
+        Assert.Equal('\u2563', buffer.GetPixel(11, 2).Character);
+        // HeaderCross
+        Assert.Equal('\u256C', buffer.GetPixel(4, 2).Character);
+
+        // Render separator lines by taking body rows into account.
+        // In order to render row separators, table needs horizontal lines enabled and at least 2 rows.
+        // Table uses TableSeparator for body separation when ShowHorizontalLines = true.
+        // The first row measures h=1. The separator measures h=1.
+        // Header is at y=1, Header sep is at y=2. So row 0 is at y=3.
+        // Separator is at y=4.
+        Assert.Equal('\u255F', buffer.GetPixel(0, 4).Character); // BodySepTLeft
+        Assert.Equal('\u2562', buffer.GetPixel(11, 4).Character); // BodySepTRight
+    }
+
+    [Fact]
     public void Table_HierarchicalCompositionAndDynamicStateMutation_NestedGrids()
     {
         var parentGrid = new Grid();
