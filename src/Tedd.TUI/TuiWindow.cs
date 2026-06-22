@@ -162,7 +162,6 @@ public class TuiWindow : UIElement
 
         _overlays.Add(overlay);
         overlay.Parent = this;
-        overlay.DataContext = this.DataContext;
     }
 
     public void RemoveOverlay(UIElement overlay)
@@ -215,40 +214,6 @@ public class TuiWindow : UIElement
             }
         }
     }
-
-    protected override void OnDataContextChanged(object newValue)
-    {
-        base.OnDataContextChanged(newValue);
-        Content?.DataContext = newValue; // Wait, DataContext is inherited automatically via Parent.
-        // But TuiWindow.Content is a property, not just a visual child (though it is).
-        // Since we set Content.Parent = this, it should inherit DataContext automatically if we didn't override this.
-        // But checking UIElement.OnPropertyChanged(DataContextProperty):
-        /*
-        if (dp.IsInherited) {
-            // Iterates VisualChildren...
-        }
-        */
-        // And GetVisualChild includes Content. So base implementation should handle it.
-        // So this override might be redundant or even harmful if it sets local value.
-        // Actually, setting Content.DataContext = newValue sets a LOCAL value on Content, breaking inheritance if Content is replaced later?
-        // No, Content.DataContext setter just sets local value.
-        // If we want inheritance, we shouldn't set it manually here.
-        // Let's remove this manual propagation and rely on inheritance.
-        // BUT: Verify UIElement actually propagates to visual children.
-        // UIElement.OnPropertyChanged:
-        /*
-        if (dp.IsInherited) {
-             int count = VisualChildrenCount;
-             for(int i=0; i<count; i++) {
-                 var child = GetVisualChild(i);
-                 if (!child.HasLocalValue(dp)) child.OnPropertyChanged(dp);
-             }
-        }
-        */
-        // Yes, it does. So we can remove this override or just call base.
-    }
-
-    // Removing OnDataContextChanged override to rely on standard inheritance.
 
     private UIElement _focusedElement;
 
