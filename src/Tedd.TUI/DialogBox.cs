@@ -20,7 +20,6 @@ public class DialogBox : UIElement
             if (field != null)
             {
                 field.Parent = this;
-                field.DataContext = this.DataContext;
             }
         }
     }
@@ -90,15 +89,6 @@ public class DialogBox : UIElement
     {
         get => (BoxStyle)GetValue(BoxStyleProperty);
         set => SetValue(BoxStyleProperty, value);
-    }
-
-    protected override void OnDataContextChanged(object newValue)
-    {
-        base.OnDataContextChanged(newValue);
-        if (Content != null)
-        {
-            Content.DataContext = newValue;
-        }
     }
 
     protected override Size MeasureOverride(Size availableSize)

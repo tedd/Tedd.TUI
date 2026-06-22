@@ -131,13 +131,6 @@ public class Border : ScrollViewer
         UpdateScrollBarStyle();
     }
 
-    protected override void OnDataContextChanged(object newValue)
-    {
-        base.OnDataContextChanged(newValue);
-        if (Title != null) Title.DataContext = newValue;
-        if (StatusBar != null) StatusBar.DataContext = newValue;
-    }
-
     public override int VisualChildrenCount
     {
         get

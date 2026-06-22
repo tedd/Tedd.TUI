@@ -80,3 +80,8 @@
 ## 2024-05-18 - Architectural Execution Flow and DOS Controls Alignment
 **Observation:** The README.md lacked explicit demonstration of newly integrated retro-computing DOS-era controls (like Button ShadowStyle properties) operating with modern binding contexts. Additionally, descriptions of DataContext inheritance and event execution phases contained some lexical ambiguity that could lead to speculative assumptions.
 **Strategic Action:** Updated the `MyTuiApp` code example to instantiate a Button utilizing DOS-era aesthetics (`ButtonShadowStyle.Solid`). Systematically rewrote the Data Binding and Execution Phases sections to adopt a more rigorous, empirical articulation of the framework's internal execution flow, ensuring strict differentiation between implemented capabilities and hypotheses.
+## 2026-06-11 - Documentation Synchronization of Separator Component
+
+**Observation:** The README.md exhibited documentation drift regarding the newly integrated `Separator` component. It lacked explicit articulation of this control, which inherits from `Control`, explicitly sets `Focusable = false`, and renders a horizontal line using the `\u2500` character to match the DOS-era styling, implementing standard XAML parity for menus and layouts.
+
+**Strategic Action:** Synchronized the README.md to articulate the `Separator` architecture under the 'Rich Control Suite' section. This ensures epistemological alignment with the current framework capabilities for menu and layout separators.

@@ -136,3 +136,9 @@
 **Strategic Action:**
 - Registered `HorizontalContentAlignment` and `VerticalContentAlignment` dependency properties on the `Control` base class.
 - Modified default `ControlTemplate` implementations within `ContentControl`, `Button`, `GroupBox`, and `Expander` to bind the generated `ContentPresenter`'s `HorizontalAlignment` and `VerticalAlignment` directly to these new inherited parent properties, bridging a significant component styling parity gap.
+## 2026-03-09 - DataContext Propagation Parity Integration
+**Observation:** Discovered a core architectural deficit where layout container controls (e.g., `Border`, `DialogBox`, `Table`, `TuiWindow`, `Grid`) were manually overriding `OnDataContextChanged` to explicitly assign a local `DataContext` value onto their content or child elements. This manual set operation inadvertently overwrote and masked standard logical/visual tree inheritance tracking, breaking WPF/XAML isomorphism by treating inherited context mutations as local overrides.
+**Strategic Action:**
+- Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
+- Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
+- Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.

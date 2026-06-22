@@ -242,12 +242,6 @@ public class Table : UIElement
         return null;
     }
 
-    protected override void OnDataContextChanged(object newValue)
-    {
-        base.OnDataContextChanged(newValue);
-        _scrollViewer.DataContext = newValue;
-    }
-
     private void UpdateVisibleRows()
     {
         if (!_rowsDirty) return;
