@@ -79,6 +79,16 @@ public class Expander : HeaderedContentControl
             var contentTemplateBinding = new Binding("ContentTemplate") { RelativeSource = RelativeSource.TemplatedParent };
             contentPresenter.SetBinding(ContentPresenter.ContentTemplateProperty, contentTemplateBinding);
 
+            // Bind HorizontalAlignment to parent.HorizontalContentAlignment
+            var hAlignBinding = new Binding("HorizontalContentAlignment");
+            hAlignBinding.RelativeSource = RelativeSource.TemplatedParent;
+            contentPresenter.SetBinding(UIElement.HorizontalAlignmentProperty, hAlignBinding);
+
+            // Bind VerticalAlignment to parent.VerticalContentAlignment
+            var vAlignBinding = new Binding("VerticalContentAlignment");
+            vAlignBinding.RelativeSource = RelativeSource.TemplatedParent;
+            contentPresenter.SetBinding(UIElement.VerticalAlignmentProperty, vAlignBinding);
+
             contentPresenter.Visibility = expander.IsExpanded;
 
             stack.Children.Add(contentPresenter);

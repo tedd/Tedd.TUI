@@ -61,6 +61,16 @@ public class Button : ButtonBase
             contentTemplateBinding.RelativeSource = RelativeSource.TemplatedParent;
             cp.SetBinding(ContentPresenter.ContentTemplateProperty, contentTemplateBinding);
 
+            // Bind HorizontalAlignment to parent.HorizontalContentAlignment
+            var hAlignBinding = new Binding("HorizontalContentAlignment");
+            hAlignBinding.RelativeSource = RelativeSource.TemplatedParent;
+            cp.SetBinding(UIElement.HorizontalAlignmentProperty, hAlignBinding);
+
+            // Bind VerticalAlignment to parent.VerticalContentAlignment
+            var vAlignBinding = new Binding("VerticalContentAlignment");
+            vAlignBinding.RelativeSource = RelativeSource.TemplatedParent;
+            cp.SetBinding(UIElement.VerticalAlignmentProperty, vAlignBinding);
+
             border.Content = cp;
             return border;
         });

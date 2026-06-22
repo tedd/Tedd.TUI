@@ -130,6 +130,12 @@
 ## 2026-03-09 - ScrollViewer ScrollBarVisibility Attached Properties
 **Observation:** Discovered a parity deficit where `ScrollViewer.HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility` were implemented as standard C# properties rather than dependency properties, and specifically, they were not attached properties. This violates WPF architecture where scroll bar visibility is a canonical attached property used widely in templates and styles on elements containing a ScrollViewer (such as ListBox).
 **Strategic Action:** Refactored `HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility` to be registered via `DependencyProperty.RegisterAttached`, implementing the required static `Get...` and `Set...` methods while maintaining instance property wrappers, bringing it into strict 1:1 behavioral and structural mapping with WPF standard API.
+
+## 2026-03-09 - Control Content Alignment Parity Integration
+**Observation:** Discovered a parity deficit where the `Control` class lacked `HorizontalContentAlignment` and `VerticalContentAlignment` dependency properties. Consequently, components utilizing control templates and `ContentPresenter` (like `ContentControl`, `Button`, `GroupBox`, `Expander`) could not leverage declarative bindings to adjust the internal alignment of their content, restricting standard WPF layout paradigms.
+**Strategic Action:**
+- Registered `HorizontalContentAlignment` and `VerticalContentAlignment` dependency properties on the `Control` base class.
+- Modified default `ControlTemplate` implementations within `ContentControl`, `Button`, `GroupBox`, and `Expander` to bind the generated `ContentPresenter`'s `HorizontalAlignment` and `VerticalAlignment` directly to these new inherited parent properties, bridging a significant component styling parity gap.
 ## 2026-03-09 - DataContext Propagation Parity Integration
 **Observation:** Discovered a core architectural deficit where layout container controls (e.g., `Border`, `DialogBox`, `Table`, `TuiWindow`, `Grid`) were manually overriding `OnDataContextChanged` to explicitly assign a local `DataContext` value onto their content or child elements. This manual set operation inadvertently overwrote and masked standard logical/visual tree inheritance tracking, breaking WPF/XAML isomorphism by treating inherited context mutations as local overrides.
 **Strategic Action:**
