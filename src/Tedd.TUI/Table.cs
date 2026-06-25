@@ -409,9 +409,10 @@ public class Table : UIElement
                     c.TLeft = '\u2523';
                     c.TRight = '\u252B';
                     c.HeaderCross = '\u254B';
-                    c.BodySepTLeft = '\u2520';
-                    c.BodySepTRight = '\u2528';
-                    c.BodySepCross = '\u2542'; // ╂ (Heavy Vert, Light Horz)
+                    c.BodySepTLeft = '\u2523';
+                    c.BodySepTRight = '\u252B';
+                    c.BodySepCross = '\u254B'; // ╋ (Heavy Vert, Heavy Horz)
+                    c.BodySepH = '\u2501'; // ━ (Heavy Horz)
                     break;
                 case BoxStyle.Double:
                     c.TDown = '\u2566';
