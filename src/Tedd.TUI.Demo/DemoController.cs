@@ -43,7 +43,8 @@ public class DemoController
             RenderModeCombo.Items.Add("Canvas");
             RenderModeCombo.Items.Add("Dom");
             RenderModeCombo.SelectedItem = "Canvas";
-            RenderModeCombo.SelectionChanged += (s, e) => {
+            RenderModeCombo.SelectionChanged += (s, e) =>
+            {
                 // Console doesn't support DOM render mode, this is here just to maintain visual parity with Blazor UI
             };
         }
