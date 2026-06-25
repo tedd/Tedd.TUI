@@ -267,7 +267,7 @@ class Program
         btnPanel.AddChild(btnSubmit);
 
         // Dialog Box Demo
-        var btnDialog = new Button { Content = "Show Dialog", BoxStyle = BoxStyle.Single };
+        var btnDialog = new Button { Content = "Show Dialog", BoxStyle = BoxStyle.Single, ShadowStyle = ButtonShadowStyle.Solid, ShadowBackground = ConsoleColor.DarkGray };
         btnDialog.Click += (s, e) =>
         {
             var dialog = new DialogBox

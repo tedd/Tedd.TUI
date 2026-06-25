@@ -106,7 +106,7 @@
              <StackPanel Orientation="Horizontal">
                 <Button Content="Submit" BoxStyle="Double" Click="OnSubmit"/>
                 <TextBlock Text="  "/>
-                <Button Content="Show Dialog" BoxStyle="Single" Click="OnShowDialog"/>
+                <Button Content="Show Dialog" BoxStyle="Single" Click="OnShowDialog" ShadowStyle="Solid" ShadowBackground="DarkGray"/>
              </StackPanel>
           </StackPanel>
        </TabItem>

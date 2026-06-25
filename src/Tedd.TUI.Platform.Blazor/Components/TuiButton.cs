@@ -11,6 +11,8 @@ public class TuiButton : TuiComponentBase
 
     [Parameter] public string Text { get; set; } = "";
     [Parameter] public BoxStyle BoxStyle { get; set; } = BoxStyle.Single;
+    [Parameter] public ButtonShadowStyle ShadowStyle { get; set; } = ButtonShadowStyle.None;
+    [Parameter] public ConsoleColor ShadowBackground { get; set; } = ConsoleColor.Black;
     [Parameter] public EventCallback OnClick { get; set; }
 
     protected override void OnInitialized()
@@ -27,5 +29,7 @@ public class TuiButton : TuiComponentBase
         base.ApplyProperties();
         _button.Content = Text;
         _button.BoxStyle = BoxStyle;
+        _button.ShadowStyle = ShadowStyle;
+        _button.ShadowBackground = ShadowBackground;
     }
 }
