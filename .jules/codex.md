@@ -85,3 +85,8 @@
 **Observation:** The README.md exhibited documentation drift regarding the newly integrated `Separator` component. It lacked explicit articulation of this control, which inherits from `Control`, explicitly sets `Focusable = false`, and renders a horizontal line using the `\u2500` character to match the DOS-era styling, implementing standard XAML parity for menus and layouts.
 
 **Strategic Action:** Synchronized the README.md to articulate the `Separator` architecture under the 'Rich Control Suite' section. This ensures epistemological alignment with the current framework capabilities for menu and layout separators.
+## 2024-06-25 - Documentation Synchronization of XamlLoader Component
+
+**Observation:** The README.md exhibited documentation drift regarding the integration of `XamlLoader`. It lacked explicit articulation of this structural component's mechanism, specifically how it leverages `Tedd.TUI.XamlLoader.Load(xml, controller)` to dynamically load UI elements from XML strings and automatically bind named controls to a provided controller instance via reflection.
+
+**Strategic Action:** Synchronized the README.md to precisely articulate these architectural realities under the 'XAML Support' section. Executed `.NET 10.0` syntax validation on the provided code examples to ensure exact epistemological alignment with the current framework capabilities while cleanly differentiating from hypothetical concepts.

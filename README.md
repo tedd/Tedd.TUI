@@ -231,7 +231,7 @@ The framework's current iteration achieves robust WPF structural parity. However
 
 ## XAML Support
 
-Tedd.TUI supports defining UI in XAML. You can load XAML at runtime using `XamlLoader`.
+Tedd.TUI supports defining UI in XAML. You can load XAML at runtime using `Tedd.TUI.XamlLoader`. This established framework capability allows UI elements to be dynamically loaded from XML strings using `Tedd.TUI.XamlLoader.Load(xml, controller)`. The mechanism automatically resolves logical elements and dynamically binds named controls to the provided controller instance via reflection, cleanly decoupling the visual tree definition from the operational code.
 
 **Example XAML (`demo.xaml`):**
 ```xml
