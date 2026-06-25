@@ -142,3 +142,11 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+
+## 2024-06-25 - Dependency Object Style Precedence Integration
+**Observation:** Discovered a core parity deficit where the `DependencyObject` property system lacked support for `Style` values and strict XAML value precedence (`Local > Trigger > Style > Inherited > Default`). Previously, `Style` property evaluation mechanics and their specific impact on triggers/local overrides were absent.
+**Strategic Action:**
+- Created the `Style` class encompassing `Setter` and `TriggerBase` collections.
+- Integrated `StyleProperty` into the `UIElement` foundation.
+- Restructured `DependencyObject.GetValue()` and assignment logic to deterministically prioritize `_localValues`, `_triggerValues`, and `_styleValues` dictionaries, resolving property collisions according to standard WPF rules.
+- Added comprehensive testing in `StyleTests.cs` to guarantee exact behavioral mapping under concurrent state mutations.

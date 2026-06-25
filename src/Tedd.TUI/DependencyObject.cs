@@ -39,11 +39,15 @@ public class DependencyObject : INotifyPropertyChanged
 {
     private readonly Dictionary<DependencyProperty, object> _localValues = new();
     private readonly Dictionary<DependencyProperty, object> _triggerValues = new();
+    private readonly Dictionary<DependencyProperty, object> _styleValues = new();
+    private readonly Dictionary<DependencyProperty, object> _styleTriggerValues = new();
+
     // Tracks properties for which SetValue was called while a trigger was active.
     // GetValue returns the local value for these, giving it precedence over the trigger.
     // Clearing the local value (ClearValue) removes the property from this set so that
     // the still-active trigger value is re-exposed instead of falling back to inherited/default.
     private readonly HashSet<DependencyProperty> _localOverridesActiveTrigger = new();
+    private readonly HashSet<DependencyProperty> _localOverridesActiveStyleTrigger = new();
 
     protected virtual DependencyObject? InheritanceParent => null;
 
@@ -51,20 +55,42 @@ public class DependencyObject : INotifyPropertyChanged
 
     public object? GetValue(DependencyProperty dp)
     {
-        // A local value explicitly set while a trigger is active takes highest precedence.
+        // Local explicitly set overrides an active trigger.
         if (_localOverridesActiveTrigger.Contains(dp) && _localValues.TryGetValue(dp, out var overrideValue))
         {
             return overrideValue;
         }
-        // Active trigger values take precedence over pre-existing local values.
+
+        // Active template trigger values take precedence over everything else
         if (_triggerValues.TryGetValue(dp, out var triggerValue))
         {
             return triggerValue;
         }
+
+        // Local explicit values set while an active style trigger is present override it.
+        if (_localOverridesActiveStyleTrigger.Contains(dp) && _localValues.TryGetValue(dp, out var styleOverrideValue))
+        {
+            return styleOverrideValue;
+        }
+
+        // Active style trigger values take precedence over regular local values
+        if (_styleTriggerValues.TryGetValue(dp, out var styleTriggerValue))
+        {
+            return styleTriggerValue;
+        }
+
+        // Local explicitly set values
         if (_localValues.TryGetValue(dp, out var localValue))
         {
             return localValue;
         }
+
+        // Style explicitly set values
+        if (_styleValues.TryGetValue(dp, out var styleValue))
+        {
+            return styleValue;
+        }
+
         if (dp.IsInherited && InheritanceParent != null)
         {
             return InheritanceParent.GetValue(dp);
@@ -95,6 +121,10 @@ public class DependencyObject : INotifyPropertyChanged
         {
             _localOverridesActiveTrigger.Add(dp);
         }
+        if (_styleTriggerValues.ContainsKey(dp))
+        {
+            _localOverridesActiveStyleTrigger.Add(dp);
+        }
 
         OnPropertyChanged(dp);
     }
@@ -107,6 +137,7 @@ public class DependencyObject : INotifyPropertyChanged
         // Even when no local value was present, removing the override flag can expose a
         // different effective value (the trigger's), so treat it as a change.
         changed = changed || (_localOverridesActiveTrigger.Remove(dp) && _triggerValues.ContainsKey(dp));
+        changed = changed || (_localOverridesActiveStyleTrigger.Remove(dp) && _styleTriggerValues.ContainsKey(dp));
         if (changed)
         {
             OnPropertyChanged(dp);
@@ -153,6 +184,51 @@ public class DependencyObject : INotifyPropertyChanged
             // Trigger is no longer active; any post-trigger local override is now just a
             // regular local value, so remove the flag.
             _localOverridesActiveTrigger.Remove(dp);
+            OnPropertyChanged(dp);
+        }
+    }
+
+    internal void SetStyleValue(DependencyProperty dp, object? value)
+    {
+        value = CoerceLegacyColor(dp, value);
+
+        if (value != null && !dp.PropertyType.IsInstanceOfType(value))
+        {
+            throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
+        }
+
+        _styleValues[dp] = value ?? null!;
+        OnPropertyChanged(dp);
+    }
+
+    internal void ClearAllStyleValues()
+    {
+        var keys = new List<DependencyProperty>(_styleValues.Keys);
+        _styleValues.Clear();
+        foreach (var key in keys)
+        {
+            OnPropertyChanged(key);
+        }
+    }
+
+    internal void SetStyleTriggerValue(DependencyProperty dp, object? value)
+    {
+        value = CoerceLegacyColor(dp, value);
+
+        if (value != null && !dp.PropertyType.IsInstanceOfType(value))
+        {
+            throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
+        }
+
+        _styleTriggerValues[dp] = value ?? null!;
+        OnPropertyChanged(dp);
+    }
+
+    internal void ClearStyleTriggerValue(DependencyProperty dp)
+    {
+        if (_styleTriggerValues.Remove(dp))
+        {
+            _localOverridesActiveStyleTrigger.Remove(dp);
             OnPropertyChanged(dp);
         }
     }
