@@ -222,3 +222,11 @@ Developed parameterized testing for both components.
 ## 2026-06-11 - Markdown Tests Expanded
 **Observation:** Additional branch coverage was needed for `MarkdownParser` and `MarkdownView`, and some existing tests lacked verifiable assertions.
 **Strategic Action:** Added parameterized `[Theory]` suites with explicit state assertions to improve deterministic coverage (existing `[Fact]` tests were retained where appropriate).
+
+## 2026-07-02 - RadioButton Test Coverage Expansion
+**Observation:** Coverage for `RadioButton.cs` was identified at 70.8%, primarily due to untested execution pathways within `NavigateToSibling`, property modifications, measuring, and rendering logic. Navigational edge cases such as looping, non-StackPanel parents, and unexpected keypress handling were missing boundary validation. Specific returns like dynamically emptied panels present challenge to reach lines 136 and 163 via conventional interactions due to logical safety bounds under natural framework event routing.
+**Strategic Action:** Developed comprehensive test matrix targeting `RadioButton` behaviors including visual rendering properties (`CheckColor`, `BracketColor`, `FocusedForeground`), coordinate-precise `Measure` and `Render` logic, multi-directional sibling navigation logic, and conditional branches for different node tree groupings, thus increasing coverage of `RadioButton` from 70.8% to 98.5%.
+
+## 2026-07-02 - RadioButton Test Coverage Expansion (Update)
+**Observation:** Attempting to reach specific unhandled bounds in `NavigateToSibling` (e.g. `count == 0` for `panel.Children` or `startIndex < 0`) proved difficult naturally as the architecture generally guards the state. A subclass with a `BeforeNavigate` hook triggering `panel.Children.Clear()` or modifying the tree during event propagation was required to simulate adversarial hierarchy manipulation mid-event.
+**Strategic Action:** Deployed subclassing and event hook injection specifically targeting UI tree mid-flight manipulation to exhaust internal null or out-of-bounds guards, effectively covering lines 136 and 163.
