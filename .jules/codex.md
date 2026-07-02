@@ -85,3 +85,8 @@
 **Observation:** The README.md exhibited documentation drift regarding the newly integrated `Separator` component. It lacked explicit articulation of this control, which inherits from `Control`, explicitly sets `Focusable = false`, and renders a horizontal line using the `\u2500` character to match the DOS-era styling, implementing standard XAML parity for menus and layouts.
 
 **Strategic Action:** Synchronized the README.md to articulate the `Separator` architecture under the 'Rich Control Suite' section. This ensures epistemological alignment with the current framework capabilities for menu and layout separators.
+## 2026-06-22 - Documentation Synchronization of Content Alignment Properties
+
+**Observation:** The README.md exhibited documentation drift regarding the newly integrated content alignment mechanism on `Control`. It lacked explicit articulation of `HorizontalContentAlignment` and `VerticalContentAlignment` dependency properties, which are essential for WPF parity and bound to internal `ContentPresenter` elements using `RelativeSource.TemplatedParent`.
+
+**Strategic Action:** Synchronized the README.md to articulate the content alignment architecture under the 'Core System' section. This ensures epistemological alignment with the current framework capabilities for content alignment within control templates.
