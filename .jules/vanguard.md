@@ -28,3 +28,6 @@
 ## 2026-06-11 - TabControl Selection Synchronization Parity
 **Observation:** The bifurcated architecture correctly synced navigation from the TreeView to the TabControl across all paradigms. However, bidirectional synchronization—where navigating via the TabControl updates the TreeView state—was absent in the Blazor deployment targets (Home.razor and Programmatic.razor).
 **Strategic Action:** Implemented identical `SelectionChanged` logic within the TabControl across the Blazor deployments to map active tabs back to the TreeView context. Introduced derived `@bind-IsSelected` boolean bindings on Razor TreeViewItems, driven from `_selectedTabIndex`, to keep navigation state synchronized between the TreeView and TabControl.
+## 2025-02-24 - Structural Sync for TuiExpander
+**Observation:** In declarative configurations (like Blazor's `Home.razor`), the `TuiExpander` layout was lacking the explicit `Width="20"` attribute present in programmatic approaches, leading to rendering discrepancies in the bifurcated architecture.
+**Strategic Action:** Synchronized `Home.razor` to enforce strict layout parameters by applying `Width="20"` to `TuiExpander`, thereby establishing unified layout rendering consistency across all vectors.
