@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Tedd.TUI;
+namespace Tedd.TUI.Archive;
 
 /// <summary>
 /// 32-bit RGBA color used throughout the Tedd.TUI rendering pipeline. Internally
@@ -18,7 +18,7 @@ namespace Tedd.TUI;
 /// <para>Color composition uses the Porter-Duff "over" operator via <see cref="Blend"/>.
 /// Renderers that target 16-color hosts use <see cref="ToNearestConsoleColor"/> to quantize.</para>
 /// </remarks>
-public readonly struct TuiColor : IEquatable<TuiColor>
+public readonly struct TuiColorArchive : IEquatable<TuiColorArchive>
 {
     private readonly uint _packed;
 
@@ -68,30 +68,30 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TuiColor(byte r, byte g, byte b, byte a = 255)
+    public TuiColorArchive(byte r, byte g, byte b, byte a = 255)
     {
         _packed = ((uint)a << 24) | ((uint)r << 16) | ((uint)g << 8) | b;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private TuiColor(uint packed)
+    private TuiColorArchive(uint packed)
     {
         _packed = packed;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TuiColor FromRgb(byte r, byte g, byte b, byte a = 255) => new TuiColor(r, g, b, a);
+    public static TuiColorArchive FromRgb(byte r, byte g, byte b, byte a = 255) => new TuiColorArchive(r, g, b, a);
 
     /// <summary>Builds a color from a packed 0xAARRGGBB unsigned int.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TuiColor FromArgb(uint argb) => new TuiColor(argb);
+    public static TuiColorArchive FromArgb(uint argb) => new TuiColorArchive(argb);
 
     /// <summary>
     /// Parses a CSS-style color string. Accepts <c>#RRGGBB</c>, <c>#RRGGBBAA</c>,
     /// <c>#RGB</c>, <c>rgb(r,g,b)</c>, <c>rgba(r,g,b,a)</c>, or any of the
     /// 16 <see cref="ConsoleColor"/> names (case-insensitive).
     /// </summary>
-    public static TuiColor FromHex(string text)
+    public static TuiColorArchive FromHex(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             throw new ArgumentException("Color string is empty", nameof(text));
@@ -108,12 +108,12 @@ public readonly struct TuiColor : IEquatable<TuiColor>
                         byte r = ParseHexNibble(hex[0]);
                         byte g = ParseHexNibble(hex[1]);
                         byte b = ParseHexNibble(hex[2]);
-                        return new TuiColor((byte)(r | (r << 4)), (byte)(g | (g << 4)), (byte)(b | (b << 4)));
+                        return new TuiColorArchive((byte)(r | (r << 4)), (byte)(g | (g << 4)), (byte)(b | (b << 4)));
                     }
                 case 6:
-                    return new TuiColor(ParseHexByte(hex[0], hex[1]), ParseHexByte(hex[2], hex[3]), ParseHexByte(hex[4], hex[5]));
+                    return new TuiColorArchive(ParseHexByte(hex[0], hex[1]), ParseHexByte(hex[2], hex[3]), ParseHexByte(hex[4], hex[5]));
                 case 8:
-                    return new TuiColor(
+                    return new TuiColorArchive(
                         ParseHexByte(hex[0], hex[1]),
                         ParseHexByte(hex[2], hex[3]),
                         ParseHexByte(hex[4], hex[5]),
@@ -134,77 +134,50 @@ public readonly struct TuiColor : IEquatable<TuiColor>
         throw new FormatException($"Unrecognized color string '{text}'.");
     }
 
-    /// <summary>
-    /// Parses a functional color string.
-    /// Time Complexity: O(N) where N is the length of the string text.
-    /// Space Complexity: O(1) as it utilizes zero-allocation ReadOnlySpan<char> slicing.
-    /// </summary>
-    private static TuiColor ParseFunctional(string text)
+    private static TuiColorArchive ParseFunctional(string text)
     {
-        ReadOnlySpan<char> span = text.AsSpan();
-        int open = span.IndexOf('(');
-        int close = span.IndexOf(')');
+        int open = text.IndexOf('(');
+        int close = text.IndexOf(')');
         if (open < 0 || close < 0 || close <= open)
             throw new FormatException($"Malformed color '{text}'.");
 
-        bool hasAlpha = span.Slice(0, open).Trim().Equals("rgba", StringComparison.OrdinalIgnoreCase);
-        ReadOnlySpan<char> inside = span.Slice(open + 1, close - open - 1);
+        bool hasAlpha = text.AsSpan(0, open).Trim().Equals("rgba", StringComparison.OrdinalIgnoreCase);
+        var inside = text.Substring(open + 1, close - open - 1);
+        var parts = inside.Split(',');
 
-        // Instead of allocating via Split, manually find the commas in the span
-        int comma1 = inside.IndexOf(',');
-        if (comma1 < 0) throw new FormatException($"Malformed color '{text}'.");
-        int comma2 = inside.Slice(comma1 + 1).IndexOf(',');
-        if (comma2 < 0) throw new FormatException($"Malformed color '{text}'.");
-        comma2 += comma1 + 1;
+        if (hasAlpha && parts.Length != 4)
+            throw new FormatException($"rgba() requires 4 components: '{text}'.");
+        if (!hasAlpha && parts.Length != 3)
+            throw new FormatException($"rgb() requires 3 components: '{text}'.");
 
-        if (hasAlpha)
-        {
-            int comma3 = inside.Slice(comma2 + 1).IndexOf(',');
-            if (comma3 < 0) throw new FormatException($"rgba() requires 4 components: '{text}'.");
-            comma3 += comma2 + 1;
-
-            if (inside.Slice(comma3 + 1).IndexOf(',') >= 0)
-                throw new FormatException($"rgba() requires 4 components: '{text}'.");
-
-            byte r = ParseColorComponent(inside.Slice(0, comma1));
-            byte g = ParseColorComponent(inside.Slice(comma1 + 1, comma2 - comma1 - 1));
-            byte b = ParseColorComponent(inside.Slice(comma2 + 1, comma3 - comma2 - 1));
-            byte a = ParseAlphaComponent(inside.Slice(comma3 + 1));
-            return new TuiColor(r, g, b, a);
-        }
-        else
-        {
-            if (inside.Slice(comma2 + 1).IndexOf(',') >= 0)
-                throw new FormatException($"rgb() requires 3 components: '{text}'.");
-
-            byte r = ParseColorComponent(inside.Slice(0, comma1));
-            byte g = ParseColorComponent(inside.Slice(comma1 + 1, comma2 - comma1 - 1));
-            byte b = ParseColorComponent(inside.Slice(comma2 + 1));
-            return new TuiColor(r, g, b, 255);
-        }
+        byte r = ParseColorComponent(parts[0]);
+        byte g = ParseColorComponent(parts[1]);
+        byte b = ParseColorComponent(parts[2]);
+        byte a = hasAlpha ? ParseAlphaComponent(parts[3]) : (byte)255;
+        return new TuiColorArchive(r, g, b, a);
     }
 
-    private static byte ParseColorComponent(ReadOnlySpan<char> component)
+    private static byte ParseColorComponent(string component)
     {
         var trimmed = component.Trim();
         if (byte.TryParse(trimmed, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var v))
             return v;
-        throw new FormatException($"Invalid color component '{component.ToString()}'.");
+        throw new FormatException($"Invalid color component '{component}'.");
     }
 
-    private static byte ParseAlphaComponent(ReadOnlySpan<char> component)
+    private static byte ParseAlphaComponent(string component)
     {
         var trimmed = component.Trim();
         if (trimmed.IndexOf('.') >= 0)
         {
             if (double.TryParse(trimmed, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d))
                 return (byte)Math.Clamp((int)Math.Round(d * 255.0), 0, 255);
-            throw new FormatException($"Invalid alpha '{component.ToString()}'.");
+            throw new FormatException($"Invalid alpha '{component}'.");
         }
 
         if (byte.TryParse(trimmed, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var b))
             return b;
-        throw new FormatException($"Invalid alpha '{component.ToString()}'.");
+        throw new FormatException($"Invalid alpha '{component}'.");
     }
 
     private static byte ParseHexNibble(char c)
@@ -221,11 +194,11 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     /// Returns the canonical RGB triple for a <see cref="ConsoleColor"/>. Values mirror
     /// the existing 16-color palette used by the Blazor surface and ASCII renderers.
     /// </summary>
-    public static TuiColor FromConsole(ConsoleColor color)
+    public static TuiColorArchive FromConsole(ConsoleColor color)
     {
         int idx = (int)color;
         if ((uint)idx >= (uint)PaletteR.Length) return Transparent;
-        return new TuiColor(PaletteR[idx], PaletteG[idx], PaletteB[idx]);
+        return new TuiColorArchive(PaletteR[idx], PaletteG[idx], PaletteB[idx]);
     }
 
     /// <summary>
@@ -233,7 +206,7 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     /// existing code (and the rendered XAML <c>Foreground="Red"</c> shorthand) keeps
     /// working unchanged.
     /// </summary>
-    public static implicit operator TuiColor(ConsoleColor color) => FromConsole(color);
+    public static implicit operator TuiColorArchive(ConsoleColor color) => FromConsole(color);
 
     /// <summary>
     /// Quantizes this color to the nearest of the 16 <see cref="ConsoleColor"/> entries
@@ -268,7 +241,7 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     /// Returns a fully opaque color when both inputs are opaque.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TuiColor Blend(TuiColor under)
+    public TuiColorArchive Blend(TuiColorArchive under)
     {
         uint srcA = (_packed >> 24) & 0xFF;
         if (srcA == 255) return this;
@@ -290,24 +263,24 @@ public readonly struct TuiColor : IEquatable<TuiColor>
         uint outG = (srcG * srcA + dstG * dstA * invSa / 255 + outA / 2) / outA;
         uint outB = (srcB * srcA + dstB * dstA * invSa / 255 + outA / 2) / outA;
 
-        return new TuiColor((byte)outR, (byte)outG, (byte)outB, (byte)outA);
+        return new TuiColorArchive((byte)outR, (byte)outG, (byte)outB, (byte)outA);
     }
 
     /// <summary>
     /// Returns this color with the alpha channel replaced by <paramref name="alpha"/>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TuiColor WithAlpha(byte alpha) => new TuiColor(R, G, B, alpha);
+    public TuiColorArchive WithAlpha(byte alpha) => new TuiColorArchive(R, G, B, alpha);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(TuiColor other) => _packed == other._packed;
-    public override bool Equals(object? obj) => obj is TuiColor c && Equals(c);
+    public bool Equals(TuiColorArchive other) => _packed == other._packed;
+    public override bool Equals(object? obj) => obj is TuiColorArchive c && Equals(c);
     public override int GetHashCode() => (int)_packed;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(TuiColor a, TuiColor b) => a._packed == b._packed;
+    public static bool operator ==(TuiColorArchive a, TuiColorArchive b) => a._packed == b._packed;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(TuiColor a, TuiColor b) => a._packed != b._packed;
+    public static bool operator !=(TuiColorArchive a, TuiColorArchive b) => a._packed != b._packed;
 
     public override string ToString() => A == 255
         ? $"#{R:X2}{G:X2}{B:X2}"
@@ -331,23 +304,23 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     };
 
     // Named 16-color palette accessors mirroring ConsoleColor for ergonomic parity.
-    public static TuiColor Black { get; } = FromConsole(ConsoleColor.Black);
-    public static TuiColor DarkBlue { get; } = FromConsole(ConsoleColor.DarkBlue);
-    public static TuiColor DarkGreen { get; } = FromConsole(ConsoleColor.DarkGreen);
-    public static TuiColor DarkCyan { get; } = FromConsole(ConsoleColor.DarkCyan);
-    public static TuiColor DarkRed { get; } = FromConsole(ConsoleColor.DarkRed);
-    public static TuiColor DarkMagenta { get; } = FromConsole(ConsoleColor.DarkMagenta);
-    public static TuiColor DarkYellow { get; } = FromConsole(ConsoleColor.DarkYellow);
-    public static TuiColor Gray { get; } = FromConsole(ConsoleColor.Gray);
-    public static TuiColor DarkGray { get; } = FromConsole(ConsoleColor.DarkGray);
-    public static TuiColor Blue { get; } = FromConsole(ConsoleColor.Blue);
-    public static TuiColor Green { get; } = FromConsole(ConsoleColor.Green);
-    public static TuiColor Cyan { get; } = FromConsole(ConsoleColor.Cyan);
-    public static TuiColor Red { get; } = FromConsole(ConsoleColor.Red);
-    public static TuiColor Magenta { get; } = FromConsole(ConsoleColor.Magenta);
-    public static TuiColor Yellow { get; } = FromConsole(ConsoleColor.Yellow);
-    public static TuiColor White { get; } = FromConsole(ConsoleColor.White);
+    public static TuiColorArchive Black { get; } = FromConsole(ConsoleColor.Black);
+    public static TuiColorArchive DarkBlue { get; } = FromConsole(ConsoleColor.DarkBlue);
+    public static TuiColorArchive DarkGreen { get; } = FromConsole(ConsoleColor.DarkGreen);
+    public static TuiColorArchive DarkCyan { get; } = FromConsole(ConsoleColor.DarkCyan);
+    public static TuiColorArchive DarkRed { get; } = FromConsole(ConsoleColor.DarkRed);
+    public static TuiColorArchive DarkMagenta { get; } = FromConsole(ConsoleColor.DarkMagenta);
+    public static TuiColorArchive DarkYellow { get; } = FromConsole(ConsoleColor.DarkYellow);
+    public static TuiColorArchive Gray { get; } = FromConsole(ConsoleColor.Gray);
+    public static TuiColorArchive DarkGray { get; } = FromConsole(ConsoleColor.DarkGray);
+    public static TuiColorArchive Blue { get; } = FromConsole(ConsoleColor.Blue);
+    public static TuiColorArchive Green { get; } = FromConsole(ConsoleColor.Green);
+    public static TuiColorArchive Cyan { get; } = FromConsole(ConsoleColor.Cyan);
+    public static TuiColorArchive Red { get; } = FromConsole(ConsoleColor.Red);
+    public static TuiColorArchive Magenta { get; } = FromConsole(ConsoleColor.Magenta);
+    public static TuiColorArchive Yellow { get; } = FromConsole(ConsoleColor.Yellow);
+    public static TuiColorArchive White { get; } = FromConsole(ConsoleColor.White);
 
     /// <summary>Fully transparent (alpha=0). Useful as a "no overlay" sentinel.</summary>
-    public static TuiColor Transparent { get; } = new TuiColor(0u);
+    public static TuiColorArchive Transparent { get; } = new TuiColorArchive(0u);
 }
