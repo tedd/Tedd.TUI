@@ -11,7 +11,7 @@ public class Border : ScrollViewer
         set => Content = value;
     }
 
-    public UIElement Title
+    public UIElement? Title
     {
         get;
         set
@@ -39,7 +39,7 @@ public class Border : ScrollViewer
         }
     } = HorizontalAlignment.Left;
 
-    public UIElement StatusBar
+    public UIElement? StatusBar
     {
         get;
         set
