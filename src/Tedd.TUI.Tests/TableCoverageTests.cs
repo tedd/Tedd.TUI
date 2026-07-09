@@ -363,18 +363,18 @@ public class TableCoverageTests
         // 6: └───────┘
 
         // Row 4 should be separator
-        // X=0: Left Junction (u2520 ┠) if ShowBorder && ShowHorizontalLines
+        // X=0: Left Junction (u2523 ┣) if ShowBorder && ShowHorizontalLines
         // X=1..3: Horz Line (u2501 ━) — matches default BorderStyle.Heavy
         // X=4: Cross (u254B ╋) if ShowVerticalLines
         // X=5..7: Horz Line
-        // X=8: Right Junction (u2528 ┨)
+        // X=8: Right Junction (u252B ┫)
 
         // Verify Row 4
-        Assert.Equal('\u2520', buffer.GetPixel(0, 4).Character);
+        Assert.Equal('\u2523', buffer.GetPixel(0, 4).Character);
         Assert.Equal('\u2501', buffer.GetPixel(1, 4).Character);
         Assert.Equal('\u254B', buffer.GetPixel(4, 4).Character); // Cross
         Assert.Equal('\u2501', buffer.GetPixel(5, 4).Character);
-        Assert.Equal('\u2528', buffer.GetPixel(8, 4).Character);
+        Assert.Equal('\u252B', buffer.GetPixel(8, 4).Character);
     }
 
     [Fact]

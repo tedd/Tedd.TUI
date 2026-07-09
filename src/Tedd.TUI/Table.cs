@@ -409,9 +409,10 @@ public class Table : UIElement
                     c.TLeft = '\u2523';
                     c.TRight = '\u252B';
                     c.HeaderCross = '\u254B';
-                    c.BodySepTLeft = '\u2520';
-                    c.BodySepTRight = '\u2528';
-                    c.BodySepCross = '\u2542'; // ╂ (Heavy Vert, Light Horz)
+                    c.BodySepH = '\u2501';
+                    c.BodySepTLeft = '\u2523';
+                    c.BodySepTRight = '\u252B';
+                    c.BodySepCross = '\u254B';
                     break;
                 case BoxStyle.Double:
                     c.TDown = '\u2566';
@@ -419,6 +420,7 @@ public class Table : UIElement
                     c.TLeft = '\u2560';
                     c.TRight = '\u2563';
                     c.HeaderCross = '\u256C';
+                    c.BodySepH = '\u2500'; // Light horizontal for Double body sep
                     c.BodySepTLeft = '\u255F'; // ╟ (Double Vert, Single Right)
                     c.BodySepTRight = '\u2562'; // ╢ (Double Vert, Single Left)
                     c.BodySepCross = '\u256B'; // ╫ (Double Vert, Single Horz)
@@ -429,6 +431,7 @@ public class Table : UIElement
                     c.TLeft = '\u251C';
                     c.TRight = '\u2524';
                     c.HeaderCross = '\u253C';
+                    c.BodySepH = '\u2500';
                     c.BodySepTLeft = '\u251C';
                     c.BodySepTRight = '\u2524';
                     c.BodySepCross = '\u253C';
@@ -1076,9 +1079,9 @@ internal class TableSeparator : UIElement
         // rather than the infinite horizontal scroll space given by ScrollViewer.
         int width = Math.Min(RenderSize.Width, table.RenderSize.Width);
 
-        var interior = BoxDrawingChars.GetInterior(table.BorderStyle);
-        char hChar = interior.Horizontal;
-        char crossChar = BoxDrawingChars.GetInteriorCross(table.BorderStyle);
+        var chars = Table.TableBoxChars.Get(table.BorderStyle);
+        char hChar = chars.BodySepH;
+        char crossChar = chars.BodySepCross;
 
         buffer.DrawHLine(x, y, width, hChar, TuiColor.Gray, TuiColor.Black);
 

@@ -316,6 +316,70 @@ public class ValidatorTableTests
     }
 
     [Fact]
+    public void Table_CoordinatePreciseCharacterAssertion_HeavyBodySeparation()
+    {
+        // Architectural Mandate: Nest in a hierarchy and trigger dynamic resize
+        var parentGrid = new Grid();
+        parentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        parentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = true,
+            ShowVerticalLines = true,
+            ShowHorizontalLines = true,
+            BorderStyle = BoxStyle.Heavy
+        };
+
+        var col1 = new TableColumn { Header = "ID", Width = new GridLength(3, GridUnitType.Pixel) };
+        var col2 = new TableColumn { Header = "Name", Width = new GridLength(4, GridUnitType.Pixel) };
+        table.Columns.Add(col1);
+        table.Columns.Add(col2);
+
+        table.AddRow("1", "Bob");
+        table.AddRow("2", "Alice");
+
+        parentGrid.Children.Add(table);
+
+        // Initial layout pass
+        parentGrid.Measure(new Size(12, 8));
+        parentGrid.Arrange(new Rect(0, 0, 12, 8));
+
+        var sv = table.GetVisualChild(0) as ScrollViewer;
+        if (sv != null)
+        {
+            sv.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        }
+
+        var buffer = new VirtualBuffer(12, 8);
+        parentGrid.Render(buffer, 0, 0);
+
+        // Assert coordinates on initial constraint
+        Assert.Equal('\u254B', buffer.GetPixel(4, 2).Character);
+        Assert.Equal('\u2523', buffer.GetPixel(0, 4).Character);
+        Assert.Equal('\u252B', buffer.GetPixel(11, 4).Character);
+        Assert.Equal('\u254B', buffer.GetPixel(4, 4).Character);
+        Assert.Equal('\u2501', buffer.GetPixel(2, 4).Character);
+
+        // Dynamic Resize state mutation
+        parentGrid.Measure(new Size(20, 10));
+        parentGrid.Arrange(new Rect(0, 0, 20, 10));
+
+        var bufferResize = new VirtualBuffer(20, 10);
+        parentGrid.Render(bufferResize, 0, 0);
+
+        // Table spans full star width, so width is 20 now.
+        // Body Sep Right is now at 19. Cross remains at 4 because column widths are fixed pixels.
+        Assert.Equal('\u254B', bufferResize.GetPixel(4, 2).Character); // Header cross junction
+        Assert.Equal('\u2523', bufferResize.GetPixel(0, 4).Character); // Left junction
+        Assert.Equal('\u252B', bufferResize.GetPixel(19, 4).Character); // Right junction moved to 19
+        Assert.Equal('\u254B', bufferResize.GetPixel(4, 4).Character); // Cross remains at 4
+        Assert.Equal('\u2501', bufferResize.GetPixel(2, 4).Character); // Horizontal remains line
+    }
+
+    [Fact]
     public void Table_CoordinatePreciseCharacterAssertion_DoubleStyle()
     {
         var table = new Table
