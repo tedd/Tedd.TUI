@@ -14,7 +14,7 @@ public class ItemsControlTests
     public void ItemsSource_Populates_Items()
     {
         var control = new TestItemsControl();
-        string[] source = [ "A", "B", "C" ];
+        string[] source = ["A", "B", "C"];
 
         control.ItemsSource = source;
 
@@ -111,7 +111,7 @@ public class ItemsControlTests
     public void Items_IsReadOnly_When_ItemsSource_Set()
     {
         var control = new TestItemsControl();
-        control.ItemsSource = (string[])[ "A" ];
+        control.ItemsSource = (string[])["A"];
 
         Assert.Throws<InvalidOperationException>(() => control.Items.Add("B"));
         Assert.Throws<InvalidOperationException>(() => control.Items.RemoveAt(0));
@@ -214,7 +214,7 @@ public class ItemsControlTests
     {
         var control = new TestItemsControl();
 
-        TestItem[] items = [ new TestItem { Name = "A" }, new TestItem { Name = "B" } ];
+        TestItem[] items = [new TestItem { Name = "A" }, new TestItem { Name = "B" }];
         control.ItemsSource = items;
 
         control.Template = new ControlTemplate(parent =>

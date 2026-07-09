@@ -1,0 +1,11 @@
+--- src/Tedd.TUI/TuiColor.cs
++++ src/Tedd.TUI/TuiColor.cs
+@@ -128,7 +128,7 @@
+
+         if (s.Length > 4 && (s[0] == 'r' || s[0] == 'R'))
+         {
+-            return ParseFunctional(s);
++            return ParseFunctional(s.ToString());
+         }
+
+         if (Enum.TryParse<ConsoleColor>(text.ToString(), ignoreCase: true, out ConsoleColor cc))

@@ -91,11 +91,6 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     /// <c>#RGB</c>, <c>rgb(r,g,b)</c>, <c>rgba(r,g,b,a)</c>, or any of the
     /// 16 <see cref="ConsoleColor"/> names (case-insensitive).
     /// </summary>
-    /// <remarks>
-    /// Optimization: Replaced string allocation and splitting with ReadOnlySpan&lt;char&gt; slicing and stackalloc Span&lt;Range&gt;.
-    /// Time Complexity: O(N) where N is the length of the string text.
-    /// Space Complexity: O(1) utilizing stack memory exclusively.
-    /// </remarks>
     public static TuiColor FromHex(string text)
     {
         if (text == null)

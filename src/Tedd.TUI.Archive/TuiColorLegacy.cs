@@ -18,7 +18,7 @@ namespace Tedd.TUI;
 /// <para>Color composition uses the Porter-Duff "over" operator via <see cref="Blend"/>.
 /// Renderers that target 16-color hosts use <see cref="ToNearestConsoleColor"/> to quantize.</para>
 /// </remarks>
-public readonly struct TuiColor : IEquatable<TuiColor>
+public readonly struct TuiColorLegacy : IEquatable<TuiColorLegacy>
 {
     private readonly uint _packed;
 
@@ -68,47 +68,35 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TuiColor(byte r, byte g, byte b, byte a = 255)
+    public TuiColorLegacy(byte r, byte g, byte b, byte a = 255)
     {
         _packed = ((uint)a << 24) | ((uint)r << 16) | ((uint)g << 8) | b;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private TuiColor(uint packed)
+    private TuiColorLegacy(uint packed)
     {
         _packed = packed;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TuiColor FromRgb(byte r, byte g, byte b, byte a = 255) => new TuiColor(r, g, b, a);
+    public static TuiColorLegacy FromRgb(byte r, byte g, byte b, byte a = 255) => new TuiColorLegacy(r, g, b, a);
 
     /// <summary>Builds a color from a packed 0xAARRGGBB unsigned int.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TuiColor FromArgb(uint argb) => new TuiColor(argb);
+    public static TuiColorLegacy FromArgb(uint argb) => new TuiColorLegacy(argb);
 
     /// <summary>
     /// Parses a CSS-style color string. Accepts <c>#RRGGBB</c>, <c>#RRGGBBAA</c>,
     /// <c>#RGB</c>, <c>rgb(r,g,b)</c>, <c>rgba(r,g,b,a)</c>, or any of the
     /// 16 <see cref="ConsoleColor"/> names (case-insensitive).
     /// </summary>
-    /// <remarks>
-    /// Optimization: Replaced string allocation and splitting with ReadOnlySpan&lt;char&gt; slicing and stackalloc Span&lt;Range&gt;.
-    /// Time Complexity: O(N) where N is the length of the string text.
-    /// Space Complexity: O(1) utilizing stack memory exclusively.
-    /// </remarks>
-    public static TuiColor FromHex(string text)
+    public static TuiColorLegacy FromHex(string text)
     {
-        if (text == null)
-            throw new ArgumentException("Color string is empty", nameof(text));
-        return FromHex(text.AsSpan());
-    }
-
-    public static TuiColor FromHex(ReadOnlySpan<char> text)
-    {
-        if (text.IsWhiteSpace())
+        if (string.IsNullOrWhiteSpace(text))
             throw new ArgumentException("Color string is empty", nameof(text));
 
-        ReadOnlySpan<char> s = text.Trim();
+        ReadOnlySpan<char> s = text.AsSpan().Trim();
 
         if (s[0] == '#')
         {
@@ -120,24 +108,24 @@ public readonly struct TuiColor : IEquatable<TuiColor>
                         byte r = ParseHexNibble(hex[0]);
                         byte g = ParseHexNibble(hex[1]);
                         byte b = ParseHexNibble(hex[2]);
-                        return new TuiColor((byte)(r | (r << 4)), (byte)(g | (g << 4)), (byte)(b | (b << 4)));
+                        return new TuiColorLegacy((byte)(r | (r << 4)), (byte)(g | (g << 4)), (byte)(b | (b << 4)));
                     }
                 case 6:
-                    return new TuiColor(ParseHexByte(hex[0], hex[1]), ParseHexByte(hex[2], hex[3]), ParseHexByte(hex[4], hex[5]));
+                    return new TuiColorLegacy(ParseHexByte(hex[0], hex[1]), ParseHexByte(hex[2], hex[3]), ParseHexByte(hex[4], hex[5]));
                 case 8:
-                    return new TuiColor(
+                    return new TuiColorLegacy(
                         ParseHexByte(hex[0], hex[1]),
                         ParseHexByte(hex[2], hex[3]),
                         ParseHexByte(hex[4], hex[5]),
                         ParseHexByte(hex[6], hex[7]));
                 default:
-                    throw new FormatException($"Invalid hex color '{text.ToString()}'. Expected #RGB, #RRGGBB, or #RRGGBBAA.");
+                    throw new FormatException($"Invalid hex color '{text}'. Expected #RGB, #RRGGBB, or #RRGGBBAA.");
             }
         }
 
         if (s.Length > 4 && (s[0] == 'r' || s[0] == 'R'))
         {
-            return ParseFunctional(s);
+            return ParseFunctional(text.AsSpan());
         }
 
         if (Enum.TryParse<ConsoleColor>(text, ignoreCase: true, out var cc))
@@ -146,7 +134,7 @@ public readonly struct TuiColor : IEquatable<TuiColor>
         throw new FormatException($"Unrecognized color string '{text}'.");
     }
 
-    private static TuiColor ParseFunctional(ReadOnlySpan<char> text)
+    private static TuiColorLegacy ParseFunctional(ReadOnlySpan<char> text)
     {
         int open = text.IndexOf('(');
         int close = text.IndexOf(')');
@@ -168,7 +156,7 @@ public readonly struct TuiColor : IEquatable<TuiColor>
         byte g = ParseColorComponent(inside[ranges[1]]);
         byte b = ParseColorComponent(inside[ranges[2]]);
         byte a = hasAlpha ? ParseAlphaComponent(inside[ranges[3]]) : (byte)255;
-        return new TuiColor(r, g, b, a);
+        return new TuiColorLegacy(r, g, b, a);
     }
 
     private static byte ParseColorComponent(ReadOnlySpan<char> component)
@@ -208,11 +196,11 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     /// Returns the canonical RGB triple for a <see cref="ConsoleColor"/>. Values mirror
     /// the existing 16-color palette used by the Blazor surface and ASCII renderers.
     /// </summary>
-    public static TuiColor FromConsole(ConsoleColor color)
+    public static TuiColorLegacy FromConsole(ConsoleColor color)
     {
         int idx = (int)color;
         if ((uint)idx >= (uint)PaletteR.Length) return Transparent;
-        return new TuiColor(PaletteR[idx], PaletteG[idx], PaletteB[idx]);
+        return new TuiColorLegacy(PaletteR[idx], PaletteG[idx], PaletteB[idx]);
     }
 
     /// <summary>
@@ -220,7 +208,7 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     /// existing code (and the rendered XAML <c>Foreground="Red"</c> shorthand) keeps
     /// working unchanged.
     /// </summary>
-    public static implicit operator TuiColor(ConsoleColor color) => FromConsole(color);
+    public static implicit operator TuiColorLegacy(ConsoleColor color) => FromConsole(color);
 
     /// <summary>
     /// Quantizes this color to the nearest of the 16 <see cref="ConsoleColor"/> entries
@@ -255,7 +243,7 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     /// Returns a fully opaque color when both inputs are opaque.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TuiColor Blend(TuiColor under)
+    public TuiColorLegacy Blend(TuiColorLegacy under)
     {
         uint srcA = (_packed >> 24) & 0xFF;
         if (srcA == 255) return this;
@@ -277,24 +265,24 @@ public readonly struct TuiColor : IEquatable<TuiColor>
         uint outG = (srcG * srcA + dstG * dstA * invSa / 255 + outA / 2) / outA;
         uint outB = (srcB * srcA + dstB * dstA * invSa / 255 + outA / 2) / outA;
 
-        return new TuiColor((byte)outR, (byte)outG, (byte)outB, (byte)outA);
+        return new TuiColorLegacy((byte)outR, (byte)outG, (byte)outB, (byte)outA);
     }
 
     /// <summary>
     /// Returns this color with the alpha channel replaced by <paramref name="alpha"/>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TuiColor WithAlpha(byte alpha) => new TuiColor(R, G, B, alpha);
+    public TuiColorLegacy WithAlpha(byte alpha) => new TuiColorLegacy(R, G, B, alpha);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(TuiColor other) => _packed == other._packed;
-    public override bool Equals(object? obj) => obj is TuiColor c && Equals(c);
+    public bool Equals(TuiColorLegacy other) => _packed == other._packed;
+    public override bool Equals(object? obj) => obj is TuiColorLegacy c && Equals(c);
     public override int GetHashCode() => (int)_packed;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator ==(TuiColor a, TuiColor b) => a._packed == b._packed;
+    public static bool operator ==(TuiColorLegacy a, TuiColorLegacy b) => a._packed == b._packed;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool operator !=(TuiColor a, TuiColor b) => a._packed != b._packed;
+    public static bool operator !=(TuiColorLegacy a, TuiColorLegacy b) => a._packed != b._packed;
 
     public override string ToString() => A == 255
         ? $"#{R:X2}{G:X2}{B:X2}"
@@ -318,23 +306,23 @@ public readonly struct TuiColor : IEquatable<TuiColor>
     };
 
     // Named 16-color palette accessors mirroring ConsoleColor for ergonomic parity.
-    public static TuiColor Black { get; } = FromConsole(ConsoleColor.Black);
-    public static TuiColor DarkBlue { get; } = FromConsole(ConsoleColor.DarkBlue);
-    public static TuiColor DarkGreen { get; } = FromConsole(ConsoleColor.DarkGreen);
-    public static TuiColor DarkCyan { get; } = FromConsole(ConsoleColor.DarkCyan);
-    public static TuiColor DarkRed { get; } = FromConsole(ConsoleColor.DarkRed);
-    public static TuiColor DarkMagenta { get; } = FromConsole(ConsoleColor.DarkMagenta);
-    public static TuiColor DarkYellow { get; } = FromConsole(ConsoleColor.DarkYellow);
-    public static TuiColor Gray { get; } = FromConsole(ConsoleColor.Gray);
-    public static TuiColor DarkGray { get; } = FromConsole(ConsoleColor.DarkGray);
-    public static TuiColor Blue { get; } = FromConsole(ConsoleColor.Blue);
-    public static TuiColor Green { get; } = FromConsole(ConsoleColor.Green);
-    public static TuiColor Cyan { get; } = FromConsole(ConsoleColor.Cyan);
-    public static TuiColor Red { get; } = FromConsole(ConsoleColor.Red);
-    public static TuiColor Magenta { get; } = FromConsole(ConsoleColor.Magenta);
-    public static TuiColor Yellow { get; } = FromConsole(ConsoleColor.Yellow);
-    public static TuiColor White { get; } = FromConsole(ConsoleColor.White);
+    public static TuiColorLegacy Black { get; } = FromConsole(ConsoleColor.Black);
+    public static TuiColorLegacy DarkBlue { get; } = FromConsole(ConsoleColor.DarkBlue);
+    public static TuiColorLegacy DarkGreen { get; } = FromConsole(ConsoleColor.DarkGreen);
+    public static TuiColorLegacy DarkCyan { get; } = FromConsole(ConsoleColor.DarkCyan);
+    public static TuiColorLegacy DarkRed { get; } = FromConsole(ConsoleColor.DarkRed);
+    public static TuiColorLegacy DarkMagenta { get; } = FromConsole(ConsoleColor.DarkMagenta);
+    public static TuiColorLegacy DarkYellow { get; } = FromConsole(ConsoleColor.DarkYellow);
+    public static TuiColorLegacy Gray { get; } = FromConsole(ConsoleColor.Gray);
+    public static TuiColorLegacy DarkGray { get; } = FromConsole(ConsoleColor.DarkGray);
+    public static TuiColorLegacy Blue { get; } = FromConsole(ConsoleColor.Blue);
+    public static TuiColorLegacy Green { get; } = FromConsole(ConsoleColor.Green);
+    public static TuiColorLegacy Cyan { get; } = FromConsole(ConsoleColor.Cyan);
+    public static TuiColorLegacy Red { get; } = FromConsole(ConsoleColor.Red);
+    public static TuiColorLegacy Magenta { get; } = FromConsole(ConsoleColor.Magenta);
+    public static TuiColorLegacy Yellow { get; } = FromConsole(ConsoleColor.Yellow);
+    public static TuiColorLegacy White { get; } = FromConsole(ConsoleColor.White);
 
     /// <summary>Fully transparent (alpha=0). Useful as a "no overlay" sentinel.</summary>
-    public static TuiColor Transparent { get; } = new TuiColor(0u);
+    public static TuiColorLegacy Transparent { get; } = new TuiColorLegacy(0u);
 }
