@@ -142,3 +142,10 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+
+## 2024-05-15 - VisualTreeHelper Parity Integration
+**Observation:** Discovered a parity deficit where the `VisualTreeHelper` utility class was completely missing. The TUI framework exposed `VisualChildrenCount` and `GetVisualChild` directly on `UIElement`, but WPF delegates visual tree traversal explicitly to the `VisualTreeHelper` API to decouple the logical/visual tree navigation mechanisms from individual component interfaces.
+**Strategic Action:**
+- Engineered the `VisualTreeHelper` static class.
+- Implemented standard visual tree traversal methods `GetChildrenCount`, `GetChild`, and `GetParent`.
+- Delegated the calls to the existing `VisualChildrenCount`, `GetVisualChild`, and `Parent` infrastructure on `UIElement`, bringing the framework structurally closer to standard XAML paradigms for visual hit-testing and control template tree navigation.
