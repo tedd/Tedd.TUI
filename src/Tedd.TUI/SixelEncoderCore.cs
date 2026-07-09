@@ -73,7 +73,7 @@ public static class SixelEncoderCore
         }
 
         var sb = new StringBuilder(width * height / 6 + 256);
-        sb.Append("\x1bP0;1;0q"); // P2=1 → background pixels remain transparent.
+        sb.Append("\eP0;1;0q"); // P2=1 → background pixels remain transparent.
 
         // Raster attributes: pan=1, pad=1 (square pixels), actual w / h.
         sb.Append('"').Append(1).Append(';').Append(1).Append(';').Append(width).Append(';').Append(height);
@@ -149,7 +149,7 @@ public static class SixelEncoderCore
             }
         }
 
-        sb.Append("\x1b\\");
+        sb.Append("\e\\");
         return sb.ToString();
     }
 
@@ -244,12 +244,12 @@ public static class SixelEncoderCore
     private static string EncodePlaceholder(int pxW, int pxH)
     {
         var sb = new StringBuilder(64 + pxW);
-        sb.Append("\x1bP0;0;0q");
+        sb.Append("\eP0;0;0q");
         sb.Append('"').Append(1).Append(';').Append(1).Append(';').Append(pxW).Append(';').Append(pxH);
         sb.Append("#0;2;0;0;0");
         sb.Append('#').Append(0);
         for (int i = 0; i < pxW; i++) sb.Append('?');
-        sb.Append("\x1b\\");
+        sb.Append("\e\\");
         return sb.ToString();
     }
 }

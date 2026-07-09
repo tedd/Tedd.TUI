@@ -147,7 +147,7 @@ public sealed class AnsiTrueColorRenderer : IRenderer
             // Park the cursor at the placement's top-left cell so terminals that draw
             // images at the current cursor position (Sixel, iTerm2 inline, Kitty default)
             // land in the right spot.
-            sb.Append('\x1b').Append('[').Append(placement.CharY + 1).Append(';').Append(placement.CharX + 1).Append('H');
+            sb.Append('\e').Append('[').Append(placement.CharY + 1).Append(';').Append(placement.CharX + 1).Append('H');
             sb.Append(encoder.Encode(placement));
         }
 
@@ -199,7 +199,7 @@ public sealed class AnsiTrueColorRenderer : IRenderer
     private void EmitCursor(int x, int y)
     {
         // ANSI cursor positioning is 1-based.
-        _buffer.Append('\x1b').Append('[').Append(y + 1).Append(';').Append(x + 1).Append('H');
+        _buffer.Append('\e').Append('[').Append(y + 1).Append(';').Append(x + 1).Append('H');
         _cursorX = x;
         _cursorY = y;
     }
@@ -208,12 +208,12 @@ public sealed class AnsiTrueColorRenderer : IRenderer
     {
         if (fg.Packed != _currentFg.Packed)
         {
-            _buffer.Append("\x1b[38;2;").Append(fg.R).Append(';').Append(fg.G).Append(';').Append(fg.B).Append('m');
+            _buffer.Append("\e[38;2;").Append(fg.R).Append(';').Append(fg.G).Append(';').Append(fg.B).Append('m');
             _currentFg = fg;
         }
         if (bg.Packed != _currentBg.Packed)
         {
-            _buffer.Append("\x1b[48;2;").Append(bg.R).Append(';').Append(bg.G).Append(';').Append(bg.B).Append('m');
+            _buffer.Append("\e[48;2;").Append(bg.R).Append(';').Append(bg.G).Append(';').Append(bg.B).Append('m');
             _currentBg = bg;
         }
     }

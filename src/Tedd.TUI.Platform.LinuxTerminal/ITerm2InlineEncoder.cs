@@ -19,7 +19,7 @@ public sealed class ITerm2InlineEncoder : IImageProtocolEncoder
             return string.Empty;
 
         var sb = new StringBuilder(placement.ImageData.Length * 4 / 3 + 128);
-        sb.Append("\x1b]1337;File=inline=1");
+        sb.Append("\e]1337;File=inline=1");
 
         if (placement.CharWidth > 0)
         {

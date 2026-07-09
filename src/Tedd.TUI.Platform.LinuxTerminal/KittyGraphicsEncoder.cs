@@ -33,7 +33,7 @@ public sealed class KittyGraphicsEncoder : IImageProtocolEncoder
             bool first = offset == 0;
             bool last = offset + len >= base64.Length;
 
-            sb.Append("\x1b_G");
+            sb.Append("\e_G");
             if (first)
             {
                 sb.Append("a=T,f=100,");
@@ -43,7 +43,7 @@ public sealed class KittyGraphicsEncoder : IImageProtocolEncoder
             sb.Append("m=").Append(last ? '0' : '1');
             sb.Append(';');
             sb.Append(base64, offset, len);
-            sb.Append("\x1b\\");
+            sb.Append("\e\\");
         }
 
         return sb.ToString();

@@ -181,7 +181,7 @@ public class TuiApp
         try { _inputManager?.Stop(); } catch { }
         try { _platform.Shutdown(); } catch { }
 
-        System.Console.Write("\x1b[?1000l\x1b[?1006l");
+        System.Console.Write("\e[?1000l\e[?1006l");
         System.Console.CursorVisible = true;
         System.Console.ResetColor();
         System.Console.Clear();

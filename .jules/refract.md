@@ -51,3 +51,7 @@
 ## 2025-02-19 - C# 13 System.Threading.Lock Modernization
 **Observation:** The codebase contained legacy lock statements utilizing an arbitrary object (`object _gate`) for synchronization in `HttpImageResolver.cs`, an obsolete pattern that lacks explicit thread safety semantics compared to modern alternatives.
 **Strategic Action:** Transitioned the synchronization mechanism to use the C# 13 `System.Threading.Lock` type (`System.Threading.Lock _gate = new();`) to enforce deterministic thread safety and structural clarity.
+
+## 2025-05-18 - [Escape Sequence Modernization]
+**Observation:** Ambiguous `\u001B` and `\x1b` escape sequences used for ANSI escape codes.
+**Strategic Action:** Replaced with the C# 13 `\e` escape sequence for precise character representation.

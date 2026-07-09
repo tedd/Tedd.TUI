@@ -16,8 +16,8 @@ public class ImageProtocolEncoderTests
         var encoder = new SixelEncoder();
         var encoded = encoder.Encode(new GraphicPlacement { CharWidth = 3, CharHeight = 2 });
 
-        Assert.StartsWith("\x1bP", encoded);
-        Assert.EndsWith("\x1b\\", encoded);
+        Assert.StartsWith("\eP", encoded);
+        Assert.EndsWith("\e\\", encoded);
         Assert.Contains("q", encoded);
         Assert.Equal("sixel", encoder.Protocol);
     }
@@ -43,8 +43,8 @@ public class ImageProtocolEncoderTests
             CharHeight = 1,
         });
 
-        Assert.StartsWith("\x1bP0;1;0q", encoded);
-        Assert.EndsWith("\x1b\\", encoded);
+        Assert.StartsWith("\eP0;1;0q", encoded);
+        Assert.EndsWith("\e\\", encoded);
         // Each used color must declare itself: "#<idx>;2;<r>;<g>;<b>".
         Assert.Matches(@"#\d+;2;100;0;0", encoded); // red
         Assert.Matches(@"#\d+;2;0;100;0", encoded); // green
@@ -78,8 +78,8 @@ public class ImageProtocolEncoderTests
             CharHeight = 2,
         });
 
-        Assert.StartsWith("\x1b_G", encoded);
-        Assert.EndsWith("\x1b\\", encoded);
+        Assert.StartsWith("\e_G", encoded);
+        Assert.EndsWith("\e\\", encoded);
         Assert.Contains("a=T,f=100", encoded);
         Assert.Contains("c=4", encoded);
         Assert.Contains("r=2", encoded);
@@ -106,7 +106,7 @@ public class ImageProtocolEncoderTests
             MediaType = "image/png",
         });
 
-        Assert.StartsWith("\x1b]1337;File=inline=1", encoded);
+        Assert.StartsWith("\e]1337;File=inline=1", encoded);
         Assert.EndsWith("\x07", encoded);
         Assert.Contains("width=10", encoded);
         Assert.Contains("height=5", encoded);

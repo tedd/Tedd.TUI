@@ -33,7 +33,7 @@ public class ConsoleInputManager
         // CSI ? 1000 h  (Normal tracking)
         // CSI ? 1003 h  (All motion tracking)
         // CSI ? 1006 h  (SGR ext mode)
-        System.Console.Write("\x1b[?1000h\x1b[?1006h");
+        System.Console.Write("\e[?1000h\e[?1006h");
     }
 
     public IntPtr InputHandle { get; private set; }

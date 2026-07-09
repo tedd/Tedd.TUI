@@ -101,7 +101,7 @@ public sealed class LinuxTerminalPlatform : ITuiPlatform
         try
         {
             // Switch to the alt screen, enable SGR mouse mode, hide the cursor.
-            System.Console.Write("\x1b[?1049h\x1b[?1000h\x1b[?1006h\x1b[?25l");
+            System.Console.Write("\e[?1049h\e[?1000h\e[?1006h\e[?25l");
             _altScreenEntered = true;
         }
         catch { }
@@ -111,7 +111,7 @@ public sealed class LinuxTerminalPlatform : ITuiPlatform
     {
         if (_altScreenEntered)
         {
-            try { System.Console.Write("\x1b[?25h\x1b[?1006l\x1b[?1000l\x1b[?1049l"); } catch { }
+            try { System.Console.Write("\e[?25h\e[?1006l\e[?1000l\e[?1049l"); } catch { }
             _altScreenEntered = false;
         }
 

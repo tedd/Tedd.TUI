@@ -20,8 +20,8 @@ public class AnsiTrueColorRendererTests
         renderer.Render(buffer);
 
         string output = sw.ToString();
-        Assert.Contains("\x1b[38;2;10;20;30m", output);
-        Assert.Contains("\x1b[48;2;40;50;60m", output);
+        Assert.Contains("\e[38;2;10;20;30m", output);
+        Assert.Contains("\e[48;2;40;50;60m", output);
         Assert.Contains("ABC", output);
     }
 
@@ -69,7 +69,7 @@ public class AnsiTrueColorRendererTests
         renderer.Render(buffer);
 
         Assert.Single(recorded);
-        Assert.Contains("\x1b[1;2H", sw.ToString()); // cursor at row 1, col 2 (1-based)
+        Assert.Contains("\e[1;2H", sw.ToString()); // cursor at row 1, col 2 (1-based)
         Assert.Contains("FAKE", sw.ToString());
     }
 
