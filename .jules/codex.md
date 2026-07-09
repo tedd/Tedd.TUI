@@ -85,3 +85,6 @@
 **Observation:** The README.md exhibited documentation drift regarding the newly integrated `Separator` component. It lacked explicit articulation of this control, which inherits from `Control`, explicitly sets `Focusable = false`, and renders a horizontal line using the `\u2500` character to match the DOS-era styling, implementing standard XAML parity for menus and layouts.
 
 **Strategic Action:** Synchronized the README.md to articulate the `Separator` architecture under the 'Rich Control Suite' section. This ensures epistemological alignment with the current framework capabilities for menu and layout separators.
+## 2024-07-09 - DataContext Inheritance and Content Alignment
+**Observation:** The documentation lacked explicit articulation regarding the adverse effects of explicit local value assignments on `DataContext` inheritance. Furthermore, it omitted architectural details regarding `HorizontalContentAlignment`, `VerticalContentAlignment`, `Foreground`, and `Background` property definitions on `UIElement` vs `Control`.
+**Strategic Action:** Explicitly document that local `DataContext` assignments break WPF-isomorphic inheritance. Add sections detailing `HorizontalContentAlignment`/`VerticalContentAlignment` on `Control` and `Foreground`/`Background` on `UIElement` to eliminate speculative assumptions about property locations.
