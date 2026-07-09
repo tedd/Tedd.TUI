@@ -222,3 +222,7 @@ Developed parameterized testing for both components.
 ## 2026-06-11 - Markdown Tests Expanded
 **Observation:** Additional branch coverage was needed for `MarkdownParser` and `MarkdownView`, and some existing tests lacked verifiable assertions.
 **Strategic Action:** Added parameterized `[Theory]` suites with explicit state assertions to improve deterministic coverage (existing `[Fact]` tests were retained where appropriate).
+
+## 2026-07-09 - Separator Test Coverage Expansion
+**Observation:** The `Separator` component's `Render` logic was insufficiently tested, specifically around handling template roots, width/height rendering boundaries based on calculated layout, and explicit background rendering versus default buffer background rendering.
+**Strategic Action:** Added `SeparatorCoverageTests.cs` using an exhaustive `[Theory]` execution matrix. Covered permutations of null template root processing, layout geometry boundary constraints (0 or negative widths), and rendering line behavior with or without background rendering, thereby pushing test coverage for `Tedd.TUI.Separator` from 79.3% to 100%.
