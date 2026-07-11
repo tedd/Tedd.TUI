@@ -6,6 +6,7 @@ using Tedd.TUI.Markdown;
 
 namespace Tedd.TUI.Tests;
 
+[Collection(ImageTestCollection.Name)]
 public class ImageGraphicEmissionTests
 {
     private sealed class PixelResolver : IImageResolver

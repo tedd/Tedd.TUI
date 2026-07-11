@@ -5,6 +5,7 @@ using Tedd.TUI.Markdown;
 
 namespace Tedd.TUI.Tests;
 
+[Collection(ImageTestCollection.Name)]
 public class ImageLayoutTests
 {
     private sealed class FakeResolver : IImageResolver
