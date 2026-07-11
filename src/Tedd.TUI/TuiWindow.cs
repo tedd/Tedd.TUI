@@ -595,8 +595,20 @@ public class TuiWindow : UIElement
 
     private bool CanFocus(UIElement element)
     {
-        if (!element.IsEnabled || !element.Visibility) return false;
-        return element.Focusable;
+        if (!element.Focusable) return false;
+
+        // Descendants of a hidden or disabled container are not interactive even
+        // when their own local flags remain true.
+        UIElement? current = element;
+        while (current != null)
+        {
+            if (!current.IsEnabled || !current.Visibility)
+                return false;
+
+            current = current.Parent;
+        }
+
+        return true;
     }
 
     /// <summary>

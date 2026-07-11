@@ -178,4 +178,51 @@ public class KeyboardInteractionTests
         Assert.True(first.IsFocused);
         Assert.False(second.IsFocused);
     }
+
+    [Fact]
+    public void TabNavigation_SkipsControlsUnderHiddenOrDisabledAncestors()
+    {
+        var first = new CheckBox { Content = "First" };
+        var hidden = new CheckBox { Content = "Hidden" };
+        var disabled = new CheckBox { Content = "Disabled" };
+        var last = new CheckBox { Content = "Last" };
+
+        var hiddenContainer = new StackPanel { Visibility = false };
+        hiddenContainer.AddChild(hidden);
+        var disabledContainer = new StackPanel { IsEnabled = false };
+        disabledContainer.AddChild(disabled);
+
+        var panel = new StackPanel();
+        panel.AddChild(first);
+        panel.AddChild(hiddenContainer);
+        panel.AddChild(disabledContainer);
+        panel.AddChild(last);
+        var host = new ControlTestHost(panel, 12, 3);
+        host.Window.SetFocus(first);
+
+        host.KeyDown(ConsoleKey.Tab);
+
+        Assert.False(hidden.IsFocused);
+        Assert.False(disabled.IsFocused);
+        Assert.True(last.IsFocused);
+    }
+
+    [Fact]
+    public void InitialFocus_SkipsControlUnderHiddenAncestor()
+    {
+        var hidden = new CheckBox { Content = "Hidden" };
+        var visible = new CheckBox { Content = "Visible" };
+        var hiddenContainer = new StackPanel { Visibility = false };
+        hiddenContainer.AddChild(hidden);
+
+        var panel = new StackPanel();
+        panel.AddChild(hiddenContainer);
+        panel.AddChild(visible);
+        var host = new ControlTestHost(panel, 12, 1);
+
+        host.Window.EnsureInitialFocus();
+
+        Assert.False(hidden.IsFocused);
+        Assert.True(visible.IsFocused);
+    }
 }
