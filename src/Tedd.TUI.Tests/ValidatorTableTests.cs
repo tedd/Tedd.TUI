@@ -374,6 +374,71 @@ public class ValidatorTableTests
     }
 
     [Fact]
+    public void Table_CoordinatePreciseCharacterAssertion_HeavyBodySeparation()
+    {
+        var table = new Table
+        {
+            ShowBorder = true,
+            ShowHeader = true,
+            ShowVerticalLines = true,
+            ShowHorizontalLines = true,
+            BorderStyle = BoxStyle.Heavy,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top,
+            Width = 12,
+            Height = 10
+        };
+
+        var col1 = new TableColumn { Header = "ID", Width = new GridLength(3, GridUnitType.Pixel) };
+        var col2 = new TableColumn { Header = "Name", Width = new GridLength(4, GridUnitType.Pixel) };
+        table.Columns.Add(col1);
+        table.Columns.Add(col2);
+
+        // Add 2 rows to trigger row separators
+        table.AddRow("1", "Bob");
+        table.AddRow("2", "Alice");
+
+        // Use a grid to test hierarchical structure
+        var parentGrid = new Grid();
+        parentGrid.Children.Add(table);
+
+        var sv = table.GetVisualChild(0) as ScrollViewer;
+        if (sv != null)
+        {
+            sv.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        }
+
+        // Initial Layout
+        parentGrid.Measure(new Size(12, 10));
+        parentGrid.Arrange(new Rect(0, 0, 12, 10));
+
+        var buffer = new VirtualBuffer(12, 10);
+        parentGrid.Render(buffer, 0, 0);
+
+        // Header separator is at y=2
+        // Row 1 is at y=3
+        // Body separator is at y=4
+        Assert.Equal('\u2523', buffer.GetPixel(0, 4).Character); // BodySepTLeft (Heavy TLeft)
+        Assert.Equal('\u252B', buffer.GetPixel(11, 4).Character); // BodySepTRight (Heavy TRight)
+        Assert.Equal('\u254B', buffer.GetPixel(4, 4).Character); // BodySepCross (Heavy Cross)
+        Assert.Equal('\u2501', buffer.GetPixel(1, 4).Character); // BodySepH (Heavy Horizontal)
+
+        // Dynamic State Mutation
+        parentGrid.Measure(new Size(14, 12));
+        parentGrid.Arrange(new Rect(0, 0, 14, 12));
+
+        var newBuffer = new VirtualBuffer(14, 12);
+        parentGrid.Render(newBuffer, 0, 0);
+
+        // Verify again at the new resolution, since it is Top/Left aligned, positions remain the same
+        Assert.Equal('\u2523', newBuffer.GetPixel(0, 4).Character); // BodySepTLeft (Heavy TLeft)
+        Assert.Equal('\u252B', newBuffer.GetPixel(11, 4).Character); // BodySepTRight (Heavy TRight)
+        Assert.Equal('\u254B', newBuffer.GetPixel(4, 4).Character); // BodySepCross (Heavy Cross)
+        Assert.Equal('\u2501', newBuffer.GetPixel(1, 4).Character); // BodySepH (Heavy Horizontal)
+    }
+
+    [Fact]
     public void Table_HierarchicalCompositionAndDynamicStateMutation_NestedGrids()
     {
         var parentGrid = new Grid();

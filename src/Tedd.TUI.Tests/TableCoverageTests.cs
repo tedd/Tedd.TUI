@@ -370,11 +370,11 @@ public class TableCoverageTests
         // X=8: Right Junction (u2528 ┨)
 
         // Verify Row 4
-        Assert.Equal('\u2520', buffer.GetPixel(0, 4).Character);
+        Assert.Equal('\u2523', buffer.GetPixel(0, 4).Character);
         Assert.Equal('\u2501', buffer.GetPixel(1, 4).Character);
         Assert.Equal('\u254B', buffer.GetPixel(4, 4).Character); // Cross
         Assert.Equal('\u2501', buffer.GetPixel(5, 4).Character);
-        Assert.Equal('\u2528', buffer.GetPixel(8, 4).Character);
+        Assert.Equal('\u252B', buffer.GetPixel(8, 4).Character);
     }
 
     [Fact]
