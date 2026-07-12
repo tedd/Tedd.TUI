@@ -76,6 +76,13 @@ public sealed class AnsiTrueColorRenderer : IRenderer
         ref Cell src = ref MemoryMarshal.GetReference(buffer.Cells);
         ref Cell back = ref MemoryMarshal.GetArrayDataReference(_backBuffer!);
 
+        // Bounding box of the cells emitted this frame; EmitGraphics uses it to decide
+        // which image placements were overdrawn by text and need re-emission.
+        _dirtyMinX = int.MaxValue;
+        _dirtyMinY = int.MaxValue;
+        _dirtyMaxX = int.MinValue;
+        _dirtyMaxY = int.MinValue;
+
         for (int y = 0; y < h; y++)
         {
             int rowOffset = y * w;
@@ -98,6 +105,11 @@ public sealed class AnsiTrueColorRenderer : IRenderer
                 }
 
                 backCell = newCell;
+
+                if (x < _dirtyMinX) _dirtyMinX = x;
+                if (x > _dirtyMaxX) _dirtyMaxX = x;
+                if (y < _dirtyMinY) _dirtyMinY = y;
+                if (y > _dirtyMaxY) _dirtyMaxY = y;
 
                 if (!runActive ||
                     runFg.Packed != newCell.Foreground.Packed ||
@@ -134,33 +146,101 @@ public sealed class AnsiTrueColorRenderer : IRenderer
         HasRenderedFrame = true;
     }
 
+    // Placements emitted on the previous frame, used to skip redundant re-encodes and
+    // to damage the cells of images that were removed or moved.
+    private GraphicPlacement[] _lastGraphics = Array.Empty<GraphicPlacement>();
+
+    private int _dirtyMinX, _dirtyMinY, _dirtyMaxX, _dirtyMaxY;
+
     private void EmitGraphics(VirtualBuffer buffer)
     {
         var encoder = ImageEncoder;
         var graphics = buffer.Graphics;
-        if (encoder == null || graphics == null || graphics.Count == 0) return;
+        int count = (encoder != null && graphics != null) ? graphics.Count : 0;
 
-        var sb = new StringBuilder(1024);
-        for (int i = 0; i < graphics.Count; i++)
+        bool placementsChanged = !PlacementsEqualLastFrame(graphics, count);
+
+        if (placementsChanged)
         {
-            var placement = graphics[i];
+            // Cells under previous placements may still show image pixels that no new
+            // placement will overwrite (image removed or moved); damage them so the
+            // next frame re-emits the underlying text.
+            for (int i = 0; i < _lastGraphics.Length; i++)
+            {
+                InvalidateRect(_lastGraphics[i].CharX, _lastGraphics[i].CharY, _lastGraphics[i].CharWidth, _lastGraphics[i].CharHeight);
+            }
+
+            _lastGraphics = count == 0 ? Array.Empty<GraphicPlacement>() : graphics!.ToArray();
+        }
+
+        if (count == 0) return;
+
+        StringBuilder? sb = null;
+        for (int i = 0; i < count; i++)
+        {
+            var placement = graphics![i];
+
+            // Re-encode and re-emit only when needed: the set of placements changed,
+            // or this frame's text diff painted into the placement's rectangle
+            // (which overwrites the image cells with text). Previously every frame
+            // re-encoded every image and then invalidated the whole back-buffer, so
+            // one blinking cell elsewhere forced full-screen redraws + Sixel encodes.
+            bool touchedByText = RectIntersectsDirty(placement.CharX, placement.CharY, placement.CharWidth, placement.CharHeight);
+            if (!placementsChanged && !touchedByText) continue;
+
+            sb ??= new StringBuilder(1024);
             // Park the cursor at the placement's top-left cell so terminals that draw
             // images at the current cursor position (Sixel, iTerm2 inline, Kitty default)
             // land in the right spot.
             sb.Append('\x1b').Append('[').Append(placement.CharY + 1).Append(';').Append(placement.CharX + 1).Append('H');
-            sb.Append(encoder.Encode(placement));
+            sb.Append(encoder!.Encode(placement));
+
+            // Note: the rect is deliberately NOT damaged here. The back-buffer's text
+            // state for these cells is still what the diff should compare against (the
+            // image merely sits on top of it); damaging it would re-emit the text next
+            // frame, erase the image, re-trigger this path, and so on every frame.
         }
 
-        if (sb.Length > 0)
+        if (sb != null && sb.Length > 0)
         {
             _output.Write(sb);
             _output.Flush();
-        }
 
-        // Image emission moves the cursor unpredictably and may overwrite cells our
-        // back-buffer believes are still valid; invalidate so the next frame redraws
-        // every affected region.
-        Invalidate();
+            // Image emission moves the cursor unpredictably; force an absolute move
+            // before the next text run.
+            _cursorX = -1;
+            _cursorY = -1;
+        }
+    }
+
+    private bool PlacementsEqualLastFrame(System.Collections.Generic.IList<GraphicPlacement>? graphics, int count)
+    {
+        if (count != _lastGraphics.Length) return false;
+
+        for (int i = 0; i < count; i++)
+        {
+            var a = graphics![i];
+            var b = _lastGraphics[i];
+            // Payload arrays are compared by reference: image controls cache their
+            // decoded buffers, so a different reference means different content.
+            if (a.CharX != b.CharX || a.CharY != b.CharY ||
+                a.CharWidth != b.CharWidth || a.CharHeight != b.CharHeight ||
+                !ReferenceEquals(a.ImageData, b.ImageData) ||
+                !ReferenceEquals(a.Pixels, b.Pixels) ||
+                a.PixelWidth != b.PixelWidth || a.PixelHeight != b.PixelHeight ||
+                a.Source != b.Source)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private bool RectIntersectsDirty(int cellX, int cellY, int cellW, int cellH)
+    {
+        if (_dirtyMaxX < _dirtyMinX) return false; // nothing emitted this frame
+        return cellX <= _dirtyMaxX && cellX + cellW > _dirtyMinX &&
+               cellY <= _dirtyMaxY && cellY + cellH > _dirtyMinY;
     }
 
     /// <summary>
@@ -175,6 +255,31 @@ public sealed class AnsiTrueColorRenderer : IRenderer
         Array.Fill(_backBuffer, new Cell('\0', sentinel, sentinel));
         _cursorX = -1;
         _cursorY = -1;
+    }
+
+    /// <summary>
+    /// Marks a cell rectangle as needing re-emission on the next <see cref="Render"/>,
+    /// leaving the rest of the back-buffer's diff state intact.
+    /// </summary>
+    private void InvalidateRect(int cellX, int cellY, int cellW, int cellH)
+    {
+        if (_backBuffer == null) return;
+        var sentinel = TuiColor.FromArgb(0x00010203u);
+        var damaged = new Cell('\0', sentinel, sentinel);
+
+        int x0 = Math.Max(0, cellX);
+        int y0 = Math.Max(0, cellY);
+        int x1 = Math.Min(_backBufferWidth, cellX + cellW);
+        int y1 = Math.Min(_backBufferHeight, cellY + cellH);
+
+        for (int y = y0; y < y1; y++)
+        {
+            int row = y * _backBufferWidth;
+            for (int x = x0; x < x1; x++)
+            {
+                _backBuffer[row + x] = damaged;
+            }
+        }
     }
 
     private void EnsureBackBuffer(int w, int h)
