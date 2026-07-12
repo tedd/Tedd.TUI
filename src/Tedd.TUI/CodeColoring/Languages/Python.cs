@@ -7,7 +7,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class PythonLanguage : ILanguage
 {
     public string Id => "python";
-    public string[] Aliases => [ "py"  ];
+    public string[] Aliases => ["py"];
 
     public Grammar GetGrammar()
     {

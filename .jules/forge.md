@@ -112,3 +112,33 @@
 ## 2026-03-09 - Grid Attached Property Parity Integration
 **Observation:** Discovered an architectural parity deficit where layout container attached properties (such as `Row`, `Column`, `RowSpan`, and `ColumnSpan` on `Grid`) were registered using standard `DependencyProperty.Register` rather than the required `DependencyProperty.RegisterAttached`. While functionally equivalent in the current internal implementation, this deviated from standard WPF/XAML semantics and architectural mapping.
 **Strategic Action:** Modified the property registrations in `Grid.cs` to correctly invoke `DependencyProperty.RegisterAttached`, properly aligning the declarative property models with the structural intent of the `DependencyProperty` system used for attached layout paradigms.
+## 2026-03-09 - ICommand Integration
+**Observation:** The TUI framework lacked support for the standard `ICommand` interface, preventing declarative MVVM command bindings (e.g. executing business logic without code-behind event handlers). Controls derived from `ButtonBase` relied exclusively on the imperative `Click` routed event.
+**Strategic Action:**
+- Engineered the `ICommand` interface in `Tedd.TUI.Input`.
+- Integrated `Command` and `CommandParameter` dependency properties into `ButtonBase`.
+- Wired property change handlers to automatically subscribe to `CanExecuteChanged` and coerce `IsEnabled` based on `CanExecute`.
+- Modified `OnClick` logic to invoke `Command.Execute()` after dispatching the standard `Click` event, successfully achieving WPF behavioral isomorphism for declarative interactions.
+
+## 2026-03-09 - Separator Integration
+**Observation:** The TUI framework lacked a native generic `Separator` component inheriting from `Control`. Specifically, menus (`MenuItem`) needed a structural element to delineate groups of items without stealing focus or responding to input, a standard paradigm in WPF and other client frameworks.
+**Strategic Action:**
+- Engineered the `Separator` control inheriting from `Control`.
+- Enforced `Focusable = false` by default.
+- Implemented a default template producing a simple `Border` with `BoxStyle.None` and 1-cell height.
+- Overrode `Render` to draw a strict horizontal line (`\u2500`) constrained by `RenderSize.Width`, completing an architectural gap in standard menu layout syntax.
+## 2026-03-09 - ScrollViewer ScrollBarVisibility Attached Properties
+**Observation:** Discovered a parity deficit where `ScrollViewer.HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility` were implemented as standard C# properties rather than dependency properties, and specifically, they were not attached properties. This violates WPF architecture where scroll bar visibility is a canonical attached property used widely in templates and styles on elements containing a ScrollViewer (such as ListBox).
+**Strategic Action:** Refactored `HorizontalScrollBarVisibility` and `VerticalScrollBarVisibility` to be registered via `DependencyProperty.RegisterAttached`, implementing the required static `Get...` and `Set...` methods while maintaining instance property wrappers, bringing it into strict 1:1 behavioral and structural mapping with WPF standard API.
+
+## 2026-03-09 - Control Content Alignment Parity Integration
+**Observation:** Discovered a parity deficit where the `Control` class lacked `HorizontalContentAlignment` and `VerticalContentAlignment` dependency properties. Consequently, components utilizing control templates and `ContentPresenter` (like `ContentControl`, `Button`, `GroupBox`, `Expander`) could not leverage declarative bindings to adjust the internal alignment of their content, restricting standard WPF layout paradigms.
+**Strategic Action:**
+- Registered `HorizontalContentAlignment` and `VerticalContentAlignment` dependency properties on the `Control` base class.
+- Modified default `ControlTemplate` implementations within `ContentControl`, `Button`, `GroupBox`, and `Expander` to bind the generated `ContentPresenter`'s `HorizontalAlignment` and `VerticalAlignment` directly to these new inherited parent properties, bridging a significant component styling parity gap.
+## 2026-03-09 - DataContext Propagation Parity Integration
+**Observation:** Discovered a core architectural deficit where layout container controls (e.g., `Border`, `DialogBox`, `Table`, `TuiWindow`, `Grid`) were manually overriding `OnDataContextChanged` to explicitly assign a local `DataContext` value onto their content or child elements. This manual set operation inadvertently overwrote and masked standard logical/visual tree inheritance tracking, breaking WPF/XAML isomorphism by treating inherited context mutations as local overrides.
+**Strategic Action:**
+- Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
+- Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
+- Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.

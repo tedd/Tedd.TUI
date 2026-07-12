@@ -40,6 +40,16 @@ public class ContentControl : Control
             templateBinding.RelativeSource = RelativeSource.TemplatedParent;
             cp.SetBinding(ContentPresenter.ContentTemplateProperty, templateBinding);
 
+            // Bind HorizontalAlignment to parent.HorizontalContentAlignment
+            var hAlignBinding = new Binding("HorizontalContentAlignment");
+            hAlignBinding.RelativeSource = RelativeSource.TemplatedParent;
+            cp.SetBinding(UIElement.HorizontalAlignmentProperty, hAlignBinding);
+
+            // Bind VerticalAlignment to parent.VerticalContentAlignment
+            var vAlignBinding = new Binding("VerticalContentAlignment");
+            vAlignBinding.RelativeSource = RelativeSource.TemplatedParent;
+            cp.SetBinding(UIElement.VerticalAlignmentProperty, vAlignBinding);
+
             return cp;
         });
     }

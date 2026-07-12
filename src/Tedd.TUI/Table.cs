@@ -57,8 +57,8 @@ public class TableRow : UIElement
         var table = FindAncestor<Table>();
         if (table != null && table.Columns.Count > 0)
         {
-             foreach (var col in table.Columns) totalWidth += col.ActualWidth;
-             if (table.ShowVerticalLines) totalWidth += table.Columns.Count - 1;
+            foreach (var col in table.Columns) totalWidth += col.ActualWidth;
+            if (table.ShowVerticalLines) totalWidth += table.Columns.Count - 1;
         }
 
         return new Size(totalWidth, maxHeight > 0 ? maxHeight : 1);
@@ -251,12 +251,6 @@ public class Table : UIElement
         return null;
     }
 
-    protected override void OnDataContextChanged(object newValue)
-    {
-        base.OnDataContextChanged(newValue);
-        _scrollViewer.DataContext = newValue;
-    }
-
     private void UpdateVisibleRows()
     {
         if (!_rowsDirty) return;
@@ -424,9 +418,10 @@ public class Table : UIElement
                     c.TLeft = '\u2523';
                     c.TRight = '\u252B';
                     c.HeaderCross = '\u254B';
-                    c.BodySepTLeft = '\u2520';
-                    c.BodySepTRight = '\u2528';
-                    c.BodySepCross = '\u2542'; // ╂ (Heavy Vert, Light Horz)
+                    c.BodySepTLeft = '\u2523';
+                    c.BodySepTRight = '\u252B';
+                    c.BodySepCross = '\u254B'; // ╋ (Heavy Vert, Heavy Horz)
+                    c.BodySepH = '\u2501'; // ━ (Heavy Horz)
                     break;
                 case BoxStyle.Double:
                     c.TDown = '\u2566';

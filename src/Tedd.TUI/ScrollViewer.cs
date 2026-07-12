@@ -43,8 +43,47 @@ public class ScrollViewer : UIElement
         }
     }
 
-    public ScrollBarVisibility HorizontalScrollBarVisibility { get; set; } = ScrollBarVisibility.Disabled;
-    public ScrollBarVisibility VerticalScrollBarVisibility { get; set; } = ScrollBarVisibility.Visible;
+    public static readonly DependencyProperty HorizontalScrollBarVisibilityProperty =
+        DependencyProperty.RegisterAttached("HorizontalScrollBarVisibility", typeof(ScrollBarVisibility), typeof(ScrollViewer), ScrollBarVisibility.Disabled);
+
+    public static void SetHorizontalScrollBarVisibility(UIElement element, ScrollBarVisibility value)
+    {
+        if (element == null) throw new ArgumentNullException(nameof(element));
+        element.SetValue(HorizontalScrollBarVisibilityProperty, value);
+    }
+
+    public static ScrollBarVisibility GetHorizontalScrollBarVisibility(UIElement element)
+    {
+        if (element == null) throw new ArgumentNullException(nameof(element));
+        return (ScrollBarVisibility)element.GetValue(HorizontalScrollBarVisibilityProperty);
+    }
+
+    public ScrollBarVisibility HorizontalScrollBarVisibility
+    {
+        get => (ScrollBarVisibility)GetValue(HorizontalScrollBarVisibilityProperty);
+        set => SetValue(HorizontalScrollBarVisibilityProperty, value);
+    }
+
+    public static readonly DependencyProperty VerticalScrollBarVisibilityProperty =
+        DependencyProperty.RegisterAttached("VerticalScrollBarVisibility", typeof(ScrollBarVisibility), typeof(ScrollViewer), ScrollBarVisibility.Visible);
+
+    public static void SetVerticalScrollBarVisibility(UIElement element, ScrollBarVisibility value)
+    {
+        if (element == null) throw new ArgumentNullException(nameof(element));
+        element.SetValue(VerticalScrollBarVisibilityProperty, value);
+    }
+
+    public static ScrollBarVisibility GetVerticalScrollBarVisibility(UIElement element)
+    {
+        if (element == null) throw new ArgumentNullException(nameof(element));
+        return (ScrollBarVisibility)element.GetValue(VerticalScrollBarVisibilityProperty);
+    }
+
+    public ScrollBarVisibility VerticalScrollBarVisibility
+    {
+        get => (ScrollBarVisibility)GetValue(VerticalScrollBarVisibilityProperty);
+        set => SetValue(VerticalScrollBarVisibilityProperty, value);
+    }
 
     /// <summary>
     /// True when the vertical scrollbar is currently shown. Resolved during the

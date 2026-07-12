@@ -8,7 +8,7 @@ namespace Tedd.TUI.CodeColoring.Languages;
 public class CSharpLanguage : ILanguage
 {
     public string Id => "csharp";
-    public string[] Aliases => [ "cs" ];
+    public string[] Aliases => ["cs"];
 
     public Grammar GetGrammar()
     {

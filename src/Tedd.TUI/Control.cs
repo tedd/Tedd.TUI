@@ -42,6 +42,24 @@ public class Control : UIElement
         set => SetValue(BorderThicknessProperty, value);
     }
 
+    public static readonly DependencyProperty HorizontalContentAlignmentProperty =
+        DependencyProperty.Register("HorizontalContentAlignment", typeof(HorizontalAlignment), typeof(Control), HorizontalAlignment.Stretch);
+
+    public HorizontalAlignment HorizontalContentAlignment
+    {
+        get => (HorizontalAlignment)GetValue(HorizontalContentAlignmentProperty);
+        set => SetValue(HorizontalContentAlignmentProperty, value);
+    }
+
+    public static readonly DependencyProperty VerticalContentAlignmentProperty =
+        DependencyProperty.Register("VerticalContentAlignment", typeof(VerticalAlignment), typeof(Control), VerticalAlignment.Stretch);
+
+    public VerticalAlignment VerticalContentAlignment
+    {
+        get => (VerticalAlignment)GetValue(VerticalContentAlignmentProperty);
+        set => SetValue(VerticalContentAlignmentProperty, value);
+    }
+
     // Tracks, per DependencyObject, which dependency properties currently have values applied by active triggers
     private System.Collections.Generic.Dictionary<DependencyObject, System.Collections.Generic.HashSet<DependencyProperty>>? _activeTriggerProperties;
 
