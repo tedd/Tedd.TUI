@@ -13,6 +13,45 @@ terminal, a browser, and a desktop window.
   Blazor, Blazor Canvas, WPF, Avalonia, WinUI, MAUI), in both XAML and code.
 - **[XAML guide](xaml.md)** — the markup dialect, controller binding, designer compatibility.
 
+## Rich content in the console
+
+The core package renders rich content straight into the character grid — in a plain
+terminal just as on every GUI host:
+
+- **Markdown** — `MarkdownView` live-parses markdown into styled cells: headings, bold
+  text, bullet lists, quotes, tables, inline code and hyperlinks, all themable via
+  `MarkdownTheme`. Fenced code blocks are syntax-highlighted automatically and image
+  references render inline.
+
+  ![MarkdownView rendering markdown in the terminal](assets/markdown.svg)
+
+- **Code highlighting** — `CodeDocument` tokenizes source with a PrismJS-style grammar
+  engine and renders colored cells, standalone or inside markdown fences. 27 grammars
+  ship in the box: ASM 6502, ASP.NET, Bash, BASIC, Batch, C#, CIL, C-like, cshtml/Razor,
+  CSS, CSV, Diff, JSON, JSON5, Lua, Markdown, NASM, Perl, PowerShell, Python, Regex,
+  Rust, SQL, URI, WASM, XML/HTML and YAML.
+
+  ![CodeDocument syntax highlighting C# and JSON](assets/code.svg)
+
+- **Images** — the `Image` control puts real bitmaps into the cell grid: pixel-perfect
+  Sixel (Windows Terminal 1.22+, VT340-style terminals), Kitty graphics and iTerm2
+  (iTerm2/WezTerm/Ghostty) output in terminals, direct bitmap compositing on GUI and
+  browser hosts, and a truecolor half-block fallback everywhere else. Decoding (PNG,
+  JPEG, GIF, WebP, …) comes from `Tedd.TUI.Imaging`; see the
+  [console guide](platforms/console.md#inline-images).
+
+  ![Inline bitmap and half-block fallback rendering of the same photo](assets/images.svg)
+
+## Controls
+
+Border, Button, Canvas, CheckBox, CodeDocument, ComboBox, ContentControl, DataGrid,
+DialogBox, DockPanel, Expander, Grid, GridSplitter, GroupBox, Image, ItemsControl,
+ListBox, MarkdownView, MenuBar, MenuItem, PasswordBox, ProgressBar, RadioButton,
+ScrollBar, ScrollViewer, Separator, Slider, StackPanel, TabControl, TabItem, Table,
+TextBlock, TextBox, TextEditor, ToggleButton, TreeView, TreeViewItem, TuiWindow,
+UniformGrid, WrapPanel — plus WPF-style data binding, routed events, control templates
+and triggers.
+
 ## Platform hosts
 
 | Host | Package | Guide |

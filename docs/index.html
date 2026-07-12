@@ -40,6 +40,7 @@
   .card h3 { color: var(--green); font-size: 16px; margin-bottom: 8px; }
   .card p { color: var(--dim); font-size: 13.5px; }
   .card .pkg { display: block; margin-top: 10px; font-size: 12px; color: var(--cyan); word-break: break-all; }
+  .tscroll { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
   th { color: var(--yellow); }
@@ -49,6 +50,15 @@
   .gallery figure { margin: 0; }
   .gallery img { width: 100%; border-radius: 10px; border: 1px solid var(--border); }
   .gallery figcaption { color: var(--dim); font-size: 13px; padding-top: 6px; text-align: center; }
+  .feature { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; margin-bottom: 30px; }
+  .feature .ftext { flex: 1 1 280px; }
+  .feature .ftext h3 { color: var(--green); font-size: 17px; margin-bottom: 8px; }
+  .feature .ftext p { color: var(--dim); font-size: 14px; }
+  .feature .ftext code { color: var(--cyan); }
+  .feature img { flex: 2 1 420px; min-width: 280px; max-width: 660px; width: 100%; border: 1px solid var(--border); border-radius: 10px; align-self: flex-start; }
+  .controls-list { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; font-size: 13.5px; line-height: 2; color: var(--green); }
+  .controls-list::before { content: "$ tui --list-controls"; display: block; color: var(--dim); margin-bottom: 8px; }
+  .controls-note { color: var(--dim); font-size: 13.5px; margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -131,6 +141,61 @@
 </section>
 
 <section class="wrap">
+  <h2>Markdown, code &amp; images — right in the console</h2>
+
+  <div class="feature">
+    <div class="ftext">
+      <h3>Markdown rendering</h3>
+      <p><code>MarkdownView</code> live-parses markdown into styled character cells:
+         headings, bold text, bullet lists, quotes, tables, inline code and hyperlinks.
+         Fenced code blocks run through the syntax highlighter automatically, image
+         references become real inline images, and every color and style comes from a
+         swappable <code>MarkdownTheme</code>.</p>
+    </div>
+    <img src="assets/markdown.svg" alt="MarkdownView rendering a heading, styled paragraph, bullet list, quote and table as character cells">
+  </div>
+
+  <div class="feature">
+    <div class="ftext">
+      <h3>Code highlighting</h3>
+      <p><code>CodeDocument</code> tokenizes source with a PrismJS-style grammar engine
+         and renders it as colored cells — standalone or inside markdown code fences.
+         27 grammars ship in the box: ASM&nbsp;6502, ASP.NET, Bash, BASIC, Batch, C#,
+         CIL, C-like, cshtml/Razor, CSS, CSV, Diff, JSON, JSON5, Lua, Markdown, NASM,
+         Perl, PowerShell, Python, Regex, Rust, SQL, URI, WASM, XML/HTML and YAML —
+         all themable per token type.</p>
+    </div>
+    <img src="assets/code.svg" alt="CodeDocument showing syntax-highlighted C# and JSON panes side by side">
+  </div>
+
+  <div class="feature">
+    <div class="ftext">
+      <h3>Image rendering</h3>
+      <p>The <code>Image</code> control puts real bitmaps into the cell grid. Terminals
+         with graphics support get pixel-perfect output — <strong>Sixel</strong>
+         (Windows Terminal 1.22+ and VT340-style terminals), <strong>Kitty</strong>
+         graphics, and the <strong>iTerm2</strong> protocol (iTerm2, WezTerm, Ghostty).
+         GUI and browser hosts composite the bitmap directly, and every other terminal
+         falls back to truecolor half-block art. PNG, JPEG, GIF, WebP and more decode
+         via <code>Tedd.TUI.Imaging</code> (Magick.NET), from disk or HTTP.</p>
+    </div>
+    <img src="assets/images.svg" alt="The same photo rendered as an inline bitmap and as truecolor half-block cells">
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>40+ controls in the box</h2>
+  <p class="controls-list">Border, Button, Canvas, CheckBox, CodeDocument, ComboBox,
+     ContentControl, DataGrid, DialogBox, DockPanel, Expander, Grid, GridSplitter,
+     GroupBox, Image, ItemsControl, ListBox, MarkdownView, MenuBar, MenuItem,
+     PasswordBox, ProgressBar, RadioButton, ScrollBar, ScrollViewer, Separator, Slider,
+     StackPanel, TabControl, TabItem, Table, TextBlock, TextBox, TextEditor,
+     ToggleButton, TreeView, TreeViewItem, TuiWindow, UniformGrid, WrapPanel</p>
+  <p class="controls-note">…plus WPF-style data binding, routed events, control templates,
+     triggers, focus management, overlays and a mouse-aware input pipeline.</p>
+</section>
+
+<section class="wrap">
   <h2>Screenshots</h2>
   <div class="gallery">
     <figure><img src="assets/form.svg" alt="Form controls demo"><figcaption>Forms: TextBox, PasswordBox, RadioButton, Slider</figcaption></figure>
@@ -149,14 +214,16 @@ dotnet add package Tedd.TUI.Platform.Wpf         <span class="c"># WPF host + de
 dotnet add package Tedd.TUI.Platform.Avalonia    <span class="c"># Avalonia host</span>
 dotnet add package Tedd.TUI.Platform.WinUI       <span class="c"># WinUI 3 host</span>
 dotnet add package Tedd.TUI.Platform.Maui        <span class="c"># .NET MAUI host</span></code></pre>
+  <div class="tscroll">
   <table>
     <tr><th>Feature</th><th>Where</th></tr>
     <tr><td>WPF-style control suite (40+ controls)</td><td><code>Tedd.TUI</code></td></tr>
     <tr><td>Grid/StackPanel/DockPanel/WrapPanel layout, data binding, routed events</td><td><code>Tedd.TUI</code></td></tr>
-    <tr><td>Markdown viewer &amp; syntax-highlighted code view</td><td><code>Tedd.TUI</code></td></tr>
-    <tr><td>Inline bitmap images in the cell grid</td><td><code>Tedd.TUI.Imaging</code> + capable hosts</td></tr>
+    <tr><td>Markdown viewer (<code>MarkdownView</code>) &amp; syntax-highlighted code view (<code>CodeDocument</code>, 27 grammars)</td><td><code>Tedd.TUI</code></td></tr>
+    <tr><td>Inline images: Sixel · Kitty · iTerm2 in terminals, real bitmaps on GUI hosts, half-block fallback</td><td><code>Tedd.TUI.Imaging</code> + hosts</td></tr>
     <tr><td>Shared Skia cell painter</td><td><code>Tedd.TUI.Surface.Skia</code></td></tr>
   </table>
+  </div>
 </section>
 
 <footer>
