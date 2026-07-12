@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tedd.TUI — one TUI, every surface</title>
+<meta name="description" content="Cross-platform TUI framework for .NET. Define the UI once in XAML or code and host it in terminals, Blazor, WPF, Avalonia, WinUI 3 and .NET MAUI.">
+<style>
+  :root {
+    --bg: #0c0e12; --bg2: #12151c; --panel: #161a23; --border: #232a38;
+    --fg: #d7dde8; --dim: #8b95a7; --cyan: #35d5e5; --green: #3be07c; --yellow: #ffd75f;
+    --mono: "Cascadia Mono", Consolas, Menlo, "DejaVu Sans Mono", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--mono); line-height: 1.6; }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  header { border-bottom: 1px solid var(--border); background: var(--bg2); position: sticky; top: 0; z-index: 5; }
+  header .wrap { display: flex; align-items: center; gap: 20px; padding: 12px 20px; flex-wrap: wrap; }
+  .logo { color: var(--green); font-weight: bold; font-size: 18px; }
+  .logo::before { content: ">_ "; color: var(--cyan); }
+  nav { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; }
+  .hero { padding: 56px 0 28px; text-align: center; }
+  .hero h1 { font-size: clamp(26px, 5vw, 44px); color: var(--fg); }
+  .hero h1 em { color: var(--green); font-style: normal; }
+  .hero p.tag { color: var(--dim); margin: 12px auto 0; max-width: 760px; }
+  .hero .surfaces { color: var(--cyan); margin-top: 8px; }
+  .shot { display: block; width: 100%; max-width: 820px; margin: 28px auto 0; border-radius: 10px; border: 1px solid var(--border); }
+  section { padding: 40px 0 8px; }
+  h2 { color: var(--yellow); font-size: 22px; margin-bottom: 16px; }
+  h2::before { content: "── "; color: var(--border); }
+  h2::after { content: " ──"; color: var(--border); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; align-items: start; }
+  pre { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  code { font-family: var(--mono); }
+  .k { color: var(--cyan); } .s { color: var(--green); } .c { color: var(--dim); } .a { color: var(--yellow); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .card h3 { color: var(--green); font-size: 16px; margin-bottom: 8px; }
+  .card p { color: var(--dim); font-size: 13.5px; }
+  .card .pkg { display: block; margin-top: 10px; font-size: 12px; color: var(--cyan); word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--yellow); }
+  td code { color: var(--green); }
+  footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 24px 0 40px; color: var(--dim); font-size: 13px; text-align: center; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .gallery figure { margin: 0; }
+  .gallery img { width: 100%; border-radius: 10px; border: 1px solid var(--border); }
+  .gallery figcaption { color: var(--dim); font-size: 13px; padding-top: 6px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="logo">Tedd.TUI</span>
+    <nav>
+      <a href="https://github.com/tedd/Tedd.TUI">GitHub</a>
+      <a href="https://www.nuget.org/packages/Tedd.TUI">NuGet</a>
+      <a href="https://github.com/tedd/Tedd.TUI/blob/main/docs/README.md">Docs</a>
+      <a href="https://github.com/tedd/Tedd.TUI/blob/main/docs/getting-started.md">Getting started</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero wrap">
+  <h1>One TUI. <em>Every surface.</em></h1>
+  <p class="tag">A high-performance, WPF-inspired text user interface framework for .NET 10.
+     Define the UI once — in XAML or in code — and host the identical character-cell grid anywhere.</p>
+  <p class="surfaces">Terminal · Blazor · WPF · Avalonia · WinUI 3 · .NET MAUI</p>
+  <img class="shot" src="assets/hello.svg" alt="Tedd.TUI demo window rendered as a character grid">
+</div>
+
+<section class="wrap">
+  <h2>Write it once</h2>
+  <div class="cols">
+    <div>
+      <pre><code><span class="c">&lt;!-- app.xaml — runs unchanged on every host --&gt;</span>
+<span class="k">&lt;TuiWindow&gt;</span>
+  <span class="k">&lt;Border</span> <span class="a">BoxStyle</span>=<span class="s">"Double"</span> <span class="a">BorderColor</span>=<span class="s">"Cyan"</span><span class="k">&gt;</span>
+    <span class="k">&lt;StackPanel</span> <span class="a">Orientation</span>=<span class="s">"Vertical"</span><span class="k">&gt;</span>
+      <span class="k">&lt;TextBlock</span> <span class="a">Text</span>=<span class="s">"Hello Tedd.TUI!"</span> <span class="a">Foreground</span>=<span class="s">"Cyan"</span><span class="k">/&gt;</span>
+      <span class="k">&lt;TextBox</span> <span class="a">x:Name</span>=<span class="s">"NameBox"</span> <span class="a">Width</span>=<span class="s">"30"</span><span class="k">/&gt;</span>
+      <span class="k">&lt;Button</span> <span class="a">Content</span>=<span class="s">"Submit"</span> <span class="a">Click</span>=<span class="s">"OnSubmit"</span><span class="k">/&gt;</span>
+    <span class="k">&lt;/StackPanel&gt;</span>
+  <span class="k">&lt;/Border&gt;</span>
+<span class="k">&lt;/TuiWindow&gt;</span></code></pre>
+    </div>
+    <div>
+      <pre><code><span class="c">// …or build the same tree in C#</span>
+<span class="k">var</span> window = <span class="k">new</span> TuiWindow
+{
+    Content = <span class="k">new</span> Border
+    {
+        BoxStyle = BoxStyle.Double,
+        BorderColor = TuiColor.Cyan,
+        Child = <span class="k">new</span> StackPanel { <span class="c">/* … */</span> }
+    }
+};
+
+<span class="c">// terminal:</span>
+<span class="k">new</span> TuiApp(window).Run();</code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Host it anywhere</h2>
+  <div class="cards">
+    <div class="card"><h3>Terminal</h3>
+      <p>Truecolor VT rendering with double-buffered diffing, mouse support and inline images (Sixel/Kitty/iTerm2). Near-zero CPU while idle.</p>
+      <span class="pkg">Tedd.TUI.Platform.Console + WindowsTerminal / LinuxTerminal</span></div>
+    <div class="card"><h3>Blazor</h3>
+      <p>Canvas or DOM surface in any browser. Author in Razor components or drop in <code>&lt;TuiXamlView Source="app.xaml"/&gt;</code>.</p>
+      <span class="pkg">Tedd.TUI.Platform.Blazor</span></div>
+    <div class="card"><h3>WPF</h3>
+      <p><code>TuiHostElement</code> paints the real cell grid — including inside the Visual Studio XAML designer, for live-preview TUI editing.</p>
+      <span class="pkg">Tedd.TUI.Platform.Wpf</span></div>
+    <div class="card"><h3>Avalonia</h3>
+      <p><code>TuiHostControl</code> renders via SkiaSharp on Windows, macOS and Linux with full HiDPI support.</p>
+      <span class="pkg">Tedd.TUI.Platform.Avalonia</span></div>
+    <div class="card"><h3>WinUI 3</h3>
+      <p><code>TuiHostControl</code> on an SkiaSharp canvas inside Windows App SDK applications.</p>
+      <span class="pkg">Tedd.TUI.Platform.WinUI</span></div>
+    <div class="card"><h3>.NET MAUI</h3>
+      <p><code>TuiHostView</code> brings the grid to Android, iOS, Mac Catalyst and Windows; touch maps to TUI mouse events.</p>
+      <span class="pkg">Tedd.TUI.Platform.Maui</span></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Screenshots</h2>
+  <div class="gallery">
+    <figure><img src="assets/form.svg" alt="Form controls demo"><figcaption>Forms: TextBox, PasswordBox, RadioButton, Slider</figcaption></figure>
+    <figure><img src="assets/table.svg" alt="Table control demo"><figcaption>Table with headers, star-sized columns and paging</figcaption></figure>
+    <figure><img src="assets/host-wpf.png" alt="TUI hosted in WPF"><figcaption>The same XAML hosted in WPF (TuiHostElement)</figcaption></figure>
+    <figure><img src="assets/host-skia.png" alt="TUI rendered by the Skia surface"><figcaption>The Skia surface used by Avalonia, WinUI and MAUI</figcaption></figure>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Install</h2>
+  <pre><code>dotnet add package Tedd.TUI                      <span class="c"># core: controls, layout, XAML</span>
+dotnet add package Tedd.TUI.Platform.Console     <span class="c"># terminal host</span>
+dotnet add package Tedd.TUI.Platform.Blazor      <span class="c"># browser host</span>
+dotnet add package Tedd.TUI.Platform.Wpf         <span class="c"># WPF host + designer preview</span>
+dotnet add package Tedd.TUI.Platform.Avalonia    <span class="c"># Avalonia host</span>
+dotnet add package Tedd.TUI.Platform.WinUI       <span class="c"># WinUI 3 host</span>
+dotnet add package Tedd.TUI.Platform.Maui        <span class="c"># .NET MAUI host</span></code></pre>
+  <table>
+    <tr><th>Feature</th><th>Where</th></tr>
+    <tr><td>WPF-style control suite (40+ controls)</td><td><code>Tedd.TUI</code></td></tr>
+    <tr><td>Grid/StackPanel/DockPanel/WrapPanel layout, data binding, routed events</td><td><code>Tedd.TUI</code></td></tr>
+    <tr><td>Markdown viewer &amp; syntax-highlighted code view</td><td><code>Tedd.TUI</code></td></tr>
+    <tr><td>Inline bitmap images in the cell grid</td><td><code>Tedd.TUI.Imaging</code> + capable hosts</td></tr>
+    <tr><td>Shared Skia cell painter</td><td><code>Tedd.TUI.Surface.Skia</code></td></tr>
+  </table>
+</section>
+
+<footer>
+  <div class="wrap">
+    MIT licensed · <a href="https://github.com/tedd/Tedd.TUI">github.com/tedd/Tedd.TUI</a> · screenshots are real renderer output
+  </div>
+</footer>
+
+</body>
+</html>

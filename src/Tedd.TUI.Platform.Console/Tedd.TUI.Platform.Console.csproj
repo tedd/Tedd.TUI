@@ -8,6 +8,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <Description>Terminal platform host for Tedd.TUI: TuiApp run loop and auto-detecting platform loader for console applications.</Description>
   </PropertyGroup>
 
 </Project>

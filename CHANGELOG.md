@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **GUI platform hosts** — the same TUI now renders inside desktop/mobile frameworks:
+  - `Tedd.TUI.Platform.Wpf`: `TuiHostElement` paints the cell grid via `DrawingContext`, including inside the Visual Studio XAML designer (live-preview TUI editing). Errors render into the surface instead of breaking the designer.
+  - `Tedd.TUI.Surface.Skia`: shared SkiaSharp cell-grid painter + framework-agnostic `TuiSurfaceController` host logic.
+  - `Tedd.TUI.Platform.Avalonia`: `TuiHostControl` (Skia via WriteableBitmap, HiDPI-aware) for Windows/macOS/Linux.
+  - `Tedd.TUI.Platform.WinUI`: `TuiHostControl` on `SKXamlCanvas` for Windows App SDK apps.
+  - `Tedd.TUI.Platform.Maui`: `TuiHostView` on `SKCanvasView` (Android/iOS/Mac Catalyst/Windows) with touch→mouse mapping and `SendKey`/`SendText` keyboard injection; `UseTeddTui()` builder extension.
+- **`TuiXamlView` Blazor component**: hosts a XAML-defined TUI (`Source` file/URL or inline `Xaml`, plus `Controller`), standalone or nested in a `TuiView`; `XamlSource` resolves files, app-base paths and HTTP.
+- **XamlLoader designer compatibility**: XML namespaces, prefixed elements, `x:Name` and designer attributes (`mc:Ignorable`, `d:DesignWidth`, `x:Class`, …) are now tolerated/ignored, so one file works in XAML editors and every host.
+- **Documentation**: `docs/` with getting-started (all hosts × XAML/programmatic), XAML guide, per-platform guides, and a GitHub Pages website (`docs/index.html`) with renderer-generated screenshots.
+- **Packaging/CI**: shared NuGet metadata + package icon for all 11 packages; deploy workflow packs and publishes every package on `deploy`/`deploy/prod` with rising versions (`VERSION` file + run number); CI moved to Windows with MAUI workload; GitHub Pages deploy workflow.
 - Initial release of **Tedd.TUI**.
 - Core framework architecture (`UIElement`, `DependencyProperty`, `Geometry`).
 - Recursive layout engine (Measure/Arrange).

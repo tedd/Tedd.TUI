@@ -1,33 +1,68 @@
 name: Deploy to NuGet
 
+# Pushing to a deploy branch builds, tests, packs and publishes ALL Tedd.TUI packages
+# to NuGet.org. The package version is <VERSION file>.<run number>, so every deploy run
+# produces a strictly increasing version. Requires the NUGET_API_KEY repository secret.
 on:
   push:
     branches:
+      - 'deploy'
       - 'deploy/prod'
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Windows runner: WPF, WinUI and MAUI (Windows TFM) targets only build on Windows.
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.0.x
-        
-    - name: Restore dependencies
+
+    - name: Install MAUI workload
+      run: dotnet workload install maui
+
+    - name: Compute version
+      id: version
+      shell: pwsh
+      run: |
+        $base = (Get-Content VERSION -Raw).Trim()
+        $version = "$base.${{ github.run_number }}"
+        "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        Write-Host "Package version: $version"
+
+    - name: Restore
       run: dotnet restore src/Tedd.TUI.sln
-      
+
     - name: Build
-      run: dotnet build src/Tedd.TUI.sln --no-restore -c Release
-      
+      run: dotnet build src/Tedd.TUI.sln --no-restore -c Release -p:Version=${{ steps.version.outputs.version }}
+
     - name: Test
       run: dotnet test src/Tedd.TUI.sln --no-build -c Release --verbosity normal
-      
+
     - name: Pack
-      run: dotnet pack src/Tedd.TUI/Tedd.TUI.csproj -c Release -o out -p:Version=1.0.${{ github.run_number }}
-      
+      shell: pwsh
+      run: |
+        $projects = @(
+          'src/Tedd.TUI/Tedd.TUI.csproj',
+          'src/Tedd.TUI.Imaging/Tedd.TUI.Imaging.csproj',
+          'src/Tedd.TUI.Platform.Console/Tedd.TUI.Platform.Console.csproj',
+          'src/Tedd.TUI.Platform.WindowsTerminal/Tedd.TUI.Platform.WindowsTerminal.csproj',
+          'src/Tedd.TUI.Platform.LinuxTerminal/Tedd.TUI.Platform.LinuxTerminal.csproj',
+          'src/Tedd.TUI.Platform.Blazor/Tedd.TUI.Platform.Blazor.csproj',
+          'src/Tedd.TUI.Platform.Wpf/Tedd.TUI.Platform.Wpf.csproj',
+          'src/Tedd.TUI.Surface.Skia/Tedd.TUI.Surface.Skia.csproj',
+          'src/Tedd.TUI.Platform.Avalonia/Tedd.TUI.Platform.Avalonia.csproj',
+          'src/Tedd.TUI.Platform.WinUI/Tedd.TUI.Platform.WinUI.csproj',
+          'src/Tedd.TUI.Platform.Maui/Tedd.TUI.Platform.Maui.csproj'
+        )
+        foreach ($p in $projects) {
+          dotnet pack $p -c Release --no-build -o out -p:Version=${{ steps.version.outputs.version }}
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+        }
+
     - name: Push to NuGet
-      run: dotnet nuget push out/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+      run: dotnet nuget push out/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate

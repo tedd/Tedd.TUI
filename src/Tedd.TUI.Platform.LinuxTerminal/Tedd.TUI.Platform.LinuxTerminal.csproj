@@ -10,6 +10,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPackable>true</IsPackable>
+    <Description>Linux/macOS terminal backend for Tedd.TUI: truecolor VT rendering, raw input, mouse and inline image protocols.</Description>
   </PropertyGroup>
 
 </Project>

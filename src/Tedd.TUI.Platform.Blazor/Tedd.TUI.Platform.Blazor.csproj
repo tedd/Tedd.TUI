@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>true</IsPackable>
+    <Description>Blazor host for Tedd.TUI: render TUIs in the browser via Canvas or DOM, author them in Razor components or XAML (TuiXamlView).</Description>
   </PropertyGroup>
 
 

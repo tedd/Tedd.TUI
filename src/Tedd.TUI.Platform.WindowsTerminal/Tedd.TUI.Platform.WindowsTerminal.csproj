@@ -10,6 +10,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPackable>true</IsPackable>
+    <Description>Windows Terminal backend for Tedd.TUI: truecolor VT rendering, raw input and mouse support.</Description>
   </PropertyGroup>
 
 </Project>

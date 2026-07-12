@@ -1,0 +1,24 @@
+<Project>
+
+  <!-- Shared NuGet metadata for all Tedd.TUI packages. Individual libraries opt in to
+       packing by setting <IsPackable>true</IsPackable> and providing a <Description>. -->
+  <PropertyGroup>
+    <Authors>Tedd Hansen</Authors>
+    <Copyright>Copyright © Tedd Hansen</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/tedd/Tedd.TUI</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://tedd.github.io/Tedd.TUI/</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>tui;console;terminal;gui;xaml;wpf;blazor;avalonia;maui;winui</PackageTags>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- Items are evaluated after all properties, so this sees the csproj's IsPackable. -->
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)..\assets\icon.png" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+
+</Project>

@@ -11,6 +11,9 @@ namespace Tedd.TUI;
 
 public static class XamlLoader
 {
+    /// <summary>XAML language namespace (x: prefix by convention). x:Name maps to UIElement.Name.</summary>
+    private const string XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
+
     public static UIElement Load(string xml, object? controller = null)
     {
         var doc = new XmlDocument();
@@ -24,24 +27,22 @@ public static class XamlLoader
 
     private static object ParseElement(XmlElement element, object? controller)
     {
-        // 1. Create Instance
-        string typeName = "Tedd.TUI." + element.Name;
-        // Also support sub-namespaces if needed, but for now flat is assumed or user specifies?
-        // Let's assume standard controls are in Tedd.TUI.
-        // If element name contains '.', it might be Property Element Syntax (e.g. <Table.Columns>).
-        if (element.Name.Contains("."))
+        // Element names may carry a namespace prefix (e.g. <tui:Button>) when the file is
+        // authored for a XAML designer; LocalName strips it so resolution stays name-based.
+        string localName = element.LocalName;
+
+        // If element name contains '.', it is Property Element Syntax (e.g. <Table.Columns>)
+        // which is handled by the parent before recursing.
+        if (localName.Contains("."))
         {
-            // This is handled by parent, so ParseElement shouldn't be called on it directly usually.
-            // But if called recursively, we need to distinguish.
-            // Actually, my recursive logic should handle property elements before calling ParseElement.
-            throw new InvalidOperationException($"Unexpected property element {element.Name} in ParseElement.");
+            throw new InvalidOperationException($"Unexpected property element {localName} in ParseElement.");
         }
 
         // Handle specific sub-namespaces if any (e.g. MarkdownView in Tedd.TUI.Markdown)
-        Type? type = ResolveType(element.Name);
+        Type? type = ResolveType(localName);
         if (type == null)
         {
-            throw new InvalidOperationException($"Type {element.Name} not found.");
+            throw new InvalidOperationException($"Type {localName} not found.");
         }
 
         var instance = Activator.CreateInstance(type);
@@ -51,15 +52,22 @@ public static class XamlLoader
         // 2. Set Properties (Attributes)
         foreach (XmlAttribute attr in element.Attributes)
         {
-            if (attr.Name.Contains("."))
+            if (IsIgnoredAttribute(attr))
+                continue;
+
+            if (IsXamlNameAttribute(attr))
+            {
+                SetProperty(instance, "Name", attr.Value, controller);
+            }
+            else if (attr.LocalName.Contains("."))
             {
                 // Attached Property? e.g. Grid.Row
                 // For now, support attached properties
-                SetAttachedProperty(instance, attr.Name, attr.Value);
+                SetAttachedProperty(instance, attr.LocalName, attr.Value);
             }
             else
             {
-                SetProperty(instance, attr.Name, attr.Value, controller);
+                SetProperty(instance, attr.LocalName, attr.Value, controller);
             }
         }
 
@@ -68,10 +76,11 @@ public static class XamlLoader
         {
             if (childNode is XmlElement childElement)
             {
-                if (childElement.Name.Contains("."))
+                if (childElement.LocalName.Contains("."))
                 {
                     // Property Element Syntax: <Table.Columns> ... </Table.Columns>
-                    string propName = childElement.Name.Substring(childElement.Name.LastIndexOf('.') + 1);
+                    string childLocalName = childElement.LocalName;
+                    string propName = childLocalName.Substring(childLocalName.LastIndexOf('.') + 1);
                     // The property name is "Columns" on "Table".
                     // Find property on instance.
                     var propInfo = instance.GetType().GetProperty(propName);
@@ -137,6 +146,35 @@ public static class XamlLoader
         }
 
         return instance;
+    }
+
+    /// <summary>
+    /// Attributes a XAML designer adds that carry no runtime meaning for the TUI loader:
+    /// xmlns declarations, markup-compatibility (mc:), designer hints (d:) and any other
+    /// prefixed attribute except x:Name. Keeping these ignorable lets one file load both
+    /// in a WPF/XAML editor and through this loader.
+    /// </summary>
+    private static bool IsIgnoredAttribute(XmlAttribute attr)
+    {
+        if (attr.Prefix == "xmlns" || attr.Name == "xmlns")
+            return true;
+
+        if (string.IsNullOrEmpty(attr.Prefix))
+            return false;
+
+        if (IsXamlNameAttribute(attr))
+            return false;
+
+        // mc:Ignorable, d:DesignWidth, x:Class, … — anything namespaced other than x:Name.
+        return true;
+    }
+
+    private static bool IsXamlNameAttribute(XmlAttribute attr)
+    {
+        if (attr.LocalName != "Name")
+            return false;
+        // Match by namespace URI when declared, by conventional prefix otherwise.
+        return attr.NamespaceURI == XamlNamespace || attr.Prefix == "x";
     }
 
     private static Type? ResolveType(string name)

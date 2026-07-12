@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseMaui>true</UseMaui>
+    <IsPackable>true</IsPackable>
+    <Description>.NET MAUI host for Tedd.TUI: TuiHostView renders the TUI cell grid via SkiaSharp on Android, iOS, macOS and Windows.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="4.150.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tedd.TUI\Tedd.TUI.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Surface.Skia\Tedd.TUI.Surface.Skia.csproj" />
+  </ItemGroup>
+
+</Project>

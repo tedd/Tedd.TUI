@@ -6,14 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    
-    <!-- NuGet Metadata -->
+
+    <!-- NuGet Metadata (shared fields live in src/Directory.Build.props) -->
+    <IsPackable>true</IsPackable>
     <PackageId>Tedd.TUI</PackageId>
-    <Authors>Tedd</Authors>
-    <Description>Cross-Platform TUI Framework for .NET</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>tui;console;terminal;gui;wpf</PackageTags>
-    <RepositoryUrl>https://github.com/Tedd/Tedd.TUI</RepositoryUrl>
+    <Description>Cross-platform TUI framework for .NET with a WPF-inspired control model. Define UIs in XAML or code and render them in terminals, Blazor, WPF, Avalonia, WinUI and MAUI.</Description>
   </PropertyGroup>
 
   <ItemGroup>
