@@ -12,7 +12,14 @@ public class ConsoleInputManager
     private uint _lastButtonState;
     private readonly ConcurrentQueue<InputEvent> _inputQueue = new();
     private readonly AutoResetEvent _inputWaitHandle = new AutoResetEvent(false);
-    private bool _running;
+    // Read by the Unix reader thread, written by Start/Stop from other threads.
+    private volatile bool _running;
+
+    // Original console input mode captured before we patch it, so Stop() can hand the
+    // terminal back the way we found it (raw mode used to leak into the parent shell).
+    private uint _originalInputMode;
+    private bool _inputModeSaved;
+    private bool _mouseTrackingEnabled;
 
     private struct InputEvent
     {
@@ -33,7 +40,13 @@ public class ConsoleInputManager
         // CSI ? 1000 h  (Normal tracking)
         // CSI ? 1003 h  (All motion tracking)
         // CSI ? 1006 h  (SGR ext mode)
-        System.Console.Write("\x1b[?1000h\x1b[?1006h");
+        // Skipped when stdout is redirected: the escapes would pollute piped output and
+        // there is no terminal to interpret them anyway.
+        if (!System.Console.IsOutputRedirected)
+        {
+            System.Console.Write("\x1b[?1000h\x1b[?1006h");
+            _mouseTrackingEnabled = true;
+        }
     }
 
     public IntPtr InputHandle { get; private set; }
@@ -41,11 +54,34 @@ public class ConsoleInputManager
 
     public void Start()
     {
+        _running = true;
         if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
         {
-            _running = true;
             var t = new Thread(UnixInputLoop) { IsBackground = true, Name = "UnixInputReader" };
             t.Start();
+        }
+    }
+
+    /// <summary>
+    /// Stops input processing and restores the console to its pre-startup state:
+    /// mouse tracking off and the original Windows console input mode re-applied.
+    /// The Unix reader thread exits after its current blocking read completes (it is a
+    /// background thread, so it never keeps the process alive).
+    /// </summary>
+    public void Stop()
+    {
+        _running = false;
+
+        if (_mouseTrackingEnabled)
+        {
+            try { System.Console.Write("\x1b[?1000l\x1b[?1006l"); } catch { }
+            _mouseTrackingEnabled = false;
+        }
+
+        if (_inputModeSaved)
+        {
+            try { NativeMethods.SetConsoleMode(InputHandle, _originalInputMode); } catch { }
+            _inputModeSaved = false;
         }
     }
 
@@ -99,13 +135,13 @@ public class ConsoleInputManager
     private void ProcessWindowsInput()
     {
         var handle = NativeMethods.GetStdHandle(NativeMethods.STD_INPUT_HANDLE);
-        uint eventsRead;
-        // Check if anything is available
-        NativeMethods.GetNumberOfConsoleInputEvents(handle, out uint numEvents);
+        // Check if anything is available. Both calls fail when stdin is not a real
+        // console (redirected/pipe); bail out rather than acting on garbage counts.
+        if (!NativeMethods.GetNumberOfConsoleInputEvents(handle, out uint numEvents)) return;
         if (numEvents == 0) return;
 
         var buffer = new NativeMethods.INPUT_RECORD[numEvents];
-        NativeMethods.ReadConsoleInput(handle, buffer, numEvents, out eventsRead);
+        if (!NativeMethods.ReadConsoleInput(handle, buffer, numEvents, out uint eventsRead)) return;
 
         for (int i = 0; i < eventsRead; i++)
         {
@@ -141,50 +177,28 @@ public class ConsoleInputManager
                 int x = record.MouseEvent.dwMousePosition.X;
                 int y = record.MouseEvent.dwMousePosition.Y;
 
-                var hit = _window.InputHitTest(x, y);
-                if (hit != null)
+                _window.ProcessMouse(new MouseEventArgs(UIElement.MouseMoveEvent)
                 {
-                    // Use Routed Events with Global Coordinates
-                    // Note: x, y are global console coordinates here?
-                    // record.MouseEvent.dwMousePosition is SCREEN buffer coordinates (Global).
-                    // InputHitTest uses them as relative to window usually?
-                    // TuiApp adjusts buffer size to window size.
-                    // Assuming x,y are Global relative to the TuiWindow Root (0,0).
+                    GlobalX = x,
+                    GlobalY = y
+                });
 
-                    if (!hit.Element.IsFocused && hit.Element.Focusable && leftDown && !wasLeftDown)
+                if (leftDown && !wasLeftDown)
+                {
+                    _window.ProcessMouse(new MouseEventArgs(UIElement.MouseDownEvent)
                     {
-                        _window.SetFocus(hit.Element);
-                    }
+                        GlobalX = x,
+                        GlobalY = y
+                    });
+                }
 
-                    var previewArgsMove = new MouseEventArgs(UIElement.PreviewMouseMoveEvent) { GlobalX = x, GlobalY = y };
-                    hit.Element.RaiseEvent(previewArgsMove);
-                    if (!previewArgsMove.Handled)
+                if (!leftDown && wasLeftDown)
+                {
+                    _window.ProcessMouse(new MouseEventArgs(UIElement.MouseUpEvent)
                     {
-                        var argsMove = new MouseEventArgs(UIElement.MouseMoveEvent) { GlobalX = x, GlobalY = y };
-                        hit.Element.RaiseEvent(argsMove);
-                    }
-
-                    if (leftDown && !wasLeftDown)
-                    {
-                        var previewArgsDown = new MouseEventArgs(UIElement.PreviewMouseDownEvent) { GlobalX = x, GlobalY = y };
-                        hit.Element.RaiseEvent(previewArgsDown);
-                        if (!previewArgsDown.Handled)
-                        {
-                            var argsDown = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
-                            hit.Element.RaiseEvent(argsDown);
-                        }
-                    }
-
-                    if (!leftDown && wasLeftDown)
-                    {
-                        var previewArgsUp = new MouseEventArgs(UIElement.PreviewMouseUpEvent) { GlobalX = x, GlobalY = y };
-                        hit.Element.RaiseEvent(previewArgsUp);
-                        if (!previewArgsUp.Handled)
-                        {
-                            var argsUp = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
-                            hit.Element.RaiseEvent(argsUp);
-                        }
-                    }
+                        GlobalX = x,
+                        GlobalY = y
+                    });
                 }
             }
             else if (record.EventType == NativeMethods.WINDOW_BUFFER_SIZE_EVENT)
@@ -196,14 +210,16 @@ public class ConsoleInputManager
 
     private ConsoleModifiers GetModifiers(uint dwControlKeyState)
     {
-        ConsoleModifiers mod = 0;
+        // Per wincon.h: RIGHT_ALT_PRESSED = 0x0001, LEFT_ALT_PRESSED = 0x0002,
+        // RIGHT_CTRL_PRESSED = 0x0004, LEFT_CTRL_PRESSED = 0x0008, SHIFT_PRESSED = 0x0010.
+        const uint RIGHT_ALT_PRESSED = 0x0001;
         const uint LEFT_ALT_PRESSED = 0x0002;
-        const uint RIGHT_ALT_PRESSED = 0x0001; // wait, check MSDN
-        const uint SHIFT_PRESSED = 0x0010;
-        const uint LEFT_CTRL_PRESSED = 0x0008;
         const uint RIGHT_CTRL_PRESSED = 0x0004;
+        const uint LEFT_CTRL_PRESSED = 0x0008;
+        const uint SHIFT_PRESSED = 0x0010;
 
-        if ((dwControlKeyState & (LEFT_ALT_PRESSED | 0x0001)) != 0) mod |= ConsoleModifiers.Alt;
+        ConsoleModifiers mod = 0;
+        if ((dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0) mod |= ConsoleModifiers.Alt;
         if ((dwControlKeyState & SHIFT_PRESSED) != 0) mod |= ConsoleModifiers.Shift;
         if ((dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0) mod |= ConsoleModifiers.Control;
         return mod;
@@ -222,14 +238,24 @@ public class ConsoleInputManager
                 else
                 {
                     // Treat as normal Escape if not recognized or handle other VT keys
-                    _window.ProcessKey(ToKeyArgs(item.Key));
+                    DispatchUnixKey(item.Key);
                 }
             }
             else
             {
-                _window.ProcessKey(ToKeyArgs(item.Key));
+                DispatchUnixKey(item.Key);
             }
         }
+    }
+
+    private void DispatchUnixKey(ConsoleKeyInfo info)
+    {
+        _window.ProcessKey(ToKeyArgs(info, UIElement.KeyDownEvent));
+        // Terminals report no key releases, so synthesize KeyUp right after KeyDown.
+        // Controls with release semantics (ButtonBase defaults to ClickMode.Release,
+        // which CheckBox/RadioButton rely on for Space/Enter) otherwise never activate
+        // from the keyboard on Unix, while the Windows backend delivers real KeyUp events.
+        _window.ProcessKey(ToKeyArgs(info, UIElement.KeyUpEvent));
     }
 
     private void SetupWindowsConsole()
@@ -240,6 +266,10 @@ public class ConsoleInputManager
             InputHandle = iStdIn;
             if (NativeMethods.GetConsoleMode(iStdIn, out uint inMode))
             {
+                // Remember the pre-patch mode so Stop() can restore it.
+                _originalInputMode = inMode;
+                _inputModeSaved = true;
+
                 // Disable Blocking / QuickEdit
                 inMode &= ~NativeMethods.ENABLE_QUICK_EDIT_MODE;
                 inMode &= ~NativeMethods.ENABLE_LINE_INPUT;
@@ -265,9 +295,9 @@ public class ConsoleInputManager
         catch { }
     }
 
-    private KeyEventArgs ToKeyArgs(ConsoleKeyInfo info)
+    private KeyEventArgs ToKeyArgs(ConsoleKeyInfo info, RoutedEvent routedEvent)
     {
-        return new KeyEventArgs(UIElement.KeyDownEvent)
+        return new KeyEventArgs(routedEvent)
         {
             Key = info.Key,
             KeyChar = info.KeyChar,
@@ -277,21 +307,38 @@ public class ConsoleInputManager
 
     private string ReadSequence()
     {
-        // Simple synchronous read of available chars
-        // A sequence usually comes in fast.
+        // Reads the remainder of an escape sequence. The caller has already consumed
+        // ESC and verified at least one more char is pending.
+        //
+        // Sequences can arrive split across reads (SSH, slow PTYs), so once a CSI has
+        // started we wait briefly for the terminator instead of bailing the moment
+        // KeyAvailable momentarily reads false — otherwise a truncated mouse report
+        // leaks its tail into the app as garbage keystrokes.
+        const int continuationTimeoutMs = 8;
+
         var sb = new StringBuilder();
-        // We already consumed ESC
+        var deadline = Environment.TickCount64 + continuationTimeoutMs;
 
-        // Loop reading until end of sequence char or timeout?
-        // SGR mouse ends with 'm' or 'M'.
-        // Let's just read what's there for a simplified approach.
-        // Or read char by char.
-
-        while (System.Console.KeyAvailable)
+        while (true)
         {
-            var k = System.Console.ReadKey(true);
-            sb.Append(k.KeyChar);
-            if (IsSequenceTerminator(k.KeyChar)) break;
+            if (System.Console.KeyAvailable)
+            {
+                var k = System.Console.ReadKey(true);
+                sb.Append(k.KeyChar);
+                // The first char is the introducer ('[' for CSI, 'O' for SS3); both fall
+                // in the final-byte range 0x40-0x7E, so testing it would truncate every
+                // sequence to a single char (which is why SGR mouse never parsed).
+                if (sb.Length > 1 && IsSequenceTerminator(k.KeyChar)) break;
+                deadline = Environment.TickCount64 + continuationTimeoutMs;
+            }
+            else
+            {
+                // Only wait for continuation when we are clearly inside a CSI ("[...")
+                // and haven't hit the terminator yet.
+                bool midSequence = sb.Length > 0 && sb[0] == '[';
+                if (!midSequence || Environment.TickCount64 >= deadline) break;
+                Thread.Sleep(1);
+            }
         }
         return sb.ToString();
     }
@@ -337,32 +384,14 @@ public class ConsoleInputManager
                 // Simple Left Click logic
                 if (btn == 0)
                 {
-                    var result = _window.InputHitTest(x, y);
-                    if (result != null)
+                    var routedEvent = isDown
+                        ? UIElement.MouseDownEvent
+                        : UIElement.MouseUpEvent;
+                    _window.ProcessMouse(new MouseEventArgs(routedEvent)
                     {
-                        if (isDown && result.Element.Focusable) _window.SetFocus(result.Element);
-
-                        if (isDown)
-                        {
-                            var previewArgs = new MouseEventArgs(UIElement.PreviewMouseDownEvent) { GlobalX = x, GlobalY = y };
-                            result.Element.RaiseEvent(previewArgs);
-                            if (!previewArgs.Handled)
-                            {
-                                var args = new MouseEventArgs(UIElement.MouseDownEvent) { GlobalX = x, GlobalY = y };
-                                result.Element.RaiseEvent(args);
-                            }
-                        }
-                        else
-                        {
-                            var previewArgs = new MouseEventArgs(UIElement.PreviewMouseUpEvent) { GlobalX = x, GlobalY = y };
-                            result.Element.RaiseEvent(previewArgs);
-                            if (!previewArgs.Handled)
-                            {
-                                var args = new MouseEventArgs(UIElement.MouseUpEvent) { GlobalX = x, GlobalY = y };
-                                result.Element.RaiseEvent(args);
-                            }
-                        }
-                    }
+                        GlobalX = x,
+                        GlobalY = y
+                    });
                 }
             }
         }

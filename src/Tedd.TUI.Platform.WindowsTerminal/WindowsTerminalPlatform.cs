@@ -19,9 +19,7 @@ public sealed class WindowsTerminalPlatform : ITuiPlatform
     private AnsiTrueColorRenderer? _renderer;
     private ITuiInputManager? _input;
     private uint _previousOutputMode;
-    private uint _previousInputMode;
     private bool _outputModePatched;
-    private bool _inputModePatched;
     private Encoding? _previousOutputEncoding;
     private bool _outputEncodingPatched;
 
@@ -101,15 +99,12 @@ public sealed class WindowsTerminalPlatform : ITuiPlatform
                 }
             }
 
-            var inHandle = Win32.GetStdHandle(Win32.STD_INPUT_HANDLE);
-            if (Win32.GetConsoleMode(inHandle, out _previousInputMode))
-            {
-                uint mode = (_previousInputMode | Win32.ENABLE_VIRTUAL_TERMINAL_INPUT) & ~Win32.ENABLE_QUICK_EDIT_MODE;
-                if (Win32.SetConsoleMode(inHandle, mode | Win32.ENABLE_EXTENDED_FLAGS))
-                {
-                    _inputModePatched = true;
-                }
-            }
+            // Input-mode configuration is intentionally NOT done here. The shared
+            // ConsoleInputManager (created by CreateInputManager right after this)
+            // owns the input mode: it requires raw INPUT_RECORDs (VT input disabled)
+            // for mouse support, and it saves/restores the original mode itself.
+            // Patching it here too made the two components fight over the same handle
+            // and double-restore different "previous" modes at shutdown.
         }
         catch
         {
@@ -133,11 +128,6 @@ public sealed class WindowsTerminalPlatform : ITuiPlatform
             {
                 Win32.SetConsoleMode(Win32.GetStdHandle(Win32.STD_OUTPUT_HANDLE), _previousOutputMode);
                 _outputModePatched = false;
-            }
-            if (_inputModePatched)
-            {
-                Win32.SetConsoleMode(Win32.GetStdHandle(Win32.STD_INPUT_HANDLE), _previousInputMode);
-                _inputModePatched = false;
             }
         }
         catch { }

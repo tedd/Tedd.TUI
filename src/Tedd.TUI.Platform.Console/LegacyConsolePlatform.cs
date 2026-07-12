@@ -76,6 +76,6 @@ internal sealed class LegacyInputAdapter : ITuiInputManager
     }
 
     public void Start() => Inner.Start();
-    public void Stop() { /* ConsoleInputManager has no explicit stop; we rely on app shutdown */ }
+    public void Stop() => Inner.Stop();
     public void Dispose() => Stop();
 }
