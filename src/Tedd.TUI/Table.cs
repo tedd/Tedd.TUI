@@ -200,6 +200,15 @@ public class Table : UIElement
     private void OnRowsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         _rowsDirty = true;
+
+        // Removing rows can leave CurrentPage pointing past the last page, which would
+        // render an empty body; pull it back onto the last valid page.
+        int maxPage = Math.Max(0, TotalPages - 1);
+        if (CurrentPage > maxPage)
+        {
+            CurrentPage = maxPage;
+        }
+
         Invalidate();
     }
 

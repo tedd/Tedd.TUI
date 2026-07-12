@@ -107,17 +107,34 @@ public class MenuItem : UIElement
     public override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        // If mouse moves over this item, focus it.
-        // This gives the "hover selection" effect.
-        if (!IsFocused)
+        // Hover selection: focusing handles the highlight (Render checks IsFocused).
+        // Only do this while a menu session is active — items inside an open popup, or
+        // top-level items while some menu is expanded. On Windows every mouse movement
+        // arrives here, so an unconditional Focus() meant that merely moving the pointer
+        // across the menu bar silently stole keyboard focus from the active control.
+        if (!IsFocused && IsMenuSessionActive())
         {
             Focus();
-            // If the parent has an open submenu (and it's not THIS item's submenu), 
-            // implies we are switching between siblings in a menu.
-            // But if we are in a MenuBar, creating "hover open" behavior usually requires click first?
-            // User request: "Mouseover on items does not change their color." -> Implies highlight.
-            // Focusing handles the highlight (Render checks IsFocused).
         }
+    }
+
+    private bool IsMenuSessionActive()
+    {
+        // Inside an open popup (this item was spawned from an expanded parent).
+        if (ParentMenuItem != null) return true;
+        if (IsExpanded) return true;
+
+        // Top-level item: hover-highlight only while a sibling menu is open, which is
+        // the classic "slide between menus" gesture.
+        if (Parent is MenuBar bar)
+        {
+            foreach (var child in bar.Children)
+            {
+                if (child is MenuItem mi && mi.IsExpanded) return true;
+            }
+        }
+
+        return false;
     }
 
     // Bug: Clicking nested focusable child inside MenuItem causes focus to be stolen by MenuItem.
