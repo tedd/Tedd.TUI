@@ -69,6 +69,28 @@ internal sealed class ControlTestHost
         Window.Render(buffer);
         return buffer;
     }
+
+    public MouseEventArgs MouseDown(int x, int y) =>
+        Mouse(UIElement.MouseDownEvent, x, y);
+
+    public MouseEventArgs MouseMove(int x, int y) =>
+        Mouse(UIElement.MouseMoveEvent, x, y);
+
+    public MouseEventArgs MouseUp(int x, int y) =>
+        Mouse(UIElement.MouseUpEvent, x, y);
+
+    private MouseEventArgs Mouse(RoutedEvent routedEvent, int x, int y)
+    {
+        var args = new MouseEventArgs(routedEvent)
+        {
+            GlobalX = x,
+            GlobalY = y
+        };
+
+        Window.ProcessMouse(args);
+        return args;
+    }
+
 }
 
 internal static class VirtualBufferAssertions

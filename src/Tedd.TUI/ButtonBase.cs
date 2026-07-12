@@ -41,6 +41,9 @@ public abstract class ButtonBase : ContentControl
         base.OnMouseDown(e);
         Focus();
 
+        if (GetRoot() is TuiWindow window)
+            window.CaptureMouse(this);
+
         IsPressed = true;
 
         if (ClickMode == ClickMode.Press)
@@ -54,17 +57,27 @@ public abstract class ButtonBase : ContentControl
     {
         base.OnMouseUp(e);
 
+        var window = GetRoot() as TuiWindow;
+        bool hasCapture = window?.CapturedElement == this;
+        bool releasedInside = !hasCapture ||
+            RenderSize.Width <= 0 || RenderSize.Height <= 0 ||
+            (e.X >= 0 && e.X < RenderSize.Width &&
+             e.Y >= 0 && e.Y < RenderSize.Height);
+
         if (IsPressed)
         {
             IsPressed = false;
 
-            // In WPF, a release click only triggers if the mouse is still over the button.
-            // For now, in TUI simple environment, we will assume it was released over it if IsPressed was true.
-            if (ClickMode == ClickMode.Release)
+            if (ClickMode == ClickMode.Release && releasedInside)
             {
                 OnClick();
             }
         }
+
+        if (hasCapture)
+            window!.ReleaseMouseCapture();
+
+        e.Handled = true;
     }
 
 
