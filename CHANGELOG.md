@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`NumericUpDown` control** (Avalonia `NumericUpDown` / WinUI `NumberBox` / MAUI `Stepper` equivalent): integer spinner rendered as `[-]  42 [+]` with `Value`/`Minimum`/`Maximum`/`Increment`, a bubbling `ValueChanged` routed event, clamping (including re-clamp when the range changes), mouse spin buttons and Up/Down/`+`/`-` keyboard spinning.
 - **`RepeatButton` control** (WPF/Avalonia primitive): a `Button` that raises `Click` repeatedly while pressed — immediately on press (`ClickMode.Press` default), then after `Delay` ms and every `Interval` ms via a background timer; keyboard repeat rides the terminal's own key auto-repeat.
 - **`ToggleSwitch` control** (MAUI `Switch` / Avalonia+WinUI `ToggleSwitch` equivalent): sliding-knob on/off switch rendered as `[●──] Off` / `[──●] On` with configurable `OnContent`/`OffContent` state labels, knob/track/bracket colors and characters, plus optional content label; inherits mouse/keyboard toggling and `Checked`/`Unchecked` events from `ToggleButton`, including three-state (indeterminate) support.
 - **GUI platform hosts** — the same TUI now renders inside desktop/mobile frameworks:
