@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`RepeatButton` control** (WPF/Avalonia primitive): a `Button` that raises `Click` repeatedly while pressed — immediately on press (`ClickMode.Press` default), then after `Delay` ms and every `Interval` ms via a background timer; keyboard repeat rides the terminal's own key auto-repeat.
 - **`ToggleSwitch` control** (MAUI `Switch` / Avalonia+WinUI `ToggleSwitch` equivalent): sliding-knob on/off switch rendered as `[●──] Off` / `[──●] On` with configurable `OnContent`/`OffContent` state labels, knob/track/bracket colors and characters, plus optional content label; inherits mouse/keyboard toggling and `Checked`/`Unchecked` events from `ToggleButton`, including three-state (indeterminate) support.
 - **GUI platform hosts** — the same TUI now renders inside desktop/mobile frameworks:
   - `Tedd.TUI.Platform.Wpf`: `TuiHostElement` paints the cell grid via `DrawingContext`, including inside the Visual Studio XAML designer (live-preview TUI editing). Errors render into the surface instead of breaking the designer.
