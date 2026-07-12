@@ -257,6 +257,7 @@ public class TuiWindow : UIElement
             // Regression: Verified by checking if hit element is within the active popup hierarchies.
             CloseMenusIfClickOutside(hit.Element);
             CloseComboBoxesIfClickOutside(hit.Element);
+            CloseDatePickersIfClickOutside(hit.Element);
         }
     }
 
@@ -337,6 +338,38 @@ public class TuiWindow : UIElement
         }
     }
 
+    private void CloseDatePickersIfClickOutside(UIElement? clickedElement)
+    {
+        var dpPopups = new List<DatePicker.DatePickerPopupBorder>();
+        for (int i = 0; i < _overlays.Count; i++)
+        {
+            if (_overlays[i] is DatePicker.DatePickerPopupBorder dpb)
+            {
+                dpPopups.Add(dpb);
+            }
+        }
+
+        foreach (var dpb in dpPopups)
+        {
+            bool insideDatePicker = false;
+            var current = clickedElement;
+            while (current != null)
+            {
+                if (current == dpb || current == dpb.Owner)
+                {
+                    insideDatePicker = true;
+                    break;
+                }
+                current = current.Parent;
+            }
+
+            if (!insideDatePicker)
+            {
+                dpb.Owner.CloseDropdown(restoreFocus: false);
+            }
+        }
+    }
+
     private void CloseMenusIfFocusLost(UIElement? newFocus)
     {
         CloseMenusIfClickOutside(newFocus);
@@ -356,6 +389,7 @@ public class TuiWindow : UIElement
         // Fix: Check if focus is moving outside the menu or combobox dropdown bounds, and auto-close them.
         CloseMenusIfFocusLost(element);
         CloseComboBoxesIfFocusLost(element);
+        CloseDatePickersIfClickOutside(element);
 
         _focusedElement?.OnLostFocus();
         _focusedElement = element;
