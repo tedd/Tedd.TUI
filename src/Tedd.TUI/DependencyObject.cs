@@ -78,12 +78,13 @@ public class DependencyObject : INotifyPropertyChanged
         // boxed value paths where the compile-time implicit operator can't run.
         value = CoerceLegacyColor(dp, value);
 
-        // Basic type validation
-        if (value != null && !dp.PropertyType.IsInstanceOfType(value))
-        {
-            throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
-        }
+        ValidateValue(dp, value);
 
+        object? oldEffective = GetValue(dp);
+
+        // The local value is always stored, even when it doesn't change the effective
+        // value (e.g. it equals an active trigger's value): it must survive as the
+        // fallback once the trigger deactivates.
         _localValues[dp] = value ?? null!;
 
         // If an active trigger is present for this property, track the local value as a
@@ -96,18 +97,47 @@ public class DependencyObject : INotifyPropertyChanged
             _localOverridesActiveTrigger.Add(dp);
         }
 
-        OnPropertyChanged(dp);
+        // Notify only when the effective value actually changed. Without this guard a
+        // no-op write (same value) still bubbled Invalidate() to the window; controls
+        // that write properties during Measure/Render then re-armed the render loop
+        // every frame, pinning a core at 100% CPU while the app was idle.
+        if (!Equals(oldEffective, GetValue(dp)))
+        {
+            OnPropertyChanged(dp);
+        }
+    }
+
+    private static void ValidateValue(DependencyProperty dp, object? value)
+    {
+        if (value == null)
+        {
+            // Null is only assignable to reference types and Nullable<T>; letting it
+            // through for e.g. an int property would defer the failure to an unboxing
+            // cast at some unrelated GetValue call site.
+            if (dp.PropertyType.IsValueType && Nullable.GetUnderlyingType(dp.PropertyType) == null)
+            {
+                throw new ArgumentException($"Null is not assignable to property {dp.Name} of non-nullable type {dp.PropertyType}");
+            }
+            return;
+        }
+
+        if (!dp.PropertyType.IsInstanceOfType(value))
+        {
+            throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
+        }
     }
 
     public void ClearValue(DependencyProperty dp)
     {
-        bool changed = _localValues.Remove(dp);
+        object? oldEffective = GetValue(dp);
+
         // Clearing the local value removes the post-trigger override flag; the trigger
         // value (if still present) will naturally surface from GetValue.
-        // Even when no local value was present, removing the override flag can expose a
-        // different effective value (the trigger's), so treat it as a change.
-        changed = changed || (_localOverridesActiveTrigger.Remove(dp) && _triggerValues.ContainsKey(dp));
-        if (changed)
+        bool removedLocal = _localValues.Remove(dp);
+        bool removedOverride = _localOverridesActiveTrigger.Remove(dp);
+        if (!removedLocal && !removedOverride) return;
+
+        if (!Equals(oldEffective, GetValue(dp)))
         {
             OnPropertyChanged(dp);
         }
@@ -125,15 +155,15 @@ public class DependencyObject : INotifyPropertyChanged
         // legacy DPs stay source-compatible.
         value = CoerceLegacyColor(dp, value);
 
-        // Basic type validation
-        if (value != null && !dp.PropertyType.IsInstanceOfType(value))
-        {
-            throw new ArgumentException($"Value of type {value.GetType()} is not assignable to property {dp.Name} of type {dp.PropertyType}");
-        }
+        ValidateValue(dp, value);
 
+        object? oldEffective = GetValue(dp);
         _triggerValues[dp] = value ?? null!;
 
-        OnPropertyChanged(dp);
+        if (!Equals(oldEffective, GetValue(dp)))
+        {
+            OnPropertyChanged(dp);
+        }
     }
 
     private static object? CoerceLegacyColor(DependencyProperty dp, object? value)
@@ -148,12 +178,17 @@ public class DependencyObject : INotifyPropertyChanged
 
     internal void ClearTriggerValue(DependencyProperty dp)
     {
+        object? oldEffective = GetValue(dp);
         if (_triggerValues.Remove(dp))
         {
             // Trigger is no longer active; any post-trigger local override is now just a
             // regular local value, so remove the flag.
             _localOverridesActiveTrigger.Remove(dp);
-            OnPropertyChanged(dp);
+
+            if (!Equals(oldEffective, GetValue(dp)))
+            {
+                OnPropertyChanged(dp);
+            }
         }
     }
 
