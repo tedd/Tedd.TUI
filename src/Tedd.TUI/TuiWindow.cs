@@ -53,12 +53,39 @@ public class TuiWindow : UIElement
     {
         Content?.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
 
-        // Overlays are managed/arranged manually by their creators (e.g. DialogBox.Show calls Arrange)
-        // or we assume they have valid RenderSize.
-        // Overlays are typically absolutely positioned by their creator (e.g. DialogBox.Show),
-        // but we should ensure they are measured/arranged if the window resizes?
-        // For now, we rely on the fact that Show() calls Arrange().
-        // If we need to support resizing updates for overlays, we'd iterate _overlays here.
+        // Overlays are absolutely positioned by their creators (DialogBox.Show, menu /
+        // combobox popups). The window re-fits them on every layout pass so a terminal
+        // resize can't strand them: dialogs re-center (mirroring DialogBox.Show),
+        // everything else keeps its position but is clamped into the new bounds.
+        for (int i = 0; i < _overlays.Count; i++)
+        {
+            var overlay = _overlays[i];
+
+            if (overlay is DialogBox)
+            {
+                overlay.Measure(new Size(finalSize.Width, finalSize.Height));
+                int w = Math.Min(overlay.DesiredSize.Width, finalSize.Width);
+                int h = Math.Min(overlay.DesiredSize.Height, finalSize.Height);
+                int x = Math.Max(0, (finalSize.Width - w) / 2);
+                int y = Math.Max(0, (finalSize.Height - h) / 2);
+                overlay.Arrange(new Rect(x, y, w, h));
+            }
+            else
+            {
+                var r = overlay.RenderSize;
+                if (r.Width <= 0 || r.Height <= 0) continue; // not arranged by its creator yet
+
+                int w = Math.Min(r.Width, finalSize.Width);
+                int h = Math.Min(r.Height, finalSize.Height);
+                int x = Math.Clamp(r.X, 0, Math.Max(0, finalSize.Width - w));
+                int y = Math.Clamp(r.Y, 0, Math.Max(0, finalSize.Height - h));
+
+                if (x != r.X || y != r.Y || w != r.Width || h != r.Height)
+                {
+                    overlay.Arrange(new Rect(x, y, w, h));
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -418,21 +445,14 @@ public class TuiWindow : UIElement
 
     private Point GetAbsolutePosition(UIElement element)
     {
-        int x = 0;
-        int y = 0;
-        var current = element;
-        while (current != null)
-        {
-            x += current.RenderSize.X;
-            y += current.RenderSize.Y;
-            current = current.Parent;
-        }
-        return new Point(x, y);
+        // PointToScreen applies the ScrollViewer content translation, so captured-mouse
+        // coordinates stay correct for elements inside scrolled content.
+        return element.PointToScreen(new Point(0, 0));
     }
 
     private HitTestResult InputHitTestRecursive(UIElement element, int x, int y)
     {
-        if (!element.Visibility) return null;
+        if (!element.Visibility || !element.IsEnabled) return null;
 
         // x and y are relative to element.Parent
 
@@ -474,6 +494,61 @@ public class TuiWindow : UIElement
 
         return null;
     }
+
+    /// <summary>
+    /// Routes a mouse event through hit testing, focus acquisition, preview tunneling,
+    /// and bubbling. Platform input managers should translate native coordinates and
+    /// delegate here so all front ends share the same interaction semantics.
+    /// </summary>
+    public void ProcessMouse(MouseEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(e);
+
+        RoutedEvent? previewEvent = null;
+        if (e.RoutedEvent == UIElement.MouseDownEvent)
+            previewEvent = UIElement.PreviewMouseDownEvent;
+        else if (e.RoutedEvent == UIElement.MouseUpEvent)
+            previewEvent = UIElement.PreviewMouseUpEvent;
+        else if (e.RoutedEvent == UIElement.MouseMoveEvent)
+            previewEvent = UIElement.PreviewMouseMoveEvent;
+        else
+            throw new ArgumentException("The routed event must be a mouse down, up, or move event.", nameof(e));
+
+        var hit = InputHitTest(e.GlobalX, e.GlobalY);
+        if (hit == null)
+            return;
+
+        if (e.RoutedEvent == UIElement.MouseDownEvent)
+        {
+            UIElement? focusTarget = hit.Element;
+            while (focusTarget != null && focusTarget != this)
+            {
+                if (CanFocus(focusTarget))
+                {
+                    SetFocus(focusTarget);
+                    break;
+                }
+
+                focusTarget = focusTarget.Parent;
+            }
+        }
+
+        var previewArgs = new MouseEventArgs(previewEvent, hit.Element)
+        {
+            GlobalX = e.GlobalX,
+            GlobalY = e.GlobalY
+        };
+
+        hit.Element.RaiseEvent(previewArgs);
+        if (previewArgs.Handled)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        hit.Element.RaiseEvent(e);
+    }
+
 
     /// <summary>
     /// Sets focus to the first focusable element when none is set (e.g. on startup).

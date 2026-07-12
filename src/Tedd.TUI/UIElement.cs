@@ -197,9 +197,20 @@ public abstract class UIElement : DependencyObject
 
     public void SetBinding(DependencyProperty dp, Binding binding)
     {
+        // A property holds at most one binding: replacing detaches the old expression,
+        // otherwise its INPC subscription lives on and keeps writing the property.
+        for (int i = _bindings.Count - 1; i >= 0; i--)
+        {
+            if (_bindings[i].TargetProperty == dp)
+            {
+                _bindings[i].Detach();
+                _bindings.RemoveAt(i);
+            }
+        }
+
         var expr = new BindingExpression(this, dp, binding);
         _bindings.Add(expr);
-        expr.UpdateTarget();
+        expr.Attach();
     }
 
     protected override void OnPropertyChanged(DependencyProperty dp)
@@ -644,6 +655,18 @@ public abstract class UIElement : DependencyObject
         {
             x += current.RenderSize.X;
             y += current.RenderSize.Y;
+
+            // A ScrollViewer (and Border, which derives from it) renders its Content
+            // translated by the scroll offsets. Hit-testing already compensates for
+            // this; the coordinate walk must apply the same translation or every
+            // local coordinate inside scrolled content is off by the scroll offset
+            // (mis-placed carets on click, wrong drag deltas under mouse capture).
+            if (current.Parent is ScrollViewer sv && ReferenceEquals(current, sv.Content))
+            {
+                x -= sv.HorizontalOffset;
+                y -= sv.VerticalOffset;
+            }
+
             current = current.Parent;
         }
         return new Point(x, y);
