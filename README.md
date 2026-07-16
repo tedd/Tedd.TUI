@@ -139,14 +139,7 @@ class Program
         // 4. Initialize the application with the Console platform
         var app = new TuiApp(window);
 
-        // 5. Define the UI layout
-        var stack = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
+        // 5. Define the UI layout components
         // Title TextBlock
         var titleBlock = new TextBlock
         {
@@ -154,7 +147,6 @@ class Program
             Foreground = ConsoleColor.Cyan,
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        stack.Children.Add(titleBlock); // UIElementCollection sets Parent automatically
 
         // Status TextBlock with Data Binding
         var statusBlock = new TextBlock
@@ -164,7 +156,6 @@ class Program
         };
         // Bind Text property to ViewModel.Status
         statusBlock.SetBinding(TextBlock.TextProperty, new Binding("Status"));
-        stack.Children.Add(statusBlock);
 
         // Button with Click Handler and DOS-era aesthetics
         var button = new Button
@@ -179,7 +170,20 @@ class Program
         {
             viewModel.OnButtonClick();
         };
-        stack.Children.Add(button);
+
+        // Assemble the UI layout utilizing C# collection initializers
+        var stack = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children =
+            {
+                titleBlock,
+                statusBlock,
+                button
+            }
+        };
 
         // 6. Set the window content
         window.Content = stack;
@@ -199,7 +203,7 @@ At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation
 
 ### Data Binding
 Tedd.TUI implements a hierarchical data binding infrastructure analogous to WPF, systematically driven by the `DataContext` inherited dependency property. This established framework capability mitigates the need for speculative manual state synchronization.
-- **DataContext Inheritance:** The `DataContext` property is an explicitly defined inherited dependency property. The `DependencyObject` base architecture resolves inherited values by recursively querying `InheritanceParent` (which maps to `Parent` in `UIElement`). Assigning a `DataContext` at the visual root (e.g., `TuiWindow`) makes the data model available to descendant elements that have not set a local `DataContext`. Propagation is implemented in `UIElement.OnPropertyChanged` for inherited dependency properties by enumerating `GetVisualChild` and calling `OnPropertyChanged(dp)` on children that do not have a local value, which in turn updates bindings.
+- **DataContext Inheritance:** The `DataContext` property is an explicitly defined inherited dependency property. The `DependencyObject` base architecture resolves inherited values by recursively querying `InheritanceParent` (which maps to `Parent` in `UIElement`). Assigning a `DataContext` at the visual root (e.g., `TuiWindow`) makes the data model available to descendant elements that have not set a local `DataContext`. **Architectural Mandate:** Explicit local value assignments on child controls (e.g., within `OnDataContextChanged` overrides or container setters) incorrectly override and break this WPF-isomorphic inheritance mechanism, and thus must be strictly avoided. Propagation is implemented in `UIElement.OnPropertyChanged` for inherited dependency properties by enumerating `GetVisualChild` and calling `OnPropertyChanged(dp)` on children that do not have a local value, which in turn updates bindings.
 - **INotifyPropertyChanged:** Models must implement `System.ComponentModel.INotifyPropertyChanged`. The internal `BindingExpression` autonomously hooks and unhooks to `PropertyChanged` events upon `DataContext` mutations, re-evaluating reflection paths when property names match or signify wholesale updates.
 - **Binding Resolutions:** The `SetBinding` method establishes a dynamic link between a target dependency property and a source property. While bindings default to resolving against the ambient `DataContext`, the framework exposes robust `RelativeSource` topologies:
   - `Self`: Targets the `UIElement` itself.
@@ -210,7 +214,7 @@ Tedd.TUI implements a hierarchical data binding infrastructure analogous to WPF,
 ### Layout Engine
 The framework employs a robust, recursive two-pass layout system orchestrated by the abstract `Panel` class:
 1.  **Measure Pass:** Container elements recursively query their children, invoking `Measure(Size availableSize)` to compute their `DesiredSize` based on layout constraints. The `UIElement` explicitly calculates requested bounds factoring in the `Margin` dependency property (`Thickness`), effectively reducing the available size passed down. Note that standard WPF layout invalidation (`InvalidateMeasure()`) is absent; topological re-evaluation is universally triggered via `Invalidate()`.
-2.  **Arrange Pass:** Parents position and size their children within the computed physical bounds by invoking `Arrange(Rect finalRect)`, which applies structural offsets for `Margin`. Container controls inheriting from `Control` further apply `Padding` (`Thickness`) during their `MeasureOverride` and `ArrangeOverride` operations to reduce inner available space for their embedded `TemplateRoot`. Within layout calculations, exact element dimensions must be accessed via `RenderSize.Width` and `RenderSize.Height` instead of the traditional `ActualWidth` and `ActualHeight` properties.
+2.  **Arrange Pass:** Parents position and size their children within the computed physical bounds by invoking `Arrange(Rect finalRect)`, which applies structural offsets for `Margin`. Container controls inheriting from `Control` further apply `Padding` (`Thickness`) during their `MeasureOverride` and `ArrangeOverride` operations to reduce inner available space for their embedded `TemplateRoot`. Within layout calculations, exact element dimensions must be accessed via `RenderSize.Width` and `RenderSize.Height` instead of the traditional `ActualWidth` and `ActualHeight` properties. Additionally, string allocations during layout calculation (e.g., `TextBlock.WrapSingleLine`) are optimized by replacing `System.Text.StringBuilder` with `Span<char>` and `stackalloc char[maxWidth]`, utilizing `ReadOnlySpan<char>` slicing to eliminate GC overhead.
 3.  **Render Pass:** The actual rendering to the `VirtualBuffer` is heavily optimized. Containers executing the `Render` method utilize clipping rects to skip elements that are fully clipped or lie completely outside the current clip rectangle, drastically reducing CPU cycles in complex visual trees.
 
 **Hierarchical Composition:** The abstract `Panel` base class manages composition via its `Children` property (a `UIElementCollection`). For concrete descendants (`StackPanel`, `Grid`, `DockPanel`, `WrapPanel`, `Canvas`, and `UniformGrid`), this collection systematically intercepts modifications. Executing `Panel.Children.Add(child)` strictly enforces visual tree integrity by automatically assigning the parent node, which inherently triggers `DataContext` propagation and establishes the routing infrastructure for input events. To ensure rendering fidelity while minimizing GC pressure, `Panel` maintains a cached `_zSortedChildren` array that is rebuilt when Z-order is invalidated and performs stable Z-Index sorting via a custom $O(N \log N)$ iterative merge sort using temporary buffers rented from `ArrayPool<T>`, rather than relying on ad-hoc in-place permutations.
@@ -284,6 +288,8 @@ app.Run();
 
 **Controller:**
 ```csharp
+using Tedd.TUI;
+
 class MyController
 {
     // Field name matches x:Name in XAML for injection
