@@ -1,3 +1,17 @@
+// Intent: Support AutoGenerateColumns, collection changed actions (Add, Remove, Reset), and compile-time expression getters in DataGrid.
+// Why:
+// - Enable dynamic columns generation based on binded item type properties.
+// - Optimize property getter performance by compiling lambda expressions and caching them.
+// - Support standard NotifyCollectionChangedAction events to keep visual items synchronized with the ItemsSource.
+// Constraints/Invariants:
+// - Columns collection changes invalidate cached property getters and trigger full visual refresh.
+// - Compiled getters must be thread-safe during dictionary updates using _globalCompiledGettersLock.
+// Failure modes:
+// - Expression compilation might fail for non-public or complex properties, handled via fallback reflection getter.
+// Verification:
+// - Run dotnet test.
+// Refs: N/A
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -107,6 +121,7 @@ public class DataGrid : ItemsControl
 
     public DataGrid()
     {
+        Focusable = true;
         _table = new Table();
         // Forward Table events
         _table.SelectionChanged += OnTableSelectionChanged;
@@ -430,7 +445,7 @@ public class DataGrid : ItemsControl
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-        _table.Render(buffer, offsetX, offsetY);
+        _table.Render(buffer, offsetX + RenderSize.X, offsetY + RenderSize.Y);
     }
 
     // Input
