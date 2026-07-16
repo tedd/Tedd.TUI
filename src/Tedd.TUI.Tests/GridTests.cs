@@ -1,11 +1,49 @@
 using System;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
 public class GridTests
 {
+    [Fact]
+    public void MouseClick_GridCells_RouteToOnlyArrangedButton()
+    {
+        var first = new Button { Content = "One" };
+        var second = new Button { Content = "Two" };
+        var grid = new Grid { Width = 16, Height = 6 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Pixel(8) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Pixel(8) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Pixel(3) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Pixel(3) });
+        grid.AddChild(first);
+        grid.AddChild(second);
+        Grid.SetColumn(first, 0);
+        Grid.SetRow(first, 0);
+        Grid.SetColumn(second, 1);
+        Grid.SetRow(second, 1);
+
+        var border = new Border { Child = grid, Width = 18, Height = 8 };
+        var surface = new StackPanel();
+        surface.AddChild(new TextBlock { Text = "grid" });
+        surface.AddChild(border);
+        var host = new ControlTestHost(surface, 18, 9);
+        int firstClicks = 0;
+        int secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        host.Click(first, 1, 1);
+        Assert.Equal((1, 0), (firstClicks, secondClicks));
+
+        host.Click(second, 1, 1);
+        Assert.Equal((1, 1), (firstClicks, secondClicks));
+
+        host.Click(grid, 10, 1);
+        Assert.Equal((1, 1), (firstClicks, secondClicks));
+    }
+
     [Fact]
     public void Grid_Pixel_Sizing_IsCorrect()
     {
