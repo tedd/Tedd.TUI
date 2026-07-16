@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 using Xunit;
 
 namespace Tedd.TUI.Tests;
@@ -121,30 +122,43 @@ public class TabControlTests
     }
 
     [Fact]
-    public void TabControl_OnMouseDown_SwitchesTabs()
+    public void MouseClick_NestedTabControl_SwitchesOnlyClickedHeader()
     {
-        var tabControl = new TabControl();
+        var tabControl = new TabControl { Width = 20, Height = 6 };
         tabControl.Items.Add(new TabItem { Header = "T1" }); // " T1 " length = 4
         tabControl.Items.Add(new TabItem { Header = "Tab 2" }); // " Tab 2 " length = 7
         tabControl.Items.Add(new TabItem { Header = "T3" }); // " T3 " length = 4
-
         tabControl.SelectedIndex = 0;
+        var sibling = new Button { Content = "Other", Width = 8 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        row.AddChild(tabControl);
+        row.AddChild(new TextBlock { Text = "  " });
+        row.AddChild(sibling);
+        var surface = new StackPanel();
+        surface.AddChild(new TextBlock { Text = "Tabs" });
+        surface.AddChild(row);
+        surface.AddChild(new TextBlock { Text = "status" });
+        var host = new ControlTestHost(new Border { Child = surface }, 32, 10);
 
         // Click on T1 (X: 0 to 3)
-        tabControl.OnMouseDown(new MouseEventArgs { X = 2, Y = 0 });
+        host.Click(tabControl, 2, 0);
         Assert.Equal(0, tabControl.SelectedIndex);
 
         // Click on Tab 2 (X: 5 to 11) -> 4 + 1(gap) = 5
-        tabControl.OnMouseDown(new MouseEventArgs { X = 6, Y = 0 });
+        host.Click(tabControl, 6, 0);
         Assert.Equal(1, tabControl.SelectedIndex);
 
         // Click on T3 (X: 13 to 16) -> 5 + 7 + 1 = 13
-        tabControl.OnMouseDown(new MouseEventArgs { X = 14, Y = 0 });
+        host.Click(tabControl, 14, 0);
         Assert.Equal(2, tabControl.SelectedIndex);
 
-        // Click below header
-        tabControl.OnMouseDown(new MouseEventArgs { X = 2, Y = 1 });
+        // Click the header gap, content separator, surrounding surface, and sibling.
+        host.Click(tabControl, 4, 0);
+        host.Click(tabControl, 2, 1);
+        host.Click(30, 8);
+        host.Click(sibling, 2, 1);
         Assert.Equal(2, tabControl.SelectedIndex);
+        Assert.True(sibling.IsFocused);
     }
 
     [Fact]
