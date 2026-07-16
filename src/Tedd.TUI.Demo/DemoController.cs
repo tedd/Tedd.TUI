@@ -149,17 +149,44 @@ public class DemoController
             // Let's keep XAML rows and append.
             // DemoTable.Rows.Clear();
 
-            AddTableRow("10", "Alice", "30");
-            AddTableRow("2", "Bob", "25");
-            AddTableRow("1", "Charlie", "35");
-            AddTableRow("20", "David", "40", true);
-            AddTableRow("3", "Eve", "22");
-            AddTableRow("4", "Frank", "28");
-            AddTableRow("5", "Grace", "31");
-            AddTableRow("6", "Heidi", "24");
-            AddTableRow("7", "Ivan", "45");
-            AddTableRow("8", "Judy", "33");
-            AddTableRow("9", "Mallory", "29");
+            var allData = new List<object[]>();
+
+            // Helper to create Edit Button in controller context
+            UIElement CreateEditBtn(string name)
+            {
+                var btn = new Button { Content = "Edit" };
+                btn.Click += (s, e) => LogBox?.Items.Add($"Edit Clicked: {name}");
+                return btn;
+            }
+
+            allData.Add(new object[] { "10", "Alice", "30", CreateEditBtn("Alice") });
+            allData.Add(new object[] { "2", "Bob", "25", CreateEditBtn("Bob") });
+            allData.Add(new object[] { "1", "Charlie", "35", CreateEditBtn("Charlie") });
+            allData.Add(new object[] { "20", "David", "40", new CheckBox { Content = "Active", IsChecked = true } }); // UI Element in cell
+            allData.Add(new object[] { "3", "Eve", "22", CreateEditBtn("Eve") });
+
+            // Add 20 more items as requested
+            for (int i = 1; i <= 20; i++)
+            {
+                allData.Add(new object[] { $"{100 + i}", $"User {i}", $"{20 + (i % 30)}", CreateEditBtn($"User {i}") });
+            }
+
+            DemoTable.PageSize = 5;
+            DemoTable.TotalRows = allData.Count;
+
+            void LoadPage()
+            {
+                DemoTable.Rows.Clear();
+                var page = DemoTable.CurrentPage;
+                int start = page * DemoTable.PageSize;
+                int count = Math.Min(DemoTable.PageSize, allData.Count - start);
+                for (int i = 0; i < count; i++)
+                {
+                    DemoTable.AddRow(allData[start + i]);
+                }
+            }
+            DemoTable.PageChanged += (s, e) => LoadPage();
+            LoadPage();
         }
 
         // Init ScrollViewer content
