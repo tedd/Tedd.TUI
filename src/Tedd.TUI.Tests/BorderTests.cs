@@ -1,11 +1,42 @@
 using Xunit;
 using Tedd.TUI;
 using System;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
 public class BorderTests
 {
+    [Fact]
+    public void MouseClick_NestedButtons_RoutesThroughBorderToOnlyClickedButton()
+    {
+        var first = new Button { Content = "One", Width = 5, Height = 3 };
+        var second = new Button { Content = "Two", Width = 5, Height = 3 };
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+        buttons.AddChild(first);
+        buttons.AddChild(new TextBlock { Text = ".." });
+        buttons.AddChild(second);
+
+        var border = new Border { Child = buttons, Width = 14, Height = 5 };
+        var surface = new StackPanel();
+        surface.AddChild(new TextBlock { Text = "outside" });
+        surface.AddChild(border);
+        var host = new ControlTestHost(surface, 14, 6);
+        int firstClicks = 0;
+        int secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        host.Click(first, 1, 1);
+        Assert.Equal((1, 0), (firstClicks, secondClicks));
+
+        host.Click(second, 1, 1);
+        Assert.Equal((1, 1), (firstClicks, secondClicks));
+
+        host.Click(0, 0);
+        Assert.Equal((1, 1), (firstClicks, secondClicks));
+    }
+
     private class MeasuringChild : UIElement
     {
         public Size LastMeasureSize { get; private set; }
