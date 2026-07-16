@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -69,26 +70,37 @@ public class ExpanderTests
     }
 
     [Fact]
-    public void Expander_Toggle_By_Mouse_Click_On_Header()
+    public void MouseClick_NestedExpanders_TogglesOnlyClickedHeader()
     {
-        var expander = new Expander
+        var first = new Expander
         {
-            Header = "Options",
-            Content = new TextBlock { Text = "Content" }
+            Header = "First",
+            Content = new TextBlock { Text = "First content" }
         };
+        var second = new Expander
+        {
+            Header = "Second",
+            Content = new TextBlock { Text = "Second content" }
+        };
+        var panel = new StackPanel();
+        panel.AddChild(new TextBlock { Text = "Expand sections" });
+        panel.AddChild(first);
+        panel.AddChild(new TextBlock { Text = "between" });
+        panel.AddChild(second);
+        panel.AddChild(new TextBlock { Text = "footer" });
+        var host = new ControlTestHost(new Border { Child = panel }, 24, 16);
 
-        expander.Measure(new Size(80, 24));
-        expander.Arrange(new Rect(0, 0, expander.DesiredSize.Width, expander.DesiredSize.Height));
+        host.Click(first, 2, 0);
+        Assert.True(first.IsExpanded);
+        Assert.False(second.IsExpanded);
 
-        Assert.False(expander.IsExpanded);
+        host.Click(second, 2, 0);
+        Assert.True(first.IsExpanded);
+        Assert.True(second.IsExpanded);
 
-        expander.OnMouseDown(new MouseEventArgs { Y = 1 });
-
-        Assert.True(expander.IsExpanded);
-
-        expander.OnMouseDown(new MouseEventArgs { Y = 1 });
-
-        Assert.False(expander.IsExpanded);
+        host.Click(first, 2, 0);
+        Assert.False(first.IsExpanded);
+        Assert.True(second.IsExpanded);
     }
 
     [Fact]
