@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -224,19 +225,130 @@ public class DataGridTests
     }
 
     [Theory]
-    [InlineData(0, 0)]
-    [InlineData(10, 10)]
-    [InlineData(-1, -1)]
-    public void InputRouting_MouseEvents_PassedToInternalTable(int x, int y)
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void MouseClick_SelectsEachRow_WithEveryHeaderAndBorderCombination(
+        bool showHeader,
+        bool showBorder)
     {
-        var grid = new DataGrid { AutoGenerateColumns = false };
-        grid.Columns.Add(new DataGridColumn { Header = "Name", BindingPath = "Name" });
-        grid.ItemsSource = new List<Person> { new Person { Name = "Test" } };
+        var people = CreatePeople(5);
+        var grid = CreateGrid(people, showHeader, showBorder);
+        var host = new ControlTestHost(grid, 20, 10);
+        int bodyY = (showBorder ? 1 : 0) + (showHeader ? 2 : 0);
+        int selectionChanges = 0;
+        grid.SelectionChanged += (_, _) => selectionChanges++;
 
-        var mouseArgs = new MouseEventArgs { X = x, Y = y };
-        grid.OnMouseDown(mouseArgs);
+        for (int rowIndex = 0; rowIndex < people.Count; rowIndex++)
+        {
+            host.Click(grid, showBorder ? 1 : 0, bodyY + rowIndex);
 
-        // Asserting no exception.
+            Assert.True(((Table)grid.GetVisualChild(0)).IsFocused);
+            Assert.Equal(rowIndex, grid.SelectedIndex);
+            Assert.Same(people[rowIndex], grid.SelectedItem);
+        }
+
+        Assert.Equal(people.Count, selectionChanges);
+    }
+
+    [Fact]
+    public void MouseClick_NestedInPanelsAndBorder_SelectsScreenRowNotParentRelativeRow()
+    {
+        var people = CreatePeople(6);
+        var grid = CreateGrid(people, showHeader: true, showBorder: true);
+        var borderedGrid = new Border
+        {
+            Child = grid,
+            BoxStyle = BoxStyle.Double,
+            Width = 22,
+            Height = 11
+        };
+        var nestedPanel = new StackPanel();
+        nestedPanel.AddChild(new TextBlock { Text = "toolbar" });
+        nestedPanel.AddChild(new TextBlock { Text = "status" });
+        nestedPanel.AddChild(borderedGrid);
+        var host = new ControlTestHost(nestedPanel, 22, 13);
+
+        // Grid local row 4 is screen row 2 (panel offset) + 1 (Border) + 3 + 4.
+        host.Click(grid, 1, 3 + 4);
+
+        Assert.Equal(4, grid.SelectedIndex);
+        Assert.Same(people[4], grid.SelectedItem);
+    }
+
+    [Fact]
+    public void MouseClick_InsideScrolledNestedContent_SelectsVisibleScreenRow()
+    {
+        var people = CreatePeople(6);
+        var grid = CreateGrid(people, showHeader: true, showBorder: false);
+        grid.Height = 8;
+
+        var scrolledContent = new StackPanel();
+        scrolledContent.AddChild(new TextBlock { Text = "one" });
+        scrolledContent.AddChild(new TextBlock { Text = "two" });
+        scrolledContent.AddChild(new TextBlock { Text = "three" });
+        scrolledContent.AddChild(grid);
+
+        var outerScrollViewer = new ScrollViewer
+        {
+            Content = scrolledContent,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        var host = new ControlTestHost(outerScrollViewer, 20, 6);
+        outerScrollViewer.ScrollToVerticalOffset(5);
+
+        // After the outer offset, DataGrid row 3 is visibly rendered at screen Y=3.
+        Assert.Equal(new Point(0, -2), grid.PointToScreen(new Point(0, 0)));
+        host.Click(grid, 0, 2 + 3);
+
+        Assert.Equal(3, grid.SelectedIndex);
+        Assert.Same(people[3], grid.SelectedItem);
+    }
+
+    [Fact]
+    public void MouseClick_AfterDataGridBodyScroll_SelectsScrolledRow()
+    {
+        var people = CreatePeople(10);
+        var grid = CreateGrid(people, showHeader: true, showBorder: true);
+        var host = new ControlTestHost(grid, 20, 8);
+        var table = (Table)grid.GetVisualChild(0);
+        var bodyScrollViewer = (ScrollViewer)table.GetVisualChild(0);
+        Assert.True(bodyScrollViewer.IsVerticalScrollBarShown);
+
+        bodyScrollViewer.ScrollToVerticalOffset(4);
+        host.Click(grid, 1, 3 + 1);
+
+        Assert.Equal(5, grid.SelectedIndex);
+        Assert.Same(people[5], grid.SelectedItem);
+    }
+
+    [Fact]
+    public void MouseClick_HeaderBorderScrollbarAndSibling_DoNotChangeSelection()
+    {
+        var people = CreatePeople(10);
+        var grid = CreateGrid(people, showHeader: true, showBorder: true);
+        grid.Width = 20;
+        var root = new StackPanel { Orientation = Orientation.Horizontal };
+        root.AddChild(grid);
+        root.AddChild(new Button { Content = "Other", Width = 7 });
+        var host = new ControlTestHost(root, 27, 8);
+
+        grid.SelectedIndex = 4;
+
+        host.Click(grid, 1, 0);
+        Assert.Equal(4, grid.SelectedIndex);
+
+        host.Click(grid, 1, 1);
+        Assert.Equal(4, grid.SelectedIndex);
+
+        host.Click(grid, 18, 4);
+        Assert.Equal(4, grid.SelectedIndex);
+
+        host.Click(23, 1);
+        Assert.Equal(4, grid.SelectedIndex);
+        Assert.Same(people[4], grid.SelectedItem);
     }
 
     [Theory]
@@ -275,5 +387,31 @@ public class DataGridTests
         var table = (Table)grid.GetVisualChild(0);
         var row = table.Rows[0];
         Assert.Equal(typeof(Person).FullName, ((TextBlock)row.Cells[0]).Text);
+    }
+
+    private static List<Person> CreatePeople(int count) =>
+        Enumerable.Range(0, count)
+            .Select(index => new Person { Name = $"Person {index}", Age = 20 + index })
+            .ToList();
+
+    private static DataGrid CreateGrid(
+        List<Person> people,
+        bool showHeader,
+        bool showBorder)
+    {
+        var grid = new DataGrid
+        {
+            AutoGenerateColumns = false,
+            ShowHeader = showHeader,
+            ShowBorder = showBorder
+        };
+        grid.Columns.Add(new DataGridColumn
+        {
+            Header = "Name",
+            BindingPath = "Name",
+            Width = new GridLength(18, GridUnitType.Pixel)
+        });
+        grid.ItemsSource = people;
+        return grid;
     }
 }

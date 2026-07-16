@@ -79,6 +79,30 @@ internal sealed class ControlTestHost
     public MouseEventArgs MouseUp(int x, int y) =>
         Mouse(UIElement.MouseUpEvent, x, y);
 
+    /// <summary>
+    /// Performs the complete primary-button click sequence used by the platform hosts.
+    /// Coordinates are relative to the test window.
+    /// </summary>
+    public (MouseEventArgs Down, MouseEventArgs Up) Click(int x, int y)
+    {
+        var down = MouseDown(x, y);
+        var up = MouseUp(x, y);
+        return (down, up);
+    }
+
+    /// <summary>
+    /// Performs a complete primary-button click at a point relative to an element.
+    /// Converting through <see cref="UIElement.PointToScreen"/> makes this suitable for
+    /// deeply nested elements, including content translated by one or more scroll viewers.
+    /// </summary>
+    public (MouseEventArgs Down, MouseEventArgs Up) Click(UIElement element, int x, int y)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+
+        var screenPoint = element.PointToScreen(new Point(x, y));
+        return Click(screenPoint.X, screenPoint.Y);
+    }
+
     private MouseEventArgs Mouse(RoutedEvent routedEvent, int x, int y)
     {
         var args = new MouseEventArgs(routedEvent)
