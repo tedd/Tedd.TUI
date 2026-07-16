@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using Tedd.TUI.Tests.TestInfrastructure;
 using Xunit;
 
 namespace Tedd.TUI.Tests;
@@ -199,31 +200,50 @@ public class ComboBoxTests
     }
 
     [Fact]
-    public void ToggleDropdown_OnMouseDown()
+    public void MouseClick_NestedComboBoxes_OpensOnlyTargetAndSelectsClickedItem()
     {
-        var window = new TuiWindow();
-        var cb = new ComboBox();
-        cb.Items.Add("Item 1");
-        window.Content = cb;
+        var first = new ComboBox { Width = 12 };
+        first.Items.Add("First A");
+        first.Items.Add("First B");
 
-        window.Measure(new Size(80, 24));
-        window.Arrange(new Rect(0, 0, 80, 24));
+        var second = new ComboBox { Width = 12 };
+        second.Items.Add("Second A");
+        second.Items.Add("Second B");
 
-        // Should open dropdown
-        cb.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
-        cb.Focus(); // Ensure it takes focus for testing rendering properties
-        Assert.True(cb.IsFocused);
+        var controls = new StackPanel { Orientation = Orientation.Horizontal };
+        controls.AddChild(first);
+        controls.AddChild(new TextBlock { Text = "   " });
+        controls.AddChild(second);
 
-        // Check if overlay was added (Border -> ListBox)
-        // TuiWindow private _overlays accessed implicitly via VisualChildrenCount or GetVisualChild
-        // The dropdown adds an overlay to TuiWindow. TuiWindow returns overlays at the end of GetVisualChild
-        Assert.Equal(2, window.VisualChildrenCount); // Content (ComboBox) + Overlay (Border)
-        var overlay = window.GetVisualChild(1);
-        Assert.IsAssignableFrom<Border>(overlay);
+        var surface = new StackPanel();
+        surface.AddChild(new TextBlock { Text = "Choose one:" });
+        surface.AddChild(controls);
+        surface.AddChild(new TextBlock { Text = "status area" });
 
-        // Should close dropdown
-        cb.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
-        Assert.Equal(1, window.VisualChildrenCount);
+        var host = new ControlTestHost(new Border { Child = surface }, 32, 10);
+
+        host.Click(first, 4, 0);
+
+        Assert.Equal(-1, first.SelectedIndex);
+        var firstPopup = Assert.IsAssignableFrom<Border>(host.Window.GetVisualChild(1));
+        var firstPopupList = Assert.IsType<ListBox>(firstPopup.Child);
+        Assert.True(firstPopupList.IsFocused);
+
+        host.Click(firstPopupList, 2, 1);
+
+        Assert.Equal(1, first.SelectedIndex);
+        Assert.Equal("First B", first.SelectedItem);
+        Assert.Equal(1, host.Window.VisualChildrenCount);
+
+        host.Click(second, 4, 0);
+        var secondPopup = Assert.IsAssignableFrom<Border>(host.Window.GetVisualChild(1));
+        var secondPopupList = Assert.IsType<ListBox>(secondPopup.Child);
+        host.Click(secondPopupList, 2, 0);
+
+        Assert.Equal(1, first.SelectedIndex);
+        Assert.Equal(0, second.SelectedIndex);
+        Assert.Equal("Second A", second.SelectedItem);
+        Assert.Equal(1, host.Window.VisualChildrenCount);
     }
 
     [Theory]
