@@ -50,18 +50,15 @@ public class NumericUpDownTests
         Assert.Equal(5, nud.Value);
         VirtualBufferAssertions.EqualText("[-]   5 [+]", host.Render());
 
-        var down = host.MouseDown(1, 0); // [-]
-        host.MouseUp(1, 0);
+        var (down, _) = host.Click(nud, 1, 0); // [-]
 
         Assert.True(down.Handled);
         Assert.True(nud.IsFocused);
         Assert.Equal(4, nud.Value);
         VirtualBufferAssertions.EqualText("[-]   4 [+]", host.Render());
 
-        host.MouseDown(9, 0); // [+]
-        host.MouseUp(9, 0);
-        host.MouseDown(9, 0);
-        host.MouseUp(9, 0);
+        host.Click(nud, 9, 0); // [+]
+        host.Click(nud, 9, 0);
 
         Assert.Equal(6, nud.Value);
         VirtualBufferAssertions.EqualText("[-]   6 [+]", host.Render());
@@ -73,8 +70,7 @@ public class NumericUpDownTests
         var nud = new NumericUpDown { Value = 5 };
         var host = new ControlTestHost(nud, 11, 1);
 
-        host.MouseDown(5, 0);
-        host.MouseUp(5, 0);
+        host.Click(nud, 5, 0);
 
         Assert.True(nud.IsFocused);
         Assert.Equal(5, nud.Value);
@@ -122,7 +118,7 @@ public class NumericUpDownTests
         host.PressKey(ConsoleKey.UpArrow);
         Assert.Equal(15, nud.Value);
 
-        host.MouseDown(1, 0); // [-]
+        host.Click(nud, 1, 0); // [-]
         Assert.Equal(10, nud.Value);
     }
 
@@ -172,7 +168,7 @@ public class NumericUpDownTests
         host.PressKey(ConsoleKey.UpArrow); // clamped at 2, no change
         Assert.Equal(1, changes);
 
-        host.MouseDown(1, 0); // [-]: 2 -> 1
+        host.Click(nud, 1, 0); // [-]: 2 -> 1
         Assert.Equal(2, changes);
     }
 
@@ -182,12 +178,37 @@ public class NumericUpDownTests
         var nud = new NumericUpDown { Value = 5, IsEnabled = false };
         var host = new ControlTestHost(nud, 11, 1);
 
-        host.MouseDown(1, 0);
-        host.MouseUp(1, 0);
+        host.Click(nud, 1, 0);
         Assert.Equal(5, nud.Value);
         Assert.False(nud.IsFocused);
 
         nud.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.UpArrow });
         Assert.Equal(5, nud.Value);
     }
+
+    [Fact]
+    public void Click_NestedNumericUpDowns_ChangesOnlyTargetValue()
+    {
+        var first = new NumericUpDown { Value = 5 };
+        var second = new NumericUpDown { Value = 10 };
+        var controls = new StackPanel { Orientation = Orientation.Horizontal };
+        controls.AddChild(first);
+        controls.AddChild(new TextBlock { Text = "  " });
+        controls.AddChild(second);
+        var surface = new Border { Content = controls };
+        var host = new ControlTestHost(surface, 26, 3);
+
+        host.Click(first, 1, 0);
+        Assert.Equal(4, first.Value);
+        Assert.Equal(10, second.Value);
+        Assert.True(first.IsFocused);
+        Assert.False(second.IsFocused);
+
+        host.Click(second, 9, 0);
+        Assert.Equal(4, first.Value);
+        Assert.Equal(11, second.Value);
+        Assert.False(first.IsFocused);
+        Assert.True(second.IsFocused);
+    }
+
 }
