@@ -144,7 +144,7 @@ public class TuiHostElement : FrameworkElement
         FocusVisualStyle = null;
         SnapsToDevicePixels = true;
         SizeChanged += (_, _) => InvalidateVisual();
-        Loaded += (_, _) => { _pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip; MeasureCell(); InvalidateVisual(); };
+        Loaded += (_, _) => { _pixelsPerDip = System.Windows.Media.VisualTreeHelper.GetDpi(this).PixelsPerDip; MeasureCell(); InvalidateVisual(); };
         Unloaded += (_, _) => DetachWindow();
     }
 
