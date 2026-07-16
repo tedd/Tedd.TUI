@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -85,6 +86,38 @@ public class CheckBoxTests
         cb.OnMouseDown(new MouseEventArgs { X = 0, Y = 0 });
         cb.OnMouseUp(new MouseEventArgs { X = 0, Y = 0 });
         Assert.False(cb.IsChecked);
+    }
+
+    [Fact]
+    public void Click_NestedCheckBoxes_TogglesOnlyTargetCheckBox()
+    {
+        var first = new CheckBox { Content = "First" };
+        var second = new CheckBox { Content = "Second" };
+        var firstClicks = 0;
+        var secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        var choices = new StackPanel();
+        choices.AddChild(first);
+        choices.AddChild(new TextBlock { Text = " spacer " });
+        choices.AddChild(second);
+        var surface = new Border { Content = choices };
+        var host = new ControlTestHost(surface, 24, 7);
+
+        host.Click(first, 1, 0);
+
+        Assert.True(first.IsChecked);
+        Assert.False(second.IsChecked);
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(0, secondClicks);
+
+        host.Click(second, 1, 0);
+
+        Assert.True(first.IsChecked);
+        Assert.True(second.IsChecked);
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(1, secondClicks);
     }
 
     [Theory]
