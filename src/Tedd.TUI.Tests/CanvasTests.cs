@@ -1,10 +1,47 @@
 using System;
 using Xunit;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
 public class CanvasTests
 {
+    [Fact]
+    public void MouseClick_PositionedButtons_ActivatesOnlyCanvasHitTarget()
+    {
+        var first = new Button { Content = "A", Width = 5, Height = 3 };
+        var second = new Button { Content = "B", Width = 5, Height = 3 };
+        Canvas.SetLeft(first, 2);
+        Canvas.SetTop(first, 1);
+        Canvas.SetLeft(second, 12);
+        Canvas.SetTop(second, 4);
+
+        var canvas = new Canvas { Width = 20, Height = 8 };
+        canvas.AddChild(first);
+        canvas.AddChild(second);
+        var border = new Border
+        {
+            Child = canvas,
+            Width = 22,
+            Height = 10,
+            BoxStyle = BoxStyle.Double
+        };
+        var surface = new StackPanel();
+        surface.AddChild(new TextBlock { Text = "canvas" });
+        surface.AddChild(border);
+        var host = new ControlTestHost(surface, 22, 11);
+        int firstClicks = 0;
+        int secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        host.Click(first, 1, 1);
+        host.Click(second, 1, 1);
+        host.Click(canvas, 9, 6);
+
+        Assert.Equal((1, 1), (firstClicks, secondClicks));
+    }
+
     [Fact]
     public void Canvas_PositionsChildrenUsingAttachedProperties()
     {
