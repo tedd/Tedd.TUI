@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Tedd.TUI;
 using Tedd.TUI.Markdown;
+using Tedd.TUI.Tests.TestInfrastructure;
 using Xunit;
 
 namespace Tedd.TUI.Tests
@@ -139,6 +140,45 @@ namespace Tedd.TUI.Tests
             var hyperlink = new Hyperlink();
             hyperlink.Url = "http://example.com";
             Assert.Equal("http://example.com", hyperlink.Url);
+        }
+
+        [Fact]
+        public void MouseClick_NestedHyperlinks_InvokesOnlyHitLinkAndMovesFocus()
+        {
+            var first = new Hyperlink { Text = "First", Url = "https://first.example" };
+            var second = new Hyperlink { Text = "Second", Url = "https://second.example" };
+            var links = new StackPanel { Orientation = Orientation.Horizontal };
+            links.AddChild(new TextBlock { Text = "[ " });
+            links.AddChild(first);
+            links.AddChild(new TextBlock { Text = " ] ... [ " });
+            links.AddChild(second);
+            links.AddChild(new TextBlock { Text = " ]" });
+            var surface = new Border { Child = links, BoxStyle = BoxStyle.Double };
+            var host = new ControlTestHost(surface, 28, 3);
+            var firstClicks = 0;
+            var secondClicks = 0;
+            first.Click += (_, _) => firstClicks++;
+            second.Click += (_, _) => secondClicks++;
+
+            var firstClick = host.Click(first, 2, 0);
+
+            Assert.True(firstClick.Down.Handled);
+            Assert.True(first.IsFocused);
+            Assert.False(second.IsFocused);
+            Assert.Equal(1, firstClicks);
+            Assert.Equal(0, secondClicks);
+
+            host.Click(links.GetVisualChild(2), 3, 0);
+            Assert.Equal(1, firstClicks);
+            Assert.Equal(0, secondClicks);
+
+            var secondClick = host.Click(second, 3, 0);
+
+            Assert.True(secondClick.Down.Handled);
+            Assert.False(first.IsFocused);
+            Assert.True(second.IsFocused);
+            Assert.Equal(1, firstClicks);
+            Assert.Equal(1, secondClicks);
         }
     }
 }
