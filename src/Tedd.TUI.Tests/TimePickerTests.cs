@@ -84,7 +84,7 @@ public class TimePickerTests
         // Before
         Assert.Equal(new TimeSpan(13, 45, 0), tp.SelectedTime);
 
-        host.MouseDown(4, 0); // minute segment (cells 3..4)
+        host.Click(tp, 4, 0); // minute segment (cells 3..4)
 
         Assert.True(tp.IsFocused);
         var buffer = host.Render();
@@ -218,10 +218,38 @@ public class TimePickerTests
         var tp = new TimePicker { SelectedTime = new TimeSpan(13, 45, 0), IsEnabled = false };
         var host = new ControlTestHost(tp, 5, 1);
 
-        host.MouseDown(0, 0);
+        host.Click(tp, 0, 0);
         Assert.False(tp.IsFocused);
 
         tp.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.UpArrow });
         Assert.Equal(new TimeSpan(13, 45, 0), tp.SelectedTime);
     }
+
+    [Fact]
+    public void Click_NestedTimePickers_ChangesOnlyFocusedTargetSegment()
+    {
+        var first = new TimePicker { SelectedTime = new TimeSpan(13, 45, 0) };
+        var second = new TimePicker { SelectedTime = new TimeSpan(10, 20, 0) };
+        var pickers = new StackPanel { Orientation = Orientation.Horizontal };
+        pickers.AddChild(first);
+        pickers.AddChild(new TextBlock { Text = "  " });
+        pickers.AddChild(second);
+        var surface = new Border { Content = pickers };
+        var host = new ControlTestHost(surface, 14, 3);
+
+        host.Click(first, 4, 0);
+        host.PressKey(ConsoleKey.UpArrow);
+        Assert.Equal(new TimeSpan(13, 46, 0), first.SelectedTime);
+        Assert.Equal(new TimeSpan(10, 20, 0), second.SelectedTime);
+        Assert.True(first.IsFocused);
+        Assert.False(second.IsFocused);
+
+        host.Click(second, 0, 0);
+        host.PressKey(ConsoleKey.UpArrow);
+        Assert.Equal(new TimeSpan(13, 46, 0), first.SelectedTime);
+        Assert.Equal(new TimeSpan(11, 20, 0), second.SelectedTime);
+        Assert.False(first.IsFocused);
+        Assert.True(second.IsFocused);
+    }
+
 }
