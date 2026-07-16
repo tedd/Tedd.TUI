@@ -222,3 +222,6 @@ Developed parameterized testing for both components.
 ## 2026-06-11 - Markdown Tests Expanded
 **Observation:** Additional branch coverage was needed for `MarkdownParser` and `MarkdownView`, and some existing tests lacked verifiable assertions.
 **Strategic Action:** Added parameterized `[Theory]` suites with explicit state assertions to improve deterministic coverage (existing `[Fact]` tests were retained where appropriate).
+## 2026-07-16 - MenuItem Coverage Expansion
+**Observation:** Achieving complete path coverage for TUI menu systems requires artificial manipulation of visual tree structures to simulate orphaned context menus and deeply nested, non-standard layout hierarchies to hit `ParentMenuItem` fallback paths.
+**Strategic Action:** Utilize independent `StackPanel` containers to emulate detached context roots without attaching them to the primary `MenuBar`, enabling precise evaluation of `LeftArrow` fallback logic where `grandParent == null` and `Parent is not MenuBar`.
