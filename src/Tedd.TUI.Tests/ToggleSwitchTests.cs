@@ -92,16 +92,14 @@ public class ToggleSwitchTests
         Assert.Equal(false, ts.IsChecked);
         VirtualBufferAssertions.EqualText("[●──] Off Sound", host.Render());
 
-        host.MouseDown(2, 0);
-        host.MouseUp(2, 0);
+        host.Click(ts, 2, 0);
 
         // After first click
         Assert.Equal(true, ts.IsChecked);
         Assert.True(ts.IsFocused);
         VirtualBufferAssertions.EqualText("[──●] On  Sound", host.Render());
 
-        host.MouseDown(2, 0);
-        host.MouseUp(2, 0);
+        host.Click(ts, 2, 0);
 
         // After second click
         Assert.Equal(false, ts.IsChecked);
@@ -146,15 +144,13 @@ public class ToggleSwitchTests
         ts.Unchecked += (_, _) => uncheckedCount++;
         ts.Click += (_, _) => clickCount++;
 
-        host.MouseDown(1, 0);
-        host.MouseUp(1, 0);
+        host.Click(ts, 1, 0);
 
         Assert.Equal(1, checkedCount);
         Assert.Equal(0, uncheckedCount);
         Assert.Equal(1, clickCount);
 
-        host.MouseDown(1, 0);
-        host.MouseUp(1, 0);
+        host.Click(ts, 1, 0);
 
         Assert.Equal(1, checkedCount);
         Assert.Equal(1, uncheckedCount);
@@ -167,8 +163,7 @@ public class ToggleSwitchTests
         var ts = new ToggleSwitch { IsEnabled = false };
         var host = new ControlTestHost(ts, 9, 1);
 
-        host.MouseDown(1, 0);
-        host.MouseUp(1, 0);
+        host.Click(ts, 1, 0);
 
         Assert.Equal(false, ts.IsChecked);
         Assert.False(ts.IsFocused);
@@ -190,4 +185,30 @@ public class ToggleSwitchTests
         ts.IsChecked = true;
         VirtualBufferAssertions.EqualText("[──●] Yes", host.Render());
     }
+
+    [Fact]
+    public void Click_NestedToggleSwitches_TogglesOnlyTargetSwitch()
+    {
+        var first = new ToggleSwitch();
+        var second = new ToggleSwitch();
+        var switches = new StackPanel { Orientation = Orientation.Horizontal };
+        switches.AddChild(first);
+        switches.AddChild(new TextBlock { Text = "  " });
+        switches.AddChild(second);
+        var surface = new Border { Content = switches };
+        var host = new ControlTestHost(surface, 22, 3);
+
+        host.Click(first, 2, 0);
+        Assert.True(first.IsChecked);
+        Assert.False(second.IsChecked);
+        Assert.True(first.IsFocused);
+        Assert.False(second.IsFocused);
+
+        host.Click(second, 2, 0);
+        Assert.True(first.IsChecked);
+        Assert.True(second.IsChecked);
+        Assert.False(first.IsFocused);
+        Assert.True(second.IsFocused);
+    }
+
 }
