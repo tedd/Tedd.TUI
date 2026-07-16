@@ -69,7 +69,7 @@ public class DatePickerTests
         var dp = new DatePicker { SelectedDate = new DateTime(2026, 7, 12) };
         var host = new ControlTestHost(dp, 12, 1);
 
-        host.MouseDown(8, 0); // day segment (cells 8..9)
+        host.Click(dp, 8, 0); // day segment (cells 8..9)
 
         Assert.True(dp.IsFocused);
         var buffer = host.Render();
@@ -198,7 +198,7 @@ public class DatePickerTests
         Assert.False(dp.IsDropDownOpen);
         Assert.Null(host.Window.Overlay);
 
-        host.MouseDown(11, 0); // arrow cell
+        host.Click(dp, 11, 0); // arrow cell
 
         // After
         Assert.True(dp.IsDropDownOpen);
@@ -225,11 +225,11 @@ public class DatePickerTests
         int changes = 0;
         dp.SelectedDateChanged += (_, _) => changes++;
 
-        host.MouseDown(11, 0); // open dropdown
+        host.Click(dp, 11, 0); // open dropdown
         Assert.True(dp.IsDropDownOpen);
 
         // Day 15 sits at calendar cell (9..10, 4); calendar starts at (1, 2) inside the border
-        host.MouseDown(10, 6);
+        host.Click(10, 6);
 
         Assert.Equal(new DateTime(2026, 7, 15), dp.SelectedDate);
         Assert.Equal(1, changes);
@@ -321,10 +321,10 @@ public class DatePickerTests
         panel.AddChild(new TextBlock { Text = "x" });
         var host = new ControlTestHost(panel, 40, 16);
 
-        host.MouseDown(11, 0); // open
+        host.Click(dp, 11, 0); // open
         Assert.True(dp.IsDropDownOpen);
 
-        host.MouseDown(35, 15); // far away from picker and popup
+        host.Click(35, 15); // far away from picker and popup
 
         Assert.False(dp.IsDropDownOpen);
         Assert.Null(host.Window.Overlay);
@@ -337,12 +337,35 @@ public class DatePickerTests
         var dp = new DatePicker { SelectedDate = new DateTime(2026, 7, 12), IsEnabled = false };
         var host = new ControlTestHost(dp, 12, 1);
 
-        host.MouseDown(11, 0);
+        host.Click(dp, 11, 0);
         Assert.False(dp.IsDropDownOpen);
         Assert.False(dp.IsFocused);
 
         dp.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.UpArrow });
         Assert.Equal(new DateTime(2026, 7, 12), dp.SelectedDate);
+    }
+
+    [Fact]
+    public void Click_NestedDatePickers_OpensOnlyTargetDropdown()
+    {
+        var first = new DatePicker { SelectedDate = new DateTime(2026, 7, 12), HorizontalAlignment = HorizontalAlignment.Left };
+        var second = new DatePicker { SelectedDate = new DateTime(2027, 8, 13), HorizontalAlignment = HorizontalAlignment.Left };
+        var pickers = new StackPanel { Orientation = Orientation.Horizontal };
+        pickers.AddChild(first);
+        pickers.AddChild(new TextBlock { Text = "  " });
+        pickers.AddChild(second);
+        var surface = new Border { Content = pickers };
+        var host = new ControlTestHost(surface, 28, 12);
+
+        host.Click(first, 11, 0);
+        Assert.True(first.IsDropDownOpen);
+        Assert.False(second.IsDropDownOpen);
+        Assert.Same(first, Assert.IsType<DatePicker.DatePickerPopupBorder>(host.Window.Overlay).Owner);
+
+        host.Click(second, 11, 0);
+        Assert.False(first.IsDropDownOpen);
+        Assert.True(second.IsDropDownOpen);
+        Assert.Same(second, Assert.IsType<DatePicker.DatePickerPopupBorder>(host.Window.Overlay).Owner);
     }
 
     private static VirtualBuffer GetRegion(VirtualBuffer source, int x, int y, int width, int height)
