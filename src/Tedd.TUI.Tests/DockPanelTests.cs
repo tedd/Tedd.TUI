@@ -1,11 +1,44 @@
 using Xunit;
 using Tedd.TUI;
 using System;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
 public class DockPanelTests
 {
+    [Fact]
+    public void MouseClick_DockedButtons_ActivatesOnlyTheirArrangedRegions()
+    {
+        var left = new Button { Content = "Left", Width = 6 };
+        var right = new Button { Content = "Right", Width = 7 };
+        DockPanel.SetDock(left, Dock.Left);
+        DockPanel.SetDock(right, Dock.Right);
+
+        var panel = new DockPanel { Width = 20, Height = 3 };
+        panel.AddChild(left);
+        panel.AddChild(right);
+        panel.AddChild(new TextBlock { Text = "gap" });
+        var border = new Border { Child = panel, Width = 22, Height = 5 };
+        var surface = new StackPanel();
+        surface.AddChild(new TextBlock { Text = "toolbar" });
+        surface.AddChild(border);
+        var host = new ControlTestHost(surface, 22, 6);
+        int leftClicks = 0;
+        int rightClicks = 0;
+        left.Click += (_, _) => leftClicks++;
+        right.Click += (_, _) => rightClicks++;
+
+        host.Click(left, 1, 1);
+        Assert.Equal((1, 0), (leftClicks, rightClicks));
+
+        host.Click(right, 1, 1);
+        Assert.Equal((1, 1), (leftClicks, rightClicks));
+
+        host.Click(panel, 10, 1);
+        Assert.Equal((1, 1), (leftClicks, rightClicks));
+    }
+
     [Fact]
     public void TestDockPanel_LeftRightFill()
     {
