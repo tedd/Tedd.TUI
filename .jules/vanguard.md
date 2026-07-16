@@ -28,7 +28,7 @@
 ## 2026-06-11 - TabControl Selection Synchronization Parity
 **Observation:** The bifurcated architecture correctly synced navigation from the TreeView to the TabControl across all paradigms. However, bidirectional synchronization—where navigating via the TabControl updates the TreeView state—was absent in the Blazor deployment targets (Home.razor and Programmatic.razor).
 **Strategic Action:** Implemented identical `SelectionChanged` logic within the TabControl across the Blazor deployments to map active tabs back to the TreeView context. Introduced derived `@bind-IsSelected` boolean bindings on Razor TreeViewItems, driven from `_selectedTabIndex`, to keep navigation state synchronized between the TreeView and TabControl.
-## 2025-07-16 - Synchronized Bifurcation of Table Pagination
+## 2026-07-16 - Synchronized Bifurcation of Table Pagination
 
 **Observation:** The programmatic implementation (`Tedd.TUI.Demo/Program.cs` and `Tedd.TUI.Demo/DemoController.cs`) lacked the dynamic dataset and pagination logic present in the Blazor equivalents (`Programmatic.razor` and `Home.razor`). The absence of parity restricted exhaustive testing of the `Table` control's dataset boundary capabilities in terminal environments.
 
