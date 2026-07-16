@@ -3,11 +3,53 @@ using Xunit;
 using Tedd.TUI;
 using System.Collections.Generic;
 using System.Linq;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
 public class ListBoxTests
 {
+    [Fact]
+    public void MouseClick_NestedListBoxes_SelectsOnlyClickedRowsAndHonorsScrollOffset()
+    {
+        var first = new ListBox { Width = 9, Height = 3 };
+        var second = new ListBox { Width = 9, Height = 3 };
+        for (var i = 0; i < 6; i++)
+        {
+            first.Items.Add($"A{i}");
+            second.Items.Add($"B{i}");
+        }
+
+        var lists = new StackPanel { Orientation = Orientation.Horizontal };
+        lists.AddChild(first);
+        lists.AddChild(new TextBlock { Text = "  " });
+        lists.AddChild(second);
+
+        var surface = new StackPanel();
+        surface.AddChild(new TextBlock { Text = "Pick rows" });
+        surface.AddChild(lists);
+        surface.AddChild(new TextBlock { Text = "unused surface" });
+
+        var host = new ControlTestHost(new Border { Child = surface }, 24, 8);
+
+        host.Click(first, 2, 1);
+        Assert.Equal(1, first.SelectedIndex);
+        Assert.Equal(-1, second.SelectedIndex);
+
+        host.Click(second, 2, 2);
+        Assert.Equal(1, first.SelectedIndex);
+        Assert.Equal(2, second.SelectedIndex);
+
+        // Click the first list's scrollbar down arrow, then the same visible row.
+        host.Click(first, first.RenderSize.Width - 1, first.RenderSize.Height - 1);
+        host.Click(first, 2, 2);
+
+        Assert.Equal(3, first.SelectedIndex);
+        Assert.Equal("A3", first.SelectedItem);
+        Assert.Equal(2, second.SelectedIndex);
+        Assert.Equal("B2", second.SelectedItem);
+    }
+
     [Fact]
     public void SelectionChange_ShouldInvalidate()
     {
