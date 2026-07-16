@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -175,5 +176,37 @@ public class RadioButtonTests
         Assert.True(rb1UncheckedRaised);
         Assert.False(rb1.IsChecked);
         Assert.True(rb2.IsChecked);
+    }
+
+    [Fact]
+    public void Click_NestedRadioButtons_SelectsOnlyTargetInGroup()
+    {
+        var first = new RadioButton { Content = "First", GroupName = "Choice" };
+        var second = new RadioButton { Content = "Second", GroupName = "Choice" };
+        var firstClicks = 0;
+        var secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        var choices = new StackPanel();
+        choices.AddChild(first);
+        choices.AddChild(new TextBlock { Text = " spacer " });
+        choices.AddChild(second);
+        var surface = new Border { Content = choices };
+        var host = new ControlTestHost(surface, 24, 7);
+
+        host.Click(first, 1, 0);
+
+        Assert.True(first.IsChecked);
+        Assert.False(second.IsChecked);
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(0, secondClicks);
+
+        host.Click(second, 1, 0);
+
+        Assert.False(first.IsChecked);
+        Assert.True(second.IsChecked);
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(1, secondClicks);
     }
 }
