@@ -194,35 +194,26 @@ public class TabControlTests
     public void TabControl_ClickChild_KeepsChildFocus()
     {
         // Arrange
-        var window = new TuiWindow();
         var tabControl = new TabControl();
         var textBox = new TextBox { Text = "Hello" };
         var tab1 = new TabItem { Header = "Tab 1", Content = textBox };
         tabControl.Items.Add(tab1);
-        window.Content = tabControl;
-
-        window.Measure(new Size(80, 25));
-        window.Arrange(new Rect(0, 0, 80, 25));
+        var host = new ControlTestHost(tabControl, 80, 25);
 
         // 1. Initially focus textBox
-        window.SetFocus(textBox);
+        host.Window.SetFocus(textBox);
         var focused = typeof(TuiWindow)
             .GetField("_focusedElement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.GetValue(window) as UIElement;
+            ?.GetValue(host.Window) as UIElement;
         Assert.Equal(textBox, focused);
 
-        // 2. Simulate mouse down event that hits the TextBox (at y >= 2 in TabControl coordinates)
-        var mouseDownArgs = new MouseEventArgs(UIElement.MouseDownEvent, textBox)
-        {
-            GlobalX = 5,
-            GlobalY = 5
-        };
-        textBox.RaiseEvent(mouseDownArgs);
+        // 2. Click the TextBox through window hit testing (at y >= 2 in TabControl coordinates).
+        host.Click(textBox, 5, 0);
 
         // 3. Verify focus was not stolen by TabControl
         focused = typeof(TuiWindow)
             .GetField("_focusedElement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.GetValue(window) as UIElement;
+            ?.GetValue(host.Window) as UIElement;
         Assert.Equal(textBox, focused);
     }
 }
