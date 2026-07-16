@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Xunit;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -273,5 +274,51 @@ public class TextEditorTests
         Assert.Equal('4', buffer.GetPixel(0, 0).Character);
         Assert.Equal('5', buffer.GetPixel(1, 0).Character);
         Assert.Equal('6', buffer.GetPixel(2, 0).Character); // Col 4 is '5'
+    }
+
+    [Fact]
+    public void MouseClick_NestedTextEditors_SelectsLineAndCaretWithoutChangingSibling()
+    {
+        var first = new TextEditor
+        {
+            Text = $"Alpha{Environment.NewLine}Bravo",
+            Width = 8,
+            Height = 2
+        };
+        var second = new TextEditor
+        {
+            Text = $"Gamma{Environment.NewLine}Delta",
+            Width = 8,
+            Height = 2
+        };
+        var editors = new StackPanel();
+        editors.AddChild(new TextBlock { Text = "editors" });
+        editors.AddChild(first);
+        editors.AddChild(new TextBlock { Text = "--------" });
+        editors.AddChild(second);
+        var surface = new Border { Child = editors, BoxStyle = BoxStyle.Double };
+        var host = new ControlTestHost(surface, 12, 8);
+
+        var firstClick = host.Click(first, 2, 1);
+        host.PressKey(ConsoleKey.X, 'X');
+
+        Assert.True(firstClick.Down.Handled);
+        Assert.True(first.IsFocused);
+        Assert.False(second.IsFocused);
+        Assert.Equal($"Alpha{Environment.NewLine}BrXavo", first.Text);
+        Assert.Equal($"Gamma{Environment.NewLine}Delta", second.Text);
+
+        host.Click(editors.GetVisualChild(2), 4, 0);
+        Assert.Equal($"Alpha{Environment.NewLine}BrXavo", first.Text);
+        Assert.Equal($"Gamma{Environment.NewLine}Delta", second.Text);
+
+        var secondClick = host.Click(second, 1, 0);
+        host.PressKey(ConsoleKey.Y, 'Y');
+
+        Assert.True(secondClick.Down.Handled);
+        Assert.False(first.IsFocused);
+        Assert.True(second.IsFocused);
+        Assert.Equal($"Alpha{Environment.NewLine}BrXavo", first.Text);
+        Assert.Equal($"GYamma{Environment.NewLine}Delta", second.Text);
     }
 }
