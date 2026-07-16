@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Xunit;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -142,5 +143,53 @@ public class TreeViewTests
         // Check data context of items
         Assert.Equal(data[0], rootItem.DataContext);
         Assert.Equal(data[0].Children[0], childItem.DataContext);
+    }
+
+    [Fact]
+    public void MouseClick_NestedTreeView_SelectsAndTogglesOnlyVisibleScrolledItem()
+    {
+        var rootA = new TreeViewItem { Header = "Root A", IsExpanded = true };
+        var childA1 = new TreeViewItem { Header = "Child A1" };
+        var childA2 = new TreeViewItem { Header = "Child A2" };
+        rootA.Items.Add(childA1);
+        rootA.Items.Add(childA2);
+        var rootB = new TreeViewItem { Header = "Root B", IsExpanded = true };
+        var childB1 = new TreeViewItem { Header = "Child B1" };
+        var childB2 = new TreeViewItem { Header = "Child B2" };
+        rootB.Items.Add(childB1);
+        rootB.Items.Add(childB2);
+        var tree = new TreeView { Width = 16, Height = 4 };
+        tree.Items.Add(rootA);
+        tree.Items.Add(rootB);
+
+        var panel = new StackPanel();
+        panel.AddChild(new TextBlock { Text = "tree" });
+        panel.AddChild(tree);
+        panel.AddChild(new TextBlock { Text = "status surface" });
+        var host = new ControlTestHost(new Border { Child = panel }, 20, 8);
+
+        var childClick = host.Click(childA1, 7, 0);
+
+        Assert.True(childClick.Down.Handled);
+        Assert.True(tree.IsFocused);
+        Assert.Same(childA1, tree.SelectedItem);
+        Assert.True(rootA.IsExpanded);
+        Assert.True(rootB.IsExpanded);
+
+        var scrollViewer = (ScrollViewer)tree.GetVisualChild(0);
+        scrollViewer.ScrollToVerticalOffset(2);
+        var rootClick = host.Click(rootB, 6, 0);
+
+        Assert.True(rootClick.Down.Handled);
+        Assert.Same(rootB, tree.SelectedItem);
+        Assert.True(rootA.IsExpanded);
+        Assert.True(rootB.IsExpanded);
+
+        host.Click(rootB, 1, 0);
+
+        Assert.Same(rootB, tree.SelectedItem);
+        Assert.True(rootA.IsExpanded);
+        Assert.False(rootB.IsExpanded);
+        Assert.False(childA1.IsSelected);
     }
 }
