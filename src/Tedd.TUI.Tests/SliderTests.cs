@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -60,5 +61,59 @@ public class SliderTests
 
         Assert.Equal(5, slider.Value);
         Assert.True(args.Handled);
+    }
+
+    [Fact]
+    public void MouseClick_NestedSliders_UsesLocalCoordinatesWithoutChangingSibling()
+    {
+        var horizontal = new Slider
+        {
+            Width = 11,
+            Height = 1,
+            Minimum = 0,
+            Maximum = 10
+        };
+        var vertical = new Slider
+        {
+            Width = 1,
+            Height = 6,
+            Minimum = 0,
+            Maximum = 10,
+            Orientation = Orientation.Vertical
+        };
+        var horizontalRow = new StackPanel { Orientation = Orientation.Horizontal };
+        horizontalRow.AddChild(horizontal);
+        horizontalRow.AddChild(new TextBlock { Text = " surface" });
+        var verticalRow = new StackPanel { Orientation = Orientation.Horizontal };
+        verticalRow.AddChild(vertical);
+        verticalRow.AddChild(new TextBlock { Text = " surface" });
+        var controls = new StackPanel();
+        controls.AddChild(new TextBlock { Text = "horizontal" });
+        controls.AddChild(horizontalRow);
+        controls.AddChild(new TextBlock { Text = "-----------" });
+        controls.AddChild(new TextBlock { Text = "vertical" });
+        controls.AddChild(verticalRow);
+        var surface = new Border { Child = controls, BoxStyle = BoxStyle.Double };
+        var host = new ControlTestHost(surface, 15, 12);
+
+        var horizontalClick = host.Click(horizontal, 7, 0);
+
+        Assert.True(horizontalClick.Down.Handled);
+        Assert.True(horizontal.IsFocused);
+        Assert.False(vertical.IsFocused);
+        Assert.Equal(7, horizontal.Value);
+        Assert.Equal(0, vertical.Value);
+
+        host.Click(controls.GetVisualChild(2), 5, 0);
+        Assert.Equal(7, horizontal.Value);
+        Assert.Equal(0, vertical.Value);
+
+        var verticalClick = host.Click(vertical, 0, 4);
+
+        Assert.True(verticalClick.Down.Handled);
+        Assert.False(horizontal.IsFocused);
+        Assert.True(vertical.IsFocused);
+        Assert.Equal(7, horizontal.Value);
+        Assert.Equal(8, vertical.Value);
     }
 }
