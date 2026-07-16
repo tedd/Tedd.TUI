@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -187,5 +188,43 @@ public class PasswordBoxTests
 
         Assert.Null(ex);
         Assert.False(args.Handled);
+    }
+
+    [Fact]
+    public void MouseClick_NestedPasswordBoxes_PlacesCaretAndDoesNotChangeSibling()
+    {
+        var first = new PasswordBox { Password = "alpha", Width = 8 };
+        var second = new PasswordBox { Password = "omega", Width = 8 };
+        var fields = new StackPanel();
+        fields.AddChild(new TextBlock { Text = "credentials" });
+        fields.AddChild(first);
+        fields.AddChild(new TextBlock { Text = "----------" });
+        fields.AddChild(second);
+        var surface = new Border { Child = fields, BoxStyle = BoxStyle.Double };
+        var host = new ControlTestHost(surface, 14, 6);
+
+        var firstClick = host.Click(first, 2, 0);
+        var firstPoint = first.PointToScreen(new Point(2, 0));
+
+        Assert.True(firstClick.Down.Handled);
+        Assert.True(first._internalTextBox!.IsFocused);
+        Assert.False(second._internalTextBox!.IsFocused);
+        Assert.Equal("alpha", first.Password);
+        Assert.Equal("omega", second.Password);
+        Assert.Equal(TuiColor.Gray, host.Render().GetPixel(firstPoint.X, firstPoint.Y).Background);
+
+        host.Click(fields.GetVisualChild(2), 4, 0);
+        Assert.Equal("alpha", first.Password);
+        Assert.Equal("omega", second.Password);
+
+        var secondClick = host.Click(second, 1, 0);
+        var secondPoint = second.PointToScreen(new Point(1, 0));
+
+        Assert.True(secondClick.Down.Handled);
+        Assert.False(first._internalTextBox.IsFocused);
+        Assert.True(second._internalTextBox.IsFocused);
+        Assert.Equal("alpha", first.Password);
+        Assert.Equal("omega", second.Password);
+        Assert.Equal(TuiColor.Gray, host.Render().GetPixel(secondPoint.X, secondPoint.Y).Background);
     }
 }
