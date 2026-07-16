@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -69,5 +70,42 @@ public class TextBoxTests
         Assert.Equal('*', buffer.GetPixel(1, 0).Character);
         Assert.Equal('*', buffer.GetPixel(2, 0).Character);
         Assert.Equal('*', buffer.GetPixel(3, 0).Character);
+    }
+
+    [Fact]
+    public void MouseClick_NestedTextBoxes_PlacesCaretAndMovesFocusWithoutChangingSibling()
+    {
+        var first = new TextBox { Text = "Alpha", Width = 8 };
+        var second = new TextBox { Text = "Omega", Width = 8 };
+        var fields = new StackPanel();
+        fields.AddChild(new TextBlock { Text = "form" });
+        fields.AddChild(first);
+        fields.AddChild(new TextBlock { Text = "--------" });
+        fields.AddChild(second);
+        fields.AddChild(new TextBlock { Text = "status" });
+        var surface = new Border { Child = fields, BoxStyle = BoxStyle.Double };
+        var host = new ControlTestHost(surface, 12, 7);
+
+        var firstClick = host.Click(first, 2, 0);
+        host.PressKey(ConsoleKey.X, 'X');
+
+        Assert.True(firstClick.Down.Handled);
+        Assert.True(first.IsFocused);
+        Assert.False(second.IsFocused);
+        Assert.Equal("AlXpha", first.Text);
+        Assert.Equal("Omega", second.Text);
+
+        host.Click(fields.GetVisualChild(2), 3, 0);
+        Assert.Equal("AlXpha", first.Text);
+        Assert.Equal("Omega", second.Text);
+
+        var secondClick = host.Click(second, 1, 0);
+        host.PressKey(ConsoleKey.Y, 'Y');
+
+        Assert.True(secondClick.Down.Handled);
+        Assert.False(first.IsFocused);
+        Assert.True(second.IsFocused);
+        Assert.Equal("AlXpha", first.Text);
+        Assert.Equal("OYmega", second.Text);
     }
 }
