@@ -1,6 +1,7 @@
 using Xunit;
 using Tedd.TUI;
 using System.Linq;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -142,6 +143,38 @@ public class ButtonTests
 
         btn.Focus();
         Assert.True(btn.IsFocused);
+    }
+
+    [Fact]
+    public void Click_NestedButtons_RoutesOnlyToTargetButton()
+    {
+        var first = new Button { Content = "First" };
+        var second = new Button { Content = "Second" };
+        var firstClicks = 0;
+        var secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        var buttons = new StackPanel();
+        buttons.AddChild(first);
+        buttons.AddChild(new TextBlock { Text = " spacer " });
+        buttons.AddChild(second);
+        var surface = new Border { Content = buttons };
+        var host = new ControlTestHost(surface, 24, 10);
+
+        host.Click(first, 2, 1);
+
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(0, secondClicks);
+        Assert.True(first.IsFocused);
+        Assert.False(second.IsFocused);
+
+        host.Click(second, 2, 1);
+
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(1, secondClicks);
+        Assert.False(first.IsFocused);
+        Assert.True(second.IsFocused);
     }
 
     // Shadow tests (DOS Turbo Pascal / Quick Basic style drop shadow)
