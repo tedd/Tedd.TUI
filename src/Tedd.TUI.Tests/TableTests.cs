@@ -4,6 +4,7 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -268,5 +269,55 @@ public class TableTests
         Assert.Contains("[5]", result);
         Assert.StartsWith("< 1 ...", result);
         Assert.EndsWith("... 10 >", result);
+    }
+
+    [Fact]
+    public void MouseClick_NestedTable_SortsColumnsAndSelectsScrolledRowOnly()
+    {
+        var table = new Table
+        {
+            Width = 18,
+            Height = 7,
+            ShowBorder = true,
+            ShowHeader = true
+        };
+        table.Columns.Add(new TableColumn { Header = "Id", Width = new GridLength(4, GridUnitType.Pixel) });
+        table.Columns.Add(new TableColumn { Header = "Name", Width = new GridLength(8, GridUnitType.Pixel) });
+        table.AddRow("3", "Charlie");
+        table.AddRow("1", "Alice");
+        table.AddRow("5", "Echo");
+        table.AddRow("2", "Bravo");
+        table.AddRow("4", "Delta");
+
+        var surfaceContent = new StackPanel();
+        surfaceContent.AddChild(new TextBlock { Text = "records" });
+        surfaceContent.AddChild(table);
+        surfaceContent.AddChild(new TextBlock { Text = "footer surface" });
+        var host = new ControlTestHost(new Border { Child = surfaceContent }, 22, 11);
+
+        var nameHeaderClick = host.Click(table, 7, 1);
+
+        Assert.True(nameHeaderClick.Down.Handled);
+        Assert.Same(table.Columns[1], table.SortedColumn);
+        Assert.Equal("Alice", GetCellText(table.Rows[0], 1));
+        Assert.Equal(-1, table.SelectedIndex);
+
+        host.Click(table, 2, 1);
+
+        Assert.Same(table.Columns[0], table.SortedColumn);
+        Assert.Equal("1", GetCellText(table.Rows[0], 0));
+        Assert.Equal(-1, table.SelectedIndex);
+
+        var bodyScrollViewer = (ScrollViewer)table.GetVisualChild(0);
+        bodyScrollViewer.ScrollToVerticalOffset(2);
+        var rowClick = host.Click(table, 2, 3);
+
+        Assert.True(rowClick.Down.Handled);
+        Assert.True(table.IsFocused);
+        Assert.Equal(2, table.SelectedIndex);
+        Assert.Equal("3", GetCellText(table.Rows[table.SelectedIndex], 0));
+
+        host.Click(surfaceContent.GetVisualChild(2), 3, 0);
+        Assert.Equal(2, table.SelectedIndex);
     }
 }
