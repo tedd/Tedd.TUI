@@ -78,10 +78,10 @@ public class CalendarTests
         Assert.Null(cal.SelectedDate);
 
         // Day 15 sits at column 3, week row 2 -> buffer (9..10, 4)
-        var args = host.MouseDown(9, 4);
+        var (down, _) = host.Click(cal, 9, 4);
 
         // After
-        Assert.True(args.Handled);
+        Assert.True(down.Handled);
         Assert.True(cal.IsFocused);
         Assert.Equal(new DateTime(2026, 7, 15), cal.SelectedDate);
         Assert.Equal(new DateTime(2026, 7, 15), cal.DisplayDate);
@@ -95,7 +95,7 @@ public class CalendarTests
         var host = new ControlTestHost(cal, 20, 8);
 
         // First week row starts with three empty cells (Su/Mo/Tu)
-        host.MouseDown(0, 2);
+        host.Click(cal, 0, 2);
 
         Assert.Null(cal.SelectedDate);
         Assert.Equal(new DateTime(2026, 7, 12), cal.DisplayDate);
@@ -110,14 +110,14 @@ public class CalendarTests
         int displayChanges = 0;
         cal.DisplayDateChanged += (_, _) => displayChanges++;
 
-        host.MouseDown(19, 0); // ">"
+        host.Click(cal, 19, 0); // ">"
 
         Assert.Equal(new DateTime(2026, 8, 12), cal.DisplayDate);
         Assert.Null(cal.SelectedDate);
         Assert.Equal(1, displayChanges);
         VirtualBufferAssertions.EqualText("<   August 2026    >", GetRow(host, 0));
 
-        host.MouseDown(0, 0); // "<"
+        host.Click(cal, 0, 0); // "<"
 
         Assert.Equal(new DateTime(2026, 7, 12), cal.DisplayDate);
         VirtualBufferAssertions.EqualText("<    July 2026     >", GetRow(host, 0));
@@ -260,12 +260,37 @@ public class CalendarTests
         cal.IsEnabled = false;
         var host = new ControlTestHost(cal, 20, 8);
 
-        host.MouseDown(9, 4);
+        host.Click(cal, 9, 4);
         Assert.Null(cal.SelectedDate);
         Assert.False(cal.IsFocused);
 
         cal.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.RightArrow });
         Assert.Equal(new DateTime(2026, 7, 12), cal.DisplayDate);
+    }
+
+    [Fact]
+    public void Click_NestedCalendars_SelectsOnlyTargetCalendar()
+    {
+        var first = July2026Calendar();
+        var second = July2026Calendar();
+        var calendars = new StackPanel { Orientation = Orientation.Horizontal };
+        calendars.AddChild(first);
+        calendars.AddChild(new TextBlock { Text = "  " });
+        calendars.AddChild(second);
+        var surface = new Border { Content = calendars };
+        var host = new ControlTestHost(surface, 44, 10);
+
+        host.Click(first, 9, 4);
+        Assert.Equal(new DateTime(2026, 7, 15), first.SelectedDate);
+        Assert.Null(second.SelectedDate);
+        Assert.True(first.IsFocused);
+        Assert.False(second.IsFocused);
+
+        host.Click(second, 12, 4);
+        Assert.Equal(new DateTime(2026, 7, 15), first.SelectedDate);
+        Assert.Equal(new DateTime(2026, 7, 16), second.SelectedDate);
+        Assert.False(first.IsFocused);
+        Assert.True(second.IsFocused);
     }
 
     private static VirtualBuffer GetRow(ControlTestHost host, int row)
