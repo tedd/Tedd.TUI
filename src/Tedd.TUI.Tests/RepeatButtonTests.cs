@@ -142,11 +142,38 @@ public class RepeatButtonTests
         int clicks = 0;
         rb.Click += (_, _) => clicks++;
 
-        host.MouseDown(1, 1);
+        host.Click(rb, 1, 1);
         rb.OnRepeatTick();
-        host.MouseUp(1, 1);
 
         Assert.Equal(0, clicks);
         Assert.False(rb.IsPressed);
     }
+
+    [Fact]
+    public void Click_NestedRepeatButtons_FiresOnlyTargetButton()
+    {
+        var first = new RepeatButton { Content = "-" };
+        var second = new RepeatButton { Content = "+" };
+        var firstClicks = 0;
+        var secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+        buttons.AddChild(first);
+        buttons.AddChild(new TextBlock { Text = "  " });
+        buttons.AddChild(second);
+        var surface = new Border { Content = buttons };
+        var host = new ControlTestHost(surface, 10, 5);
+
+        host.Click(first, 1, 1);
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(0, secondClicks);
+        Assert.False(first.IsPressed);
+
+        host.Click(second, 1, 1);
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(1, secondClicks);
+        Assert.False(second.IsPressed);
+    }
+
 }
