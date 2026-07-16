@@ -104,23 +104,34 @@ public class ExpanderTests
     }
 
     [Fact]
-    public void Expander_Mouse_Click_On_Content_Does_Not_Toggle()
+    public void MouseClick_ExpandedContent_DoesNotToggleParentOrSiblingExpander()
     {
-        var expander = new Expander
+        var contentButton = new Button { Content = "Run" };
+        var first = new Expander
         {
-            Header = "Options",
-            Content = new TextBlock { Text = "Content" },
+            Header = "Actions",
+            Content = contentButton,
             IsExpanded = true
         };
+        var second = new Expander
+        {
+            Header = "Other",
+            Content = new TextBlock { Text = "Other content" }
+        };
+        var panel = new StackPanel();
+        panel.AddChild(new TextBlock { Text = "Toolbar" });
+        panel.AddChild(first);
+        panel.AddChild(second);
+        var host = new ControlTestHost(new Border { Child = panel }, 24, 14);
+        var buttonClicks = 0;
+        contentButton.Click += (_, _) => buttonClicks++;
 
-        expander.Measure(new Size(80, 24));
-        expander.Arrange(new Rect(0, 0, expander.DesiredSize.Width, expander.DesiredSize.Height));
+        host.Click(contentButton, 2, 1);
 
-        Assert.True(expander.IsExpanded);
-
-        expander.OnMouseDown(new MouseEventArgs { Y = 4 });
-
-        Assert.True(expander.IsExpanded);
+        Assert.Equal(1, buttonClicks);
+        Assert.True(first.IsExpanded);
+        Assert.False(second.IsExpanded);
+        Assert.True(contentButton.IsFocused);
     }
 
     [Fact]
