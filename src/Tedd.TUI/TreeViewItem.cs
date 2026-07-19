@@ -58,6 +58,56 @@ public class TreeViewItem : HeaderedItemsControl
     {
     }
 
+    public static readonly DependencyProperty SelectedForegroundProperty =
+        DependencyProperty.Register("SelectedForeground", typeof(TuiColor), typeof(TreeViewItem), TuiColor.White);
+
+    /// <summary>Text color while the item is selected.</summary>
+    public TuiColor SelectedForeground
+    {
+        get => (TuiColor)GetValue(SelectedForegroundProperty);
+        set => SetValue(SelectedForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedBackgroundProperty =
+        DependencyProperty.Register("SelectedBackground", typeof(TuiColor), typeof(TreeViewItem), TuiColor.Blue);
+
+    /// <summary>Background of the selection bar.</summary>
+    public TuiColor SelectedBackground
+    {
+        get => (TuiColor)GetValue(SelectedBackgroundProperty);
+        set => SetValue(SelectedBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HeaderForegroundProperty =
+        DependencyProperty.Register("HeaderForeground", typeof(TuiColor), typeof(TreeViewItem), TuiColor.Gray);
+
+    /// <summary>Text color of unselected string headers (element headers use their own Foreground).</summary>
+    public TuiColor HeaderForeground
+    {
+        get => (TuiColor)GetValue(HeaderForegroundProperty);
+        set => SetValue(HeaderForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty ExpanderBracketColorProperty =
+        DependencyProperty.Register("ExpanderBracketColor", typeof(TuiColor), typeof(TreeViewItem), TuiColor.DarkGray);
+
+    /// <summary>Color of the "[" and "]" around the expand/collapse indicator.</summary>
+    public TuiColor ExpanderBracketColor
+    {
+        get => (TuiColor)GetValue(ExpanderBracketColorProperty);
+        set => SetValue(ExpanderBracketColorProperty, value);
+    }
+
+    public static readonly DependencyProperty ExpanderGlyphColorProperty =
+        DependencyProperty.Register("ExpanderGlyphColor", typeof(TuiColor), typeof(TreeViewItem), TuiColor.White);
+
+    /// <summary>Color of the "+" / "-" expand/collapse glyph.</summary>
+    public TuiColor ExpanderGlyphColor
+    {
+        get => (TuiColor)GetValue(ExpanderGlyphColorProperty);
+        set => SetValue(ExpanderGlyphColorProperty, value);
+    }
+
     protected override void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         base.OnItemsCollectionChanged(sender, e);
@@ -97,13 +147,14 @@ public class TreeViewItem : HeaderedItemsControl
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
-        var bg = IsSelected ? TuiColor.Blue : (Background ?? TuiColor.Black);
-        var fg = IsSelected ? TuiColor.White : (Header is UIElement ? TuiColor.White : TuiColor.Gray);
+        var bg = IsSelected ? SelectedBackground : (Background ?? buffer.GetPixel(x, y).Background);
+        var fg = IsSelected ? SelectedForeground : (Header is UIElement ? Foreground : HeaderForeground);
 
-        // Indentation
+        // Indentation (kept outside the selection bar, adopting the surface behind it)
+        var indentBg = Background ?? buffer.GetPixel(x, y).Background;
         for (int i = 0; i < Level * 2; i++)
         {
-            buffer.SetPixel(x + i, y, ' ', fg, TuiColor.Black);
+            buffer.SetPixel(x + i, y, ' ', fg, indentBg);
         }
 
         int contentX = x + Level * 2;
@@ -111,9 +162,9 @@ public class TreeViewItem : HeaderedItemsControl
         if (HasItems)
         {
             char c = IsExpanded ? '-' : '+';
-            buffer.SetPixel(contentX, y, '[', TuiColor.DarkGray, bg);
-            buffer.SetPixel(contentX + 1, y, c, TuiColor.White, bg);
-            buffer.SetPixel(contentX + 2, y, ']', TuiColor.DarkGray, bg);
+            buffer.SetPixel(contentX, y, '[', ExpanderBracketColor, bg);
+            buffer.SetPixel(contentX + 1, y, c, ExpanderGlyphColor, bg);
+            buffer.SetPixel(contentX + 2, y, ']', ExpanderBracketColor, bg);
         }
         else
         {

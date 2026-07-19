@@ -104,7 +104,6 @@ public class GridSplitter : Thumb
 
     public GridSplitter()
     {
-        Background = TuiColor.DarkGray;
         DragDelta += OnDragDelta;
     }
 

@@ -282,6 +282,136 @@ public class ThemeTests
     }
 
     [Fact]
+    public void DarkTheme_PreservesClassicMenuListAndScrollBarColors()
+    {
+        // These used to be hardcoded (or set as blocking local values) in the controls;
+        // they now come from the default theme and must resolve to the same colors.
+        Assert.Equal(TuiColor.Black, new MenuItem().Foreground);
+        Assert.Equal(TuiColor.Gray, new ListBox().Foreground);
+        Assert.Equal(TuiColor.White, new ScrollBar().Foreground);
+
+        // ScrollBar style beats the Gray it would inherit from a ListBox parent.
+        var list = new ListBox();
+        var bar = new ScrollBar { Parent = list };
+        Assert.Equal(TuiColor.White, bar.Foreground);
+    }
+
+    [Fact]
+    public void MenuBar_RendersThemedStrip()
+    {
+        var theme = new TuiTheme("Test");
+        theme.Styles.Add(new Style(typeof(MenuBar))
+            .Set(UIElement.BackgroundProperty, TuiColor.DarkRed)
+            .Set(UIElement.ForegroundProperty, TuiColor.Yellow));
+
+        using var _ = ThemeManager.BeginScope(theme);
+        // Height set explicitly: an empty MenuBar measures to zero rows otherwise.
+        var bar = new MenuBar { Height = 1 };
+        bar.Measure(new Size(10, 1));
+        bar.Arrange(new Rect(0, 0, 10, 1));
+
+        var buffer = new VirtualBuffer(10, 1);
+        bar.Render(buffer, 0, 0);
+
+        Assert.Equal(TuiColor.DarkRed, buffer.GetPixel(4, 0).Background);
+        Assert.Equal(TuiColor.Yellow, buffer.GetPixel(4, 0).Foreground);
+    }
+
+    [Fact]
+    public void MenuBar_DefaultStripStaysGray()
+    {
+        var bar = new MenuBar { Height = 1 };
+        bar.Measure(new Size(10, 1));
+        bar.Arrange(new Rect(0, 0, 10, 1));
+
+        var buffer = new VirtualBuffer(10, 1);
+        bar.Render(buffer, 0, 0);
+
+        Assert.Equal(TuiColor.Gray, buffer.GetPixel(0, 0).Background);
+    }
+
+    [Fact]
+    public void MenuItem_UsesThemedHighlightColors()
+    {
+        using (ThemeManager.BeginScope(TuiThemes.TurboPascal))
+        {
+            var mi = new MenuItem();
+            Assert.Equal(TuiColor.FromRgb(0x00, 0xAA, 0x00), mi.HighlightBackground);
+            Assert.Equal(TuiColor.Black, mi.HighlightForeground);
+        }
+
+        using (ThemeManager.BeginScope(TuiThemes.QuickBasic))
+        {
+            var mi = new MenuItem();
+            Assert.Equal(TuiColor.Black, mi.HighlightBackground);
+            Assert.Equal(TuiColor.FromRgb(0xFF, 0xFF, 0xFF), mi.HighlightForeground);
+        }
+    }
+
+    [Fact]
+    public void TreeViewItem_RendersThemedSelectionBar()
+    {
+        var theme = new TuiTheme("Test");
+        theme.Styles.Add(new Style(typeof(TreeViewItem))
+            .Set(TreeViewItem.SelectedBackgroundProperty, TuiColor.DarkRed)
+            .Set(TreeViewItem.SelectedForegroundProperty, TuiColor.Yellow));
+
+        using var _ = ThemeManager.BeginScope(theme);
+        var item = new TreeViewItem { Header = "Node", IsSelected = true };
+        item.Measure(new Size(20, 1));
+        item.Arrange(new Rect(0, 0, item.DesiredSize.Width, 1));
+
+        var buffer = new VirtualBuffer(20, 1);
+        item.Render(buffer, 0, 0);
+
+        // Level 0: expander area is cols 0..3, header text starts at col 4.
+        var cell = buffer.GetPixel(4, 0);
+        Assert.Equal('N', cell.Character);
+        Assert.Equal(TuiColor.DarkRed, cell.Background);
+        Assert.Equal(TuiColor.Yellow, cell.Foreground);
+    }
+
+    [Fact]
+    public void TextEditor_UsesThemedFocusColors()
+    {
+        var theme = new TuiTheme("Test");
+        theme.Styles.Add(new Style(typeof(TextEditor))
+            .Set(TextEditor.FocusedBackgroundProperty, TuiColor.DarkRed)
+            .Set(TextEditor.CaretBackgroundProperty, TuiColor.Magenta));
+
+        using var _ = ThemeManager.BeginScope(theme);
+        var editor = new TextEditor { Text = "ab", IsFocused = true };
+        editor.Measure(new Size(10, 3));
+        editor.Arrange(new Rect(0, 0, 10, 3));
+
+        var buffer = new VirtualBuffer(10, 3);
+        editor.Render(buffer, 0, 0);
+
+        Assert.Equal(TuiColor.DarkRed, buffer.GetPixel(0, 0).Background);
+        // Programmatic Text set leaves the caret at the end of the last line (col 2).
+        Assert.Equal(TuiColor.Magenta, buffer.GetPixel(2, 0).Background);
+    }
+
+    [Fact]
+    public void TabControl_TableAndSplitter_ResolveThemedColors()
+    {
+        var theme = new TuiTheme("Test");
+        theme.Styles.Add(new Style(typeof(TabControl))
+            .Set(TabControl.FocusedTabBackgroundProperty, TuiColor.DarkRed));
+        theme.Styles.Add(new Style(typeof(Table))
+            .Set(Table.HeaderBackgroundProperty, TuiColor.DarkRed)
+            .Set(Table.GridLineForegroundProperty, TuiColor.Magenta));
+        theme.Styles.Add(new Style(typeof(GridSplitter))
+            .Set(UIElement.BackgroundProperty, TuiColor.DarkRed));
+
+        using var _ = ThemeManager.BeginScope(theme);
+        Assert.Equal(TuiColor.DarkRed, new TabControl().FocusedTabBackground);
+        Assert.Equal(TuiColor.DarkRed, new Table().HeaderBackground);
+        Assert.Equal(TuiColor.Magenta, new Table().GridLineForeground);
+        Assert.Equal(new TuiColor?(TuiColor.DarkRed), new GridSplitter().Background);
+    }
+
+    [Fact]
     public void MutatedTheme_AppliesAfterInvalidateCache()
     {
         var theme = new TuiTheme("Test");

@@ -21,6 +21,86 @@ public class TabControl : Selector
         set => SetValue(BoxStyleProperty, value);
     }
 
+    public static readonly DependencyProperty FocusedTabForegroundProperty =
+        DependencyProperty.Register("FocusedTabForeground", typeof(TuiColor), typeof(TabControl), TuiColor.Yellow);
+
+    /// <summary>Header text color of the selected tab while the control has focus.</summary>
+    public TuiColor FocusedTabForeground
+    {
+        get => (TuiColor)GetValue(FocusedTabForegroundProperty);
+        set => SetValue(FocusedTabForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty FocusedTabBackgroundProperty =
+        DependencyProperty.Register("FocusedTabBackground", typeof(TuiColor), typeof(TabControl), TuiColor.DarkBlue);
+
+    /// <summary>Header background of the selected tab while the control has focus.</summary>
+    public TuiColor FocusedTabBackground
+    {
+        get => (TuiColor)GetValue(FocusedTabBackgroundProperty);
+        set => SetValue(FocusedTabBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedTabForegroundProperty =
+        DependencyProperty.Register("SelectedTabForeground", typeof(TuiColor), typeof(TabControl), TuiColor.Black);
+
+    /// <summary>Header text color of the selected tab while the control is unfocused.</summary>
+    public TuiColor SelectedTabForeground
+    {
+        get => (TuiColor)GetValue(SelectedTabForegroundProperty);
+        set => SetValue(SelectedTabForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedTabBackgroundProperty =
+        DependencyProperty.Register("SelectedTabBackground", typeof(TuiColor), typeof(TabControl), TuiColor.Gray);
+
+    /// <summary>Header background of the selected tab while the control is unfocused.</summary>
+    public TuiColor SelectedTabBackground
+    {
+        get => (TuiColor)GetValue(SelectedTabBackgroundProperty);
+        set => SetValue(SelectedTabBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty TabForegroundProperty =
+        DependencyProperty.Register("TabForeground", typeof(TuiColor), typeof(TabControl), TuiColor.White);
+
+    /// <summary>Header text color of unselected tabs.</summary>
+    public TuiColor TabForeground
+    {
+        get => (TuiColor)GetValue(TabForegroundProperty);
+        set => SetValue(TabForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty TabBackgroundProperty =
+        DependencyProperty.Register("TabBackground", typeof(TuiColor?), typeof(TabControl), null);
+
+    /// <summary>Header background of unselected tabs; null adopts the underlying surface.</summary>
+    public TuiColor? TabBackground
+    {
+        get => (TuiColor?)GetValue(TabBackgroundProperty);
+        set => SetValue(TabBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty StripLineForegroundProperty =
+        DependencyProperty.Register("StripLineForeground", typeof(TuiColor), typeof(TabControl), TuiColor.Gray);
+
+    /// <summary>Color of the horizontal line under the tab headers.</summary>
+    public TuiColor StripLineForeground
+    {
+        get => (TuiColor)GetValue(StripLineForegroundProperty);
+        set => SetValue(StripLineForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty StripLineBackgroundProperty =
+        DependencyProperty.Register("StripLineBackground", typeof(TuiColor?), typeof(TabControl), null);
+
+    /// <summary>Background behind the strip line; null adopts the underlying surface.</summary>
+    public TuiColor? StripLineBackground
+    {
+        get => (TuiColor?)GetValue(StripLineBackgroundProperty);
+        set => SetValue(StripLineBackgroundProperty, value);
+    }
+
     public override int VisualChildrenCount => (SelectedIndex >= 0 && SelectedIndex < Items.Count) ? 1 : 0;
 
     public override UIElement GetVisualChild(int index)
@@ -192,19 +272,19 @@ public class TabControl : Selector
             {
                 if (IsFocused)
                 {
-                    fg = TuiColor.Yellow;
-                    bg = TuiColor.DarkBlue;
+                    fg = FocusedTabForeground;
+                    bg = FocusedTabBackground;
                 }
                 else
                 {
-                    fg = TuiColor.Black;
-                    bg = TuiColor.Gray;
+                    fg = SelectedTabForeground;
+                    bg = SelectedTabBackground;
                 }
             }
             else
             {
-                fg = TuiColor.White;
-                bg = TuiColor.Black;
+                fg = TabForeground;
+                bg = TabBackground ?? buffer.GetPixel(headerX, y).Background;
             }
 
             for (int k = 0; k < header.Length; k++)
@@ -216,8 +296,10 @@ public class TabControl : Selector
 
         // Draw Content Border line
         char hChar = BoxDrawingChars.Get(BoxStyle).Horizontal;
+        var stripFg = StripLineForeground;
+        var stripBg = StripLineBackground;
         for (int i = 0; i < w; i++)
-            buffer.SetPixel(x + i, y + 1, hChar, TuiColor.Gray, TuiColor.Black);
+            buffer.SetPixel(x + i, y + 1, hChar, stripFg, stripBg ?? buffer.GetPixel(x + i, y + 1).Background);
 
         // Draw Selected Content
         if (SelectedIndex >= 0 && SelectedIndex < Items.Count)

@@ -29,6 +29,46 @@ public class MenuItem : UIElement
         Focusable = true;
     }
 
+    public static readonly DependencyProperty HighlightBackgroundProperty =
+        DependencyProperty.Register("HighlightBackground", typeof(TuiColor), typeof(MenuItem), TuiColor.Green);
+
+    /// <summary>Background of the item while focused or expanded (the menu highlight bar).</summary>
+    public TuiColor HighlightBackground
+    {
+        get => (TuiColor)GetValue(HighlightBackgroundProperty);
+        set => SetValue(HighlightBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HighlightForegroundProperty =
+        DependencyProperty.Register("HighlightForeground", typeof(TuiColor), typeof(MenuItem), TuiColor.Black);
+
+    /// <summary>Text color of the item while focused or expanded.</summary>
+    public TuiColor HighlightForeground
+    {
+        get => (TuiColor)GetValue(HighlightForegroundProperty);
+        set => SetValue(HighlightForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty PopupBackgroundProperty =
+        DependencyProperty.Register("PopupBackground", typeof(TuiColor), typeof(MenuItem), TuiColor.Gray);
+
+    /// <summary>Background of this item's dropdown popup (and of the item itself inside one).</summary>
+    public TuiColor PopupBackground
+    {
+        get => (TuiColor)GetValue(PopupBackgroundProperty);
+        set => SetValue(PopupBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty PopupBorderColorProperty =
+        DependencyProperty.Register("PopupBorderColor", typeof(TuiColor), typeof(MenuItem), TuiColor.Black);
+
+    /// <summary>Border color of this item's dropdown popup.</summary>
+    public TuiColor PopupBorderColor
+    {
+        get => (TuiColor)GetValue(PopupBorderColorProperty);
+        set => SetValue(PopupBorderColorProperty, value);
+    }
+
     public override int VisualChildrenCount => Header != null ? 1 : 0;
 
     public override UIElement GetVisualChild(int index)
@@ -61,14 +101,12 @@ public class MenuItem : UIElement
         int y = RenderSize.Y + offsetY;
 
         bool isActive = IsFocused || IsExpanded;
-        // Turbo Pascal Style:
-        // Active: Green Background, Black Text
-        // Inactive: 
-        //   - MenuBar: Gray Background, Black Text (inherited/default)
-        //   - Popup: Gray Background, Black Text (inherited from Border)
+        // Active: highlight bar. Inactive on the MenuBar: transparent (the bar's strip
+        // shows through). Inactive in a popup: the popup fill. All colors are themable;
+        // the predefined themes style MenuItem.Foreground to the classic black.
 
-        var bg = isActive ? TuiColor.Green : (Parent is MenuBar ? (TuiColor?)null : TuiColor.Gray);
-        var fg = TuiColor.Black; // Always black text
+        var bg = isActive ? HighlightBackground : (Parent is MenuBar ? (TuiColor?)null : PopupBackground);
+        var fg = isActive ? HighlightForeground : Foreground;
 
         // Draw background
         for (int i = 0; i < RenderSize.Width; i++)
@@ -100,7 +138,7 @@ public class MenuItem : UIElement
         // Draw sub-menu arrow indicator if needed
         if (Items.Count > 0 && !(Parent is MenuBar))
         {
-            buffer.SetPixel(x + RenderSize.Width - 1, y, '\u25BA', fg, bg ?? TuiColor.Gray); // Arrow
+            buffer.SetPixel(x + RenderSize.Width - 1, y, '\u25BA', fg, bg ?? PopupBackground); // Arrow
         }
     }
 
@@ -322,8 +360,8 @@ public class MenuItem : UIElement
         _popupBorder = new MenuPopupBorder
         {
             Child = stackPanel,
-            BorderColor = TuiColor.Black,
-            Background = TuiColor.Gray,
+            BorderColor = PopupBorderColor,
+            Background = PopupBackground,
             BoxStyle = BoxStyle.Single,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Owner = this

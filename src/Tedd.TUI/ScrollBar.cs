@@ -269,6 +269,4 @@ public class ScrollBar : UIElement
         e.Handled = true;
     }
 
-    public new TuiColor Foreground { get; set; } = TuiColor.White;
-
 }

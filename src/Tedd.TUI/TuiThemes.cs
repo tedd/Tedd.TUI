@@ -74,6 +74,24 @@ public static class TuiThemes
         t.Styles.Add(new Style(typeof(PasswordBox))
             .Set(UIElement.BackgroundProperty, TuiColor.DarkBlue));
 
+        t.Styles.Add(new Style(typeof(TextEditor))
+            .Set(UIElement.BackgroundProperty, TuiColor.DarkBlue));
+
+        // These carry the classic colors that used to be hardcoded (or set as local
+        // values) in the controls; keeping them as theme styles lets other themes and
+        // user code override them.
+        t.Styles.Add(new Style(typeof(MenuBar))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(MenuItem))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(ListBox))
+            .Set(UIElement.ForegroundProperty, TuiColor.Gray));
+
+        t.Styles.Add(new Style(typeof(ScrollBar))
+            .Set(UIElement.ForegroundProperty, TuiColor.White));
+
         return t;
     }
 
@@ -161,6 +179,79 @@ public static class TuiThemes
             .Set(NumericUpDown.HoverForegroundProperty, TuiColor.DarkCyan)
             .Set(NumericUpDown.ButtonColorProperty, TuiColor.DarkGray));
 
+        t.Styles.Add(new Style(typeof(Border))
+            .Set(Border.BorderColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(MenuBar))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(MenuItem))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black)
+            .Set(MenuItem.HighlightBackgroundProperty, TuiColor.DarkBlue)
+            .Set(MenuItem.HighlightForegroundProperty, TuiColor.White)
+            .Set(MenuItem.PopupBackgroundProperty, TuiColor.Gray)
+            .Set(MenuItem.PopupBorderColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(TabControl))
+            .Set(TabControl.FocusedTabForegroundProperty, TuiColor.White)
+            .Set(TabControl.FocusedTabBackgroundProperty, TuiColor.DarkBlue)
+            .Set(TabControl.SelectedTabForegroundProperty, TuiColor.Black)
+            .Set(TabControl.SelectedTabBackgroundProperty, TuiColor.White)
+            .Set(TabControl.TabForegroundProperty, TuiColor.DarkGray)
+            .Set(TabControl.StripLineForegroundProperty, TuiColor.DarkGray));
+
+        t.Styles.Add(new Style(typeof(Table))
+            .Set(Table.HeaderForegroundProperty, TuiColor.White)
+            .Set(Table.HeaderBackgroundProperty, TuiColor.DarkGray)
+            .Set(Table.GridLineForegroundProperty, TuiColor.DarkGray)
+            .Set(Table.GridLineBackgroundProperty, TuiColor.Gray));
+
+        t.Styles.Add(new Style(typeof(TreeViewItem))
+            .Set(TreeViewItem.HeaderForegroundProperty, TuiColor.Black)
+            .Set(TreeViewItem.SelectedForegroundProperty, TuiColor.White)
+            .Set(TreeViewItem.SelectedBackgroundProperty, TuiColor.DarkBlue)
+            .Set(TreeViewItem.ExpanderBracketColorProperty, TuiColor.DarkGray)
+            .Set(TreeViewItem.ExpanderGlyphColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(TextEditor))
+            .Set(UIElement.BackgroundProperty, TuiColor.White)
+            .Set(TextEditor.FocusedForegroundProperty, TuiColor.Black)
+            .Set(TextEditor.FocusedBackgroundProperty, TuiColor.White)
+            .Set(TextEditor.CaretForegroundProperty, TuiColor.White)
+            .Set(TextEditor.CaretBackgroundProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(ScrollBar))
+            .Set(UIElement.ForegroundProperty, TuiColor.DarkGray));
+
+        t.Styles.Add(new Style(typeof(ListBox))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(Calendar))
+            .Set(Calendar.HeaderColorProperty, TuiColor.Black)
+            .Set(Calendar.ArrowColorProperty, TuiColor.DarkGray)
+            .Set(Calendar.WeekdayColorProperty, TuiColor.DarkGray)
+            .Set(Calendar.TodayColorProperty, TuiColor.DarkBlue)
+            .Set(Calendar.SelectedForegroundProperty, TuiColor.White)
+            .Set(Calendar.SelectedBackgroundProperty, TuiColor.DarkBlue)
+            .Set(Calendar.FocusedDayForegroundProperty, TuiColor.Black)
+            .Set(Calendar.FocusedDayBackgroundProperty, TuiColor.White));
+
+        t.Styles.Add(new Style(typeof(DatePicker))
+            .Set(DatePicker.FocusedForegroundProperty, TuiColor.DarkBlue)
+            .Set(DatePicker.HoverForegroundProperty, TuiColor.DarkCyan)
+            .Set(DatePicker.PlaceholderColorProperty, TuiColor.DarkGray)
+            .Set(DatePicker.ActiveSegmentBackgroundProperty, TuiColor.Gray)
+            .Set(DatePicker.ArrowColorProperty, TuiColor.Black)
+            .Set(DatePicker.ArrowBackgroundColorProperty, TuiColor.DarkGray)
+            .Set(DatePicker.PopupBackgroundProperty, TuiColor.Gray)
+            .Set(DatePicker.PopupBorderColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(TimePicker))
+            .Set(TimePicker.FocusedForegroundProperty, TuiColor.DarkBlue)
+            .Set(TimePicker.HoverForegroundProperty, TuiColor.DarkCyan)
+            .Set(TimePicker.PlaceholderColorProperty, TuiColor.DarkGray)
+            .Set(TimePicker.ActiveSegmentBackgroundProperty, TuiColor.Gray));
+
         return t;
     }
 
@@ -223,9 +314,12 @@ public static class TuiThemes
             .Set(ToggleSwitch.KnobColorProperty, DosWhite)
             .Set(ToggleSwitch.OnKnobColorProperty, DosGreen));
 
+        // TP file/list boxes: black text on cyan with a blue selection bar.
         t.Styles.Add(new Style(typeof(ListBox))
-            .Set(ListBox.SelectionForegroundProperty, TuiColor.Black)
-            .Set(ListBox.SelectionBackgroundProperty, DosCyan)
+            .Set(UIElement.ForegroundProperty, TuiColor.Black)
+            .Set(UIElement.BackgroundProperty, DosCyan)
+            .Set(ListBox.SelectionForegroundProperty, DosWhite)
+            .Set(ListBox.SelectionBackgroundProperty, DosBlue)
             .Set(ListBox.FocusedSelectionForegroundProperty, DosWhite)
             .Set(ListBox.FocusedSelectionBackgroundProperty, DosGreen));
 
@@ -235,6 +329,11 @@ public static class TuiThemes
         t.Styles.Add(new Style(typeof(ComboBox))
             .Set(ComboBox.FocusedForegroundProperty, DosWhite)
             .Set(ComboBox.HoverForegroundProperty, DosWhite)
+            .Set(ComboBox.FocusedTextBackgroundColorProperty, DosCyan)
+            .Set(ComboBox.ArrowColorProperty, TuiColor.Black)
+            .Set(ComboBox.ArrowBackgroundColorProperty, DosCyan)
+            .Set(ComboBox.FocusedArrowColorProperty, DosWhite)
+            .Set(ComboBox.FocusedArrowBackgroundColorProperty, DosCyan)
             .Set(ComboBox.PopupBackgroundProperty, DosLightGray)
             .Set(ComboBox.PopupBorderColorProperty, TuiColor.Black));
 
@@ -247,6 +346,83 @@ public static class TuiThemes
             .Set(Slider.ThumbColorProperty, DosBlue)
             .Set(Slider.FocusedThumbColorProperty, DosYellow)
             .Set(Slider.HoverThumbColorProperty, DosWhite));
+
+        t.Styles.Add(new Style(typeof(MenuBar))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black)
+            .Set(UIElement.BackgroundProperty, DosLightGray));
+
+        t.Styles.Add(new Style(typeof(MenuItem))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black)
+            .Set(MenuItem.HighlightBackgroundProperty, DosGreen)
+            .Set(MenuItem.HighlightForegroundProperty, TuiColor.Black)
+            .Set(MenuItem.PopupBackgroundProperty, DosLightGray)
+            .Set(MenuItem.PopupBorderColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(TabControl))
+            .Set(TabControl.FocusedTabForegroundProperty, TuiColor.Black)
+            .Set(TabControl.FocusedTabBackgroundProperty, DosGreen)
+            .Set(TabControl.SelectedTabForegroundProperty, TuiColor.Black)
+            .Set(TabControl.SelectedTabBackgroundProperty, DosLightGray)
+            .Set(TabControl.TabForegroundProperty, DosLightGray)
+            .Set(TabControl.StripLineForegroundProperty, DosLightGray));
+
+        t.Styles.Add(new Style(typeof(Table))
+            .Set(Table.HeaderForegroundProperty, TuiColor.Black)
+            .Set(Table.HeaderBackgroundProperty, DosCyan)
+            .Set(Table.GridLineForegroundProperty, DosCyan)
+            .Set(Table.GridLineBackgroundProperty, DosBlue));
+
+        t.Styles.Add(new Style(typeof(TreeViewItem))
+            .Set(TreeViewItem.HeaderForegroundProperty, DosYellow)
+            .Set(TreeViewItem.SelectedForegroundProperty, TuiColor.Black)
+            .Set(TreeViewItem.SelectedBackgroundProperty, DosCyan)
+            .Set(TreeViewItem.ExpanderBracketColorProperty, DosLightGray)
+            .Set(TreeViewItem.ExpanderGlyphColorProperty, DosWhite));
+
+        t.Styles.Add(new Style(typeof(TextEditor))
+            .Set(UIElement.ForegroundProperty, DosYellow)
+            .Set(UIElement.BackgroundProperty, DosBlue)
+            .Set(TextEditor.FocusedForegroundProperty, DosYellow)
+            .Set(TextEditor.FocusedBackgroundProperty, DosBlue)
+            .Set(TextEditor.CaretForegroundProperty, TuiColor.Black)
+            .Set(TextEditor.CaretBackgroundProperty, DosLightGray));
+
+        t.Styles.Add(new Style(typeof(ScrollBar))
+            .Set(UIElement.ForegroundProperty, DosCyan));
+
+        t.Styles.Add(new Style(typeof(GridSplitter))
+            .Set(UIElement.BackgroundProperty, DosCyan));
+
+        t.Styles.Add(new Style(typeof(NumericUpDown))
+            .Set(NumericUpDown.FocusedForegroundProperty, DosWhite)
+            .Set(NumericUpDown.HoverForegroundProperty, DosWhite)
+            .Set(NumericUpDown.ButtonColorProperty, DosCyan));
+
+        t.Styles.Add(new Style(typeof(Calendar))
+            .Set(Calendar.HeaderColorProperty, TuiColor.Black)
+            .Set(Calendar.ArrowColorProperty, TuiColor.Black)
+            .Set(Calendar.WeekdayColorProperty, DosDarkGray)
+            .Set(Calendar.TodayColorProperty, DosBlue)
+            .Set(Calendar.SelectedForegroundProperty, TuiColor.Black)
+            .Set(Calendar.SelectedBackgroundProperty, DosCyan)
+            .Set(Calendar.FocusedDayForegroundProperty, DosWhite)
+            .Set(Calendar.FocusedDayBackgroundProperty, DosGreen));
+
+        t.Styles.Add(new Style(typeof(DatePicker))
+            .Set(DatePicker.FocusedForegroundProperty, DosWhite)
+            .Set(DatePicker.HoverForegroundProperty, DosWhite)
+            .Set(DatePicker.PlaceholderColorProperty, DosDarkGray)
+            .Set(DatePicker.ActiveSegmentBackgroundProperty, DosCyan)
+            .Set(DatePicker.ArrowColorProperty, TuiColor.Black)
+            .Set(DatePicker.ArrowBackgroundColorProperty, DosLightGray)
+            .Set(DatePicker.PopupBackgroundProperty, DosLightGray)
+            .Set(DatePicker.PopupBorderColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(TimePicker))
+            .Set(TimePicker.FocusedForegroundProperty, DosWhite)
+            .Set(TimePicker.HoverForegroundProperty, DosWhite)
+            .Set(TimePicker.PlaceholderColorProperty, DosDarkGray)
+            .Set(TimePicker.ActiveSegmentBackgroundProperty, DosCyan));
 
         return t;
     }
@@ -312,6 +488,7 @@ public static class TuiThemes
             .Set(ToggleSwitch.OnKnobColorProperty, DosGreen));
 
         t.Styles.Add(new Style(typeof(ListBox))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black)
             .Set(ListBox.SelectionForegroundProperty, DosWhite)
             .Set(ListBox.SelectionBackgroundProperty, TuiColor.Black)
             .Set(ListBox.FocusedSelectionForegroundProperty, DosWhite)
@@ -319,6 +496,9 @@ public static class TuiThemes
 
         t.Styles.Add(new Style(typeof(GroupBox))
             .Set(GroupBox.BorderColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(Border))
+            .Set(Border.BorderColorProperty, TuiColor.Black));
 
         t.Styles.Add(new Style(typeof(ComboBox))
             .Set(ComboBox.PopupBackgroundProperty, DosLightGray)
@@ -330,6 +510,84 @@ public static class TuiThemes
 
         t.Styles.Add(new Style(typeof(Slider))
             .Set(Slider.TrackColorProperty, DosCyan));
+
+        t.Styles.Add(new Style(typeof(MenuBar))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black)
+            .Set(UIElement.BackgroundProperty, DosLightGray));
+
+        // QB menus: gray bar and popups, selection inverts to a black bar.
+        t.Styles.Add(new Style(typeof(MenuItem))
+            .Set(UIElement.ForegroundProperty, TuiColor.Black)
+            .Set(MenuItem.HighlightBackgroundProperty, TuiColor.Black)
+            .Set(MenuItem.HighlightForegroundProperty, DosWhite)
+            .Set(MenuItem.PopupBackgroundProperty, DosLightGray)
+            .Set(MenuItem.PopupBorderColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(TabControl))
+            .Set(TabControl.FocusedTabForegroundProperty, DosWhite)
+            .Set(TabControl.FocusedTabBackgroundProperty, TuiColor.Black)
+            .Set(TabControl.SelectedTabForegroundProperty, TuiColor.Black)
+            .Set(TabControl.SelectedTabBackgroundProperty, DosLightGray)
+            .Set(TabControl.TabForegroundProperty, DosLightGray)
+            .Set(TabControl.StripLineForegroundProperty, DosLightGray));
+
+        t.Styles.Add(new Style(typeof(Table))
+            .Set(Table.HeaderForegroundProperty, TuiColor.Black)
+            .Set(Table.HeaderBackgroundProperty, DosCyan)
+            .Set(Table.GridLineForegroundProperty, DosLightGray)
+            .Set(Table.GridLineBackgroundProperty, DosBlue));
+
+        t.Styles.Add(new Style(typeof(TreeViewItem))
+            .Set(TreeViewItem.HeaderForegroundProperty, DosLightGray)
+            .Set(TreeViewItem.SelectedForegroundProperty, DosWhite)
+            .Set(TreeViewItem.SelectedBackgroundProperty, TuiColor.Black)
+            .Set(TreeViewItem.ExpanderBracketColorProperty, DosLightGray)
+            .Set(TreeViewItem.ExpanderGlyphColorProperty, DosWhite));
+
+        t.Styles.Add(new Style(typeof(TextEditor))
+            .Set(UIElement.ForegroundProperty, DosLightGray)
+            .Set(UIElement.BackgroundProperty, DosBlue)
+            .Set(TextEditor.FocusedForegroundProperty, DosWhite)
+            .Set(TextEditor.FocusedBackgroundProperty, DosBlue)
+            .Set(TextEditor.CaretForegroundProperty, TuiColor.Black)
+            .Set(TextEditor.CaretBackgroundProperty, DosLightGray));
+
+        t.Styles.Add(new Style(typeof(ScrollBar))
+            .Set(UIElement.ForegroundProperty, DosLightGray));
+
+        t.Styles.Add(new Style(typeof(GridSplitter))
+            .Set(UIElement.BackgroundProperty, DosCyan));
+
+        t.Styles.Add(new Style(typeof(NumericUpDown))
+            .Set(NumericUpDown.FocusedForegroundProperty, DosWhite)
+            .Set(NumericUpDown.HoverForegroundProperty, DosWhite)
+            .Set(NumericUpDown.ButtonColorProperty, DosCyan));
+
+        t.Styles.Add(new Style(typeof(Calendar))
+            .Set(Calendar.HeaderColorProperty, TuiColor.Black)
+            .Set(Calendar.ArrowColorProperty, TuiColor.Black)
+            .Set(Calendar.WeekdayColorProperty, DosDarkGray)
+            .Set(Calendar.TodayColorProperty, DosBlue)
+            .Set(Calendar.SelectedForegroundProperty, DosWhite)
+            .Set(Calendar.SelectedBackgroundProperty, TuiColor.Black)
+            .Set(Calendar.FocusedDayForegroundProperty, DosWhite)
+            .Set(Calendar.FocusedDayBackgroundProperty, DosCyan));
+
+        t.Styles.Add(new Style(typeof(DatePicker))
+            .Set(DatePicker.FocusedForegroundProperty, DosWhite)
+            .Set(DatePicker.HoverForegroundProperty, DosWhite)
+            .Set(DatePicker.PlaceholderColorProperty, DosDarkGray)
+            .Set(DatePicker.ActiveSegmentBackgroundProperty, DosCyan)
+            .Set(DatePicker.ArrowColorProperty, TuiColor.Black)
+            .Set(DatePicker.ArrowBackgroundColorProperty, DosLightGray)
+            .Set(DatePicker.PopupBackgroundProperty, DosLightGray)
+            .Set(DatePicker.PopupBorderColorProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(TimePicker))
+            .Set(TimePicker.FocusedForegroundProperty, DosWhite)
+            .Set(TimePicker.HoverForegroundProperty, DosWhite)
+            .Set(TimePicker.PlaceholderColorProperty, DosDarkGray)
+            .Set(TimePicker.ActiveSegmentBackgroundProperty, DosCyan));
 
         return t;
     }

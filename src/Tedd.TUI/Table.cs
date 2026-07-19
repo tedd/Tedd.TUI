@@ -33,7 +33,9 @@ public class TableRow : UIElement
 
     public void AddCell(string text)
     {
-        AddCell(new TextBlock { Text = text, Foreground = TuiColor.White });
+        // No explicit Foreground: the cell inherits it (default White), so themed
+        // surfaces (e.g. a Light dialog) restyle table text automatically.
+        AddCell(new TextBlock { Text = text });
     }
 
     public override int VisualChildrenCount => _cells.Count;
@@ -105,7 +107,7 @@ public class TableRow : UIElement
             for (int i = 0; i < table.Columns.Count - 1; i++)
             {
                 cx += table.Columns[i].ActualWidth;
-                buffer.DrawVLine(x + cx, y, RenderSize.Height, vChar, TuiColor.Gray, TuiColor.Black);
+                buffer.DrawVLine(x + cx, y, RenderSize.Height, vChar, table.GridLineForeground, table.GridLineBackground);
                 cx++;
             }
         }
@@ -140,8 +142,44 @@ public class Table : UIElement
     private readonly StackPanel _rowStack;
 
     public bool ShowHeader { get; set; } = true;
-    public TuiColor HeaderForeground { get; set; } = TuiColor.Yellow;
-    public TuiColor HeaderBackground { get; set; } = TuiColor.DarkGray;
+
+    public static readonly DependencyProperty HeaderForegroundProperty =
+        DependencyProperty.Register("HeaderForeground", typeof(TuiColor), typeof(Table), TuiColor.Yellow);
+
+    public TuiColor HeaderForeground
+    {
+        get => (TuiColor)GetValue(HeaderForegroundProperty);
+        set => SetValue(HeaderForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HeaderBackgroundProperty =
+        DependencyProperty.Register("HeaderBackground", typeof(TuiColor), typeof(Table), TuiColor.DarkGray);
+
+    public TuiColor HeaderBackground
+    {
+        get => (TuiColor)GetValue(HeaderBackgroundProperty);
+        set => SetValue(HeaderBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty GridLineForegroundProperty =
+        DependencyProperty.Register("GridLineForeground", typeof(TuiColor), typeof(Table), TuiColor.Gray);
+
+    /// <summary>Color of interior grid lines, separators and the pagination bar text.</summary>
+    public TuiColor GridLineForeground
+    {
+        get => (TuiColor)GetValue(GridLineForegroundProperty);
+        set => SetValue(GridLineForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty GridLineBackgroundProperty =
+        DependencyProperty.Register("GridLineBackground", typeof(TuiColor), typeof(Table), TuiColor.Black);
+
+    /// <summary>Background behind interior grid lines, separators and the pagination bar.</summary>
+    public TuiColor GridLineBackground
+    {
+        get => (TuiColor)GetValue(GridLineBackgroundProperty);
+        set => SetValue(GridLineBackgroundProperty, value);
+    }
 
     // Style Properties
     public bool ShowBorder { get; set; } = false;
@@ -1042,7 +1080,7 @@ public class Table : UIElement
         int borderOffset = ShowBorder ? 1 : 0;
         int drawW = Math.Max(0, w - 2 * borderOffset);
 
-        buffer.DrawHLine(RenderSize.X + offsetX + borderOffset, RenderSize.Y + offsetY + y, drawW, ' ', TuiColor.Gray, TuiColor.Black);
+        buffer.DrawHLine(RenderSize.X + offsetX + borderOffset, RenderSize.Y + offsetY + y, drawW, ' ', GridLineForeground, GridLineBackground);
 
         Span<char> textBuffer = stackalloc char[256];
         int len = GetPaginationString(textBuffer, drawW, totalPages, CurrentPage);
@@ -1052,7 +1090,7 @@ public class Table : UIElement
         int absX = RenderSize.X + offsetX + startX;
         int absY = RenderSize.Y + offsetY + y;
 
-        buffer.DrawString(absX, absY, text, TuiColor.Gray, TuiColor.Black);
+        buffer.DrawString(absX, absY, text, GridLineForeground, GridLineBackground);
     }
 }
 
@@ -1090,7 +1128,7 @@ internal class TableSeparator : UIElement
         char hChar = interior.Horizontal;
         char crossChar = BoxDrawingChars.GetInteriorCross(table.BorderStyle);
 
-        buffer.DrawHLine(x, y, width, hChar, TuiColor.Gray, TuiColor.Black);
+        buffer.DrawHLine(x, y, width, hChar, table.GridLineForeground, table.GridLineBackground);
 
         if (table.ShowVerticalLines)
         {
@@ -1098,7 +1136,7 @@ internal class TableSeparator : UIElement
             for (int i = 0; i < table.Columns.Count - 1; i++)
             {
                 cx += table.Columns[i].ActualWidth;
-                buffer.SetPixel(x + cx, y, crossChar, TuiColor.Gray, TuiColor.Black);
+                buffer.SetPixel(x + cx, y, crossChar, table.GridLineForeground, table.GridLineBackground);
                 cx++;
             }
         }

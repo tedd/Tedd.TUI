@@ -26,6 +26,46 @@ public class TextEditor : UIElement
         set => SetValue(TextProperty, value);
     }
 
+    public static readonly DependencyProperty FocusedForegroundProperty =
+        DependencyProperty.Register("FocusedForeground", typeof(TuiColor), typeof(TextEditor), TuiColor.Yellow);
+
+    /// <summary>Text color while the editor has keyboard focus.</summary>
+    public TuiColor FocusedForeground
+    {
+        get => (TuiColor)GetValue(FocusedForegroundProperty);
+        set => SetValue(FocusedForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty FocusedBackgroundProperty =
+        DependencyProperty.Register("FocusedBackground", typeof(TuiColor), typeof(TextEditor), TuiColor.DarkBlue);
+
+    /// <summary>Background color while the editor has keyboard focus.</summary>
+    public TuiColor FocusedBackground
+    {
+        get => (TuiColor)GetValue(FocusedBackgroundProperty);
+        set => SetValue(FocusedBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty CaretForegroundProperty =
+        DependencyProperty.Register("CaretForeground", typeof(TuiColor), typeof(TextEditor), TuiColor.Black);
+
+    /// <summary>Foreground of the cell under the caret.</summary>
+    public TuiColor CaretForeground
+    {
+        get => (TuiColor)GetValue(CaretForegroundProperty);
+        set => SetValue(CaretForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty CaretBackgroundProperty =
+        DependencyProperty.Register("CaretBackground", typeof(TuiColor), typeof(TextEditor), TuiColor.Gray);
+
+    /// <summary>Background of the cell under the caret.</summary>
+    public TuiColor CaretBackground
+    {
+        get => (TuiColor)GetValue(CaretBackgroundProperty);
+        set => SetValue(CaretBackgroundProperty, value);
+    }
+
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
         base.OnPropertyChanged(dp);
@@ -111,8 +151,8 @@ public class TextEditor : UIElement
 
         if (w <= 0 || h <= 0) return;
 
-        var fg = IsFocused ? TuiColor.Yellow : TuiColor.White;
-        var bg = IsFocused ? TuiColor.DarkBlue : (Background ?? buffer.GetPixel(x, y).Background);
+        var fg = IsFocused ? FocusedForeground : Foreground;
+        var bg = IsFocused ? FocusedBackground : (Background ?? buffer.GetPixel(x, y).Background);
 
         for (int row = 0; row < h; row++)
         {
@@ -130,8 +170,8 @@ public class TextEditor : UIElement
 
                 if (IsFocused && lineIdx == _cursorRow && charIdx == _cursorCol)
                 {
-                    cellFg = TuiColor.Black;
-                    cellBg = TuiColor.Gray;
+                    cellFg = CaretForeground;
+                    cellBg = CaretBackground;
                 }
 
                 buffer.SetPixel(x + col, y + row, c, cellFg, cellBg);
@@ -139,7 +179,7 @@ public class TextEditor : UIElement
 
             if (IsFocused && lineIdx == _cursorRow && _cursorCol == lineText.Length && _cursorCol - _scrollX < w)
             {
-                buffer.SetPixel(x + (_cursorCol - _scrollX), y + row, ' ', TuiColor.Black, TuiColor.Gray);
+                buffer.SetPixel(x + (_cursorCol - _scrollX), y + row, ' ', CaretForeground, CaretBackground);
             }
         }
     }

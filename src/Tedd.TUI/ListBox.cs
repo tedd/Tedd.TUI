@@ -18,7 +18,8 @@ public class ListBox : Selector
         _scrollBar.Parent = this;
         _scrollBar.ValueChanged += OnScroll;
 
-        Foreground = ConsoleColor.Gray;
+        // No local Foreground: the predefined themes style ListBox.Foreground (Gray in
+        // the default Dark theme), and a local value here would block them.
     }
 
     private void OnScroll(object? sender, EventArgs e)
@@ -172,7 +173,7 @@ public class ListBox : Selector
             for (int dx = 0; dx < effectiveW; dx++)
             {
                 var pixelBg = Background ?? buffer.GetPixel(x + dx, y + i).Background;
-                buffer.SetPixel(x + dx, y + i, ' ', TuiColor.White, pixelBg);
+                buffer.SetPixel(x + dx, y + i, ' ', Foreground, pixelBg);
             }
 
             if (itemIndex < Items.Count)

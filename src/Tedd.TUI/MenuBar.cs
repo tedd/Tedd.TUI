@@ -7,7 +7,6 @@ public class MenuBar : StackPanel
     public MenuBar()
     {
         Orientation = Orientation.Horizontal;
-        Background = TuiColor.Gray;
         VerticalAlignment = VerticalAlignment.Top;
     }
 
@@ -16,15 +15,15 @@ public class MenuBar : StackPanel
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
-        // Draw background strip
-        if (Background.HasValue)
+        // Draw background strip. No local Background is set in the constructor so the
+        // active theme can style it; unthemed bars keep the classic gray strip.
+        var bg = Background ?? TuiColor.Gray;
+        var fg = Foreground;
+        for (int i = 0; i < RenderSize.Width; i++)
         {
-            for (int i = 0; i < RenderSize.Width; i++)
+            for (int j = 0; j < RenderSize.Height; j++)
             {
-                for (int j = 0; j < RenderSize.Height; j++)
-                {
-                    buffer.SetPixel(x + i, y + j, ' ', TuiColor.Black, Background.Value);
-                }
+                buffer.SetPixel(x + i, y + j, ' ', fg, bg);
             }
         }
 
