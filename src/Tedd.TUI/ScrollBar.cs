@@ -152,7 +152,7 @@ public class ScrollBar : UIElement
     }
 
     private bool _isDragging;
-    private int _dragAnchor; // Mouse position when drag started
+    private double _dragAnchorF; // Fractional global mouse position (drag axis) when drag started
     private int _dragStartValue; // Value when drag started
 
     public override void OnMouseDown(MouseEventArgs e)
@@ -197,9 +197,11 @@ public class ScrollBar : UIElement
             // Check if clicked ON Thumb
             if (clickTrackPos >= thumbPos && clickTrackPos < thumbPos + thumbSize)
             {
-                // Start Drag
+                // Start Drag. The anchor is kept in fractional global coordinates so the
+                // drag keeps working wherever the pointer goes (mouse is captured) and so
+                // sub-cell precision from pixel-based hosts maps to fine-grained scrolling.
                 _isDragging = true;
-                _dragAnchor = clickPos;
+                _dragAnchorF = (Orientation == Orientation.Vertical) ? e.GlobalYF : e.GlobalXF;
                 _dragStartValue = Value;
 
                 var root = GetRoot() as TuiWindow;
@@ -220,7 +222,6 @@ public class ScrollBar : UIElement
         {
             int w = RenderSize.Width;
             int h = RenderSize.Height;
-            int currentPos = (Orientation == Orientation.Vertical) ? e.Y : e.X;
             int maxPos = (Orientation == Orientation.Vertical) ? h : w;
             int innerLen = maxPos - 2;
 
@@ -237,21 +238,19 @@ public class ScrollBar : UIElement
 
             if (availableSlide > 0 && range > 0)
             {
-                // Calculate delta in pixels
-                int deltaPixels = currentPos - _dragAnchor;
+                // Delta in fractional global cells along the drag axis. Global coordinates
+                // (rather than local) so the mapping is unaffected by where the captured
+                // pointer currently is relative to the bar.
+                double currentPosF = (Orientation == Orientation.Vertical) ? e.GlobalYF : e.GlobalXF;
+                double deltaCells = currentPosF - _dragAnchorF;
 
-                // Convert pixels to value
                 // thumbPos = availableSlide * (Value - Min) / Range
-                // Value - Min = thumbPos * Range / availableSlide
-                // DeltaValue = DeltaPixels * Range / availableSlide
+                // => DeltaValue = DeltaCells * Range / availableSlide
+                // Rounded to nearest so sub-cell movement scrolls line by line once the
+                // accumulated distance crosses half a line's worth of track.
+                int deltaValue = (int)Math.Round(deltaCells * range / availableSlide);
 
-                // We use float/double for better precision during drag? 
-                // Int is fine if we accumulate, but straightforward mapping:
-                // NewValue = StartValue + (Delta * Range / Slide)
-
-                long deltaValue = (long)deltaPixels * range / availableSlide;
-
-                Value = _dragStartValue + (int)deltaValue;
+                Value = _dragStartValue + deltaValue;
             }
         }
         e.Handled = true;
@@ -265,6 +264,24 @@ public class ScrollBar : UIElement
             _isDragging = false;
             var root = GetRoot() as TuiWindow;
             root?.ReleaseMouseCapture();
+        }
+        e.Handled = true;
+    }
+
+    private WheelNotchAccumulator _wheelAccumulator;
+
+    public override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        if (e.Handled) return;
+        if (Maximum <= Minimum) return; // nothing to scroll; let an ancestor take the wheel
+
+        int notches = _wheelAccumulator.Add(e.Delta);
+        if (notches != 0)
+        {
+            // Wheel up (positive delta) scrolls toward Minimum, one notch = the same
+            // distance as WheelScrollLines clicks on the arrow buttons.
+            Value -= notches * SmallChange * ScrollViewer.WheelScrollLines;
         }
         e.Handled = true;
     }

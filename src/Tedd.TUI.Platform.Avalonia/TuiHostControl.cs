@@ -226,12 +226,14 @@ public class TuiHostControl : AvControl
 
     // ---------------------------------------------------------------- input
 
-    private (int X, int Y) ToCell(global::Avalonia.Point position)
+    // Fractional cell coordinates (clamped so the integer cell stays within the grid);
+    // sub-cell precision feeds fine-grained drags such as scrollbar thumbs.
+    private (double X, double Y) ToCell(global::Avalonia.Point position)
     {
         double scale = _lastScale <= 0 ? 1.0 : _lastScale;
         var surface = EnsureSurface(scale);
-        int cx = Math.Clamp((int)(position.X * scale / surface.CellWidth), 0, Math.Max(0, Columns - 1));
-        int cy = Math.Clamp((int)(position.Y * scale / surface.CellHeight), 0, Math.Max(0, Rows - 1));
+        double cx = Math.Clamp(position.X * scale / surface.CellWidth, 0.0, Math.Max(0, Columns - 1) + 0.999);
+        double cy = Math.Clamp(position.Y * scale / surface.CellHeight, 0.0, Math.Max(0, Rows - 1) + 0.999);
         return (cx, cy);
     }
 
@@ -264,6 +266,19 @@ public class TuiHostControl : AvControl
         base.OnPointerMoved(e);
         var (cx, cy) = ToCell(e.GetPosition(this));
         _controller.MouseMove(cx, cy);
+    }
+
+    protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
+    {
+        base.OnPointerWheelChanged(e);
+        // Avalonia reports the wheel in scroll-lines (±1 per notch); normalize to the
+        // WPF-style ±120-per-notch convention the TUI uses.
+        int delta = (int)Math.Round(e.Delta.Y * 120);
+        if (delta == 0)
+            return;
+        var (cx, cy) = ToCell(e.GetPosition(this));
+        _controller.MouseWheel(cx, cy, delta);
+        e.Handled = true;
     }
 
     protected override void OnKeyDown(AvKeyEventArgs e)

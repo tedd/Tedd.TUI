@@ -198,11 +198,13 @@ public class TuiHostControl : UserControl
 
     // ---------------------------------------------------------------- input
 
-    private (int X, int Y) ToCell(Windows.Foundation.Point position)
+    // Fractional cell coordinates (clamped so the integer cell stays within the grid);
+    // sub-cell precision feeds fine-grained drags such as scrollbar thumbs.
+    private (double X, double Y) ToCell(Windows.Foundation.Point position)
     {
         var surface = EnsureSurface(_lastScale);
-        int cx = Math.Clamp((int)(position.X * _lastScale / surface.CellWidth), 0, Math.Max(0, Columns - 1));
-        int cy = Math.Clamp((int)(position.Y * _lastScale / surface.CellHeight), 0, Math.Max(0, Rows - 1));
+        double cx = Math.Clamp(position.X * _lastScale / surface.CellWidth, 0.0, Math.Max(0, Columns - 1) + 0.999);
+        double cy = Math.Clamp(position.Y * _lastScale / surface.CellHeight, 0.0, Math.Max(0, Rows - 1) + 0.999);
         return (cx, cy);
     }
 
@@ -233,6 +235,18 @@ public class TuiHostControl : UserControl
         base.OnPointerMoved(e);
         var (cx, cy) = ToCell(e.GetCurrentPoint(this).Position);
         _controller.MouseMove(cx, cy);
+    }
+
+    protected override void OnPointerWheelChanged(PointerRoutedEventArgs e)
+    {
+        base.OnPointerWheelChanged(e);
+        var point = e.GetCurrentPoint(this);
+        int delta = point.Properties.MouseWheelDelta; // ±120 per notch
+        if (delta == 0)
+            return;
+        var (cx, cy) = ToCell(point.Position);
+        _controller.MouseWheel(cx, cy, delta);
+        e.Handled = true;
     }
 
     protected override void OnKeyDown(KeyRoutedEventArgs e)

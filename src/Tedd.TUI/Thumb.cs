@@ -85,8 +85,11 @@ public class Thumb : Control
         remove => RemoveHandler(DragCompletedEvent, value);
     }
 
-    private Point _originScreenCoord;
-    private Point _previousScreenCoord;
+    // Fractional global coordinates (cell units). Pixel-based hosts report sub-cell
+    // positions, so drag deltas can be smaller than one cell; terminal hosts report
+    // whole cells and deltas stay integral.
+    private double _originXF, _originYF;
+    private double _previousXF, _previousYF;
 
     public Thumb()
     {
@@ -105,8 +108,8 @@ public class Thumb : Control
 
             IsDragging = false;
             var args = new DragCompletedEventArgs(
-                _previousScreenCoord.X - _originScreenCoord.X,
-                _previousScreenCoord.Y - _originScreenCoord.Y,
+                _previousXF - _originXF,
+                _previousYF - _originYF,
                 true,
                 DragCompletedEvent,
                 this);
@@ -126,10 +129,12 @@ public class Thumb : Control
                 Focus();
                 root.CaptureMouse(this);
                 IsDragging = true;
-                _originScreenCoord = new Point(e.GlobalX, e.GlobalY);
-                _previousScreenCoord = _originScreenCoord;
+                _originXF = e.GlobalXF;
+                _originYF = e.GlobalYF;
+                _previousXF = _originXF;
+                _previousYF = _originYF;
 
-                var args = new DragStartedEventArgs(_originScreenCoord.X, _originScreenCoord.Y, DragStartedEvent, this);
+                var args = new DragStartedEventArgs(_originXF, _originYF, DragStartedEvent, this);
                 RaiseEvent(args);
             }
         }
@@ -143,15 +148,16 @@ public class Thumb : Control
             var root = GetRoot() as TuiWindow;
             if (root?.CapturedElement == this)
             {
-                int currentX = e.GlobalX;
-                int currentY = e.GlobalY;
+                double currentX = e.GlobalXF;
+                double currentY = e.GlobalYF;
 
-                if (currentX != _previousScreenCoord.X || currentY != _previousScreenCoord.Y)
+                if (currentX != _previousXF || currentY != _previousYF)
                 {
-                    double deltaX = currentX - _previousScreenCoord.X;
-                    double deltaY = currentY - _previousScreenCoord.Y;
+                    double deltaX = currentX - _previousXF;
+                    double deltaY = currentY - _previousYF;
 
-                    _previousScreenCoord = new Point(currentX, currentY);
+                    _previousXF = currentX;
+                    _previousYF = currentY;
 
                     var args = new DragDeltaEventArgs(deltaX, deltaY, DragDeltaEvent, this);
                     RaiseEvent(args);
@@ -176,8 +182,8 @@ public class Thumb : Control
             e.Handled = true;
 
             var args = new DragCompletedEventArgs(
-                _previousScreenCoord.X - _originScreenCoord.X,
-                _previousScreenCoord.Y - _originScreenCoord.Y,
+                _previousXF - _originXF,
+                _previousYF - _originYF,
                 false,
                 DragCompletedEvent,
                 this);

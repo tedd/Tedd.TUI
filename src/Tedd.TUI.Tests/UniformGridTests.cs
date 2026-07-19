@@ -1,10 +1,43 @@
 using System;
+using Tedd.TUI.Tests.TestInfrastructure;
 using Xunit;
 
 namespace Tedd.TUI.Tests
 {
     public class UniformGridTests
     {
+        [Fact]
+        public void MouseClick_ButtonsInSeparateCells_HitsOnlyTarget()
+        {
+            var first = new Button { Content = "First" };
+            var second = new Button { Content = "Second" };
+            var grid = new UniformGrid
+            {
+                Rows = 2,
+                Columns = 2,
+                Width = 20,
+                Height = 8
+            };
+            grid.AddChild(first);
+            grid.AddChild(new TextBlock { Text = "empty cell" });
+            grid.AddChild(new TextBlock { Text = "surface" });
+            grid.AddChild(second);
+
+            var host = new ControlTestHost(new Border { Child = grid }, 24, 12);
+            var firstClicks = 0;
+            var secondClicks = 0;
+            first.Click += (_, _) => firstClicks++;
+            second.Click += (_, _) => secondClicks++;
+
+            host.Click(first, 2, 1);
+            host.Click(grid, 12, 1);
+            host.Click(second, 2, 1);
+
+            Assert.Equal(1, firstClicks);
+            Assert.Equal(1, secondClicks);
+            Assert.True(second.IsFocused);
+        }
+
         [Theory]
         [InlineData(2, 2, 4)]
         [InlineData(0, 0, 9)] // should default to 3x3

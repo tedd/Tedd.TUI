@@ -190,9 +190,10 @@ public class TuiHostView : SKCanvasView
         base.OnTouch(e);
 
         var surface = EnsureSurface(_lastScale);
-        // SKTouchEventArgs locations are already in canvas pixels.
-        int cx = Math.Clamp((int)(e.Location.X / surface.CellWidth), 0, Math.Max(0, Columns - 1));
-        int cy = Math.Clamp((int)(e.Location.Y / surface.CellHeight), 0, Math.Max(0, Rows - 1));
+        // SKTouchEventArgs locations are already in canvas pixels. Fractional cell
+        // coordinates keep sub-cell precision for fine-grained drags.
+        double cx = Math.Clamp(e.Location.X / surface.CellWidth, 0.0, Math.Max(0, Columns - 1) + 0.999);
+        double cy = Math.Clamp(e.Location.Y / surface.CellHeight, 0.0, Math.Max(0, Rows - 1) + 0.999);
 
         switch (e.ActionType)
         {
@@ -204,6 +205,11 @@ public class TuiHostView : SKCanvasView
                 break;
             case SKTouchAction.Released:
                 _controller.MouseUp(cx, cy);
+                break;
+            case SKTouchAction.WheelChanged:
+                if (e.WheelDelta == 0)
+                    return;
+                _controller.MouseWheel(cx, cy, e.WheelDelta); // ±120 per notch on desktop
                 break;
             default:
                 return;

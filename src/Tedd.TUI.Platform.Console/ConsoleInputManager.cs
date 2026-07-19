@@ -166,16 +166,31 @@ public class ConsoleInputManager
             }
             else if (record.EventType == NativeMethods.MOUSE_EVENT)
             {
+                // Note: Mouse coordinates are 0-based in current console window
+                int x = record.MouseEvent.dwMousePosition.X;
+                int y = record.MouseEvent.dwMousePosition.Y;
+
+                if ((record.MouseEvent.dwEventFlags & NativeMethods.MOUSE_WHEELED) != 0)
+                {
+                    // Wheel rotation is the signed high word of dwButtonState
+                    // (WPF-style ±120 per notch). Wheel records carry no button
+                    // transition, so they don't touch the down/up tracking below.
+                    int wheelDelta = (short)(record.MouseEvent.dwButtonState >> 16);
+                    _window.ProcessMouse(new MouseWheelEventArgs
+                    {
+                        GlobalX = x,
+                        GlobalY = y,
+                        Delta = wheelDelta
+                    });
+                    continue;
+                }
+
                 // Track Mouse State
                 // dwButtonState: lowest bit is Left Button
                 bool leftDown = (record.MouseEvent.dwButtonState & 0x01) != 0;
                 bool wasLeftDown = (_lastButtonState & 0x01) != 0;
 
                 _lastButtonState = record.MouseEvent.dwButtonState;
-
-                // Note: Mouse coordinates are 0-based in current console window
-                int x = record.MouseEvent.dwMousePosition.X;
-                int y = record.MouseEvent.dwMousePosition.Y;
 
                 _window.ProcessMouse(new MouseEventArgs(UIElement.MouseMoveEvent)
                 {
@@ -391,6 +406,17 @@ public class ConsoleInputManager
                     {
                         GlobalX = x,
                         GlobalY = y
+                    });
+                }
+                else if ((btn == 64 || btn == 65) && isDown)
+                {
+                    // SGR wheel buttons: 64 = wheel up, 65 = wheel down; terminals
+                    // report one notch per event (always as a press).
+                    _window.ProcessMouse(new MouseWheelEventArgs
+                    {
+                        GlobalX = x,
+                        GlobalY = y,
+                        Delta = btn == 64 ? MouseWheelEventArgs.WheelNotch : -MouseWheelEventArgs.WheelNotch
                     });
                 }
             }

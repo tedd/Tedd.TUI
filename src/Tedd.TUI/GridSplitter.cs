@@ -102,8 +102,14 @@ public class GridSplitter : Thumb
         return GridResizeDirection.Columns;
     }
 
+    // Grid tracks are whole cells, but drag deltas can be fractional (sub-cell mouse
+    // precision on pixel-based hosts). Accumulate until a whole cell is crossed.
+    private double _accumulatedX;
+    private double _accumulatedY;
+
     public GridSplitter()
     {
+        DragStarted += (_, _) => { _accumulatedX = 0; _accumulatedY = 0; };
         DragDelta += OnDragDelta;
     }
 
@@ -123,8 +129,10 @@ public class GridSplitter : Thumb
                 var leftCol = grid.ColumnDefinitions[col - 1];
                 var rightCol = grid.ColumnDefinitions[col + 1];
 
-                double change = e.HorizontalChange;
+                _accumulatedX += e.HorizontalChange;
+                double change = (int)_accumulatedX; // whole cells only, keep the remainder
                 if (change == 0) return;
+                _accumulatedX -= change;
 
                 // Clamp horizontal change so both columns stay within Min/Max and total width stays constant.
                 double leftActual = leftCol.ActualWidth;
@@ -176,8 +184,10 @@ public class GridSplitter : Thumb
                 var topRow = grid.RowDefinitions[row - 1];
                 var bottomRow = grid.RowDefinitions[row + 1];
 
-                double change = e.VerticalChange;
+                _accumulatedY += e.VerticalChange;
+                double change = (int)_accumulatedY; // whole cells only, keep the remainder
                 if (change == 0) return;
+                _accumulatedY -= change;
 
                 // Clamp vertical change so both rows stay within Min/Max and total height stays constant.
                 double topActual = topRow.ActualHeight;

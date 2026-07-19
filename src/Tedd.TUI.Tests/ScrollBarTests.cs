@@ -1,6 +1,7 @@
 using Xunit;
 using Tedd.TUI;
 using System;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests
 {
@@ -90,9 +91,9 @@ namespace Tedd.TUI.Tests
         }
 
         [Fact]
-        public void TestInput_Step()
+        public void MouseClick_NestedSiblingScrollBars_ChangesOnlyClickedArrow()
         {
-            var scrollBar = new ScrollBar
+            var vertical = new ScrollBar
             {
                 Orientation = Orientation.Vertical,
                 Minimum = 0,
@@ -102,24 +103,47 @@ namespace Tedd.TUI.Tests
                 Height = 10,
                 Width = 1
             };
-            scrollBar.Measure(new Size(1, 10));
-            scrollBar.Arrange(new Rect(0, 0, 1, 10));
+            var horizontal = new ScrollBar
+            {
+                Orientation = Orientation.Horizontal,
+                Minimum = 0,
+                Maximum = 100,
+                Value = 40,
+                SmallChange = 7,
+                Height = 1,
+                Width = 10
+            };
+            var canvas = new Canvas { Width = 20, Height = 14 };
+            var caption = new TextBlock { Text = "Scroll controls" };
+            Canvas.SetLeft(caption, 1);
+            Canvas.SetTop(caption, 0);
+            Canvas.SetLeft(vertical, 3);
+            Canvas.SetTop(vertical, 2);
+            Canvas.SetLeft(horizontal, 7);
+            Canvas.SetTop(horizontal, 12);
+            canvas.AddChild(caption);
+            canvas.AddChild(vertical);
+            canvas.AddChild(horizontal);
+            var host = new ControlTestHost(new Border { Child = canvas }, 24, 18);
 
-            // Click Up Arrow (0, 0)
-            var args = new MouseEventArgs { X = 0, Y = 0 };
-            scrollBar.OnMouseDown(args);
+            host.Click(vertical, 0, 0);
+            Assert.Equal(45, vertical.Value);
+            Assert.Equal(40, horizontal.Value);
 
-            Assert.Equal(45, scrollBar.Value);
+            host.Click(vertical, 0, vertical.RenderSize.Height - 1);
+            Assert.Equal(50, vertical.Value);
+            Assert.Equal(40, horizontal.Value);
 
-            // Click Down Arrow (0, 9)
-            args = new MouseEventArgs { X = 0, Y = 9 };
-            scrollBar.OnMouseDown(args);
+            host.Click(horizontal, 0, 0);
+            Assert.Equal(50, vertical.Value);
+            Assert.Equal(33, horizontal.Value);
 
-            Assert.Equal(50, scrollBar.Value);
+            host.Click(horizontal, horizontal.RenderSize.Width - 1, 0);
+            Assert.Equal(40, horizontal.Value);
         }
 
         [Fact]
-        public void TestInput_Page()
+        public void MouseClick_NestedScrollBarTrack_PagesWithoutActivatingSibling()
         {
             var scrollBar = new ScrollBar
             {
@@ -128,37 +152,40 @@ namespace Tedd.TUI.Tests
                 Maximum = 100,
                 Value = 50,
                 LargeChange = 20,
-                Height = 12, // Arrows: 2, Track: 10
+                Height = 12,
                 Width = 1,
-                ViewportSize = 10 // Thumb size approx 1?
+                ViewportSize = 10
             };
-            // Range = 100. ContentSize = 110. InnerLen = 10.
-            // ThumbSize = 10 * 10 / 110 = 0.9 -> 1.
-            // AvailableSlide = 9.
-            // Value=50. ThumbPos = 9 * (50-0) / 100 = 4.5 -> 4.
-            // Track starts at Y=1. Thumb at 1+4=5.
+            var sibling = new Button { Content = "Other", Width = 8 };
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            row.AddChild(new TextBlock { Text = "  " });
+            row.AddChild(scrollBar);
+            row.AddChild(new TextBlock { Text = "    " });
+            row.AddChild(sibling);
+            var surface = new StackPanel();
+            surface.AddChild(new TextBlock { Text = "Page through results" });
+            surface.AddChild(row);
+            surface.AddChild(new TextBlock { Text = "status" });
+            var host = new ControlTestHost(new Border { Child = surface }, 24, 17);
+            var siblingClicks = 0;
+            sibling.Click += (_, _) => siblingClicks++;
 
-            scrollBar.Measure(new Size(1, 12));
-            scrollBar.Arrange(new Rect(0, 0, 1, 12));
+            // At value 50, the thumb is at local Y=5; Y=2 pages up.
+            host.Click(scrollBar, 0, 2);
+            Assert.Equal(30, scrollBar.Value);
 
-            // Click above thumb (Y=2) -> Page Up
-            var args = new MouseEventArgs { X = 0, Y = 2 };
-            scrollBar.OnMouseDown(args);
+            // At value 30, the thumb is at local Y=3; Y=8 pages down.
+            host.Click(scrollBar, 0, 8);
+            Assert.Equal(50, scrollBar.Value);
+            Assert.Equal(0, siblingClicks);
 
-            Assert.Equal(30, scrollBar.Value); // 50 - 20
-
-            // Click below thumb (Y=8) -> Page Down
-            // Recalculate thumb pos? Value changed to 30.
-            // ThumbPos for 30: 9 * 30 / 100 = 2.7 -> 2. Thumb at 1+2=3.
-            // Y=8 is well below thumb.
-            args = new MouseEventArgs { X = 0, Y = 8 };
-            scrollBar.OnMouseDown(args);
-
-            Assert.Equal(50, scrollBar.Value); // 30 + 20
+            host.Click(sibling, 2, 1);
+            Assert.Equal(1, siblingClicks);
+            Assert.Equal(50, scrollBar.Value);
         }
 
         [Fact]
-        public void TestInput_Drag()
+        public void MouseDrag_NestedScrollBar_CapturesAndContinuesOutsideBounds()
         {
             var scrollBar = new ScrollBar
             {
@@ -166,41 +193,90 @@ namespace Tedd.TUI.Tests
                 Minimum = 0,
                 Maximum = 100,
                 Value = 0,
-                Height = 102, // Arrows: 2, Track: 100
+                Height = 102,
                 Width = 1,
                 ViewportSize = 1
             };
-            // InnerLen = 100. Range = 100. ContentSize = 101.
-            // ThumbSize = 100 * 1 / 101 = 0 -> 1.
-            // AvailableSlide = 99.
-            // 1 pixel drag ~= 1 value roughly.
+            var sibling = new ScrollBar
+            {
+                Orientation = Orientation.Vertical,
+                Value = 25,
+                Height = 12,
+                Width = 1
+            };
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            row.AddChild(new TextBlock { Text = "  " });
+            row.AddChild(scrollBar);
+            row.AddChild(new TextBlock { Text = "     " });
+            row.AddChild(sibling);
+            var host = new ControlTestHost(new Border { Child = row }, 14, 106);
+            var start = scrollBar.PointToScreen(new Point(0, 1));
 
-            scrollBar.Measure(new Size(1, 102));
-            scrollBar.Arrange(new Rect(0, 0, 1, 102));
+            host.MouseDown(start.X, start.Y);
+            Assert.Same(scrollBar, host.Window.CapturedElement);
 
-            // MouseDown on Thumb at Y=1 (Value=0)
-            var downArgs = new MouseEventArgs { X = 0, Y = 1 };
-            scrollBar.OnMouseDown(downArgs);
+            // Capture keeps routing to the scrollbar even far outside its one-cell width.
+            host.MouseMove(start.X + 20, start.Y + 10);
+            Assert.InRange(scrollBar.Value, 9, 11);
+            Assert.Equal(25, sibling.Value);
 
-            // Drag down by 10 pixels
-            var moveArgs = new MouseEventArgs { X = 0, Y = 11 };
-            scrollBar.OnMouseMove(moveArgs);
+            host.MouseUp(start.X + 30, start.Y + 10);
+            Assert.Null(host.Window.CapturedElement);
+            var valueAfterRelease = scrollBar.Value;
 
-            // Verify value changed
-            // DeltaPixels = 10.
-            // DeltaValue = 10 * 100 / 99 = 10.
-            // Expected Value = 10.
-            Assert.True(scrollBar.Value >= 9 && scrollBar.Value <= 11, $"Value was {scrollBar.Value}, expected ~10");
+            host.MouseMove(start.X, start.Y + 50);
+            Assert.Equal(valueAfterRelease, scrollBar.Value);
+            Assert.Equal(25, sibling.Value);
+        }
 
-            // MouseUp
-            var upArgs = new MouseEventArgs { X = 0, Y = 11 };
-            scrollBar.OnMouseUp(upArgs);
+        [Fact]
+        public void MouseDrag_SubCellMoves_ScrollsLineByLine()
+        {
+            // Height 12 -> inner track 10, thumb size 1, available slide 9.
+            // One whole cell of thumb travel covers 100/9 ≈ 11 lines, so line-by-line
+            // scrolling is only reachable through sub-cell (pixel host) precision.
+            var scrollBar = new ScrollBar
+            {
+                Orientation = Orientation.Vertical,
+                Minimum = 0,
+                Maximum = 100,
+                Value = 0,
+                Height = 12,
+                Width = 1,
+                ViewportSize = 10
+            };
+            var host = new ControlTestHost(new Border { Child = scrollBar }, 5, 14);
 
-            // Drag after Up should not change value
-            var moveArgs2 = new MouseEventArgs { X = 0, Y = 50 };
-            scrollBar.OnMouseMove(moveArgs2);
+            // Thumb is at local Y=1 when Value=0; press its center.
+            var thumb = scrollBar.PointToScreen(new Point(0, 1));
+            double x = thumb.X + 0.5;
+            double y = thumb.Y + 0.5;
+            host.MouseDownF(x, y);
+            Assert.Same(scrollBar, host.Window.CapturedElement);
+            Assert.Equal(0, scrollBar.Value);
 
-            Assert.True(scrollBar.Value >= 9 && scrollBar.Value <= 11);
+            // 0.05 cells * 100/9 = 0.56 -> rounds to 1: a slight move scrolls one line.
+            host.MouseMoveF(x, y + 0.05);
+            Assert.Equal(1, scrollBar.Value);
+
+            // 0.14 cells * 100/9 = 1.56 -> 2 lines. Mapping stays absolute, not additive.
+            host.MouseMoveF(x, y + 0.14);
+            Assert.Equal(2, scrollBar.Value);
+
+            // A whole cell matches the coarse (terminal) granularity: 100/9 -> 11.
+            host.MouseMoveF(x, y + 1.0);
+            Assert.Equal(11, scrollBar.Value);
+
+            // Sub-cell moves keep working far away from the bar horizontally.
+            host.MouseMoveF(x + 17, y + 1.09);
+            Assert.Equal(12, scrollBar.Value);
+
+            // Returning to the anchor restores the starting value.
+            host.MouseMoveF(x, y);
+            Assert.Equal(0, scrollBar.Value);
+
+            host.MouseUpF(x, y);
+            Assert.Null(host.Window.CapturedElement);
         }
     }
 }

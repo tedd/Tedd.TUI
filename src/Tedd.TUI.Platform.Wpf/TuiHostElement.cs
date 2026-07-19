@@ -17,6 +17,7 @@ using WpfSize = System.Windows.Size;
 using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
 using WpfMouseEventArgs = System.Windows.Input.MouseEventArgs;
 using WpfMouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
+using WpfMouseWheelEventArgs = System.Windows.Input.MouseWheelEventArgs;
 using WpfTextCompositionEventArgs = System.Windows.Input.TextCompositionEventArgs;
 using WpfKeyboard = System.Windows.Input.Keyboard;
 using WpfMouseButton = System.Windows.Input.MouseButton;
@@ -130,6 +131,7 @@ public class TuiHostElement : FrameworkElement
     private bool _renderQueued;
     private bool _initialFocusDone;
     private int _lastMouseCellX = -1, _lastMouseCellY = -1;
+    private double _lastMouseXF = double.NaN, _lastMouseYF = double.NaN;
 
     private Typeface? _typeface;
     private double _cellWidth = 8, _cellHeight = 16;
@@ -489,35 +491,66 @@ public class TuiHostElement : FrameworkElement
     protected override void OnMouseMove(WpfMouseEventArgs e)
     {
         base.OnMouseMove(e);
-        var (cx, cy) = ToCell(e);
-        // Mouse-move only matters at cell granularity; gate on cell change to avoid
-        // flooding the TUI with sub-cell movements.
-        if (cx == _lastMouseCellX && cy == _lastMouseCellY)
+        var (fx, fy) = ToCell(e);
+        int cx = (int)fx, cy = (int)fy;
+        // Hover only matters at cell granularity; gate on cell change to avoid flooding
+        // the TUI with sub-cell movements. While a TUI element holds mouse capture
+        // (drag in progress), forward every sub-cell change for fine-grained tracking.
+        bool cellChanged = cx != _lastMouseCellX || cy != _lastMouseCellY;
+        bool subCellChanged = fx != _lastMouseXF || fy != _lastMouseYF;
+        bool captured = _window?.CapturedElement != null;
+        if (!cellChanged && !(captured && subCellChanged))
             return;
         _lastMouseCellX = cx;
         _lastMouseCellY = cy;
-        SendMouseCell(cx, cy, UIElement.MouseMoveEvent);
+        _lastMouseXF = fx;
+        _lastMouseYF = fy;
+        SendMouseCell(fx, fy, UIElement.MouseMoveEvent);
     }
 
-    private (int X, int Y) ToCell(WpfMouseEventArgs e)
+    // Fractional cell coordinates, clamped so the integer cell stays within the grid.
+    private (double X, double Y) ToCell(WpfMouseEventArgs e)
     {
         var pos = e.GetPosition(this);
-        int cx = Math.Clamp((int)(pos.X / _cellWidth), 0, Math.Max(0, Columns - 1));
-        int cy = Math.Clamp((int)(pos.Y / _cellHeight), 0, Math.Max(0, Rows - 1));
-        return (cx, cy);
+        double fx = Math.Clamp(pos.X / _cellWidth, 0.0, Math.Max(0, Columns - 1) + 0.999);
+        double fy = Math.Clamp(pos.Y / _cellHeight, 0.0, Math.Max(0, Rows - 1) + 0.999);
+        return (fx, fy);
     }
 
     private void SendMouse(WpfMouseEventArgs e, RoutedEvent routedEvent)
     {
-        var (cx, cy) = ToCell(e);
-        SendMouseCell(cx, cy, routedEvent);
+        var (fx, fy) = ToCell(e);
+        SendMouseCell(fx, fy, routedEvent);
     }
 
-    private void SendMouseCell(int cx, int cy, RoutedEvent routedEvent)
+    private void SendMouseCell(double fx, double fy, RoutedEvent routedEvent)
     {
         if (_window == null)
             return;
-        _window.ProcessMouse(new MouseEventArgs(routedEvent) { GlobalX = cx, GlobalY = cy });
+        _window.ProcessMouse(new MouseEventArgs(routedEvent)
+        {
+            GlobalX = (int)fx,
+            GlobalY = (int)fy,
+            GlobalXF = fx,
+            GlobalYF = fy
+        });
+    }
+
+    protected override void OnMouseWheel(WpfMouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        if (_window == null)
+            return;
+        var (fx, fy) = ToCell(e);
+        _window.ProcessMouse(new Tedd.TUI.MouseWheelEventArgs
+        {
+            GlobalX = (int)fx,
+            GlobalY = (int)fy,
+            GlobalXF = fx,
+            GlobalYF = fy,
+            Delta = e.Delta // WPF already reports ±120 per notch
+        });
+        e.Handled = true;
     }
 
     protected override void OnKeyDown(WpfKeyEventArgs e)

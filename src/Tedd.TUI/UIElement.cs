@@ -592,12 +592,14 @@ public abstract class UIElement : DependencyObject
     public static readonly RoutedEvent PreviewMouseDownEvent = RoutedEvent.Register("PreviewMouseDown", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent PreviewMouseUpEvent = RoutedEvent.Register("PreviewMouseUp", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent PreviewMouseMoveEvent = RoutedEvent.Register("PreviewMouseMove", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent PreviewMouseWheelEvent = RoutedEvent.Register("PreviewMouseWheel", RoutingStrategy.Tunnel, typeof(RoutedEventHandler), typeof(UIElement));
 
     public static readonly RoutedEvent KeyDownEvent = RoutedEvent.Register("KeyDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent KeyUpEvent = RoutedEvent.Register("KeyUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseDownEvent = RoutedEvent.Register("MouseDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseUpEvent = RoutedEvent.Register("MouseUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseMoveEvent = RoutedEvent.Register("MouseMove", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseWheelEvent = RoutedEvent.Register("MouseWheel", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseEnterEvent = RoutedEvent.Register("MouseEnter", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseLeaveEvent = RoutedEvent.Register("MouseLeave", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent GotFocusEvent = RoutedEvent.Register("GotFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
@@ -610,11 +612,13 @@ public abstract class UIElement : DependencyObject
         else if (e.RoutedEvent == PreviewMouseDownEvent) OnPreviewMouseDown((MouseEventArgs)e);
         else if (e.RoutedEvent == PreviewMouseUpEvent) OnPreviewMouseUp((MouseEventArgs)e);
         else if (e.RoutedEvent == PreviewMouseMoveEvent) OnPreviewMouseMove((MouseEventArgs)e);
+        else if (e.RoutedEvent == PreviewMouseWheelEvent) OnPreviewMouseWheel((MouseWheelEventArgs)e);
         else if (e.RoutedEvent == KeyDownEvent) OnKeyDown((KeyEventArgs)e);
         else if (e.RoutedEvent == KeyUpEvent) OnKeyUp((KeyEventArgs)e);
         else if (e.RoutedEvent == MouseDownEvent) OnMouseDown((MouseEventArgs)e);
         else if (e.RoutedEvent == MouseUpEvent) OnMouseUp((MouseEventArgs)e);
         else if (e.RoutedEvent == MouseMoveEvent) OnMouseMove((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseWheelEvent) OnMouseWheel((MouseWheelEventArgs)e);
         else if (e.RoutedEvent == MouseEnterEvent) OnMouseEnter((MouseEventArgs)e);
         else if (e.RoutedEvent == MouseLeaveEvent) OnMouseLeave((MouseEventArgs)e);
         else if (e.RoutedEvent == GotFocusEvent) OnGotFocus();
@@ -626,12 +630,14 @@ public abstract class UIElement : DependencyObject
     public virtual void OnPreviewMouseDown(MouseEventArgs e) { }
     public virtual void OnPreviewMouseUp(MouseEventArgs e) { }
     public virtual void OnPreviewMouseMove(MouseEventArgs e) { }
+    public virtual void OnPreviewMouseWheel(MouseWheelEventArgs e) { }
 
     public virtual void OnKeyDown(KeyEventArgs e) { }
     public virtual void OnKeyUp(KeyEventArgs e) { }
     public virtual void OnMouseDown(MouseEventArgs e) { }
     public virtual void OnMouseUp(MouseEventArgs e) { }
     public virtual void OnMouseMove(MouseEventArgs e) { }
+    public virtual void OnMouseWheel(MouseWheelEventArgs e) { }
 
     public virtual void OnMouseEnter(MouseEventArgs e)
     {
@@ -772,6 +778,29 @@ public class MouseEventArgs : RoutedEventArgs
     public int GlobalX { get; set; }
     public int GlobalY { get; set; }
 
+    private double? _globalXF;
+    private double? _globalYF;
+
+    /// <summary>
+    /// Fractional global X in cell units. Pixel-based hosts set this for sub-cell
+    /// precision (e.g. fine scrollbar drags); when unset it defaults to the center
+    /// of the <see cref="GlobalX"/> cell, which is all a terminal can report.
+    /// </summary>
+    public double GlobalXF
+    {
+        get => _globalXF ?? GlobalX + 0.5;
+        set => _globalXF = value;
+    }
+
+    /// <summary>
+    /// Fractional global Y in cell units. See <see cref="GlobalXF"/>.
+    /// </summary>
+    public double GlobalYF
+    {
+        get => _globalYF ?? GlobalY + 0.5;
+        set => _globalYF = value;
+    }
+
     public MouseEventArgs(RoutedEvent routedEvent, object source) : base(routedEvent, source)
     {
     }
@@ -788,6 +817,51 @@ public class MouseEventArgs : RoutedEventArgs
     {
         if (relativeTo == null) return new Point(GlobalX, GlobalY);
         return relativeTo.PointFromScreen(new Point(GlobalX, GlobalY));
+    }
+}
+
+public class MouseWheelEventArgs : MouseEventArgs
+{
+    /// <summary>
+    /// Wheel rotation following the WPF convention: +120 per notch rotated away from
+    /// the user (scroll up/back), -120 per notch toward the user (scroll down/forward).
+    /// High-precision devices (trackpads) may report fractions of a notch; consumers
+    /// should accumulate rather than truncate. See <see cref="WheelNotch"/>.
+    /// </summary>
+    public int Delta { get; set; }
+
+    /// <summary>The <see cref="Delta"/> magnitude of one full wheel notch.</summary>
+    public const int WheelNotch = 120;
+
+    public MouseWheelEventArgs(RoutedEvent routedEvent, object source) : base(routedEvent, source)
+    {
+    }
+
+    public MouseWheelEventArgs(RoutedEvent routedEvent) : base(routedEvent)
+    {
+    }
+
+    public MouseWheelEventArgs() : base(UIElement.MouseWheelEvent)
+    {
+    }
+}
+
+/// <summary>
+/// Accumulates wheel deltas into whole notches so high-precision devices (trackpads)
+/// that report fractions of <see cref="MouseWheelEventArgs.WheelNotch"/> per event
+/// still scroll once the accumulated distance crosses a full notch.
+/// </summary>
+internal struct WheelNotchAccumulator
+{
+    private int _accumulated;
+
+    /// <summary>Adds a delta and returns the number of whole notches now crossed (signed).</summary>
+    public int Add(int delta)
+    {
+        _accumulated += delta;
+        int notches = _accumulated / MouseWheelEventArgs.WheelNotch;
+        _accumulated -= notches * MouseWheelEventArgs.WheelNotch;
+        return notches;
     }
 }
 

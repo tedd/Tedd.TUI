@@ -1,11 +1,42 @@
 using System;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 using Xunit;
 
 namespace Tedd.TUI.Tests;
 
 public class GroupBoxTests
 {
+    [Fact]
+    public void MouseClick_NestedButtons_RoutesThroughGroupBoxContent()
+    {
+        var first = new Button { Content = "First", Width = 9 };
+        var second = new Button { Content = "Second", Width = 9 };
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        row.AddChild(first);
+        row.AddChild(new TextBlock { Text = "   " });
+        row.AddChild(second);
+
+        var group = new GroupBox
+        {
+            Header = new TextBlock { Text = "Actions" },
+            Content = row
+        };
+        var host = new ControlTestHost(new Border { Child = group }, 28, 8);
+        var firstClicks = 0;
+        var secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        host.Click(first, 2, 1);
+        host.Click(group, 11, 2);
+        host.Click(second, 2, 1);
+
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(1, secondClicks);
+        Assert.True(second.IsFocused);
+    }
+
     [Fact]
     public void GroupBox_DefaultProperties_AreSet()
     {

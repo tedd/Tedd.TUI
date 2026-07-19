@@ -381,4 +381,37 @@ public class ScrollViewer : UIElement
         // ScrollViewer's RenderSize, so no extra logic is needed here.
         base.OnMouseDown(e);
     }
+
+    /// <summary>
+    /// Rows/columns scrolled per full wheel notch, analogous to the desktop
+    /// "wheel scroll lines" system setting.
+    /// </summary>
+    public static int WheelScrollLines { get; set; } = 3;
+
+    private WheelNotchAccumulator _wheelAccumulator;
+
+    public override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        if (e.Handled) return;
+
+        // Wheel over content (a wheel over one of our scrollbars is handled by the bar
+        // itself before bubbling here). Vertical scrolling wins when both axes can
+        // scroll; a viewer with nothing to scroll lets the event bubble so a nested
+        // viewer's ancestor can take it.
+        ScrollBar? target = null;
+        if (_showVertical && _verticalScrollBar.Maximum > _verticalScrollBar.Minimum)
+            target = _verticalScrollBar;
+        else if (_showHorizontal && _horizontalScrollBar.Maximum > _horizontalScrollBar.Minimum)
+            target = _horizontalScrollBar;
+
+        if (target == null) return;
+
+        int notches = _wheelAccumulator.Add(e.Delta);
+        if (notches != 0)
+        {
+            target.Value -= notches * target.SmallChange * WheelScrollLines;
+        }
+        e.Handled = true;
+    }
 }

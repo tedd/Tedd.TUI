@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -73,5 +74,61 @@ public class DialogBoxTests
         // Hide D1
         dialog1.Hide();
         Assert.Null(window.Overlay);
+    }
+
+    [Fact]
+    public void MouseClick_DialogOverlay_BlocksBackgroundAndInvokesOnlyChosenButton()
+    {
+        var backgroundButton = new Button { Content = "Background", Width = 12 };
+        var backgroundClicks = 0;
+        backgroundButton.Click += (_, _) => backgroundClicks++;
+        var background = new StackPanel();
+        background.AddChild(new TextBlock { Text = "main surface" });
+        background.AddChild(backgroundButton);
+        var host = new ControlTestHost(new Border { Child = background }, 30, 15);
+
+        var ok = new Button { Content = "OK", Width = 10 };
+        var cancel = new Button { Content = "Cancel", Width = 10 };
+        var okClicks = 0;
+        var cancelClicks = 0;
+        ok.Click += (_, _) => okClicks++;
+        cancel.Click += (_, _) => cancelClicks++;
+        var dialogContent = new StackPanel();
+        dialogContent.AddChild(ok);
+        dialogContent.AddChild(new TextBlock { Text = "dialog surface" });
+        dialogContent.AddChild(cancel);
+        var dialog = new DialogBox
+        {
+            Title = "Confirm",
+            Width = 18,
+            Height = 9,
+            Content = dialogContent
+        };
+        host.Window.PushOverlay(dialog);
+        dialog.Show();
+
+        host.Click(backgroundButton, 2, 1);
+        Assert.Equal(0, backgroundClicks);
+        Assert.Equal(0, okClicks);
+        Assert.Equal(0, cancelClicks);
+
+        var okClick = host.Click(ok, 2, 1);
+
+        Assert.True(okClick.Down.Handled);
+        Assert.Equal(1, okClicks);
+        Assert.Equal(0, cancelClicks);
+        Assert.Equal(0, backgroundClicks);
+        Assert.True(ok.IsFocused);
+        Assert.Same(dialog, host.Window.Overlay);
+
+        var cancelClick = host.Click(cancel, 2, 1);
+
+        Assert.True(cancelClick.Down.Handled);
+        Assert.Equal(1, okClicks);
+        Assert.Equal(1, cancelClicks);
+        Assert.Equal(0, backgroundClicks);
+        Assert.False(ok.IsFocused);
+        Assert.True(cancel.IsFocused);
+        Assert.Same(dialog, host.Window.Overlay);
     }
 }

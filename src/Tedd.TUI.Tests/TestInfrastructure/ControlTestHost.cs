@@ -79,6 +79,32 @@ internal sealed class ControlTestHost
     public MouseEventArgs MouseUp(int x, int y) =>
         Mouse(UIElement.MouseUpEvent, x, y);
 
+    /// <summary>Mouse down at a fractional cell position, as pixel-based hosts report it.</summary>
+    public MouseEventArgs MouseDownF(double x, double y) =>
+        MouseF(UIElement.MouseDownEvent, x, y);
+
+    /// <summary>Mouse move at a fractional cell position, as pixel-based hosts report it.</summary>
+    public MouseEventArgs MouseMoveF(double x, double y) =>
+        MouseF(UIElement.MouseMoveEvent, x, y);
+
+    /// <summary>Mouse up at a fractional cell position, as pixel-based hosts report it.</summary>
+    public MouseEventArgs MouseUpF(double x, double y) =>
+        MouseF(UIElement.MouseUpEvent, x, y);
+
+    /// <summary>Wheel rotation at a cell position; delta is WPF-style (±120 per notch).</summary>
+    public MouseWheelEventArgs MouseWheel(int x, int y, int delta)
+    {
+        var args = new MouseWheelEventArgs
+        {
+            GlobalX = x,
+            GlobalY = y,
+            Delta = delta
+        };
+
+        Window.ProcessMouse(args);
+        return args;
+    }
+
     /// <summary>
     /// Performs the complete primary-button click sequence used by the platform hosts.
     /// Coordinates are relative to the test window.
@@ -109,6 +135,20 @@ internal sealed class ControlTestHost
         {
             GlobalX = x,
             GlobalY = y
+        };
+
+        Window.ProcessMouse(args);
+        return args;
+    }
+
+    private MouseEventArgs MouseF(RoutedEvent routedEvent, double x, double y)
+    {
+        var args = new MouseEventArgs(routedEvent)
+        {
+            GlobalX = (int)Math.Floor(x),
+            GlobalY = (int)Math.Floor(y),
+            GlobalXF = x,
+            GlobalYF = y
         };
 
         Window.ProcessMouse(args);

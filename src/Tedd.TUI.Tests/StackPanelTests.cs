@@ -1,5 +1,6 @@
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Tests.TestInfrastructure;
 using System;
 
 namespace Tedd.TUI.Tests;
@@ -19,6 +20,32 @@ public class StackPanelTests
             LastMeasureConstraint = availableSize;
             return new Size(3, 3);
         }
+    }
+
+    [Fact]
+    public void MouseClick_VerticallyNestedButtons_HitsOnlyTarget()
+    {
+        var first = new Button { Content = "First", Width = 10 };
+        var second = new Button { Content = "Second", Width = 10 };
+        var panel = new StackPanel();
+        panel.AddChild(new TextBlock { Text = "Toolbar" });
+        panel.AddChild(first);
+        panel.AddChild(new TextBlock { Text = "spacer" });
+        panel.AddChild(second);
+        panel.AddChild(new TextBlock { Text = "footer" });
+        var host = new ControlTestHost(new Border { Child = panel }, 18, 14);
+        var firstClicks = 0;
+        var secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        host.Click(first, 2, 1);
+        host.Click(panel, 2, 4);
+        host.Click(second, 2, 1);
+
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(1, secondClicks);
+        Assert.True(second.IsFocused);
     }
 
     [Fact]

@@ -28,6 +28,18 @@ public class ListBox : Selector
         Invalidate();
     }
 
+    public override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        if (e.Handled) return;
+
+        // Delegate to the internal scrollbar: shares its notch accumulator, clamping
+        // and ValueChanged -> _scrollOffset sync. When there is nothing to scroll the
+        // bar leaves the event unhandled so an outer scroll viewer can take it.
+        if (_scrollBar.Visibility)
+            _scrollBar.OnMouseWheel(e);
+    }
+
     /// <summary>
     /// When true (default), selection is visible even when unfocused.
     /// When false, selection highlighting is only shown while focused.
@@ -253,10 +265,16 @@ public class ListBox : Selector
             // ScrollBar is at (Width-1, 0).
             // So localX = e.X - (Width-1) = 0 usually.
 
+            // Global coordinates must be carried over: a thumb press anchors its drag
+            // in global space, and captured moves arrive with real global coordinates.
             var sbArgs = new MouseEventArgs
             {
                 X = e.X - (RenderSize.Width - 1),
                 Y = e.Y,
+                GlobalX = e.GlobalX,
+                GlobalY = e.GlobalY,
+                GlobalXF = e.GlobalXF,
+                GlobalYF = e.GlobalYF,
                 Handled = false
             };
             _scrollBar.OnMouseDown(sbArgs);

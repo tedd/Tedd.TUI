@@ -1,10 +1,41 @@
 using System;
+using Tedd.TUI.Tests.TestInfrastructure;
 using Xunit;
 
 namespace Tedd.TUI.Tests;
 
 public class WrapPanelTests
 {
+    [Fact]
+    public void MouseClick_WrappedButtons_HitsCorrectRow()
+    {
+        var first = new Button { Content = "First", Width = 8, Height = 3 };
+        var second = new Button { Content = "Second", Width = 9, Height = 3 };
+        var panel = new WrapPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Width = 18
+        };
+        panel.AddChild(first);
+        panel.AddChild(new TextBlock { Text = "gap", Width = 4, Height = 3 });
+        panel.AddChild(second);
+
+        var host = new ControlTestHost(new Border { Child = panel }, 22, 10);
+        var firstClicks = 0;
+        var secondClicks = 0;
+        first.Click += (_, _) => firstClicks++;
+        second.Click += (_, _) => secondClicks++;
+
+        host.Click(first, 2, 1);
+        host.Click(panel, 9, 1);
+        host.Click(second, 2, 1);
+
+        Assert.Equal(1, firstClicks);
+        Assert.Equal(1, secondClicks);
+        Assert.True(second.IsFocused);
+        Assert.True(second.RenderSize.Y > first.RenderSize.Y);
+    }
+
     [Fact]
     public void WrapPanel_Horizontal_FlowsAndWraps()
     {

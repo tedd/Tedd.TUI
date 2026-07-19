@@ -1,6 +1,7 @@
 using Xunit;
 using Tedd.TUI;
 using System;
+using Tedd.TUI.Tests.TestInfrastructure;
 
 namespace Tedd.TUI.Tests;
 
@@ -151,5 +152,60 @@ public class ScrollViewerTests
         Assert.True(child.LastMeasureSize.Height > 1000);
         // Specifically, it should be effectively infinite (int.MaxValue or int.MaxValue - scrollbarWidth)
         Assert.True(child.LastMeasureSize.Width > int.MaxValue - 100);
+    }
+
+    [Fact]
+    public void MouseClick_NestedScrollViewer_ScrollsAndActivatesOnlyVisibleButton()
+    {
+        var top = new Button { Content = "Top", Width = 8 };
+        var bottom = new Button { Content = "Bottom", Width = 8 };
+        var topClicks = 0;
+        var bottomClicks = 0;
+        top.Click += (_, _) => topClicks++;
+        bottom.Click += (_, _) => bottomClicks++;
+        var content = new StackPanel();
+        content.AddChild(top);
+        content.AddChild(new TextBlock { Text = "row 1" });
+        content.AddChild(new TextBlock { Text = "row 2" });
+        content.AddChild(new TextBlock { Text = "row 3" });
+        content.AddChild(new TextBlock { Text = "row 4" });
+        content.AddChild(bottom);
+        var scrollViewer = new ScrollViewer
+        {
+            Content = content,
+            Width = 12,
+            Height = 5,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+        var panel = new StackPanel();
+        panel.AddChild(new TextBlock { Text = "scroll area" });
+        panel.AddChild(scrollViewer);
+        panel.AddChild(new TextBlock { Text = "status surface" });
+        var host = new ControlTestHost(new Border { Child = panel }, 16, 9);
+
+        var topClick = host.Click(top, 2, 1);
+
+        Assert.True(topClick.Down.Handled);
+        Assert.Equal(1, topClicks);
+        Assert.Equal(0, bottomClicks);
+        Assert.True(top.IsFocused);
+
+        for (var i = 0; i < 5; i++)
+        {
+            host.Click(scrollViewer, scrollViewer.RenderSize.Width - 1, scrollViewer.RenderSize.Height - 1);
+        }
+
+        Assert.Equal(5, scrollViewer.VerticalOffset);
+        Assert.Equal(1, topClicks);
+        Assert.Equal(0, bottomClicks);
+
+        var bottomClick = host.Click(bottom, 2, 1);
+
+        Assert.True(bottomClick.Down.Handled);
+        Assert.Equal(1, topClicks);
+        Assert.Equal(1, bottomClicks);
+        Assert.False(top.IsFocused);
+        Assert.True(bottom.IsFocused);
     }
 }

@@ -15,6 +15,7 @@ public sealed class TuiSurfaceController
     private TuiWindow? _window;
     private bool _initialFocusDone;
     private int _lastMouseCellX = -1, _lastMouseCellY = -1;
+    private double _lastMouseXF = double.NaN, _lastMouseYF = double.NaN;
 
     /// <summary>Explicit window to host; takes precedence over <see cref="Xaml"/> and <see cref="Source"/>.</summary>
     public TuiWindow? ExplicitWindow { get; private set; }
@@ -153,22 +154,64 @@ public sealed class TuiSurfaceController
         _window?.ProcessKey(new KeyEventArgs { Key = key, KeyChar = keyChar, Modifiers = modifiers });
     }
 
-    public void MouseDown(int cellX, int cellY) => SendMouse(cellX, cellY, UIElement.MouseDownEvent);
+    public void MouseDown(int cellX, int cellY) => MouseDown(cellX + 0.5, cellY + 0.5);
 
-    public void MouseUp(int cellX, int cellY) => SendMouse(cellX, cellY, UIElement.MouseUpEvent);
+    public void MouseUp(int cellX, int cellY) => MouseUp(cellX + 0.5, cellY + 0.5);
 
-    /// <summary>Forwards a move only when the hovered cell changed, to avoid flooding the TUI.</summary>
-    public void MouseMove(int cellX, int cellY)
+    public void MouseMove(int cellX, int cellY) => MouseMove(cellX + 0.5, cellY + 0.5);
+
+    /// <summary>Cell coordinates may be fractional; hosts with pixel-precision input should
+    /// prefer these overloads so drags (e.g. scrollbar thumbs) get sub-cell resolution.</summary>
+    public void MouseDown(double cellX, double cellY) => SendMouse(cellX, cellY, UIElement.MouseDownEvent);
+
+    public void MouseUp(double cellX, double cellY) => SendMouse(cellX, cellY, UIElement.MouseUpEvent);
+
+    /// <summary>
+    /// Forwards a move only when the hovered cell changed, to avoid flooding the TUI.
+    /// While an element holds mouse capture (a drag is in progress), every sub-cell
+    /// change is forwarded instead so fine-grained drag tracking works.
+    /// </summary>
+    public void MouseMove(double cellX, double cellY)
     {
-        if (cellX == _lastMouseCellX && cellY == _lastMouseCellY)
+        int cx = (int)Math.Floor(cellX);
+        int cy = (int)Math.Floor(cellY);
+        bool cellChanged = cx != _lastMouseCellX || cy != _lastMouseCellY;
+        bool subCellChanged = cellX != _lastMouseXF || cellY != _lastMouseYF;
+        bool captured = _window?.CapturedElement != null;
+
+        if (!cellChanged && !(captured && subCellChanged))
             return;
-        _lastMouseCellX = cellX;
-        _lastMouseCellY = cellY;
+
+        _lastMouseCellX = cx;
+        _lastMouseCellY = cy;
+        _lastMouseXF = cellX;
+        _lastMouseYF = cellY;
         SendMouse(cellX, cellY, UIElement.MouseMoveEvent);
     }
 
-    private void SendMouse(int cellX, int cellY, RoutedEvent routedEvent)
+    private void SendMouse(double cellX, double cellY, RoutedEvent routedEvent)
     {
-        _window?.ProcessMouse(new MouseEventArgs(routedEvent) { GlobalX = cellX, GlobalY = cellY });
+        _window?.ProcessMouse(new MouseEventArgs(routedEvent)
+        {
+            GlobalX = (int)Math.Floor(cellX),
+            GlobalY = (int)Math.Floor(cellY),
+            GlobalXF = cellX,
+            GlobalYF = cellY
+        });
+    }
+
+    public void MouseWheel(int cellX, int cellY, int delta) => MouseWheel(cellX + 0.5, cellY + 0.5, delta);
+
+    /// <summary>Forwards wheel rotation (WPF-style ±120 per notch) at the given cell position.</summary>
+    public void MouseWheel(double cellX, double cellY, int delta)
+    {
+        _window?.ProcessMouse(new MouseWheelEventArgs
+        {
+            GlobalX = (int)Math.Floor(cellX),
+            GlobalY = (int)Math.Floor(cellY),
+            GlobalXF = cellX,
+            GlobalYF = cellY,
+            Delta = delta
+        });
     }
 }

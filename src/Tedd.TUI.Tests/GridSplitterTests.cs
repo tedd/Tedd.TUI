@@ -72,4 +72,33 @@ public class GridSplitterTests
         Assert.Equal(GridUnitType.Pixel, grid.RowDefinitions[0].Height.GridUnitType);
         Assert.Equal(GridUnitType.Pixel, grid.RowDefinitions[2].Height.GridUnitType);
     }
+
+    [Fact]
+    public void GridSplitter_FractionalDrags_AccumulateIntoWholeCells()
+    {
+        var window = new TuiWindow();
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10, GridUnitType.Pixel) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10, GridUnitType.Pixel) });
+
+        var splitter = new GridSplitter();
+        Grid.SetColumn(splitter, 1);
+        grid.Children.Add(splitter);
+        window.Content = grid;
+        window.Measure(new Size(80, 24));
+        window.Arrange(new Rect(0, 0, 80, 24));
+
+        int initialLeftWidth = grid.ColumnDefinitions[0].ActualWidth;
+
+        // Sub-cell deltas (pixel hosts) must not be truncated away: 0.4 + 0.4 < 1 cell
+        // does nothing yet, the third 0.4 crosses the cell boundary and moves 1 column.
+        splitter.RaiseEvent(new DragDeltaEventArgs(0.4, 0.0, Thumb.DragDeltaEvent, splitter));
+        splitter.RaiseEvent(new DragDeltaEventArgs(0.4, 0.0, Thumb.DragDeltaEvent, splitter));
+        Assert.Equal(GridUnitType.Pixel, grid.ColumnDefinitions[0].Width.GridUnitType);
+        Assert.Equal(initialLeftWidth, grid.ColumnDefinitions[0].ActualWidth);
+
+        splitter.RaiseEvent(new DragDeltaEventArgs(0.4, 0.0, Thumb.DragDeltaEvent, splitter));
+        Assert.Equal(initialLeftWidth + 1, grid.ColumnDefinitions[0].Width.Value);
+    }
 }

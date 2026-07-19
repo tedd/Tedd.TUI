@@ -597,8 +597,10 @@ public class TuiWindow : UIElement
             previewEvent = UIElement.PreviewMouseUpEvent;
         else if (e.RoutedEvent == UIElement.MouseMoveEvent)
             previewEvent = UIElement.PreviewMouseMoveEvent;
+        else if (e.RoutedEvent == UIElement.MouseWheelEvent)
+            previewEvent = UIElement.PreviewMouseWheelEvent;
         else
-            throw new ArgumentException("The routed event must be a mouse down, up, or move event.", nameof(e));
+            throw new ArgumentException("The routed event must be a mouse down, up, move, or wheel event.", nameof(e));
 
         var hit = InputHitTest(e.GlobalX, e.GlobalY);
         UpdateMouseOver(hit?.Element, e.GlobalX, e.GlobalY);
@@ -620,11 +622,13 @@ public class TuiWindow : UIElement
             }
         }
 
-        var previewArgs = new MouseEventArgs(previewEvent, hit.Element)
-        {
-            GlobalX = e.GlobalX,
-            GlobalY = e.GlobalY
-        };
+        MouseEventArgs previewArgs = e is MouseWheelEventArgs wheelArgs
+            ? new MouseWheelEventArgs(previewEvent, hit.Element) { Delta = wheelArgs.Delta }
+            : new MouseEventArgs(previewEvent, hit.Element);
+        previewArgs.GlobalX = e.GlobalX;
+        previewArgs.GlobalY = e.GlobalY;
+        previewArgs.GlobalXF = e.GlobalXF;
+        previewArgs.GlobalYF = e.GlobalYF;
 
         hit.Element.RaiseEvent(previewArgs);
         if (previewArgs.Handled)
