@@ -22,7 +22,13 @@ public static class XamlLoader
         if (doc.DocumentElement == null)
             throw new InvalidOperationException("XML document is empty.");
 
-        return (UIElement)ParseElement(doc.DocumentElement, controller);
+        var root = (UIElement)ParseElement(doc.DocumentElement, controller);
+
+        // ElementName bindings may reference elements declared later in the document
+        // than their target; re-evaluate every binding now that the tree is complete.
+        root.RefreshBindingsRecursive();
+
+        return root;
     }
 
     private static object ParseElement(XmlElement element, object? controller)
@@ -219,6 +225,18 @@ public static class XamlLoader
             return;
         }
 
+        // Markup extensions: {Binding ...}, {x:Null}, {TemplateBinding ...}.
+        // "{}" is the XAML escape for a literal value starting with '{'.
+        if (value.StartsWith("{}", StringComparison.Ordinal))
+        {
+            value = value.Substring(2);
+        }
+        else if (MarkupExtensionParser.IsExtension(value))
+        {
+            ApplyMarkupExtension(instance, name, value, controller);
+            return;
+        }
+
         var type = instance.GetType();
 
         // 1. Event Wiring
@@ -311,8 +329,223 @@ public static class XamlLoader
         // ...
     }
 
+    /// <summary>
+    /// Applies a parsed markup extension attribute. Supported: {Binding ...} (wired to
+    /// the matching DependencyProperty), {TemplateBinding Path} (Binding with
+    /// RelativeSource TemplatedParent), {x:Null} and {StaticResource Key} (resolved
+    /// against the controller's fields/properties, this loader's stand-in for a
+    /// resource dictionary). Unknown extensions throw, matching WPF's loud failure.
+    /// </summary>
+    private static void ApplyMarkupExtension(object instance, string propertyName, string text, object? controller)
+    {
+        var ext = MarkupExtensionParser.Parse(text);
+        string extName = StripXmlPrefix(ext.Name);
+
+        switch (extName)
+        {
+            case "Binding":
+                SetBindingOnProperty(instance, propertyName, BuildBinding(ext, controller));
+                return;
+
+            case "TemplateBinding":
+            {
+                var binding = new Binding(ext.Positional ?? throw new InvalidOperationException("TemplateBinding requires a property name."))
+                {
+                    RelativeSource = RelativeSource.TemplatedParent,
+                    Mode = BindingMode.OneWay
+                };
+                SetBindingOnProperty(instance, propertyName, binding);
+                return;
+            }
+
+            case "Null":
+            {
+                var prop = instance.GetType().GetProperty(propertyName);
+                if (prop == null || !prop.CanWrite)
+                    throw new InvalidOperationException($"Cannot assign {{x:Null}}: no writable property '{propertyName}' on {instance.GetType().Name}.");
+                prop.SetValue(instance, null);
+                return;
+            }
+
+            case "StaticResource":
+            {
+                object resource = ResolveControllerResource(controller, ext.Positional ?? "")
+                    ?? throw new InvalidOperationException($"StaticResource '{ext.Positional}' was not found on the controller.");
+                var prop = instance.GetType().GetProperty(propertyName);
+                if (prop == null || !prop.CanWrite)
+                    throw new InvalidOperationException($"Cannot assign StaticResource: no writable property '{propertyName}' on {instance.GetType().Name}.");
+                prop.SetValue(instance, resource);
+                return;
+            }
+
+            default:
+                throw new InvalidOperationException($"Unsupported markup extension '{ext.Name}'.");
+        }
+    }
+
+    private static void SetBindingOnProperty(object instance, string propertyName, Binding binding)
+    {
+        if (instance is not UIElement element)
+            throw new InvalidOperationException($"A '{{Binding}}' can only be set on a UIElement; {instance.GetType().Name} is not one.");
+
+        var dp = FindDependencyProperty(instance.GetType(), propertyName)
+            ?? throw new InvalidOperationException(
+                $"A '{{Binding}}' cannot be set on the '{propertyName}' property of '{instance.GetType().Name}': no dependency property '{propertyName}Property' was found.");
+
+        element.SetBinding(dp, binding);
+    }
+
+    /// <summary>Finds the conventional static '<paramref name="propertyName"/>Property' field, walking base types.</summary>
+    private static DependencyProperty? FindDependencyProperty(Type type, string propertyName)
+    {
+        var field = type.GetField(propertyName + "Property",
+            BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+        return field?.GetValue(null) as DependencyProperty;
+    }
+
+    private static Binding BuildBinding(ParsedMarkupExtension ext, object? controller)
+    {
+        var binding = new Binding();
+
+        foreach (var (key, value) in ext.Arguments)
+        {
+            switch (key)
+            {
+                case null:
+                case "Path":
+                    binding.Path = value;
+                    break;
+                case "Mode":
+                    binding.Mode = Enum.Parse<BindingMode>(value);
+                    break;
+                case "ElementName":
+                    binding.ElementName = value;
+                    break;
+                case "StringFormat":
+                    // The value-level "{}" escape ("{}{0} items") is common here.
+                    binding.StringFormat = value.StartsWith("{}", StringComparison.Ordinal) ? value.Substring(2) : value;
+                    break;
+                case "FallbackValue":
+                    binding.FallbackValue = value;
+                    break;
+                case "TargetNullValue":
+                    binding.TargetNullValue = value;
+                    break;
+                case "ConverterParameter":
+                    binding.ConverterParameter = value;
+                    break;
+                case "Converter":
+                    binding.Converter = ResolveControllerResource(controller, value) as IValueConverter
+                        ?? throw new InvalidOperationException($"Converter '{value}' was not found on the controller or does not implement IValueConverter.");
+                    break;
+                case "Source":
+                    binding.Source = ResolveControllerResource(controller, value)
+                        ?? throw new InvalidOperationException($"Binding Source '{value}' was not found on the controller.");
+                    break;
+                case "RelativeSource":
+                    binding.RelativeSource = ParseRelativeSource(value);
+                    break;
+                case "UpdateSourceTrigger":
+                    // Accepted for WPF markup compatibility; this engine always updates
+                    // on property change.
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unsupported Binding property '{key}'.");
+            }
+        }
+
+        return binding;
+    }
+
+    private static RelativeSource ParseRelativeSource(string value)
+    {
+        if (!MarkupExtensionParser.IsExtension(value))
+            throw new InvalidOperationException($"Invalid RelativeSource value '{value}'.");
+
+        var ext = MarkupExtensionParser.Parse(value);
+        var relativeSource = new RelativeSource(RelativeSourceMode.None);
+
+        foreach (var (key, val) in ext.Arguments)
+        {
+            switch (key)
+            {
+                case null:
+                case "Mode":
+                    relativeSource.Mode = Enum.Parse<RelativeSourceMode>(val);
+                    break;
+                case "AncestorType":
+                    relativeSource.AncestorType = ResolveTypeReference(val);
+                    break;
+                case "AncestorLevel":
+                    relativeSource.AncestorLevel = int.Parse(val);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unsupported RelativeSource property '{key}'.");
+            }
+        }
+
+        // WPF infers FindAncestor when only AncestorType is given.
+        if (relativeSource.AncestorType != null && relativeSource.Mode == RelativeSourceMode.None)
+            relativeSource.Mode = RelativeSourceMode.FindAncestor;
+
+        return relativeSource;
+    }
+
+    /// <summary>Resolves a type name, accepting "{x:Type tui:Grid}", "tui:Grid" or "Grid".</summary>
+    private static Type ResolveTypeReference(string value)
+    {
+        if (MarkupExtensionParser.IsExtension(value))
+        {
+            var ext = MarkupExtensionParser.Parse(value);
+            value = ext.Positional ?? "";
+        }
+        value = StripXmlPrefix(value);
+        return ResolveType(value)
+            ?? throw new InvalidOperationException($"Type '{value}' not found.");
+    }
+
+    /// <summary>
+    /// Looks up a named member (field or property, any visibility) on the controller.
+    /// Serves as the loader's stand-in for StaticResource lookup, so converters and
+    /// source objects can live on the code-behind object.
+    /// </summary>
+    private static object? ResolveControllerResource(object? controller, string value)
+    {
+        string key = value;
+        if (MarkupExtensionParser.IsExtension(value))
+        {
+            var ext = MarkupExtensionParser.Parse(value);
+            string name = StripXmlPrefix(ext.Name);
+            if (name is not ("StaticResource" or "StaticResourceExtension"))
+                throw new InvalidOperationException($"Unsupported markup extension '{ext.Name}' in resource reference.");
+            key = ext.Positional ?? "";
+        }
+
+        if (controller == null || key.Length == 0) return null;
+
+        var type = controller.GetType();
+        const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+
+        var field = type.GetField(key, flags);
+        if (field != null) return field.GetValue(field.IsStatic ? null : controller);
+
+        var prop = type.GetProperty(key, flags);
+        if (prop != null) return prop.GetValue(prop.GetMethod?.IsStatic == true ? null : controller);
+
+        return null;
+    }
+
+    private static string StripXmlPrefix(string name)
+    {
+        int colon = name.IndexOf(':');
+        return colon >= 0 ? name.Substring(colon + 1) : name;
+    }
+
     private static void SetAttachedProperty(object instance, string name, string value)
     {
+        if (MarkupExtensionParser.IsExtension(value))
+            throw new NotSupportedException($"Markup extensions are not supported on attached property '{name}'.");
+
         // Format: Grid.Row="1"
         // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
         ReadOnlySpan<char> nameSpan = name.AsSpan();

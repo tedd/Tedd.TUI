@@ -223,7 +223,7 @@ public class BindingExpression
             // FallbackValue is provided.
             if (_binding.FallbackValue != null)
             {
-                SetTargetValue(_binding.FallbackValue);
+                SetTargetValue(CoerceFallback(_binding.FallbackValue));
             }
             return;
         }
@@ -231,9 +231,11 @@ public class BindingExpression
         object? value = EvaluateAndSubscribe(source);
         if (ReferenceEquals(value, Unresolved))
         {
-            // Broken path: FallbackValue verbatim (no converter/format), else the
+            // Broken path: FallbackValue (no converter/format applied), else the
             // property's registration default.
-            SetTargetValue(_binding.FallbackValue ?? _property.DefaultValue);
+            SetTargetValue(_binding.FallbackValue != null
+                ? CoerceFallback(_binding.FallbackValue)
+                : _property.DefaultValue);
             return;
         }
 
@@ -362,6 +364,16 @@ public class BindingExpression
             success = false;
             return null;
         }
+    }
+
+    /// <summary>
+    /// FallbackValue frequently arrives as a XAML attribute string; coerce it to the
+    /// target property type, keeping it verbatim when conversion is impossible.
+    /// </summary>
+    private object? CoerceFallback(object fallback)
+    {
+        object? coerced = ConvertToTargetType(fallback, out bool converted);
+        return converted ? coerced : fallback;
     }
 
     private void SetTargetValue(object? value)

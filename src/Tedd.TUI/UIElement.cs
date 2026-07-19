@@ -228,6 +228,25 @@ public abstract class UIElement : DependencyObject
     }
 
     /// <summary>
+    /// Re-evaluates every binding on this element and its visual descendants.
+    /// XamlLoader calls this once the whole tree is assembled so ElementName bindings
+    /// that referenced elements declared later in the document resolve.
+    /// </summary>
+    internal void RefreshBindingsRecursive()
+    {
+        foreach (var binding in _bindings)
+        {
+            binding.UpdateTarget();
+        }
+
+        int count = VisualChildrenCount;
+        for (int i = 0; i < count; i++)
+        {
+            GetVisualChild(i)?.RefreshBindingsRecursive();
+        }
+    }
+
+    /// <summary>
     /// Recursively informs this element and its visual descendants that the active
     /// <see cref="TuiTheme"/> was replaced. Bindings are re-evaluated so values copied
     /// from theme-styled sources are refreshed, and <see cref="OnThemeChanged"/> lets
