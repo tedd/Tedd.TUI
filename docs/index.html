@@ -166,9 +166,13 @@
       <h3>Code highlighting</h3>
       <p><code>CodeDocument</code> tokenizes source with a PrismJS-style grammar engine
          and renders it as colored cells — standalone or inside markdown code fences.
-         27 grammars ship in the box: ASM&nbsp;6502, ASP.NET, Bash, BASIC, Batch, C#,
-         CIL, C-like, cshtml/Razor, CSS, CSV, Diff, JSON, JSON5, Lua, Markdown, NASM,
-         Perl, PowerShell, Python, Regex, Rust, SQL, URI, WASM, XML/HTML and YAML —
+         76 grammars ship in the box — the mainstream (C, C++, C#, Java, JavaScript,
+         TypeScript, Python, Go, Rust, Ruby, PHP, Swift, Kotlin, SQL, XML/HTML, CSS,
+         Bash, PowerShell&nbsp;…), the functional (Haskell, Elixir, Erlang, Clojure,
+         Lisp, Scheme, OCaml, F#&nbsp;…), config &amp; devops (JSON, YAML, TOML, INI,
+         Docker, Makefile, CMake, Terraform/HCL, nginx, Git, HTTP, GraphQL,
+         protobuf&nbsp;…) and the classics (LaTeX, Fortran, Pascal, Ada, COBOL, Prolog,
+         Smalltalk, Tcl, Verilog, VHDL, Zig, Nim, Solidity&nbsp;…) —
          all themable per token type.</p>
     </div>
     <img src="assets/code.svg" alt="CodeDocument showing syntax-highlighted C# and JSON panes side by side">
@@ -227,7 +231,7 @@ dotnet add package Tedd.TUI.Platform.Sdl2        <span class="c"># native SDL2 w
     <tr><th>Feature</th><th>Where</th></tr>
     <tr><td>WPF-style control suite (40+ controls)</td><td><code>Tedd.TUI</code></td></tr>
     <tr><td>Grid/StackPanel/DockPanel/WrapPanel layout, data binding, routed events</td><td><code>Tedd.TUI</code></td></tr>
-    <tr><td>Markdown viewer (<code>MarkdownView</code>) &amp; syntax-highlighted code view (<code>CodeDocument</code>, 27 grammars)</td><td><code>Tedd.TUI</code></td></tr>
+    <tr><td>Markdown viewer (<code>MarkdownView</code>) &amp; syntax-highlighted code view (<code>CodeDocument</code>, 76 grammars)</td><td><code>Tedd.TUI</code></td></tr>
     <tr><td>Inline images: Sixel · Kitty · iTerm2 in terminals, real bitmaps on GUI hosts, half-block fallback</td><td><code>Tedd.TUI.Imaging</code> + hosts</td></tr>
     <tr><td>Standalone Skia host: any <code>SKCanvas</code>, headless PNG screenshots</td><td><code>Tedd.TUI.Platform.Skia</code></td></tr>
     <tr><td>SDL2 host: native window or attach to your SDL render loop</td><td><code>Tedd.TUI.Platform.Sdl2</code></td></tr>

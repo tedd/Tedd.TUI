@@ -27,10 +27,15 @@ terminal just as on every GUI host:
   ![MarkdownView rendering markdown in the terminal](assets/markdown.svg)
 
 - **Code highlighting** — `CodeDocument` tokenizes source with a PrismJS-style grammar
-  engine and renders colored cells, standalone or inside markdown fences. 27 grammars
-  ship in the box: ASM 6502, ASP.NET, Bash, BASIC, Batch, C#, CIL, C-like, cshtml/Razor,
-  CSS, CSV, Diff, JSON, JSON5, Lua, Markdown, NASM, Perl, PowerShell, Python, Regex,
-  Rust, SQL, URI, WASM, XML/HTML and YAML.
+  engine (ported from [Prism.js](https://github.com/PrismJS/prism), MIT) and renders
+  colored cells, standalone or inside markdown fences. 76 grammars ship in the box:
+  Ada, ASM 6502, ASP.NET, Bash, BASIC, Batch, C, C#, C++, CIL, C-like, Clojure, CMake,
+  COBOL, cshtml/Razor, CSS, CSV, Dart, Diff, Docker, Elixir, Erlang, F#, Fortran, Git,
+  Go, GraphQL, Groovy, Haskell, HCL/Terraform, HTTP, INI, Java, JavaScript, JSON, JSON5,
+  Julia, Kotlin, LaTeX, Lisp, Lua, Makefile, Markdown, NASM, nginx, Nim, Objective-C,
+  OCaml, Pascal, Perl, PHP, PowerShell, Prolog, protobuf, Python, R, Regex, Ruby, Rust,
+  Scala, Scheme, Smalltalk, Solidity, SQL, Swift, Tcl, TOML, TypeScript, URI, Verilog,
+  VHDL, Visual Basic, WASM, XML/HTML, YAML and Zig.
 
   ![CodeDocument syntax highlighting C# and JSON](assets/code.svg)
 

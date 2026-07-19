@@ -281,7 +281,7 @@ see [SDL2](platforms/sdl2.md).
 - [XAML guide](xaml.md) — full dialect reference: controllers, attached properties,
   property-element syntax, colors, designer compatibility.
 - [Rich content](README.md#rich-content-in-the-console) — markdown rendering, syntax
-  highlighting (27 grammars) and inline images, straight in the console; image protocol
+  highlighting (76 grammars) and inline images, straight in the console; image protocol
   setup is in the [console guide](platforms/console.md#inline-images).
 - Per-platform guides: [Console](platforms/console.md) · [Blazor](platforms/blazor.md) ·
   [WPF](platforms/wpf.md) · [Avalonia](platforms/avalonia.md) · [WinUI](platforms/winui.md) ·
