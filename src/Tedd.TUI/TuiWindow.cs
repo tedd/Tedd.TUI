@@ -400,6 +400,66 @@ public class TuiWindow : UIElement
     private UIElement _capturedElement;
     public UIElement? CapturedElement => _capturedElement;
 
+    // Elements currently under the mouse, deepest first (hit element .. root).
+    // The full chain is stored (rather than just the deepest element) so IsMouseOver
+    // can be cleared on every ancestor even if part of the old chain is detached
+    // from the tree in the meantime (e.g. an overlay closing).
+    private readonly List<UIElement> _hoverChain = new();
+
+    /// <summary>The deepest element currently under the mouse, or null.</summary>
+    public UIElement? HoveredElement => _hoverChain.Count > 0 ? _hoverChain[0] : null;
+
+    /// <summary>
+    /// Maintains IsMouseOver along the ancestor chain of the element under the mouse and
+    /// raises MouseLeave/MouseEnter for elements that left or joined the chain. Driven by
+    /// <see cref="ProcessMouse"/>, so hover state only updates on platforms that report
+    /// mouse events.
+    /// </summary>
+    private void UpdateMouseOver(UIElement? target, int globalX, int globalY)
+    {
+        bool unchanged = target == null
+            ? _hoverChain.Count == 0
+            : _hoverChain.Count > 0 && ReferenceEquals(_hoverChain[0], target);
+        if (unchanged)
+            return;
+
+        var newChain = new List<UIElement>();
+        for (var current = target; current != null; current = current.Parent)
+            newChain.Add(current);
+
+        // Leave elements no longer under the mouse, deepest first.
+        foreach (var element in _hoverChain)
+        {
+            if (!newChain.Contains(element))
+            {
+                element.IsMouseOver = false;
+                element.RaiseEvent(new MouseEventArgs(UIElement.MouseLeaveEvent, element)
+                {
+                    GlobalX = globalX,
+                    GlobalY = globalY
+                });
+            }
+        }
+
+        // Enter newly hovered elements, outermost first.
+        for (int i = newChain.Count - 1; i >= 0; i--)
+        {
+            var element = newChain[i];
+            if (!_hoverChain.Contains(element))
+            {
+                element.IsMouseOver = true;
+                element.RaiseEvent(new MouseEventArgs(UIElement.MouseEnterEvent, element)
+                {
+                    GlobalX = globalX,
+                    GlobalY = globalY
+                });
+            }
+        }
+
+        _hoverChain.Clear();
+        _hoverChain.AddRange(newChain);
+    }
+
     public void CaptureMouse(UIElement element)
     {
         _capturedElement = element;
@@ -514,6 +574,7 @@ public class TuiWindow : UIElement
             throw new ArgumentException("The routed event must be a mouse down, up, or move event.", nameof(e));
 
         var hit = InputHitTest(e.GlobalX, e.GlobalY);
+        UpdateMouseOver(hit?.Element, e.GlobalX, e.GlobalY);
         if (hit == null)
             return;
 

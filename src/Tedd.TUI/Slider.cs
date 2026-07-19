@@ -120,6 +120,16 @@ public class Slider : UIElement
         set => SetValue(FocusedThumbColorProperty, value);
     }
 
+    public static readonly DependencyProperty HoverThumbColorProperty =
+        DependencyProperty.Register(nameof(HoverThumbColor), typeof(TuiColor), typeof(Slider), TuiColor.Cyan);
+
+    /// <summary>Thumb color used while the mouse hovers the slider and it is not focused.</summary>
+    public TuiColor HoverThumbColor
+    {
+        get => (TuiColor)GetValue(HoverThumbColorProperty);
+        set => SetValue(HoverThumbColorProperty, value);
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
         if (Orientation == Orientation.Horizontal)
@@ -147,7 +157,7 @@ public class Slider : UIElement
         if (val < 0) val = 0;
         if (val > range) val = range;
 
-        TuiColor thumbColor = IsFocused ? FocusedThumbColor : ThumbColor;
+        TuiColor thumbColor = IsFocused ? FocusedThumbColor : IsMouseOver ? HoverThumbColor : ThumbColor;
         TuiColor bg = Background ?? TuiColor.Black;
 
         if (Orientation == Orientation.Horizontal)

@@ -75,6 +75,16 @@ public class TimePicker : UIElement
         set => SetValue(FocusedForegroundProperty, value);
     }
 
+    public static readonly DependencyProperty HoverForegroundProperty =
+        DependencyProperty.Register(nameof(HoverForeground), typeof(TuiColor), typeof(TimePicker), TuiColor.Cyan);
+
+    /// <summary>Time text foreground used while the mouse hovers the control and it is not focused.</summary>
+    public TuiColor HoverForeground
+    {
+        get => (TuiColor)GetValue(HoverForegroundProperty);
+        set => SetValue(HoverForegroundProperty, value);
+    }
+
     public static readonly DependencyProperty PlaceholderColorProperty =
         DependencyProperty.Register(nameof(PlaceholderColor), typeof(TuiColor), typeof(TimePicker), TuiColor.DarkGray);
 
@@ -126,7 +136,7 @@ public class TimePicker : UIElement
         var bg = Background ?? buffer.GetPixel(x, y).Background;
         var selected = SelectedTime;
         var fg = selected.HasValue
-            ? (IsFocused ? FocusedForeground : Foreground)
+            ? (IsFocused ? FocusedForeground : IsMouseOver ? HoverForeground : Foreground)
             : PlaceholderColor;
 
         string text;

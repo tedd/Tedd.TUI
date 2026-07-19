@@ -94,6 +94,16 @@ public class NumericUpDown : UIElement
         set => SetValue(FocusedForegroundProperty, value);
     }
 
+    public static readonly DependencyProperty HoverForegroundProperty =
+        DependencyProperty.Register(nameof(HoverForeground), typeof(TuiColor), typeof(NumericUpDown), TuiColor.Cyan);
+
+    /// <summary>Value foreground used while the mouse hovers the control and it is not focused.</summary>
+    public TuiColor HoverForeground
+    {
+        get => (TuiColor)GetValue(HoverForegroundProperty);
+        set => SetValue(HoverForegroundProperty, value);
+    }
+
     protected override void OnPropertyChanged(DependencyProperty property)
     {
         base.OnPropertyChanged(property);
@@ -127,7 +137,7 @@ public class NumericUpDown : UIElement
 
         var bg = Background ?? buffer.GetPixel(x, y).Background;
         var buttonColor = ButtonColor;
-        var valueColor = IsFocused ? FocusedForeground : Foreground;
+        var valueColor = IsFocused ? FocusedForeground : IsMouseOver ? HoverForeground : Foreground;
 
         buffer.SetPixel(x, y, '[', buttonColor, bg);
         buffer.SetPixel(x + 1, y, '-', buttonColor, bg);

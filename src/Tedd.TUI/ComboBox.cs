@@ -22,6 +22,16 @@ public class ComboBox : Selector
         set => SetValue(FocusedForegroundProperty, value);
     }
 
+    public static readonly DependencyProperty HoverForegroundProperty =
+        DependencyProperty.Register("HoverForeground", typeof(TuiColor), typeof(ComboBox), TuiColor.Cyan);
+
+    /// <summary>Text foreground used while the mouse hovers the control and it is not focused.</summary>
+    public TuiColor HoverForeground
+    {
+        get => (TuiColor)GetValue(HoverForegroundProperty);
+        set => SetValue(HoverForegroundProperty, value);
+    }
+
     public static readonly DependencyProperty FocusedTextBackgroundColorProperty =
         DependencyProperty.Register("FocusedTextBackgroundColor", typeof(TuiColor), typeof(ComboBox), TuiColor.DarkGray);
 
@@ -104,7 +114,9 @@ public class ComboBox : Selector
 
         // Draw text area
         var textBg = IsFocused && !_arrowFocused ? FocusedTextBackgroundColor : (Background ?? TuiColor.Black);
-        var textFg = IsFocused && !_arrowFocused ? FocusedForeground : Foreground;
+        var textFg = IsFocused && !_arrowFocused ? FocusedForeground
+            : !IsFocused && IsMouseOver ? HoverForeground
+            : Foreground;
 
         string text = GetItemText(SelectedItem);
         if (text.Length > w - 2) text = text.Substring(0, w - 2);

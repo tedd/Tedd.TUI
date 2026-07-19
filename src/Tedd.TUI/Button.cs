@@ -116,6 +116,26 @@ public class Button : ButtonBase
         set => SetValue(FocusedBorderColorProperty, value);
     }
 
+    public static readonly DependencyProperty HoverForegroundProperty =
+        DependencyProperty.Register("HoverForeground", typeof(TuiColor), typeof(Button), TuiColor.Cyan);
+
+    /// <summary>Foreground used while the mouse hovers the button and it is not focused.</summary>
+    public TuiColor HoverForeground
+    {
+        get => (TuiColor)GetValue(HoverForegroundProperty);
+        set => SetValue(HoverForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HoverBorderColorProperty =
+        DependencyProperty.Register("HoverBorderColor", typeof(TuiColor), typeof(Button), TuiColor.Cyan);
+
+    /// <summary>Border color used while the mouse hovers the button and it is not focused.</summary>
+    public TuiColor HoverBorderColor
+    {
+        get => (TuiColor)GetValue(HoverBorderColorProperty);
+        set => SetValue(HoverBorderColorProperty, value);
+    }
+
     // Internal "Effective" properties for Template Binding
 
     public static readonly DependencyProperty EffectiveBorderColorProperty =
@@ -394,7 +414,8 @@ public class Button : ButtonBase
         base.OnPropertyChanged(dp);
         if (dp == BorderColorProperty || dp == FocusedBorderColorProperty ||
             dp == UIElement.ForegroundProperty || dp == FocusedForegroundProperty ||
-            dp == IsFocusedProperty)
+            dp == HoverBorderColorProperty || dp == HoverForegroundProperty ||
+            dp == IsFocusedProperty || dp == IsMouseOverProperty)
         {
             UpdateEffectiveColors();
         }
@@ -402,10 +423,17 @@ public class Button : ButtonBase
 
     private void UpdateEffectiveColors()
     {
+        // Focus wins over hover so keyboard users don't lose the focus highlight
+        // when the pointer happens to rest on the focused button.
         if (IsFocused)
         {
             EffectiveBorderColor = FocusedBorderColor;
             EffectiveForeground = FocusedForeground;
+        }
+        else if (IsMouseOver)
+        {
+            EffectiveBorderColor = HoverBorderColor;
+            EffectiveForeground = HoverForeground;
         }
         else
         {

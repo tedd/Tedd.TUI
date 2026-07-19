@@ -63,6 +63,16 @@ public class DatePicker : UIElement
         set => SetValue(FocusedForegroundProperty, value);
     }
 
+    public static readonly DependencyProperty HoverForegroundProperty =
+        DependencyProperty.Register(nameof(HoverForeground), typeof(TuiColor), typeof(DatePicker), TuiColor.Cyan);
+
+    /// <summary>Date text foreground used while the mouse hovers the control and it is not focused.</summary>
+    public TuiColor HoverForeground
+    {
+        get => (TuiColor)GetValue(HoverForegroundProperty);
+        set => SetValue(HoverForegroundProperty, value);
+    }
+
     public static readonly DependencyProperty PlaceholderColorProperty =
         DependencyProperty.Register(nameof(PlaceholderColor), typeof(TuiColor), typeof(DatePicker), TuiColor.DarkGray);
 
@@ -148,7 +158,7 @@ public class DatePicker : UIElement
         var bg = Background ?? TuiColor.Black;
         var selected = SelectedDate;
         var fg = selected.HasValue
-            ? (IsFocused ? FocusedForeground : Foreground)
+            ? (IsFocused ? FocusedForeground : IsMouseOver ? HoverForeground : Foreground)
             : PlaceholderColor;
 
         string text = selected.HasValue

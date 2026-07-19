@@ -105,6 +105,20 @@ public abstract class UIElement : DependencyObject
         set => SetValue(IsFocusedProperty, value);
     }
 
+    public static readonly DependencyProperty IsMouseOverProperty =
+        DependencyProperty.Register("IsMouseOver", typeof(bool), typeof(UIElement), false);
+
+    /// <summary>
+    /// True while the mouse pointer is over this element or one of its descendants.
+    /// Maintained by the hosting <see cref="TuiWindow"/> from mouse events, so it only
+    /// changes on platforms whose front end reports mouse movement.
+    /// </summary>
+    public bool IsMouseOver
+    {
+        get => (bool)GetValue(IsMouseOverProperty);
+        internal set => SetValue(IsMouseOverProperty, value);
+    }
+
     public static readonly DependencyProperty IsEnabledProperty =
         DependencyProperty.Register("IsEnabled", typeof(bool), typeof(UIElement), true);
 
@@ -552,6 +566,8 @@ public abstract class UIElement : DependencyObject
     public static readonly RoutedEvent MouseDownEvent = RoutedEvent.Register("MouseDown", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseUpEvent = RoutedEvent.Register("MouseUp", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent MouseMoveEvent = RoutedEvent.Register("MouseMove", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseEnterEvent = RoutedEvent.Register("MouseEnter", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(UIElement));
+    public static readonly RoutedEvent MouseLeaveEvent = RoutedEvent.Register("MouseLeave", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent GotFocusEvent = RoutedEvent.Register("GotFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
     public static readonly RoutedEvent LostFocusEvent = RoutedEvent.Register("LostFocus", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(UIElement));
 
@@ -567,6 +583,8 @@ public abstract class UIElement : DependencyObject
         else if (e.RoutedEvent == MouseDownEvent) OnMouseDown((MouseEventArgs)e);
         else if (e.RoutedEvent == MouseUpEvent) OnMouseUp((MouseEventArgs)e);
         else if (e.RoutedEvent == MouseMoveEvent) OnMouseMove((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseEnterEvent) OnMouseEnter((MouseEventArgs)e);
+        else if (e.RoutedEvent == MouseLeaveEvent) OnMouseLeave((MouseEventArgs)e);
         else if (e.RoutedEvent == GotFocusEvent) OnGotFocus();
         else if (e.RoutedEvent == LostFocusEvent) OnLostFocus();
     }
@@ -582,6 +600,16 @@ public abstract class UIElement : DependencyObject
     public virtual void OnMouseDown(MouseEventArgs e) { }
     public virtual void OnMouseUp(MouseEventArgs e) { }
     public virtual void OnMouseMove(MouseEventArgs e) { }
+
+    public virtual void OnMouseEnter(MouseEventArgs e)
+    {
+        Invalidate();
+    }
+
+    public virtual void OnMouseLeave(MouseEventArgs e)
+    {
+        Invalidate();
+    }
 
     public virtual void OnGotFocus()
     {

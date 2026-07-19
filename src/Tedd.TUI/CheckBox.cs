@@ -18,6 +18,16 @@ public class CheckBox : ToggleButton
         set => SetValue(FocusedForegroundProperty, value);
     }
 
+    public static readonly DependencyProperty HoverForegroundProperty =
+        DependencyProperty.Register("HoverForeground", typeof(TuiColor), typeof(CheckBox), TuiColor.Cyan);
+
+    /// <summary>Label foreground used while the mouse hovers the control and it is not focused.</summary>
+    public TuiColor HoverForeground
+    {
+        get => (TuiColor)GetValue(HoverForegroundProperty);
+        set => SetValue(HoverForegroundProperty, value);
+    }
+
     public static readonly DependencyProperty CheckColorProperty =
         DependencyProperty.Register("CheckColor", typeof(TuiColor), typeof(CheckBox), TuiColor.Green);
 
@@ -75,7 +85,7 @@ public class CheckBox : ToggleButton
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
-        var fg = IsFocused ? FocusedForeground : Foreground;
+        var fg = IsFocused ? FocusedForeground : IsMouseOver ? HoverForeground : Foreground;
         var bg = Background ?? buffer.GetPixel(x, y).Background;
 
         char mark = UncheckedChar;
