@@ -49,6 +49,19 @@ public class LanguageGrammarTests
         yield return ["hcl", "# tf\nresource \"aws_instance\" \"web\" {\n  ami = \"ami-123\"\n  count = 2\n  tag = \"${var.name}\"\n}"];
         yield return ["http", "GET /api/users HTTP/1.1\nHost: example.com\nContent-Type: application/json\n\n{\"id\": 1}"];
         yield return ["protobuf", "syntax = \"proto3\";\nmessage User {\n  string name = 1;\n  map<string, int32> tags = 2;\n}"];
+        yield return ["latex", "% comment\n\\documentclass{article}\n\\begin{document}\nEinstein: $E = mc^2$\n\\section{Intro}\n\\end{document}"];
+        yield return ["fortran", "PROGRAM hello\n  ! comment\n  REAL :: x = 1.5E-3\n  PRINT *, 'hi'\nEND PROGRAM hello"];
+        yield return ["pascal", "program Demo;\n{ comment }\nvar x: Integer;\nbegin\n  x := $FF;\n  WriteLn('hi');\nend."];
+        yield return ["ada", "-- comment\nprocedure Hello is\nbegin\n   Put_Line (\"Hello\");\nend Hello;"];
+        yield return ["cobol", "       IDENTIFICATION DIVISION.\n       PROGRAM-ID. HELLO.\n      * comment\n       PROCEDURE DIVISION.\n           DISPLAY \"HI\".\n           STOP RUN."];
+        yield return ["prolog", "% comment\nfact(0, 1).\nfact(N, F) :- N > 0, F is N * 2."];
+        yield return ["smalltalk", "\"comment\"\n| x |\nx := 42.\nTranscript showCr: 'hi'."];
+        yield return ["tcl", "# comment\nset name \"world\"\nproc greet {n} {\n  puts \"hello $n\"\n}"];
+        yield return ["verilog", "// comment\nmodule counter(input clk, output reg [7:0] q);\n  always @(posedge clk) q <= q + 8'h01;\nendmodule"];
+        yield return ["vhdl", "-- comment\nentity gate is\n  port (a, b : in std_logic; y : out std_logic);\nend gate;\ny <= a and b;"];
+        yield return ["zig", "// comment\nconst std = @import(\"std\");\npub fn main() void {\n    var x: i32 = 0x1F;\n}"];
+        yield return ["nim", "# comment\nproc greet(name: string): string =\n  result = \"hi \" & name\nlet x = 0xFF"];
+        yield return ["solidity", "pragma solidity ^0.8.0;\ncontract Token {\n  mapping(address => uint256) balances;\n  // note\n}"];
     }
 
     [Theory]
