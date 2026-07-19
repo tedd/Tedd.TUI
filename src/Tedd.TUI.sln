@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.Skia", "T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.Skia.Tests", "Tedd.TUI.Platform.Skia.Tests\Tedd.TUI.Platform.Skia.Tests.csproj", "{F0C76C00-3EA7-43DE-99B1-58993CB7A2BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.Sdl2", "Tedd.TUI.Platform.Sdl2\Tedd.TUI.Platform.Sdl2.csproj", "{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -293,6 +295,18 @@ Global
 		{F0C76C00-3EA7-43DE-99B1-58993CB7A2BA}.Release|x64.Build.0 = Release|Any CPU
 		{F0C76C00-3EA7-43DE-99B1-58993CB7A2BA}.Release|x86.ActiveCfg = Release|Any CPU
 		{F0C76C00-3EA7-43DE-99B1-58993CB7A2BA}.Release|x86.Build.0 = Release|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Debug|x64.Build.0 = Debug|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Debug|x86.Build.0 = Debug|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Release|x64.ActiveCfg = Release|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Release|x64.Build.0 = Release|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Release|x86.ActiveCfg = Release|Any CPU
+		{EFA879FA-7882-4D6B-B505-6C8B1E9D3ED6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
