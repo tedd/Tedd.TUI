@@ -82,6 +82,13 @@ class Program
 
         targets.Add(new()
         {
+            Id = "sdl2",
+            Label = "SDL2 (native window, SkiaSharp cell surface)",
+            Run = Sdl2Target.Run
+        });
+
+        targets.Add(new()
+        {
             Id = "skia",
             Label = "Skia standalone (headless: PNG frame of every test page)",
             Run = SkiaScreenshotTarget.Run
