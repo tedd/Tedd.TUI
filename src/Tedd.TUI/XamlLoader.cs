@@ -45,7 +45,7 @@ public static class XamlLoader
         }
 
         // Handle specific sub-namespaces if any (e.g. MarkdownView in Tedd.TUI.Markdown)
-        Type? type = ResolveType(localName);
+        Type? type = ResolveType(localName, element.NamespaceURI);
         if (type == null)
         {
             throw new InvalidOperationException($"Type {localName} not found.");
@@ -183,8 +183,41 @@ public static class XamlLoader
         return attr.NamespaceURI == XamlNamespace || attr.Prefix == "x";
     }
 
-    private static Type? ResolveType(string name)
+    private static Type? ResolveType(string name) => ResolveType(name, null);
+
+    /// <summary>
+    /// Resolves an element name to a type. A WPF-style CLR namespace URI
+    /// ("clr-namespace:My.Ns;assembly=MyAsm") or WinUI-style "using:My.Ns" takes
+    /// precedence, letting XAML files reference user-defined controls; any other URI
+    /// (urn:tedd-tui, designer namespaces) falls back to name-based resolution against
+    /// the built-in namespaces.
+    /// </summary>
+    private static Type? ResolveType(string name, string? namespaceUri)
     {
+        if (!string.IsNullOrEmpty(namespaceUri))
+        {
+            if (namespaceUri.StartsWith("clr-namespace:", StringComparison.Ordinal))
+            {
+                string spec = namespaceUri.Substring("clr-namespace:".Length);
+                string ns = spec;
+                string? assemblyName = null;
+                int semicolon = spec.IndexOf(';');
+                if (semicolon >= 0)
+                {
+                    ns = spec.Substring(0, semicolon);
+                    string tail = spec.Substring(semicolon + 1).Trim();
+                    if (tail.StartsWith("assembly=", StringComparison.Ordinal))
+                        assemblyName = tail.Substring("assembly=".Length);
+                }
+                return ResolveFromClrNamespace(ns.Trim(), assemblyName?.Trim(), name);
+            }
+
+            if (namespaceUri.StartsWith("using:", StringComparison.Ordinal))
+            {
+                return ResolveFromClrNamespace(namespaceUri.Substring("using:".Length).Trim(), null, name);
+            }
+        }
+
         // Try common namespaces
         string[] namespaces = new[]
         {
@@ -212,6 +245,32 @@ public static class XamlLoader
                 var t = asm.GetType(ns + "." + name);
                 if (t != null) return t;
             }
+        }
+
+        return null;
+    }
+
+    private static Type? ResolveFromClrNamespace(string ns, string? assemblyName, string name)
+    {
+        string fullName = ns.Length == 0 ? name : ns + "." + name;
+
+        if (!string.IsNullOrEmpty(assemblyName))
+        {
+            try
+            {
+                var type = Assembly.Load(assemblyName).GetType(fullName);
+                if (type != null) return type;
+            }
+            catch (Exception)
+            {
+                // Assembly not loadable by name; fall through to the loaded-assembly scan.
+            }
+        }
+
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var type = asm.GetType(fullName);
+            if (type != null) return type;
         }
 
         return null;
