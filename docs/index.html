@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tedd.TUI — one TUI, every surface</title>
-<meta name="description" content="Cross-platform TUI framework for .NET. Define the UI once in XAML or code and host it in terminals, Blazor, WPF, Avalonia, WinUI 3, .NET MAUI or any SkiaSharp canvas.">
+<meta name="description" content="Cross-platform TUI framework for .NET. Define the UI once in XAML or code and host it in terminals, Blazor, WPF, Avalonia, WinUI 3, .NET MAUI, native SDL2 windows or any SkiaSharp canvas.">
 <style>
   :root {
     --bg: #0c0e12; --bg2: #12151c; --panel: #161a23; --border: #232a38;
@@ -79,7 +79,7 @@
   <h1>One TUI. <em>Every surface.</em></h1>
   <p class="tag">A high-performance, WPF-inspired text user interface framework for .NET 10.
      Define the UI once — in XAML or in code — and host the identical character-cell grid anywhere.</p>
-  <p class="surfaces">Terminal · Blazor · WPF · Avalonia · WinUI 3 · .NET MAUI · Skia</p>
+  <p class="surfaces">Terminal · Blazor · WPF · Avalonia · WinUI 3 · .NET MAUI · Skia · SDL2</p>
   <img class="shot" src="assets/hello.svg" alt="Tedd.TUI demo window rendered as a character grid">
 </div>
 
@@ -140,6 +140,9 @@
     <div class="card"><h3>Skia — no framework</h3>
       <p><code>TuiSkiaHost</code> paints straight onto any <code>SKCanvas</code> — or headless to PNG — for game engines, custom windowing and CI screenshots.</p>
       <span class="pkg">Tedd.TUI.Platform.Skia</span></div>
+    <div class="card"><h3>SDL2</h3>
+      <p><code>TuiSdl2Host</code> opens a native SDL2 window in one call — or attaches to the SDL render loop your game or emulator already owns.</p>
+      <span class="pkg">Tedd.TUI.Platform.Sdl2</span></div>
   </div>
 </section>
 
@@ -217,7 +220,8 @@ dotnet add package Tedd.TUI.Platform.Wpf         <span class="c"># WPF host + de
 dotnet add package Tedd.TUI.Platform.Avalonia    <span class="c"># Avalonia host</span>
 dotnet add package Tedd.TUI.Platform.WinUI       <span class="c"># WinUI 3 host</span>
 dotnet add package Tedd.TUI.Platform.Maui        <span class="c"># .NET MAUI host</span>
-dotnet add package Tedd.TUI.Platform.Skia        <span class="c"># standalone Skia host / headless PNG</span></code></pre>
+dotnet add package Tedd.TUI.Platform.Skia        <span class="c"># standalone Skia host / headless PNG</span>
+dotnet add package Tedd.TUI.Platform.Sdl2        <span class="c"># native SDL2 window host</span></code></pre>
   <div class="tscroll">
   <table>
     <tr><th>Feature</th><th>Where</th></tr>
@@ -226,6 +230,7 @@ dotnet add package Tedd.TUI.Platform.Skia        <span class="c"># standalone Sk
     <tr><td>Markdown viewer (<code>MarkdownView</code>) &amp; syntax-highlighted code view (<code>CodeDocument</code>, 27 grammars)</td><td><code>Tedd.TUI</code></td></tr>
     <tr><td>Inline images: Sixel · Kitty · iTerm2 in terminals, real bitmaps on GUI hosts, half-block fallback</td><td><code>Tedd.TUI.Imaging</code> + hosts</td></tr>
     <tr><td>Standalone Skia host: any <code>SKCanvas</code>, headless PNG screenshots</td><td><code>Tedd.TUI.Platform.Skia</code></td></tr>
+    <tr><td>SDL2 host: native window or attach to your SDL render loop</td><td><code>Tedd.TUI.Platform.Sdl2</code></td></tr>
     <tr><td>Shared Skia cell painter</td><td><code>Tedd.TUI.Surface.Skia</code></td></tr>
   </table>
   </div>
