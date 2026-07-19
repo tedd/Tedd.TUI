@@ -6,7 +6,7 @@ namespace Tedd.TUI;
 /// A modal dialog box control with a border, title bar, and content container.
 /// Can be shown/hidden using the Visibility property.
 /// </summary>
-public class DialogBox : UIElement
+public class DialogBox : UIElement, IModalOverlay
 {
     /// <summary>
     /// Gets or sets the content element displayed inside the dialog.

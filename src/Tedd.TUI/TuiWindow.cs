@@ -86,6 +86,12 @@ public class TuiWindow : UIElement
                 int y = Math.Max(0, (finalSize.Height - h) / 2);
                 overlay.Arrange(new Rect(x, y, w, h));
             }
+            else if (overlay is Window win)
+            {
+                // Windows keep their user-set position (clamped) or re-center when
+                // no explicit Left/Top has been set; the Window itself knows which.
+                win.ArrangeInHost(finalSize);
+            }
             else
             {
                 var r = overlay.RenderSize;
@@ -518,8 +524,8 @@ public class TuiWindow : UIElement
                 if (hit != null)
                     return hit;
 
-                // If overlay is a modal dialog, block input to background/lower overlays
-                if (overlay is DialogBox dialog && dialog.IsModal)
+                // If overlay is a modal dialog/window, block input to background/lower overlays
+                if (overlay is IModalOverlay modal && modal.IsModal)
                     return null;
             }
         }
