@@ -10,7 +10,7 @@ terminal, a browser, and a desktop window.
 ## Start here
 
 - **[Getting started](getting-started.md)** — install, hello world for every host (console,
-  Blazor, Blazor Canvas, WPF, Avalonia, WinUI, MAUI), in both XAML and code.
+  Blazor, Blazor Canvas, WPF, Avalonia, WinUI, MAUI, standalone Skia), in both XAML and code.
 - **[XAML guide](xaml.md)** — the markup dialect, controller binding, designer compatibility.
 
 ## Rich content in the console
@@ -64,9 +64,10 @@ and triggers.
 | Avalonia (Win/macOS/Linux) | `Tedd.TUI.Platform.Avalonia` | [Avalonia](platforms/avalonia.md) |
 | WinUI 3 | `Tedd.TUI.Platform.WinUI` | [WinUI](platforms/winui.md) |
 | .NET MAUI | `Tedd.TUI.Platform.Maui` | [MAUI](platforms/maui.md) |
+| Skia standalone (any `SKCanvas`, headless PNG) | `Tedd.TUI.Platform.Skia` | [Skia](platforms/skia.md) |
 
 Supporting packages: `Tedd.TUI` (core), `Tedd.TUI.Surface.Skia` (shared Skia cell painter
-used by the Avalonia/WinUI/MAUI hosts), `Tedd.TUI.Imaging` (bitmap decoding for image-aware
+used by the Skia/Avalonia/WinUI/MAUI hosts), `Tedd.TUI.Imaging` (bitmap decoding for image-aware
 controls).
 
 ## How the pieces fit
@@ -77,7 +78,8 @@ controls).
    Razor components ──┼──►  Control tree  ──► │── WPF (DrawingContext)
                       │    (UIElement,        ├── Avalonia (Skia)
   Programmatic C# ────┘     layout, events)   ├── WinUI 3 (Skia)
-                                │             └── MAUI (Skia)
+                                │             ├── MAUI (Skia)
+                                │             └── Skia standalone (SKCanvas / PNG)
                                 ▼
                           VirtualBuffer
                        (character cell grid)

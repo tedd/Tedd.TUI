@@ -232,6 +232,27 @@ Touch maps to TUI mouse events. MAUI exposes no cross-platform hardware-keyboard
 so keyboard input is injected with `TuiHost.SendKey(...)` / `TuiHost.SendText(...)` — see
 [MAUI](platforms/maui.md).
 
+## Skia (standalone / headless)
+
+```
+dotnet add package Tedd.TUI.Platform.Skia
+```
+
+No GUI framework required — render onto any `SKCanvas` you own, or straight to PNG:
+
+```csharp
+using Tedd.TUI.Platform.Skia;
+
+using var host = new TuiSkiaHost();
+host.SetContent(source: "app.xaml", controller: new AppController());
+
+host.RenderToPng("screenshot.png", columns: 80, rows: 25);   // headless screenshot
+// or in your own loop: host.Render(canvas, pixelWidth, pixelHeight);
+```
+
+Input is forwarded with `MouseDown/Up/Move` (pixel coordinates), `ProcessKey` and
+`SendText`; `RenderRequested` signals when to repaint. See [Skia](platforms/skia.md).
+
 ---
 
 ## Next steps
@@ -243,4 +264,4 @@ so keyboard input is injected with `TuiHost.SendKey(...)` / `TuiHost.SendText(..
   setup is in the [console guide](platforms/console.md#inline-images).
 - Per-platform guides: [Console](platforms/console.md) · [Blazor](platforms/blazor.md) ·
   [WPF](platforms/wpf.md) · [Avalonia](platforms/avalonia.md) · [WinUI](platforms/winui.md) ·
-  [MAUI](platforms/maui.md)
+  [MAUI](platforms/maui.md) · [Skia](platforms/skia.md)
