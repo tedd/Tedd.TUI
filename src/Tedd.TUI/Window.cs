@@ -198,7 +198,7 @@ public class Window : UIElement
     /// Positions at <see cref="Left"/>/<see cref="Top"/>, or centered when unset,
     /// and moves focus to the first focusable element inside.
     /// </summary>
-    public void Show()
+    public virtual void Show()
     {
         Visibility = true;
         if (GetRoot() is TuiWindow root)
