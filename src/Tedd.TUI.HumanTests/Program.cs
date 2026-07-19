@@ -80,6 +80,13 @@ class Program
         });
 #endif
 
+        targets.Add(new()
+        {
+            Id = "skia",
+            Label = "Skia standalone (headless: PNG frame of every test page)",
+            Run = SkiaScreenshotTarget.Run
+        });
+
         return targets;
     }
 

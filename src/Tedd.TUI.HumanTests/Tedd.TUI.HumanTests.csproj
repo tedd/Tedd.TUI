@@ -6,6 +6,7 @@
     <ProjectReference Include="..\Tedd.TUI.Platform.WindowsTerminal\Tedd.TUI.Platform.WindowsTerminal.csproj" />
     <ProjectReference Include="..\Tedd.TUI.Platform.LinuxTerminal\Tedd.TUI.Platform.LinuxTerminal.csproj" />
     <ProjectReference Include="..\Tedd.TUI.Platform.Avalonia\Tedd.TUI.Platform.Avalonia.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Platform.Skia\Tedd.TUI.Platform.Skia.csproj" />
   </ItemGroup>
 
   <ItemGroup>
