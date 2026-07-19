@@ -16,9 +16,17 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- On Windows the exe targets net10.0-windows so it can also host the WPF render
+         target; elsewhere it stays a plain net10.0 console app. -->
     <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows</TargetFramework>
+    <UseWPF Condition="'$(TargetFramework)' == 'net10.0-windows'">true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <ProjectReference Include="..\Tedd.TUI.Platform.Wpf\Tedd.TUI.Platform.Wpf.csproj" />
+  </ItemGroup>
 
 </Project>

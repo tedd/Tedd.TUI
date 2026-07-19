@@ -71,6 +71,15 @@ class Program
             Run = AvaloniaTarget.Run
         });
 
+#if WINDOWS
+        targets.Add(new()
+        {
+            Id = "wpf",
+            Label = "WPF (desktop window, DrawingContext cell surface)",
+            Run = WpfTarget.Run
+        });
+#endif
+
         return targets;
     }
 

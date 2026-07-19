@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace Tedd.TUI.HumanTests.Infrastructure;
 
 public static class Logger
