@@ -30,8 +30,9 @@ public class Button : ButtonBase
             boxStyleBinding.RelativeSource = RelativeSource.TemplatedParent;
             border.SetBinding(Border.BoxStyleProperty, boxStyleBinding);
 
-            // Bind Background (inherited but explicit binding ensures it's passed if border doesn't inherit)
-            var bgBinding = new Binding("Background");
+            // Bind Background to the state-aware EffectiveBackground so focus/hover
+            // fills (and theme-provided fills) reach the Border.
+            var bgBinding = new Binding("EffectiveBackground");
             bgBinding.RelativeSource = RelativeSource.TemplatedParent;
             border.SetBinding(UIElement.BackgroundProperty, bgBinding);
 
@@ -136,7 +137,36 @@ public class Button : ButtonBase
         set => SetValue(HoverBorderColorProperty, value);
     }
 
+    public static readonly DependencyProperty FocusedBackgroundProperty =
+        DependencyProperty.Register("FocusedBackground", typeof(TuiColor?), typeof(Button), null);
+
+    /// <summary>Background used while focused; null falls back to <see cref="UIElement.Background"/>.</summary>
+    public TuiColor? FocusedBackground
+    {
+        get => (TuiColor?)GetValue(FocusedBackgroundProperty);
+        set => SetValue(FocusedBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HoverBackgroundProperty =
+        DependencyProperty.Register("HoverBackground", typeof(TuiColor?), typeof(Button), null);
+
+    /// <summary>Background used while hovered and not focused; null falls back to <see cref="UIElement.Background"/>.</summary>
+    public TuiColor? HoverBackground
+    {
+        get => (TuiColor?)GetValue(HoverBackgroundProperty);
+        set => SetValue(HoverBackgroundProperty, value);
+    }
+
     // Internal "Effective" properties for Template Binding
+
+    public static readonly DependencyProperty EffectiveBackgroundProperty =
+        DependencyProperty.Register("EffectiveBackground", typeof(TuiColor?), typeof(Button), null);
+
+    public TuiColor? EffectiveBackground
+    {
+        get => (TuiColor?)GetValue(EffectiveBackgroundProperty);
+        private set => SetValue(EffectiveBackgroundProperty, value);
+    }
 
     public static readonly DependencyProperty EffectiveBorderColorProperty =
         DependencyProperty.Register("EffectiveBorderColor", typeof(TuiColor), typeof(Button), TuiColor.Gray);
@@ -415,10 +445,26 @@ public class Button : ButtonBase
         if (dp == BorderColorProperty || dp == FocusedBorderColorProperty ||
             dp == UIElement.ForegroundProperty || dp == FocusedForegroundProperty ||
             dp == HoverBorderColorProperty || dp == HoverForegroundProperty ||
+            dp == UIElement.BackgroundProperty || dp == FocusedBackgroundProperty ||
+            dp == HoverBackgroundProperty ||
             dp == IsFocusedProperty || dp == IsMouseOverProperty)
         {
             UpdateEffectiveColors();
         }
+    }
+
+    // Effective colors are computed snapshots, so theme swaps and (re)attachment must
+    // recompute them: theme style values change without per-property notifications.
+    protected override void OnThemeChanged()
+    {
+        base.OnThemeChanged();
+        UpdateEffectiveColors();
+    }
+
+    protected override void OnParentChanged()
+    {
+        base.OnParentChanged();
+        UpdateEffectiveColors();
     }
 
     private void UpdateEffectiveColors()
@@ -429,16 +475,19 @@ public class Button : ButtonBase
         {
             EffectiveBorderColor = FocusedBorderColor;
             EffectiveForeground = FocusedForeground;
+            EffectiveBackground = FocusedBackground ?? Background;
         }
         else if (IsMouseOver)
         {
             EffectiveBorderColor = HoverBorderColor;
             EffectiveForeground = HoverForeground;
+            EffectiveBackground = HoverBackground ?? Background;
         }
         else
         {
             EffectiveBorderColor = BorderColor;
             EffectiveForeground = Foreground;
+            EffectiveBackground = Background;
         }
     }
 }

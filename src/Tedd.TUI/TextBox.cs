@@ -26,6 +26,66 @@ public class TextBox : UIElement
         set => SetValue(TextProperty, value);
     }
 
+    public static readonly DependencyProperty FocusedForegroundProperty =
+        DependencyProperty.Register("FocusedForeground", typeof(TuiColor), typeof(TextBox), TuiColor.Yellow);
+
+    /// <summary>Text color while the text box has keyboard focus.</summary>
+    public TuiColor FocusedForeground
+    {
+        get => (TuiColor)GetValue(FocusedForegroundProperty);
+        set => SetValue(FocusedForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty FocusedBackgroundProperty =
+        DependencyProperty.Register("FocusedBackground", typeof(TuiColor), typeof(TextBox), TuiColor.DarkBlue);
+
+    /// <summary>Background color while the text box has keyboard focus.</summary>
+    public TuiColor FocusedBackground
+    {
+        get => (TuiColor)GetValue(FocusedBackgroundProperty);
+        set => SetValue(FocusedBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectionForegroundProperty =
+        DependencyProperty.Register("SelectionForeground", typeof(TuiColor), typeof(TextBox), TuiColor.Black);
+
+    /// <summary>Text color of the selected range.</summary>
+    public TuiColor SelectionForeground
+    {
+        get => (TuiColor)GetValue(SelectionForegroundProperty);
+        set => SetValue(SelectionForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectionBackgroundProperty =
+        DependencyProperty.Register("SelectionBackground", typeof(TuiColor), typeof(TextBox), TuiColor.Cyan);
+
+    /// <summary>Background color of the selected range.</summary>
+    public TuiColor SelectionBackground
+    {
+        get => (TuiColor)GetValue(SelectionBackgroundProperty);
+        set => SetValue(SelectionBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty CaretForegroundProperty =
+        DependencyProperty.Register("CaretForeground", typeof(TuiColor), typeof(TextBox), TuiColor.Black);
+
+    /// <summary>Foreground of the cell under the caret.</summary>
+    public TuiColor CaretForeground
+    {
+        get => (TuiColor)GetValue(CaretForegroundProperty);
+        set => SetValue(CaretForegroundProperty, value);
+    }
+
+    public static readonly DependencyProperty CaretBackgroundProperty =
+        DependencyProperty.Register("CaretBackground", typeof(TuiColor), typeof(TextBox), TuiColor.Gray);
+
+    /// <summary>Background of the cell under the caret.</summary>
+    public TuiColor CaretBackground
+    {
+        get => (TuiColor)GetValue(CaretBackgroundProperty);
+        set => SetValue(CaretBackgroundProperty, value);
+    }
+
     public static readonly DependencyProperty IsPasswordProperty =
         DependencyProperty.Register("IsPassword", typeof(bool), typeof(TextBox), false);
 
@@ -196,12 +256,10 @@ public class TextBox : UIElement
         int y = RenderSize.Y + offsetY;
         int w = RenderSize.Width;
 
-        var fg = IsFocused ? TuiColor.Yellow : TuiColor.White;
-        // Default to provided Background, or transparent (existing buffer background) if null
-        // However, existing behavior was hardcoded Black when not focused.
-        // We want to support transparency if Background is null.
-        var effectiveBg = IsFocused ? TuiColor.DarkBlue : (Background ?? buffer.GetPixel(x, y).Background);
-        var bg = effectiveBg;
+        var fg = IsFocused ? FocusedForeground : Foreground;
+        // Unfocused with no Background set: keep transparent behavior by adopting the
+        // existing buffer background under the control.
+        var bg = IsFocused ? FocusedBackground : (Background ?? buffer.GetPixel(x, y).Background);
 
         string text = Text ?? "";
         string display = IsPassword ? new string(PasswordChar, text.Length) : text;
@@ -230,15 +288,15 @@ public class TextBox : UIElement
             // Selection highlight
             if (textIdx >= selStart && textIdx < selEnd)
             {
-                cellBg = TuiColor.Cyan;
-                cellFg = TuiColor.Black;
+                cellBg = SelectionBackground;
+                cellFg = SelectionForeground;
             }
 
             // Cursor (takes priority over selection)
             if (IsFocused && textIdx == _cursorPos)
             {
-                cellBg = TuiColor.Gray;
-                cellFg = TuiColor.Black;
+                cellBg = CaretBackground;
+                cellFg = CaretForeground;
             }
 
             buffer.SetPixel(x + i, y, c, cellFg, cellBg);
@@ -247,7 +305,7 @@ public class TextBox : UIElement
         // Draw cursor at end if needed
         if (IsFocused && _cursorPos == display.Length && display.Length - start < w)
         {
-            buffer.SetPixel(x + (display.Length - start), y, ' ', TuiColor.Black, TuiColor.Gray);
+            buffer.SetPixel(x + (display.Length - start), y, ' ', CaretForeground, CaretBackground);
         }
     }
 

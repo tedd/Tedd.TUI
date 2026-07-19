@@ -6,6 +6,22 @@ namespace Tedd.TUI;
 
 public class TuiWindow : UIElement
 {
+    public TuiWindow()
+    {
+        // Weakly tracked so a global theme swap can refresh this window's tree.
+        ThemeManager.RegisterWindow(this);
+    }
+
+    /// <summary>
+    /// Called by <see cref="ThemeManager"/> when the global theme is replaced:
+    /// refreshes cached themed state throughout the tree and schedules a re-render.
+    /// </summary>
+    internal void OnGlobalThemeChanged()
+    {
+        NotifyThemeChanged();
+        Invalidate();
+    }
+
     /// <summary>
     /// Capabilities of the surface this window is rendered on. Controls call
     /// <see cref="UIElement.GetCapabilities"/> to read this. Defaults to
@@ -95,6 +111,17 @@ public class TuiWindow : UIElement
     /// </summary>
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
+        // Themed desktops (Turbo Pascal / QuickBasic blue, Light gray, ...) set the
+        // window Background; fill the surface first so content and empty areas sit on
+        // it. Unthemed windows keep the historical behavior of not painting anything.
+        var windowBackground = Background;
+        if (windowBackground.HasValue)
+        {
+            int w = RenderSize.Width > 0 ? RenderSize.Width : buffer.Width;
+            int h = RenderSize.Height > 0 ? RenderSize.Height : buffer.Height;
+            buffer.FillRect(RenderSize.X + offsetX, RenderSize.Y + offsetY, w, h, ' ', Foreground, windowBackground.Value);
+        }
+
         // Base content lives directly on the destination buffer to avoid an extra allocation.
         Content?.Render(buffer, offsetX, offsetY);
 

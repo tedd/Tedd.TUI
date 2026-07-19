@@ -227,6 +227,38 @@ public abstract class UIElement : DependencyObject
         expr.Attach();
     }
 
+    /// <summary>
+    /// Recursively informs this element and its visual descendants that the active
+    /// <see cref="TuiTheme"/> was replaced. Bindings are re-evaluated so values copied
+    /// from theme-styled sources are refreshed, and <see cref="OnThemeChanged"/> lets
+    /// controls that cache derived state (e.g. effective colors) rebuild it. Invoked
+    /// by <see cref="TuiWindow"/> for the whole tree when
+    /// <see cref="ThemeManager.Current"/> changes.
+    /// </summary>
+    public void NotifyThemeChanged()
+    {
+        OnThemeChanged();
+
+        foreach (var binding in _bindings)
+        {
+            binding.UpdateTarget();
+        }
+
+        int count = VisualChildrenCount;
+        for (int i = 0; i < count; i++)
+        {
+            GetVisualChild(i)?.NotifyThemeChanged();
+        }
+    }
+
+    /// <summary>
+    /// Override to refresh state derived from themed property values (caches,
+    /// computed "effective" colors, ...). The base implementation does nothing.
+    /// </summary>
+    protected virtual void OnThemeChanged()
+    {
+    }
+
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
         base.OnPropertyChanged(dp);

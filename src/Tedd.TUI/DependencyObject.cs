@@ -65,6 +65,14 @@ public class DependencyObject : INotifyPropertyChanged
         {
             return localValue;
         }
+        // Theme style values rank below local/trigger values but above inheritance and
+        // registration defaults, matching WPF's precedence for theme styles. Inherited
+        // properties still resolve theme styles of ancestors naturally because the
+        // parent walk re-enters GetValue on each ancestor.
+        if (ThemeManager.Current.TryGetStyleValue(GetType(), dp, out var themeValue))
+        {
+            return themeValue;
+        }
         if (dp.IsInherited && InheritanceParent != null)
         {
             return InheritanceParent.GetValue(dp);
@@ -166,7 +174,7 @@ public class DependencyObject : INotifyPropertyChanged
         }
     }
 
-    private static object? CoerceLegacyColor(DependencyProperty dp, object? value)
+    internal static object? CoerceLegacyColor(DependencyProperty dp, object? value)
     {
         if (value is ConsoleColor cc)
         {
