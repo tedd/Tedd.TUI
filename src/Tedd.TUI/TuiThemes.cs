@@ -149,6 +149,12 @@ public static class TuiThemes
             .Set(DialogBox.TitleColorProperty, TuiColor.Black)
             .Set(UIElement.ForegroundProperty, TuiColor.Black));
 
+        t.Styles.Add(new Style(typeof(Window))
+            .Set(Window.BackgroundColorProperty, TuiColor.White)
+            .Set(Window.BorderColorProperty, TuiColor.Black)
+            .Set(Window.TitleColorProperty, TuiColor.Black)
+            .Set(UIElement.ForegroundProperty, TuiColor.Black));
+
         t.Styles.Add(new Style(typeof(ListBox))
             .Set(ListBox.SelectionForegroundProperty, TuiColor.White)
             .Set(ListBox.SelectionBackgroundProperty, TuiColor.DarkBlue)
@@ -268,6 +274,13 @@ public static class TuiThemes
             .Set(DialogBox.BorderColorProperty, DosWhite)
             .Set(DialogBox.TitleColorProperty, TuiColor.Black)
             .Set(DialogBox.BoxStyleProperty, BoxStyle.Single)
+            .Set(UIElement.ForegroundProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(Window))
+            .Set(Window.BackgroundColorProperty, DosLightGray)
+            .Set(Window.BorderColorProperty, DosWhite)
+            .Set(Window.TitleColorProperty, TuiColor.Black)
+            .Set(Window.BoxStyleProperty, BoxStyle.Single)
             .Set(UIElement.ForegroundProperty, TuiColor.Black));
 
         // TP dialog buttons: black text on a green face, no frame, solid black shadow.
@@ -440,6 +453,13 @@ public static class TuiThemes
             .Set(DialogBox.BorderColorProperty, TuiColor.Black)
             .Set(DialogBox.TitleColorProperty, TuiColor.Black)
             .Set(DialogBox.BoxStyleProperty, BoxStyle.Single)
+            .Set(UIElement.ForegroundProperty, TuiColor.Black));
+
+        t.Styles.Add(new Style(typeof(Window))
+            .Set(Window.BackgroundColorProperty, DosLightGray)
+            .Set(Window.BorderColorProperty, TuiColor.Black)
+            .Set(Window.TitleColorProperty, TuiColor.Black)
+            .Set(Window.BoxStyleProperty, BoxStyle.Single)
             .Set(UIElement.ForegroundProperty, TuiColor.Black));
 
         // QB dialog buttons: flat "< OK >"-style black-on-gray text; focus inverts.
