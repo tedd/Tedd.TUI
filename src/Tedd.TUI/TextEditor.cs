@@ -105,6 +105,33 @@ public class TextEditor : UIElement
         Invalidate();
     }
 
+    /// <summary>
+    /// Raised on Ctrl+V before the default clipboard-text paste. Set
+    /// <see cref="TextPasteEventArgs.Handled"/> to replace the default behavior,
+    /// e.g. to convert rich clipboard content (images, files) before inserting
+    /// via <see cref="InsertTextAtCaret"/>.
+    /// </summary>
+    public event EventHandler<TextPasteEventArgs>? PasteRequested;
+
+    /// <summary>Inserts (possibly multi-line) text at the caret and moves the caret after it.</summary>
+    public void InsertTextAtCaret(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+
+        var parts = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        string currentLine = _lines[_cursorRow];
+        string tail = currentLine.Substring(_cursorCol);
+        _lines[_cursorRow] = currentLine.Substring(0, _cursorCol) + parts[0];
+        for (int i = 1; i < parts.Length; i++)
+            _lines.Insert(_cursorRow + i, parts[i]);
+        _cursorRow += parts.Length - 1;
+        _cursorCol = _lines[_cursorRow].Length;
+        _lines[_cursorRow] += tail;
+
+        UpdateTextFromLines();
+        AdjustScroll();
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
         return new Size(Width > 0 ? Width : 40, Height > 0 ? Height : 10);
@@ -334,6 +361,14 @@ public class TextEditor : UIElement
             AdjustScroll();
             e.Handled = true;
         }
+        else if ((e.Modifiers & ConsoleModifiers.Control) != 0 && e.Key == ConsoleKey.V)
+        {
+            var args = new TextPasteEventArgs();
+            PasteRequested?.Invoke(this, args);
+            if (!args.Handled)
+                InsertTextAtCaret(Clipboard.GetText());
+            e.Handled = true;
+        }
         else if (!char.IsControl(e.KeyChar))
         {
             _lines[_cursorRow] = _lines[_cursorRow].Insert(_cursorCol, e.KeyChar.ToString());
@@ -343,4 +378,11 @@ public class TextEditor : UIElement
             e.Handled = true;
         }
     }
+}
+
+/// <summary>Event args for <see cref="TextEditor.PasteRequested"/>.</summary>
+public class TextPasteEventArgs : EventArgs
+{
+    /// <summary>Set to true to suppress the default clipboard-text paste.</summary>
+    public bool Handled { get; set; }
 }
