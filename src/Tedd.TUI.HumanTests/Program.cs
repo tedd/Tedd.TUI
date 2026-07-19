@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Tedd.TUI;
 using Tedd.TUI.HumanTests.Infrastructure;
-using Tedd.TUI.HumanTests.Screens;
+using Tedd.TUI.HumanTests.RenderTargets;
 using Tedd.TUI.Platform.Console;
 using Tedd.TUI.Platform.LinuxTerminal;
 using Tedd.TUI.Platform.WindowsTerminal;
@@ -15,60 +15,115 @@ class Program
         Logger.Clear();
 
         var profile = TerminalProbe.Detect();
-        var platform = SelectRenderingPlatformInteractively(profile);
-        LogRenderingChoice(platform, profile);
-
-        var window = new TuiWindow();
-        var app = new TuiApp(window, platform);
-
-        var runner = new TestRunner(window);
-
-        void ShowSelection()
-        {
-            // Clear any overlays
-            window.ClearOverlay();
-
-            var selection = new SelectionScreen(runner);
-            window.Content = selection;
-            window.SetFocus(selection); // Ensure focus is somewhere valid
-            window.EnsureInitialFocus();
-        }
-
-        runner.OnComplete = ShowSelection;
-
-        // Initial Screen
-        ShowSelection();
-
-        System.Console.CancelKeyPress += (s, e) =>
-        {
-            app.Stop();
-            e.Cancel = true;
-        };
-
-        try
-        {
-            app.Run();
-        }
-        finally
-        {
-            app.Stop();
-        }
+        var targets = BuildTargets(profile);
+        var target = SelectTarget(targets, args, profile);
+        LogRenderingChoice(target, profile);
+        target.Run();
     }
 
-    private static void LogRenderingChoice(ITuiPlatform platform, TerminalProfile profile)
+    /// <summary>
+    /// Every rendering target this executable can host on the current OS. Terminal
+    /// targets run in this console; GUI targets open their own window.
+    /// </summary>
+    private static List<RenderTarget> BuildTargets(TerminalProfile profile)
     {
-        var backend = platform switch
+        var targets = new List<RenderTarget>
         {
-            LegacyConsolePlatform => "Legacy",
-            WindowsTerminalPlatform => "WindowsTerminal",
-            LinuxTerminalPlatform => "LinuxTerminal",
-            _ => platform.GetType().FullName ?? platform.GetType().Name,
+            new()
+            {
+                Id = "auto",
+                Label = "Auto terminal (PlatformLoader - best match for this host)",
+                Run = () => TerminalTarget.Run(PlatformLoader.Load())
+            },
+            new()
+            {
+                Id = "legacy",
+                Label = "Legacy terminal (16-color System.Console / ConsoleRenderer)",
+                Run = () => TerminalTarget.Run(new LegacyConsolePlatform(profile))
+            },
         };
 
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            targets.Add(new()
+            {
+                Id = "windowsterminal",
+                Label = "WindowsTerminal (VT output / AnsiTrueColorRenderer)",
+                Run = () => TerminalTarget.Run(new WindowsTerminalPlatform(profile))
+            });
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            targets.Add(new()
+            {
+                Id = "linuxterminal",
+                Label = "LinuxTerminal (unix truecolor + raw-mode input)",
+                Run = () => TerminalTarget.Run(new LinuxTerminalPlatform(profile))
+            });
+        }
+
+        return targets;
+    }
+
+    /// <summary>
+    /// Picks the target from <c>--target &lt;id&gt;</c> (or <c>--target=&lt;id&gt;</c>)
+    /// when given, otherwise via a plain <see cref="System.Console"/> prompt before the
+    /// selected backend takes over the screen.
+    /// </summary>
+    private static RenderTarget SelectTarget(List<RenderTarget> targets, string[] args, TerminalProfile profile)
+    {
+        var requested = ParseTargetArg(args);
+        if (requested != null)
+        {
+            var match = targets.FirstOrDefault(t => t.Id.Equals(requested, StringComparison.OrdinalIgnoreCase));
+            if (match != null)
+                return match;
+
+            System.Console.WriteLine($"Unknown --target '{requested}'. Available: {string.Join(", ", targets.Select(t => t.Id))}");
+        }
+
+        System.Console.WriteLine();
+        System.Console.WriteLine("Tedd.TUI HumanTests - rendering target");
+        System.Console.WriteLine("Host probe: " + DescribeProbeOneLine(profile));
+        System.Console.WriteLine();
+        for (var i = 0; i < targets.Count; i++)
+            System.Console.WriteLine($"  {i + 1}) {targets[i].Label}");
+        System.Console.WriteLine();
+        System.Console.Write($"Enter 1-{targets.Count} [default: 1 = {targets[0].Id}]: ");
+
+        var line = System.Console.ReadLine();
+        var index = 0;
+        if (!string.IsNullOrWhiteSpace(line) &&
+            int.TryParse(line.Trim(), out var n) &&
+            n >= 1 && n <= targets.Count)
+        {
+            index = n - 1;
+        }
+
+        System.Console.WriteLine();
+        return targets[index];
+    }
+
+    private static string? ParseTargetArg(string[] args)
+    {
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i].Equals("--target", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+                return args[i + 1];
+            if (args[i].StartsWith("--target=", StringComparison.OrdinalIgnoreCase))
+                return args[i]["--target=".Length..];
+        }
+        return null;
+    }
+
+    private static void LogRenderingChoice(RenderTarget target, TerminalProfile profile)
+    {
         var termDisp = profile.RawTerm ?? "(null)";
         var colorDisp = profile.RawColorTerm ?? "(null)";
         var message =
-            $"Selected={backend}; " +
+            $"Selected={target.Id}; " +
             $"probe: IsWindowsTerminal={profile.IsWindowsTerminal}, IsLegacyWindowsConsole={profile.IsLegacyWindowsConsole}, " +
             $"IsUnixTerminal={profile.IsUnixTerminal}, SupportsTrueColor={profile.SupportsTrueColor}, " +
             $"TERM={termDisp}, COLORTERM={colorDisp}";
@@ -80,51 +135,6 @@ class Program
             Message = message,
             Timestamp = DateTime.Now,
         });
-    }
-
-    /// <summary>
-    /// Plain <see cref="System.Console"/> prompt before the TUI takes over the screen.
-    /// Lists every backend this executable can host so manual runs can exercise each path.
-    /// </summary>
-    private static ITuiPlatform SelectRenderingPlatformInteractively(TerminalProfile profile)
-    {
-        var choices = new List<(string Label, Func<ITuiPlatform> Factory)>
-        {
-            ("Auto (PlatformLoader - best match for this host)", () => PlatformLoader.Load()),
-            ("Legacy (16-color System.Console / ConsoleRenderer)", () => new LegacyConsolePlatform(profile)),
-        };
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            choices.Add(("WindowsTerminal (VT output / AnsiTrueColorRenderer)", () => new WindowsTerminalPlatform(profile)));
-        }
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            choices.Add(("LinuxTerminal (unix truecolor + raw-mode input)", () => new LinuxTerminalPlatform(profile)));
-        }
-
-        System.Console.WriteLine();
-        System.Console.WriteLine("Tedd.TUI HumanTests - rendering backend");
-        System.Console.WriteLine("Host probe: " + DescribeProbeOneLine(profile));
-        System.Console.WriteLine();
-        for (var i = 0; i < choices.Count; i++)
-            System.Console.WriteLine($"  {i + 1}) {choices[i].Label}");
-        System.Console.WriteLine();
-        System.Console.Write($"Enter 1-{choices.Count} [default: 1 = Auto]: ");
-
-        var line = System.Console.ReadLine();
-        var index = 0;
-        if (!string.IsNullOrWhiteSpace(line) &&
-            int.TryParse(line.Trim(), out var n) &&
-            n >= 1 && n <= choices.Count)
-        {
-            index = n - 1;
-        }
-
-        System.Console.WriteLine();
-        return choices[index].Factory();
     }
 
     private static string DescribeProbeOneLine(TerminalProfile p)
