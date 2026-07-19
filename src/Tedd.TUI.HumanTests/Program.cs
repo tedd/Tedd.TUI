@@ -87,6 +87,30 @@ class Program
             Run = SkiaScreenshotTarget.Run
         });
 
+        targets.Add(new()
+        {
+            Id = "blazor",
+            Label = "Blazor (browser: launches the Tedd.TUI.Demo.Blazor WASM dev server)",
+            Run = BlazorTarget.Run
+        });
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            targets.Add(new()
+            {
+                Id = "winui",
+                Label = "WinUI (info: needs a Windows App SDK app; prints how to test)",
+                Run = InfoTargets.WinUi
+            });
+        }
+
+        targets.Add(new()
+        {
+            Id = "maui",
+            Label = "MAUI (info: needs a MAUI app; prints how to test)",
+            Run = InfoTargets.Maui
+        });
+
         return targets;
     }
 
