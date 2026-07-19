@@ -302,3 +302,5 @@ class MyController
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+The syntax highlighting grammars in `Tedd.TUI.CodeColoring` are derived from [Prism.js](https://github.com/PrismJS/prism) (MIT) - see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

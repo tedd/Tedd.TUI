@@ -16,12 +16,10 @@ public class Pattern
         RegexOptions options = RegexOptions.Compiled;
         if (regexOptions.Contains("i")) options |= RegexOptions.IgnoreCase;
         if (regexOptions.Contains("m")) options |= RegexOptions.Multiline;
+        if (regexOptions.Contains("s")) options |= RegexOptions.Singleline;
 
-        // Note: JS 'm' means Multiline (dot matches newline? No, ^/$ match line breaks).
-        // JS 's' means DotMatchesNewline.
-        // C# Multiline means ^/$ match line breaks. C# Singleline means . matches newline.
-        // Prism uses 'm' for ^/$ matching line breaks usually.
-        // We will need careful translation of flags.
+        // JS flag mapping: 'i' -> IgnoreCase, 'm' (^/$ match line breaks) -> Multiline,
+        // 's' (dot matches newline) -> Singleline.
 
         Regex = new Regex(regexPattern, options);
         Lookbehind = lookbehind;
