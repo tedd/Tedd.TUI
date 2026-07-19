@@ -13,25 +13,32 @@ public class DependencyProperty
     public Type OwnerType { get; }
     public object? DefaultValue { get; }
     public bool IsInherited { get; }
+    /// <summary>
+    /// When true, a Binding whose Mode is left at BindingMode.Default binds TwoWay to
+    /// this property (WPF's FrameworkPropertyMetadata.BindsTwoWayByDefault). Set on
+    /// user-input properties such as TextBox.Text and ToggleButton.IsChecked.
+    /// </summary>
+    public bool BindsTwoWayByDefault { get; }
 
-    private DependencyProperty(string name, Type propertyType, Type ownerType, object? defaultValue, bool isInherited)
+    private DependencyProperty(string name, Type propertyType, Type ownerType, object? defaultValue, bool isInherited, bool bindsTwoWayByDefault)
     {
         Name = name;
         PropertyType = propertyType;
         OwnerType = ownerType;
         DefaultValue = defaultValue;
         IsInherited = isInherited;
+        BindsTwoWayByDefault = bindsTwoWayByDefault;
     }
 
-    public static DependencyProperty Register(string name, Type propertyType, Type ownerType, object? defaultValue = null, bool isInherited = false)
+    public static DependencyProperty Register(string name, Type propertyType, Type ownerType, object? defaultValue = null, bool isInherited = false, bool bindsTwoWayByDefault = false)
     {
-        return new DependencyProperty(name, propertyType, ownerType, defaultValue, isInherited);
+        return new DependencyProperty(name, propertyType, ownerType, defaultValue, isInherited, bindsTwoWayByDefault);
     }
 
     public static DependencyProperty RegisterAttached(string name, Type propertyType, Type ownerType, object? defaultValue = null, bool isInherited = false)
     {
         // Attached properties are essentially the same structure in this simple implementation
-        return new DependencyProperty(name, propertyType, ownerType, defaultValue, isInherited);
+        return new DependencyProperty(name, propertyType, ownerType, defaultValue, isInherited, bindsTwoWayByDefault: false);
     }
 }
 

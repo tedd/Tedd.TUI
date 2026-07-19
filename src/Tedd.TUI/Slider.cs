@@ -28,7 +28,7 @@ public class Slider : UIElement
     }
 
     public static readonly DependencyProperty ValueProperty =
-        DependencyProperty.Register(nameof(Value), typeof(int), typeof(Slider), 0);
+        DependencyProperty.Register(nameof(Value), typeof(int), typeof(Slider), 0, bindsTwoWayByDefault: true);
 
     public static readonly RoutedEvent ValueChangedEvent =
         RoutedEvent.Register("ValueChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(Slider));

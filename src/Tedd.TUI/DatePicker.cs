@@ -37,7 +37,7 @@ public class DatePicker : UIElement
     }
 
     public static readonly DependencyProperty SelectedDateProperty =
-        DependencyProperty.Register(nameof(SelectedDate), typeof(DateTime?), typeof(DatePicker), null);
+        DependencyProperty.Register(nameof(SelectedDate), typeof(DateTime?), typeof(DatePicker), null, bindsTwoWayByDefault: true);
 
     public DateTime? SelectedDate
     {

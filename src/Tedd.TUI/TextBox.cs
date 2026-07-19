@@ -18,7 +18,7 @@ public class TextBox : UIElement
     private bool _isMouseSelecting = false;
 
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register("Text", typeof(string), typeof(TextBox), string.Empty);
+        DependencyProperty.Register("Text", typeof(string), typeof(TextBox), string.Empty, bindsTwoWayByDefault: true);
 
     public string Text
     {

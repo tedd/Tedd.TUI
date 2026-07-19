@@ -18,7 +18,7 @@ public class TextEditor : UIElement
     private List<string> _lines = new List<string> { "" };
 
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register("Text", typeof(string), typeof(TextEditor), string.Empty);
+        DependencyProperty.Register("Text", typeof(string), typeof(TextEditor), string.Empty, bindsTwoWayByDefault: true);
 
     public string Text
     {

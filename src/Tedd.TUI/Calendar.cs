@@ -40,7 +40,7 @@ public class Calendar : UIElement
     }
 
     public static readonly DependencyProperty SelectedDateProperty =
-        DependencyProperty.Register(nameof(SelectedDate), typeof(DateTime?), typeof(Calendar), null);
+        DependencyProperty.Register(nameof(SelectedDate), typeof(DateTime?), typeof(Calendar), null, bindsTwoWayByDefault: true);
 
     public DateTime? SelectedDate
     {

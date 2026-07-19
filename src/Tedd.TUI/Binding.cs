@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
@@ -10,7 +11,13 @@ public enum BindingMode
     OneWay,
     TwoWay,
     OneTime,
-    OneWayToSource
+    OneWayToSource,
+    /// <summary>
+    /// Resolves at attach time: TwoWay for properties registered with
+    /// BindsTwoWayByDefault (TextBox.Text, ToggleButton.IsChecked, ...), OneWay otherwise.
+    /// This mirrors WPF, where an unspecified Mode picks up the property's default.
+    /// </summary>
+    Default
 }
 
 public enum RelativeSourceMode
@@ -46,11 +53,20 @@ public class Binding
 {
     public string? Path { get; set; }
     public object? Source { get; set; }
+    /// <summary>Name (x:Name / Name) of another element in the same tree to use as source.</summary>
+    public string? ElementName { get; set; }
     public RelativeSource? RelativeSource { get; set; }
-    public BindingMode Mode { get; set; } = BindingMode.OneWay;
+    public BindingMode Mode { get; set; } = BindingMode.Default;
     public IValueConverter? Converter { get; set; }
     public object? ConverterParameter { get; set; }
     public object? FallbackValue { get; set; }
+    /// <summary>Value pushed to the target when the binding resolves to null.</summary>
+    public object? TargetNullValue { get; set; }
+    /// <summary>
+    /// Format applied when the target property is a string. Either a composite format
+    /// ("{0:N0} items") or a bare format specifier ("N0", treated as "{0:N0}").
+    /// </summary>
+    public string? StringFormat { get; set; }
 
     public Binding(string path)
     {
@@ -64,10 +80,22 @@ public class Binding
 
 public class BindingExpression
 {
+    /// <summary>Sentinel for "the path could not be resolved" (distinct from a resolved null).</summary>
+    private static readonly object Unresolved = new object();
+
     private readonly UIElement _target;
     private readonly DependencyProperty _property;
     private readonly Binding _binding;
-    private object? _currentSource;
+    // "" and "." both mean "the source object itself".
+    private readonly string[] _pathSegments;
+    // INPC sources subscribed along the path; _chainProps[i] is the segment watched on
+    // _chainObjects[i]. Rebuilt on every UpdateTarget so intermediate object swaps
+    // (vm.Child = other) re-hook the tail of the chain.
+    private readonly List<INotifyPropertyChanged> _chainObjects = [];
+    private readonly List<string> _chainProps = [];
+    // Effective mode: Binding.Mode with BindingMode.Default resolved against the
+    // target property's BindsTwoWayByDefault registration flag.
+    private BindingMode _mode;
     // Breaks target<->source update cycles for TwoWay bindings whose converter or type
     // coercion doesn't round-trip to an equal value.
     private bool _isUpdating;
@@ -81,23 +109,30 @@ public class BindingExpression
         _target = target;
         _property = property;
         _binding = binding;
+        _pathSegments = string.IsNullOrEmpty(binding.Path) || binding.Path == "."
+            ? Array.Empty<string>()
+            : binding.Path.Split('.');
     }
 
     /// <summary>
-    /// Activates the expression: wires target-change tracking for modes that write back
-    /// to the source and performs the initial value transfer in the mode's direction.
+    /// Activates the expression: resolves the effective mode, wires target-change
+    /// tracking for modes that write back to the source, and performs the initial
+    /// value transfer in the mode's direction.
     /// </summary>
     internal void Attach()
     {
-        if (_binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
+        _mode = _binding.Mode == BindingMode.Default
+            ? (_property.BindsTwoWayByDefault ? BindingMode.TwoWay : BindingMode.OneWay)
+            : _binding.Mode;
+
+        if (_mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
         {
             _target.PropertyChanged += OnTargetPropertyChanged;
             _targetSubscribed = true;
         }
 
-        if (_binding.Mode == BindingMode.OneWayToSource)
+        if (_mode == BindingMode.OneWayToSource)
         {
-            _currentSource = ResolveSource();
             UpdateSource();
         }
         else
@@ -107,16 +142,12 @@ public class BindingExpression
     }
 
     /// <summary>
-    /// Deactivates the expression, dropping both the source INPC subscription and the
+    /// Deactivates the expression, dropping the source INPC subscriptions and the
     /// target subscription so a replaced binding cannot keep updating (or leak).
     /// </summary>
     internal void Detach()
     {
-        if (_currentSource is INotifyPropertyChanged npc)
-        {
-            npc.PropertyChanged -= OnPropertyChanged;
-        }
-        _currentSource = null;
+        UnsubscribeChain();
 
         if (_targetSubscribed)
         {
@@ -130,6 +161,14 @@ public class BindingExpression
         if (_binding.Source != null)
         {
             return _binding.Source;
+        }
+
+        if (!string.IsNullOrEmpty(_binding.ElementName))
+        {
+            // Resolved from the tree root so forward references work once the tree is
+            // assembled; bindings re-resolve on parent/DataContext changes and after
+            // XamlLoader finishes building the tree.
+            return _target.GetRoot()?.FindName(_binding.ElementName);
         }
 
         if (_binding.RelativeSource != null)
@@ -167,70 +206,166 @@ public class BindingExpression
 
     public void UpdateTarget()
     {
-        object? newSource = ResolveSource();
-
         // OneWayToSource never writes the target; a source change (e.g. new DataContext)
         // re-resolves and pushes the target's current value into the new source instead.
-        if (_binding.Mode == BindingMode.OneWayToSource)
+        if (_mode == BindingMode.OneWayToSource)
         {
-            _currentSource = newSource;
             UpdateSource();
             return;
         }
 
-        // Handle INotifyPropertyChanged subscription change. OneTime bindings transfer
-        // the value whenever they are (re)activated — initial set, TemplatedParent or
-        // DataContext change — but never track subsequent source mutations.
-        if (newSource != _currentSource)
+        UnsubscribeChain();
+
+        object? source = ResolveSource();
+        if (source == null)
         {
-            if (_currentSource is INotifyPropertyChanged oldNpc)
-            {
-                oldNpc.PropertyChanged -= OnPropertyChanged;
-            }
-
-            _currentSource = newSource;
-
-            if (_binding.Mode != BindingMode.OneTime && _currentSource is INotifyPropertyChanged newNpc)
-            {
-                newNpc.PropertyChanged += OnPropertyChanged;
-            }
-        }
-
-        if (newSource == null)
-        {
-            // If fallback value is set, use it
+            // WPF keeps the target's current value when the source is missing unless a
+            // FallbackValue is provided.
             if (_binding.FallbackValue != null)
             {
-                _target.SetValue(_property, _binding.FallbackValue);
+                SetTargetValue(_binding.FallbackValue);
             }
             return;
         }
 
-        object? value = newSource;
-        if (!string.IsNullOrEmpty(_binding.Path))
+        object? value = EvaluateAndSubscribe(source);
+        if (ReferenceEquals(value, Unresolved))
         {
-            // Simple reflection to get property value from context
-            var propInfo = newSource.GetType().GetProperty(_binding.Path);
-            if (propInfo != null)
-            {
-                value = propInfo.GetValue(newSource);
-            }
-            else
-            {
-                // Property not found
-                if (_binding.Path == ".")
-                    value = newSource;
-                else
-                    value = _binding.FallbackValue ?? _property.DefaultValue;
-            }
+            // Broken path: FallbackValue verbatim (no converter/format), else the
+            // property's registration default.
+            SetTargetValue(_binding.FallbackValue ?? _property.DefaultValue);
+            return;
         }
 
-        // Apply Converter
         if (_binding.Converter != null && value != null)
         {
-            value = _binding.Converter.Convert(value, _property.PropertyType, _binding.ConverterParameter, CultureInfo.CurrentCulture);
+            value = _binding.Converter.Convert(value, _property.PropertyType, _binding.ConverterParameter!, CultureInfo.CurrentCulture);
         }
 
+        if (value == null)
+        {
+            if (_binding.TargetNullValue != null)
+            {
+                value = _binding.TargetNullValue;
+            }
+        }
+        else if (_binding.StringFormat != null && _property.PropertyType == typeof(string))
+        {
+            value = FormatValue(value);
+        }
+
+        value = ConvertToTargetType(value, out bool converted);
+        if (!converted)
+        {
+            value = _binding.FallbackValue ?? _property.DefaultValue;
+        }
+
+        SetTargetValue(value);
+    }
+
+    /// <summary>
+    /// Walks the path from <paramref name="source"/>, subscribing (except for OneTime
+    /// bindings) to change notification on every INPC object that exposes a segment,
+    /// so a swap anywhere along "A.B.C" re-evaluates the binding. Returns the resolved
+    /// value, or <see cref="Unresolved"/> when a segment is missing or an intermediate
+    /// object is null.
+    /// </summary>
+    private object? EvaluateAndSubscribe(object source)
+    {
+        object? current = source;
+        for (int i = 0; i < _pathSegments.Length; i++)
+        {
+            if (current == null) return Unresolved;
+
+            if (_mode != BindingMode.OneTime && current is INotifyPropertyChanged npc)
+            {
+                npc.PropertyChanged += OnSourcePropertyChanged;
+                _chainObjects.Add(npc);
+                _chainProps.Add(_pathSegments[i]);
+            }
+
+            var propInfo = current.GetType().GetProperty(_pathSegments[i]);
+            if (propInfo == null) return Unresolved;
+            current = propInfo.GetValue(current);
+        }
+        return current;
+    }
+
+    private void UnsubscribeChain()
+    {
+        for (int i = 0; i < _chainObjects.Count; i++)
+        {
+            _chainObjects[i].PropertyChanged -= OnSourcePropertyChanged;
+        }
+        _chainObjects.Clear();
+        _chainProps.Clear();
+    }
+
+    private object FormatValue(object value)
+    {
+        string format = _binding.StringFormat!;
+        // A bare specifier ("N0", "yyyy-MM-dd") formats the value itself, matching
+        // WPF's treatment of StringFormat without a composite placeholder.
+        if (format.IndexOf('{') < 0)
+        {
+            format = "{0:" + format + "}";
+        }
+        return string.Format(CultureInfo.CurrentCulture, format, value);
+    }
+
+    /// <summary>
+    /// Coerces a resolved value to the target property's type the way WPF's default
+    /// conversion does: pass-through when assignable, ToString for string targets,
+    /// enum parsing, and IConvertible changes for the rest. A null for a non-nullable
+    /// value type property becomes the property default. On failure the caller falls
+    /// back to FallbackValue / default instead of throwing out of input handling.
+    /// </summary>
+    private object? ConvertToTargetType(object? value, out bool success)
+    {
+        success = true;
+        Type targetType = _property.PropertyType;
+
+        if (value == null)
+        {
+            if (targetType.IsValueType && Nullable.GetUnderlyingType(targetType) == null)
+            {
+                return _property.DefaultValue;
+            }
+            return null;
+        }
+
+        if (targetType.IsInstanceOfType(value)) return value;
+
+        Type underlying = Nullable.GetUnderlyingType(targetType) ?? targetType;
+        if (underlying.IsInstanceOfType(value)) return value;
+
+        try
+        {
+            if (underlying == typeof(string))
+            {
+                return System.Convert.ToString(value, CultureInfo.CurrentCulture);
+            }
+            if (underlying.IsEnum)
+            {
+                return value is string s
+                    ? Enum.Parse(underlying, s, ignoreCase: true)
+                    : Enum.ToObject(underlying, System.Convert.ChangeType(value, Enum.GetUnderlyingType(underlying), CultureInfo.CurrentCulture)!);
+            }
+            if (underlying == typeof(TuiColor) && value is string colorText)
+            {
+                return TuiColor.FromHex(colorText);
+            }
+            return System.Convert.ChangeType(value, underlying, CultureInfo.CurrentCulture);
+        }
+        catch
+        {
+            success = false;
+            return null;
+        }
+    }
+
+    private void SetTargetValue(object? value)
+    {
         if (_isUpdating) return;
         _isUpdating = true;
         try
@@ -252,12 +387,19 @@ public class BindingExpression
     {
         if (_isUpdating) return;
 
-        object? source = _currentSource ?? ResolveSource();
-        _currentSource = source;
+        object? source = ResolveSource();
         if (source == null) return;
-        if (string.IsNullOrEmpty(_binding.Path) || _binding.Path == ".") return;
+        if (_pathSegments.Length == 0) return;
 
-        var propInfo = source.GetType().GetProperty(_binding.Path);
+        // Walk to the object owning the last segment.
+        object? current = source;
+        for (int i = 0; i < _pathSegments.Length - 1 && current != null; i++)
+        {
+            current = current.GetType().GetProperty(_pathSegments[i])?.GetValue(current);
+        }
+        if (current == null) return;
+
+        var propInfo = current.GetType().GetProperty(_pathSegments[^1]);
         if (propInfo == null || !propInfo.CanWrite) return;
 
         object? value = _target.GetValue(_property);
@@ -272,16 +414,18 @@ public class BindingExpression
             if (value != null && !propInfo.PropertyType.IsInstanceOfType(value))
             {
                 var targetType = Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
-                value = Convert.ChangeType(value, targetType, CultureInfo.CurrentCulture);
+                value = targetType.IsEnum && value is string enumText
+                    ? Enum.Parse(targetType, enumText, ignoreCase: true)
+                    : System.Convert.ChangeType(value, targetType, CultureInfo.CurrentCulture);
             }
 
             // Skip no-op writes so INPC sources don't echo the value straight back.
-            if (Equals(propInfo.GetValue(source), value)) return;
+            if (Equals(propInfo.GetValue(current), value)) return;
 
             _isUpdating = true;
             try
             {
-                propInfo.SetValue(source, value);
+                propInfo.SetValue(current, value);
             }
             finally
             {
@@ -294,11 +438,21 @@ public class BindingExpression
         }
     }
 
-    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnSourcePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == _binding.Path || string.IsNullOrEmpty(e.PropertyName))
+        if (string.IsNullOrEmpty(e.PropertyName))
         {
             UpdateTarget();
+            return;
+        }
+
+        for (int i = 0; i < _chainObjects.Count; i++)
+        {
+            if (ReferenceEquals(_chainObjects[i], sender) && _chainProps[i] == e.PropertyName)
+            {
+                UpdateTarget();
+                return;
+            }
         }
     }
 

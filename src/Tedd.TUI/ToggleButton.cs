@@ -5,7 +5,7 @@ namespace Tedd.TUI;
 public class ToggleButton : ButtonBase
 {
     public static readonly DependencyProperty IsCheckedProperty =
-        DependencyProperty.Register("IsChecked", typeof(bool?), typeof(ToggleButton), false);
+        DependencyProperty.Register("IsChecked", typeof(bool?), typeof(ToggleButton), false, bindsTwoWayByDefault: true);
 
     public bool? IsChecked
     {

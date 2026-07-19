@@ -47,7 +47,7 @@ public class NumericUpDown : UIElement
     }
 
     public static readonly DependencyProperty ValueProperty =
-        DependencyProperty.Register(nameof(Value), typeof(int), typeof(NumericUpDown), 0);
+        DependencyProperty.Register(nameof(Value), typeof(int), typeof(NumericUpDown), 0, bindsTwoWayByDefault: true);
 
     public int Value
     {

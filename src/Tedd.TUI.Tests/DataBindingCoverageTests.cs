@@ -152,48 +152,45 @@ public class DataBindingCoverageTests
     }
 
     [Fact]
-    public void Binding_TypeMismatch_ThrowsOrIgnores()
+    public void Binding_IntSource_ToStringTarget_ConvertsAutomatically()
     {
-        // This test documents current behavior.
-        // Binding int property (Count) to string property (Text).
-        // If SetValue performs strict cast, this might fail.
-
+        // WPF converts bound values to the target property type; an int source bound
+        // to TextBlock.Text renders its invariant string representation.
         var vm = new TestViewModel { Count = 42 };
         var tb = new TextBlock();
         tb.DataContext = vm;
 
-        // Text is string, Count is int.
-        // DependencyProperty for Text is typeof(string).
-        // SetValue(TextProperty, 42) -> if validation is loose, it might work if stored as object,
-        // but usage as (string)GetValue() will cast exception.
+        tb.SetBinding(TextBlock.TextProperty, new Binding(nameof(TestViewModel.Count)));
 
-        // Let's see if SetValue handles it.
-        // If it throws, we should probably catch it in BindingExpression to be safe, but currently likely crashes.
+        Assert.Equal("42", tb.Text);
 
-        Assert.Throws<ArgumentException>(() =>
-        {
-            tb.SetBinding(TextBlock.TextProperty, new Binding(nameof(TestViewModel.Count)));
-        });
+        vm.Count = 7;
+        Assert.Equal("7", tb.Text);
     }
 
     [Fact]
-    public void Binding_TypeMismatch_Safe_If_Converted()
+    public void Binding_StringSource_ToIntTarget_ConvertsAutomatically()
     {
-        // Ideally we want automatic ToString() conversion, but Binding doesn't support Converter yet.
-        // This test confirms that we need to match types.
-
         var vm = new TestViewModel { Title = "123" };
-        var progressBar = new ProgressBar(); // Value is int/double?
-        // ProgressBar.Value is usually int or double. Let's check ProgressBar.
-        // Assuming it's int for now based on TUI nature.
-
+        var progressBar = new ProgressBar();
         progressBar.DataContext = vm;
 
-        // Title is string "123". Value property expects int.
-        // This will likely throw InvalidCastException or ArgumentException.
-        Assert.Throws<ArgumentException>(() =>
-        {
-            progressBar.SetBinding(ProgressBar.ValueProperty, new Binding(nameof(TestViewModel.Title)));
-        });
+        progressBar.SetBinding(ProgressBar.ValueProperty, new Binding(nameof(TestViewModel.Title)));
+
+        Assert.Equal(123, progressBar.Value);
+    }
+
+    [Fact]
+    public void Binding_UnconvertibleValue_FallsBackToDefault()
+    {
+        // "not a number" cannot become an int; the binding must not throw and the
+        // target keeps the property's registration default.
+        var vm = new TestViewModel { Title = "not a number" };
+        var progressBar = new ProgressBar();
+        progressBar.DataContext = vm;
+
+        progressBar.SetBinding(ProgressBar.ValueProperty, new Binding(nameof(TestViewModel.Title)));
+
+        Assert.Equal(0, progressBar.Value);
     }
 }
