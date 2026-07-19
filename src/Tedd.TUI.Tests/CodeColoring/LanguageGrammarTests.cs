@@ -22,6 +22,15 @@ public class LanguageGrammarTests
         yield return ["kotlin", "fun main() { val x = \"hello $name and ${1 + 2}\"\n@Anno class Foo }"];
         yield return ["swift", "func greet(name: String) -> String { return \"Hello \\(name)\" } // eol\nlet n = 0x1F"];
         yield return ["dart", "import 'dart:io';\nclass Point { final num x; Point(this.x); }\nvar s = 'a $b c';"];
+        yield return ["ruby", "# comment\nclass Foo\n  def bar(x)\n    :sym\n    @var = \"hi #{x}\"\n  end\nend"];
+        yield return ["php", "<?php\nnamespace App;\nclass Foo {\n  public function bar(int $x): string { return \"v=$x\"; }\n}\n?>"];
+        yield return ["r", "f <- function(x) {\n  # comment\n  y <- x %in% c(1.5, TRUE)\n}"];
+        yield return ["julia", "function f(x)\n  # comment\n  s = \"hi\"\n  return x^2 + 1.5\nend"];
+        yield return ["groovy", "def greet(name) {\n  println \"Hello ${name}!\" // eol\n  @Override int x = 0\n}"];
+        yield return ["scala", "object Main { def main(): Unit = { val s = s\"v=${1 + 2}\"\n println(\"hi\") } }"];
+        yield return ["objectivec", "@interface Foo : NSObject\n- (void)bar:(NSString *)s;\n@end\nNSString *x = @\"hi\"; // c"];
+        yield return ["vb", "Module M\n  ' comment\n  Sub Main()\n    Dim x As Integer = &H1F\n    Console.WriteLine(\"hi\")\n  End Sub\nEnd Module"];
+        yield return ["fsharp", "module M =\n  (* block *)\n  let add x y = x + y\n  [<EntryPoint>]\n  let main _ = printfn \"hi\"; 0"];
     }
 
     [Theory]
