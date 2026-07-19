@@ -38,6 +38,17 @@ public class LanguageGrammarTests
         yield return ["lisp", "(defun greet (name)\n  ;; comment\n  (message \"Hello %s\" name))"];
         yield return ["scheme", "(define (square x)\n  ; comment\n  (* x x))\n(display \"hi\") #t 3.14"];
         yield return ["ocaml", "(* comment *)\nlet rec fact n = if n <= 1 then 1 else n * fact (n - 1)\nlet s = \"hi\""];
+        yield return ["toml", "# config\n[server.web]\nhost = \"localhost\"\nport = 8080\nenabled = true\ndate = 2024-01-15"];
+        yield return ["ini", "; comment\n[section name]\nkey = \"value\"\nother=42"];
+        yield return ["graphql", "# comment\nquery GetUser($id: ID!) {\n  user(id: $id) { name email }\n}"];
+        yield return ["docker", "# build stage\nFROM node:20 AS build\nRUN --mount=type=cache npm ci\nENV FOO=\"bar\""];
+        yield return ["makefile", "# rules\n.PHONY: all\nall: main.o\n\t$(CC) -o $@ $^\nCFLAGS := -Wall"];
+        yield return ["git", "$ git status\n# On branch main\ncommit a11a14ef7e26f2ca62d4b35eac455ce636d0dc09\n@@ -1 +1,2 @@\n-old line\n+new line"];
+        yield return ["nginx", "# comment\nserver {\n    listen 80;\n    server_name example.com;\n    root \"/var/www\";\n}"];
+        yield return ["cmake", "# build\ncmake_minimum_required(VERSION 3.20)\nproject(Demo)\nset(SRC \"${CMAKE_SOURCE_DIR}/main.cpp\")"];
+        yield return ["hcl", "# tf\nresource \"aws_instance\" \"web\" {\n  ami = \"ami-123\"\n  count = 2\n  tag = \"${var.name}\"\n}"];
+        yield return ["http", "GET /api/users HTTP/1.1\nHost: example.com\nContent-Type: application/json\n\n{\"id\": 1}"];
+        yield return ["protobuf", "syntax = \"proto3\";\nmessage User {\n  string name = 1;\n  map<string, int32> tags = 2;\n}"];
     }
 
     [Theory]
