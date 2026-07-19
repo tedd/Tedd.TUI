@@ -44,6 +44,19 @@ public static class XamlLoader
             throw new InvalidOperationException($"Unexpected property element {localName} in ParseElement.");
         }
 
+        // Templates defer instantiation: the inner XML becomes a factory invoked per
+        // materialization (each list item gets its own tree), matching XAML semantics.
+        if (localName == "DataTemplate")
+        {
+            var content = GetSingleTemplateChild(element, "DataTemplate");
+            return new DataTemplate(() => (UIElement)ParseElement(content, controller));
+        }
+        if (localName == "ItemsPanelTemplate")
+        {
+            var content = GetSingleTemplateChild(element, "ItemsPanelTemplate");
+            return new ItemsPanelTemplate(() => (Panel)ParseElement(content, controller));
+        }
+
         // Handle specific sub-namespaces if any (e.g. MarkdownView in Tedd.TUI.Markdown)
         Type? type = ResolveType(localName, element.NamespaceURI);
         if (type == null)
@@ -152,6 +165,22 @@ public static class XamlLoader
         }
 
         return instance;
+    }
+
+    /// <summary>Returns the template's single root element, throwing on zero or many.</summary>
+    private static XmlElement GetSingleTemplateChild(XmlElement element, string templateName)
+    {
+        XmlElement? content = null;
+        foreach (XmlNode child in element.ChildNodes)
+        {
+            if (child is XmlElement childElement)
+            {
+                if (content != null)
+                    throw new InvalidOperationException($"{templateName} must have exactly one root element.");
+                content = childElement;
+            }
+        }
+        return content ?? throw new InvalidOperationException($"{templateName} requires a child element.");
     }
 
     /// <summary>
