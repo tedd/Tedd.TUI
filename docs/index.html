@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tedd.TUI — one TUI, every surface</title>
-<meta name="description" content="Cross-platform TUI framework for .NET. Define the UI once in XAML or code and host it in terminals, Blazor, WPF, Avalonia, WinUI 3 and .NET MAUI.">
+<meta name="description" content="Cross-platform TUI framework for .NET. Define the UI once in XAML or code and host it in terminals, Blazor, WPF, Avalonia, WinUI 3, .NET MAUI or any SkiaSharp canvas.">
 <style>
   :root {
     --bg: #0c0e12; --bg2: #12151c; --panel: #161a23; --border: #232a38;
@@ -79,7 +79,7 @@
   <h1>One TUI. <em>Every surface.</em></h1>
   <p class="tag">A high-performance, WPF-inspired text user interface framework for .NET 10.
      Define the UI once — in XAML or in code — and host the identical character-cell grid anywhere.</p>
-  <p class="surfaces">Terminal · Blazor · WPF · Avalonia · WinUI 3 · .NET MAUI</p>
+  <p class="surfaces">Terminal · Blazor · WPF · Avalonia · WinUI 3 · .NET MAUI · Skia</p>
   <img class="shot" src="assets/hello.svg" alt="Tedd.TUI demo window rendered as a character grid">
 </div>
 
@@ -137,6 +137,9 @@
     <div class="card"><h3>.NET MAUI</h3>
       <p><code>TuiHostView</code> brings the grid to Android, iOS, Mac Catalyst and Windows; touch maps to TUI mouse events.</p>
       <span class="pkg">Tedd.TUI.Platform.Maui</span></div>
+    <div class="card"><h3>Skia — no framework</h3>
+      <p><code>TuiSkiaHost</code> paints straight onto any <code>SKCanvas</code> — or headless to PNG — for game engines, custom windowing and CI screenshots.</p>
+      <span class="pkg">Tedd.TUI.Platform.Skia</span></div>
   </div>
 </section>
 
@@ -201,7 +204,7 @@
     <figure><img src="assets/form.svg" alt="Form controls demo"><figcaption>Forms: TextBox, PasswordBox, RadioButton, Slider</figcaption></figure>
     <figure><img src="assets/table.svg" alt="Table control demo"><figcaption>Table with headers, star-sized columns and paging</figcaption></figure>
     <figure><img src="assets/host-wpf.png" alt="TUI hosted in WPF"><figcaption>The same XAML hosted in WPF (TuiHostElement)</figcaption></figure>
-    <figure><img src="assets/host-skia.png" alt="TUI rendered by the Skia surface"><figcaption>The Skia surface used by Avalonia, WinUI and MAUI</figcaption></figure>
+    <figure><img src="assets/host-skia.png" alt="TUI rendered by the Skia surface"><figcaption>The Skia surface: standalone host, Avalonia, WinUI and MAUI</figcaption></figure>
   </div>
 </section>
 
@@ -213,7 +216,8 @@ dotnet add package Tedd.TUI.Platform.Blazor      <span class="c"># browser host<
 dotnet add package Tedd.TUI.Platform.Wpf         <span class="c"># WPF host + designer preview</span>
 dotnet add package Tedd.TUI.Platform.Avalonia    <span class="c"># Avalonia host</span>
 dotnet add package Tedd.TUI.Platform.WinUI       <span class="c"># WinUI 3 host</span>
-dotnet add package Tedd.TUI.Platform.Maui        <span class="c"># .NET MAUI host</span></code></pre>
+dotnet add package Tedd.TUI.Platform.Maui        <span class="c"># .NET MAUI host</span>
+dotnet add package Tedd.TUI.Platform.Skia        <span class="c"># standalone Skia host / headless PNG</span></code></pre>
   <div class="tscroll">
   <table>
     <tr><th>Feature</th><th>Where</th></tr>
@@ -221,6 +225,7 @@ dotnet add package Tedd.TUI.Platform.Maui        <span class="c"># .NET MAUI hos
     <tr><td>Grid/StackPanel/DockPanel/WrapPanel layout, data binding, routed events</td><td><code>Tedd.TUI</code></td></tr>
     <tr><td>Markdown viewer (<code>MarkdownView</code>) &amp; syntax-highlighted code view (<code>CodeDocument</code>, 27 grammars)</td><td><code>Tedd.TUI</code></td></tr>
     <tr><td>Inline images: Sixel · Kitty · iTerm2 in terminals, real bitmaps on GUI hosts, half-block fallback</td><td><code>Tedd.TUI.Imaging</code> + hosts</td></tr>
+    <tr><td>Standalone Skia host: any <code>SKCanvas</code>, headless PNG screenshots</td><td><code>Tedd.TUI.Platform.Skia</code></td></tr>
     <tr><td>Shared Skia cell painter</td><td><code>Tedd.TUI.Surface.Skia</code></td></tr>
   </table>
   </div>
