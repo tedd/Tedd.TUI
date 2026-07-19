@@ -6,7 +6,7 @@
 
 **Tedd.TUI** is a high-performance, Cross-Platform Text User Interface (TUI) Framework for .NET 10, architected with WPF-inspired design patterns. It features a robust visual tree, hierarchical data binding, a recursive layout engine, and an event system, all optimized for zero-allocation rendering.
 
-Define the UI once — in XAML or in code — and host it anywhere: **terminal, Blazor, WPF, Avalonia, WinUI 3, .NET MAUI and any bare SkiaSharp canvas** (headless PNG rendering included). Every host renders the identical character-cell grid.
+Define the UI once — in XAML or in code — and host it anywhere: **terminal, Blazor, WPF, Avalonia, WinUI 3, .NET MAUI, native SDL2 windows and any bare SkiaSharp canvas** (headless PNG rendering included). Every host renders the identical character-cell grid.
 
 ![Tedd.TUI](docs/assets/hello.svg)
 
@@ -26,6 +26,7 @@ Define the UI once — in XAML or in code — and host it anywhere: **terminal, 
 | `Tedd.TUI.Platform.WinUI` | [![NuGet](https://img.shields.io/nuget/v/Tedd.TUI.Platform.WinUI.svg)](https://www.nuget.org/packages/Tedd.TUI.Platform.WinUI) | WinUI 3 host (`TuiHostControl`) |
 | `Tedd.TUI.Platform.Maui` | [![NuGet](https://img.shields.io/nuget/v/Tedd.TUI.Platform.Maui.svg)](https://www.nuget.org/packages/Tedd.TUI.Platform.Maui) | .NET MAUI host (`TuiHostView`) for Android/iOS/macOS/Windows |
 | `Tedd.TUI.Platform.Skia` | [![NuGet](https://img.shields.io/nuget/v/Tedd.TUI.Platform.Skia.svg)](https://www.nuget.org/packages/Tedd.TUI.Platform.Skia) | Standalone Skia host (`TuiSkiaHost`): any `SKCanvas`, headless PNG screenshots |
+| `Tedd.TUI.Platform.Sdl2` | [![NuGet](https://img.shields.io/nuget/v/Tedd.TUI.Platform.Sdl2.svg)](https://www.nuget.org/packages/Tedd.TUI.Platform.Sdl2) | SDL2 host (`TuiSdl2Host`): native SDL2 window or attach to your SDL render loop |
 | `Tedd.TUI.Surface.Skia` | [![NuGet](https://img.shields.io/nuget/v/Tedd.TUI.Surface.Skia.svg)](https://www.nuget.org/packages/Tedd.TUI.Surface.Skia) | Shared SkiaSharp cell painter used by the Skia/Avalonia/WinUI/MAUI hosts |
 | `Tedd.TUI.Imaging` | [![NuGet](https://img.shields.io/nuget/v/Tedd.TUI.Imaging.svg)](https://www.nuget.org/packages/Tedd.TUI.Imaging) | Bitmap decoding for image-aware controls (Magick.NET) |
 
@@ -60,7 +61,7 @@ Define the UI once — in XAML or in code — and host it anywhere: **terminal, 
   - **PasswordBox:** Inherits from `Control` and employs a `ControlTemplate` housing a `TextBox` with `IsPassword = true`, bridging a crucial parity gap for secure input masking by intercepting `OnKeyDown` events to synchronize an exposed `Password` property.
 - **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
 - **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
-- **Cross-Platform:** Decoupled rendering pipeline with hosts for the terminal (Windows/Linux/macOS), Blazor (Canvas or DOM), WPF (with XAML-designer live preview), Avalonia, WinUI 3, .NET MAUI and standalone Skia (any `SKCanvas`, headless PNG) — all painting the same `VirtualBuffer` cell grid.
+- **Cross-Platform:** Decoupled rendering pipeline with hosts for the terminal (Windows/Linux/macOS), Blazor (Canvas or DOM), WPF (with XAML-designer live preview), Avalonia, WinUI 3, .NET MAUI, SDL2 (native window or your own render loop) and standalone Skia (any `SKCanvas`, headless PNG) — all painting the same `VirtualBuffer` cell grid.
 
 ## Getting Started
 
@@ -249,7 +250,7 @@ The `Tedd.TUI.Platform.Blazor` library provides wrappers for integrating TUI com
 ### Platform Abstraction
 - **Tedd.TUI (Core):** Contains the framework logic (`UIElement`, `Grid`, `Table`, etc.) and is platform-agnostic.
 - **Tedd.TUI.Platform.Console:** Provides the concrete implementation of `IConsole`, the input manager, and the `TuiApp` host for terminal environments.
-- **GUI hosts:** `Tedd.TUI.Platform.Wpf` (`TuiHostElement`, renders via `DrawingContext` and previews live in the Visual Studio XAML designer), `Tedd.TUI.Platform.Avalonia`, `Tedd.TUI.Platform.WinUI` and `Tedd.TUI.Platform.Maui` (all painting through the shared `Tedd.TUI.Surface.Skia` cell painter). `Tedd.TUI.Platform.Skia` (`TuiSkiaHost`) drops the GUI framework entirely and renders onto any bare `SKCanvas` — or headless to `SKImage`/PNG — for game engines, custom windowing and CI screenshots. Each host is a thin display driver: it paints the flattened `VirtualBuffer` and feeds keyboard/mouse input back in cell coordinates, so behavior and looks are identical across surfaces. See the [per-platform guides](docs/README.md#platform-hosts).
+- **GUI hosts:** `Tedd.TUI.Platform.Wpf` (`TuiHostElement`, renders via `DrawingContext` and previews live in the Visual Studio XAML designer), `Tedd.TUI.Platform.Avalonia`, `Tedd.TUI.Platform.WinUI` and `Tedd.TUI.Platform.Maui` (all painting through the shared `Tedd.TUI.Surface.Skia` cell painter). `Tedd.TUI.Platform.Skia` (`TuiSkiaHost`) drops the GUI framework entirely and renders onto any bare `SKCanvas` — or headless to `SKImage`/PNG — for game engines, custom windowing and CI screenshots. `Tedd.TUI.Platform.Sdl2` (`TuiSdl2Host`) builds on it to open a native SDL2 window in one call, or attaches to the SDL2 window/renderer a game or emulator already owns. Each host is a thin display driver: it paints the flattened `VirtualBuffer` and feeds keyboard/mouse input back in cell coordinates, so behavior and looks are identical across surfaces. See the [per-platform guides](docs/README.md#platform-hosts).
 
 
 ### Planned Future Enhancements (Hypotheses)

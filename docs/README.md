@@ -10,7 +10,8 @@ terminal, a browser, and a desktop window.
 ## Start here
 
 - **[Getting started](getting-started.md)** — install, hello world for every host (console,
-  Blazor, Blazor Canvas, WPF, Avalonia, WinUI, MAUI, standalone Skia), in both XAML and code.
+  Blazor, Blazor Canvas, WPF, Avalonia, WinUI, MAUI, standalone Skia, SDL2), in both XAML
+  and code.
 - **[XAML guide](xaml.md)** — the markup dialect, controller binding, designer compatibility.
 
 ## Rich content in the console
@@ -65,6 +66,7 @@ and triggers.
 | WinUI 3 | `Tedd.TUI.Platform.WinUI` | [WinUI](platforms/winui.md) |
 | .NET MAUI | `Tedd.TUI.Platform.Maui` | [MAUI](platforms/maui.md) |
 | Skia standalone (any `SKCanvas`, headless PNG) | `Tedd.TUI.Platform.Skia` | [Skia](platforms/skia.md) |
+| SDL2 window (Win/macOS/Linux, game-loop attach) | `Tedd.TUI.Platform.Sdl2` | [SDL2](platforms/sdl2.md) |
 
 Supporting packages: `Tedd.TUI` (core), `Tedd.TUI.Surface.Skia` (shared Skia cell painter
 used by the Skia/Avalonia/WinUI/MAUI hosts), `Tedd.TUI.Imaging` (bitmap decoding for image-aware
@@ -79,7 +81,8 @@ controls).
                       │    (UIElement,        ├── Avalonia (Skia)
   Programmatic C# ────┘     layout, events)   ├── WinUI 3 (Skia)
                                 │             ├── MAUI (Skia)
-                                │             └── Skia standalone (SKCanvas / PNG)
+                                │             ├── Skia standalone (SKCanvas / PNG)
+                                │             └── SDL2 (native window, Skia)
                                 ▼
                           VirtualBuffer
                        (character cell grid)

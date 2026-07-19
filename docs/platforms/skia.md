@@ -71,3 +71,6 @@ host.SendText("hello");
 - For hosting inside Avalonia, WinUI or MAUI, use their dedicated host packages instead —
   they add focus, input mapping and DPI handling for their frameworks on top of the same
   painter.
+- Want a ready-made native window (or to composite into an SDL render loop) instead of
+  bringing your own surface? [`Tedd.TUI.Platform.Sdl2`](sdl2.md) builds exactly that on
+  top of this host.

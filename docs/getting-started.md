@@ -253,6 +253,27 @@ host.RenderToPng("screenshot.png", columns: 80, rows: 25);   // headless screens
 Input is forwarded with `MouseDown/Up/Move` (pixel coordinates), `ProcessKey` and
 `SendText`; `RenderRequested` signals when to repaint. See [Skia](platforms/skia.md).
 
+## SDL2
+
+```
+dotnet add package Tedd.TUI.Platform.Sdl2
+```
+
+A native SDL2 window on Windows/Linux/macOS — no .NET GUI framework:
+
+```csharp
+using Tedd.TUI.Platform.Sdl2;
+
+using var host = new TuiSdl2Host();
+host.SetContent(source: "app.xaml", controller: new AppController());
+
+host.Run(title: "My App", columns: 80, rows: 25);   // blocks until the window closes
+```
+
+Keyboard, text input and mouse arrive through SDL automatically. Already running an SDL
+loop? `Attach(window, renderer)` + `HandleEvent`/`RenderFrame` composite the TUI into it —
+see [SDL2](platforms/sdl2.md).
+
 ---
 
 ## Next steps
@@ -264,4 +285,4 @@ Input is forwarded with `MouseDown/Up/Move` (pixel coordinates), `ProcessKey` an
   setup is in the [console guide](platforms/console.md#inline-images).
 - Per-platform guides: [Console](platforms/console.md) · [Blazor](platforms/blazor.md) ·
   [WPF](platforms/wpf.md) · [Avalonia](platforms/avalonia.md) · [WinUI](platforms/winui.md) ·
-  [MAUI](platforms/maui.md) · [Skia](platforms/skia.md)
+  [MAUI](platforms/maui.md) · [Skia](platforms/skia.md) · [SDL2](platforms/sdl2.md)
