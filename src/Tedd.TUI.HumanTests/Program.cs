@@ -64,6 +64,13 @@ class Program
             });
         }
 
+        targets.Add(new()
+        {
+            Id = "avalonia",
+            Label = "Avalonia (desktop window, SkiaSharp cell surface)",
+            Run = AvaloniaTarget.Run
+        });
+
         return targets;
     }
 

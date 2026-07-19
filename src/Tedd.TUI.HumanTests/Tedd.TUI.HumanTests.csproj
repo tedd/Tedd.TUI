@@ -5,6 +5,13 @@
     <ProjectReference Include="..\Tedd.TUI.Platform.Console\Tedd.TUI.Platform.Console.csproj" />
     <ProjectReference Include="..\Tedd.TUI.Platform.WindowsTerminal\Tedd.TUI.Platform.WindowsTerminal.csproj" />
     <ProjectReference Include="..\Tedd.TUI.Platform.LinuxTerminal\Tedd.TUI.Platform.LinuxTerminal.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Platform.Avalonia\Tedd.TUI.Platform.Avalonia.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Desktop windowing backends + theme for the Avalonia render target. -->
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
   </ItemGroup>
 
   <PropertyGroup>
