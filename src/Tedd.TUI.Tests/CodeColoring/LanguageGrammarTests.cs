@@ -1,0 +1,64 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Tedd.TUI.CodeColoring;
+using Xunit;
+
+namespace Tedd.TUI.Tests.CodeColoring;
+
+// Smoke tests for the ported Prism grammars: every language must load, tokenize a
+// representative snippet without throwing, produce at least one typed token, and
+// the token stream must reassemble to exactly the input text.
+public class LanguageGrammarTests
+{
+    public static IEnumerable<object[]> Samples()
+    {
+        yield return ["javascript", "const f = async (x) => { return `hi ${x.name}`; } // done"];
+        yield return ["typescript", "interface Foo<T> { bar: T; }\nconst x: number = 42; @decorator\nclass A {}"];
+        yield return ["c", "#include <stdio.h>\nint main(void) { /* hi */ printf(\"%d\\n\", 42); return 0; }"];
+        yield return ["cpp", "#include <vector>\nclass Foo : public Bar { std::vector<int> v; };\nauto s = R\"(raw)\";"];
+        yield return ["java", "import java.util.List;\npublic class Foo<T> { @Override int x = 0b1010; String s = \"hi\"; }"];
+        yield return ["go", "package main\nfunc main() { s := `raw`\n\tfmt.Println(\"hi\", 0x1F, 'c') }"];
+        yield return ["kotlin", "fun main() { val x = \"hello $name and ${1 + 2}\"\n@Anno class Foo }"];
+        yield return ["swift", "func greet(name: String) -> String { return \"Hello \\(name)\" } // eol\nlet n = 0x1F"];
+        yield return ["dart", "import 'dart:io';\nclass Point { final num x; Point(this.x); }\nvar s = 'a $b c';"];
+    }
+
+    [Theory]
+    [MemberData(nameof(Samples))]
+    public void GrammarTokenizesRoundTrip(string language, string code)
+    {
+        var grammar = LanguageRegistry.GetGrammar(language);
+        Assert.NotNull(grammar);
+
+        var tokens = PrismTokenizer.Tokenize(code, grammar);
+
+        Assert.Equal(code, Flatten(tokens));
+        Assert.Contains(tokens, t => t.Type != "text");
+    }
+
+    private static string Flatten(List<Token> tokens)
+    {
+        var sb = new StringBuilder();
+        foreach (var token in tokens)
+        {
+            Append(sb, token);
+        }
+        return sb.ToString();
+    }
+
+    private static void Append(StringBuilder sb, Token token)
+    {
+        if (token.Content is string s)
+        {
+            sb.Append(s);
+        }
+        else if (token.Content is List<Token> nested)
+        {
+            foreach (var child in nested)
+            {
+                Append(sb, child);
+            }
+        }
+    }
+}

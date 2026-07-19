@@ -59,6 +59,14 @@ public class CodeDocument : StackPanel
 
         string type = token.Type == "text" ? parentType : token.Type;
 
+        // Prism aliases map grammar-specific token names onto standard theme names
+        // (e.g. "annotation" -> "punctuation"); use the alias when the theme has no
+        // entry for the primary type.
+        if (token.Alias != null && !Theme.TokenColors.ContainsKey(type) && Theme.TokenColors.ContainsKey(token.Alias))
+        {
+            type = token.Alias;
+        }
+
         if (token.Content is List<Token> nestedTokens)
         {
             foreach (var nested in nestedTokens)
