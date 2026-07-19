@@ -362,20 +362,43 @@ class Program
             return btn;
         }
 
-        // Add Rows with unsorted IDs to demonstrate sorting
-        table.AddRow("10", "Alice", "30", CreateEditBtn("Alice"));
-        table.AddRow("2", "Bob", "25", CreateEditBtn("Bob"));
-        table.AddRow("1", "Charlie", "35", CreateEditBtn("Charlie"));
-        table.AddRow("20", "David", "40", new CheckBox { Content = "Active", IsChecked = true });
-        table.AddRow("3", "Eve", "22", CreateEditBtn("Eve"));
+        // Data Source (Simulating Database)
+        var allData = new List<object[]>();
+        allData.Add(new object[] { "10", "Alice", "30", CreateEditBtn("Alice") });
+        allData.Add(new object[] { "2", "Bob", "25", CreateEditBtn("Bob") });
+        allData.Add(new object[] { "1", "Charlie", "35", CreateEditBtn("Charlie") });
+        allData.Add(new object[] { "20", "David", "40", new CheckBox { Content = "Active", IsChecked = true } }); // UI Element in cell
+        allData.Add(new object[] { "3", "Eve", "22", CreateEditBtn("Eve") });
 
-        // Add more rows for pagination testing
-        table.AddRow("4", "Frank", "28", CreateEditBtn("Frank"));
-        table.AddRow("5", "Grace", "31", CreateEditBtn("Grace"));
-        table.AddRow("6", "Heidi", "24", CreateEditBtn("Heidi"));
-        table.AddRow("7", "Ivan", "45", CreateEditBtn("Ivan"));
-        table.AddRow("8", "Judy", "33", CreateEditBtn("Judy"));
-        table.AddRow("9", "Mallory", "29", CreateEditBtn("Mallory"));
+        // Add 20 more items as requested
+        for (int i = 1; i <= 20; i++)
+        {
+            allData.Add(new object[] { $"{100 + i}", $"User {i}", $"{20 + (i % 30)}", CreateEditBtn($"User {i}") });
+        }
+
+        // Configure Pagination
+        table.PageSize = 5;
+        table.TotalRows = allData.Count; // Tell table we have 25 items
+
+        // Handler to fetch data (Server-Side Paging Simulation)
+        void LoadPage()
+        {
+            table.Rows.Clear();
+            var page = table.CurrentPage;
+            int start = page * table.PageSize;
+            int count = Math.Min(table.PageSize, allData.Count - start);
+
+            for (int i = 0; i < count; i++)
+            {
+                var rowData = allData[start + i];
+                table.AddRow(rowData);
+            }
+        }
+
+        table.PageChanged += (s, e) => LoadPage();
+
+        // Initial Load
+        LoadPage();
 
         tableStack.AddChild(table);
         tabs.Items.Add(new TabItem { Header = "Table", Content = tableStack });
