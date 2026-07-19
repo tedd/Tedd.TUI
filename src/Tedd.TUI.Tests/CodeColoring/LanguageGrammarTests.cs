@@ -31,6 +31,13 @@ public class LanguageGrammarTests
         yield return ["objectivec", "@interface Foo : NSObject\n- (void)bar:(NSString *)s;\n@end\nNSString *x = @\"hi\"; // c"];
         yield return ["vb", "Module M\n  ' comment\n  Sub Main()\n    Dim x As Integer = &H1F\n    Console.WriteLine(\"hi\")\n  End Sub\nEnd Module"];
         yield return ["fsharp", "module M =\n  (* block *)\n  let add x y = x + y\n  [<EntryPoint>]\n  let main _ = printfn \"hi\"; 0"];
+        yield return ["haskell", "module Main where\n-- comment\nmain :: IO ()\nmain = putStrLn \"hi\" >> print 42"];
+        yield return ["elixir", "defmodule Foo do\n  # comment\n  def bar(x), do: \"v=#{x}\"\nend"];
+        yield return ["erlang", "-module(foo).\n%% comment\nbar(X) -> io:format(\"~p~n\", [X])."];
+        yield return ["clojure", "(defn greet [name]\n  ; comment\n  (str \"Hello \" name 42))"];
+        yield return ["lisp", "(defun greet (name)\n  ;; comment\n  (message \"Hello %s\" name))"];
+        yield return ["scheme", "(define (square x)\n  ; comment\n  (* x x))\n(display \"hi\") #t 3.14"];
+        yield return ["ocaml", "(* comment *)\nlet rec fact n = if n <= 1 then 1 else n * fact (n - 1)\nlet s = \"hi\""];
     }
 
     [Theory]
