@@ -41,6 +41,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.WinUI", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.Maui", "src\Tedd.TUI.Platform.Maui\Tedd.TUI.Platform.Maui.csproj", "{030CDA17-538C-4FB5-8A3F-85CAED85F883}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.Skia", "src\Tedd.TUI.Platform.Skia\Tedd.TUI.Platform.Skia.csproj", "{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -267,6 +269,18 @@ Global
 		{030CDA17-538C-4FB5-8A3F-85CAED85F883}.Release|x64.Build.0 = Release|Any CPU
 		{030CDA17-538C-4FB5-8A3F-85CAED85F883}.Release|x86.ActiveCfg = Release|Any CPU
 		{030CDA17-538C-4FB5-8A3F-85CAED85F883}.Release|x86.Build.0 = Release|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Debug|x64.Build.0 = Debug|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Debug|x86.Build.0 = Debug|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Release|x64.ActiveCfg = Release|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Release|x64.Build.0 = Release|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Release|x86.ActiveCfg = Release|Any CPU
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -290,6 +304,7 @@ Global
 		{7CA6F16F-08D1-4D22-86E9-168F958194A7} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{8AEE0DFB-B17E-46E8-97FF-2D5BA0539468} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{030CDA17-538C-4FB5-8A3F-85CAED85F883} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{00D6C7CB-462A-4479-9BA7-CEF05F5513AA} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AE2DEACB-A7F1-43A1-B459-F215FFD8F407}

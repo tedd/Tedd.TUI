@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <Description>Standalone SkiaSharp host for Tedd.TUI: render a TUI window straight onto any SKCanvas or to PNG — headless screenshots, game engines and custom windowing, no GUI framework required.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="4.150.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tedd.TUI\Tedd.TUI.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Surface.Skia\Tedd.TUI.Surface.Skia.csproj" />
+  </ItemGroup>
+
+</Project>
