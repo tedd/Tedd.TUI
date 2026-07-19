@@ -56,6 +56,7 @@ jobs:
           'src/Tedd.TUI.Platform.Wpf/Tedd.TUI.Platform.Wpf.csproj',
           'src/Tedd.TUI.Surface.Skia/Tedd.TUI.Surface.Skia.csproj',
           'src/Tedd.TUI.Platform.Skia/Tedd.TUI.Platform.Skia.csproj',
+          'src/Tedd.TUI.Platform.Sdl2/Tedd.TUI.Platform.Sdl2.csproj',
           'src/Tedd.TUI.Platform.Avalonia/Tedd.TUI.Platform.Avalonia.csproj',
           'src/Tedd.TUI.Platform.WinUI/Tedd.TUI.Platform.WinUI.csproj',
           'src/Tedd.TUI.Platform.Maui/Tedd.TUI.Platform.Maui.csproj'
