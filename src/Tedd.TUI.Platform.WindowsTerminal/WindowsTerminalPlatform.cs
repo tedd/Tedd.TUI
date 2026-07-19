@@ -72,6 +72,8 @@ public sealed class WindowsTerminalPlatform : ITuiPlatform
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
 
+        Clipboard.RegisterProvider(new Win32Clipboard());
+
         try
         {
             _previousOutputEncoding = System.Console.OutputEncoding;

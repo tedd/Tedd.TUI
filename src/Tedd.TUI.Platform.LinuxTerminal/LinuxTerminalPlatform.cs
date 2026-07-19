@@ -71,6 +71,10 @@ public sealed class LinuxTerminalPlatform : ITuiPlatform
             return;
         }
 
+        // OSC 52 pushes copies to the hosting terminal's clipboard; reads fall back to
+        // the in-process buffer (see Osc52Clipboard remarks).
+        Clipboard.RegisterProvider(new Osc52Clipboard());
+
         try
         {
             if (Termios.isatty(Termios.STDIN_FILENO) != 1) return;

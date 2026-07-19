@@ -140,6 +140,7 @@ public class TuiHostElement : FrameworkElement
 
     public TuiHostElement()
     {
+        Clipboard.RegisterProvider(new WpfClipboard());
         Focusable = true;
         FocusVisualStyle = null;
         SnapsToDevicePixels = true;

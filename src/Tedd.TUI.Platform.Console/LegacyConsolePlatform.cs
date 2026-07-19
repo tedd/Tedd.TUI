@@ -45,7 +45,14 @@ public sealed class LegacyConsolePlatform : ITuiPlatform
         return _input;
     }
 
-    public void Initialize() { /* ConsoleRenderer / ConsoleInputManager handle setup eagerly */ }
+    public void Initialize()
+    {
+        // ConsoleRenderer / ConsoleInputManager handle their own setup eagerly.
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            Clipboard.RegisterProvider(new Win32Clipboard());
+        }
+    }
 
     public void Shutdown()
     {
