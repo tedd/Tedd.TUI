@@ -111,6 +111,15 @@ public class TuiHostControl : AvControl
         _controller.RenderRequested += OnTuiRenderRequested;
     }
 
+    protected override void OnAttachedToVisualTree(global::Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        // A TopLevel (and thus its clipboard) only exists once attached. Resolve it lazily
+        // so the provider survives reparenting.
+        Clipboard.RegisterProvider(new AvaloniaClipboard(
+            () => global::Avalonia.Controls.TopLevel.GetTopLevel(this)?.Clipboard));
+    }
+
     private void OnTuiRenderRequested()
     {
         if (_invalidateQueued)

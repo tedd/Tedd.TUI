@@ -102,6 +102,7 @@ public class TuiHostControl : UserControl
     public TuiHostControl()
     {
         IsTabStop = true;
+        Clipboard.RegisterProvider(new WinUIClipboard());
 
         _canvas = new SKXamlCanvas
         {

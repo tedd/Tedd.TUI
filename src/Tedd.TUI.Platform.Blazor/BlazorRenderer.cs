@@ -19,6 +19,7 @@ public class BlazorRenderer : IRenderer, IRendererAsync, ICapabilityProvider
     {
         _js = js;
         _canvasId = canvasId;
+        Clipboard.RegisterProvider(new BlazorClipboard(js));
     }
 
     /// <summary>

@@ -153,6 +153,7 @@ public sealed class TuiSdl2Host : IDisposable
 
             _wakeEventType = SDL.SDL_RegisterEvents(1);
             SDL.SDL_StartTextInput();
+            Clipboard.RegisterProvider(new Sdl2Clipboard());
 
             _running = true;
             RenderFrame();
@@ -204,6 +205,7 @@ public sealed class TuiSdl2Host : IDisposable
         _renderer = renderer;
         _ownsSdl = false;
         SDL.SDL_StartTextInput();
+        Clipboard.RegisterProvider(new Sdl2Clipboard());
         Interlocked.Exchange(ref _renderPending, 1);
     }
 

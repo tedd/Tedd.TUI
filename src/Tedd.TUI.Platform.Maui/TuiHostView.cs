@@ -100,6 +100,7 @@ public class TuiHostView : SKCanvasView
     public TuiHostView()
     {
         EnableTouchEvents = true;
+        Clipboard.RegisterProvider(new MauiClipboard());
         _controller.RenderRequested += OnTuiRenderRequested;
     }
 
