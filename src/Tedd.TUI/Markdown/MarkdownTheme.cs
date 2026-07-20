@@ -120,6 +120,12 @@ public class MarkdownTheme
     /// <summary>Background of the code block copy button right after a successful copy.</summary>
     public TuiColor? CodeBlockCopiedBackground { get; set; } = ConsoleColor.Green;
 
+    /// <summary>Background painted over cells covered by a text selection (mouse drag).</summary>
+    public TuiColor? SelectionBackground { get; set; } = ConsoleColor.DarkCyan;
+
+    /// <summary>Foreground of text under a selection. When null, the glyph keeps its own color.</summary>
+    public TuiColor? SelectionForeground { get; set; } = ConsoleColor.White;
+
     /// <summary>
     /// Language identifier used for fenced code blocks that don't carry one (e.g. plain
     /// <c>```</c> fences from WordPress-exported markdown). When null or empty, those
