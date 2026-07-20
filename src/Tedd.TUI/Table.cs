@@ -499,6 +499,15 @@ public class Table : UIElement
 
         if (w <= 0 || h <= 0) return;
 
+        // 0. Fill Background
+        // Cells only paint their text glyphs, so without a fill the cell padding, the
+        // area right of the last column and the grid-line gutters keep whatever the
+        // buffer already held instead of the table's own background.
+        if (Background.HasValue)
+        {
+            buffer.FillRect(x, y, w, h, ' ', Foreground, Background.Value);
+        }
+
         // 1. Draw Outer Border
         if (ShowBorder)
         {

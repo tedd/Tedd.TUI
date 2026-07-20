@@ -129,8 +129,20 @@ public class MarkdownParser
             if (_theme.Table.HeaderBackground.HasValue)
                 table.HeaderBackground = _theme.Table.HeaderBackground.Value;
 
-            // Body cells must carry an explicit background; otherwise TextBlock samples the
-            // buffer (often black) and no longer matches the table chrome (header / borders).
+            // Grid lines (separators and vertical dividers) should use the same background as cells
+            // to create visual continuity and avoid black gaps in the table.
+            if (_theme.Table.CellBackground.HasValue)
+                table.GridLineBackground = _theme.Table.CellBackground.Value;
+            else if (_theme.Table.HeaderBackground.HasValue)
+                table.GridLineBackground = _theme.Table.HeaderBackground.Value;
+
+            // Set table background: applied during Render as a fill before all other painting.
+            // Grid lines use GridLineBackground; body cells use the markdown style background.
+            if (_theme.Table.CellBackground.HasValue)
+                table.Background = _theme.Table.CellBackground.Value;
+            else if (_theme.Table.HeaderBackground.HasValue)
+                table.Background = _theme.Table.HeaderBackground.Value;
+
             var cellMarkdownStyle = new MarkdownStyle(
                 foreground: _theme.Table.CellForeground ?? _theme.Header4.Foreground ?? TuiColor.White,
                 background: _theme.Table.CellBackground ?? table.HeaderBackground);
@@ -138,9 +150,14 @@ public class MarkdownParser
             // Define Columns
             if (tableBlock.Headers != null)
             {
-                foreach (var h in tableBlock.Headers)
+                for (int i = 0; i < tableBlock.Headers.Count; i++)
                 {
-                    table.Columns.Add(new TableColumn { Header = h, Width = GridLength.Auto });
+                    var h = tableBlock.Headers[i];
+                    // Last column uses Star width to fill remaining space and ensure cells extend to table edge.
+                    var width = (i == tableBlock.Headers.Count - 1)
+                        ? GridLength.Star
+                        : GridLength.Auto;
+                    table.Columns.Add(new TableColumn { Header = h, Width = width });
                 }
             }
 
@@ -157,6 +174,9 @@ public class MarkdownParser
                     // Usually cells don't wrap in simple tables, or they do?
                     // Let's use Paragraph for cell content to support links etc.
                     var cellP = new Paragraph();
+                    // Set cell background so the entire cell rect is painted, not just glyphs.
+                    if (cellMarkdownStyle.Background.HasValue)
+                        cellP.Background = cellMarkdownStyle.Background.Value;
                     AddInlineContent(cellP, cellText, cellMarkdownStyle);
                     row.AddCell(cellP);
                 }

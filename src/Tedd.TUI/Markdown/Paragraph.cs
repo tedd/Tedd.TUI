@@ -148,6 +148,12 @@ public class Paragraph : UIElement
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
+        // Fill background if set, so cells with explicit backgrounds paint completely.
+        if (Background.HasValue && RenderSize.Width > 0 && RenderSize.Height > 0)
+        {
+            buffer.FillRect(x, y, RenderSize.Width, RenderSize.Height, ' ', Foreground, Background.Value);
+        }
+
         foreach (var child in _children)
         {
             child.Render(buffer, x, y);
