@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD workflows using GitHub Actions.
 
 ### Fixed
+- Fixed scrollbar thumb drags in terminals only taking effect on mouse release: the console host now requests VT mouse mode 1002 (button-event tracking) so terminals report motion while a button is held, and SGR motion reports (`Cb` bit 32) are dispatched as MouseMove — captured drags (scrollbar/Thumb) follow the pointer live.
 - Fixed a bug where underlying characters bled through menu items and overlay borders when spaces were rendered with an opaque background.
 - Fixed an issue where popup borders for menus and comboboxes always showed a vertical scrollbar by default, by configuring their vertical scrollbar visibility to `Auto`.
 - Fixed constant 100% CPU use while idle: `DependencyObject.SetValue` now raises change notifications only when the effective value changes, so property writes during Measure/Render no longer re-arm the render loop every frame.

@@ -37,14 +37,17 @@ public class ConsoleInputManager
         }
 
         // Enable Mouse Tracking
-        // CSI ? 1000 h  (Normal tracking)
-        // CSI ? 1003 h  (All motion tracking)
+        // CSI ? 1000 h  (Normal tracking: press/release only — fallback for terminals
+        //                that don't know 1002)
+        // CSI ? 1002 h  (Button-event tracking: like 1000 plus motion while a button is
+        //                held, so drags — e.g. a scrollbar thumb — report live instead of
+        //                only at release)
         // CSI ? 1006 h  (SGR ext mode)
         // Skipped when stdout is redirected: the escapes would pollute piped output and
         // there is no terminal to interpret them anyway.
         if (!System.Console.IsOutputRedirected)
         {
-            System.Console.Write("\x1b[?1000h\x1b[?1006h");
+            System.Console.Write("\x1b[?1000h\x1b[?1002h\x1b[?1006h");
             _mouseTrackingEnabled = true;
         }
     }
@@ -74,7 +77,7 @@ public class ConsoleInputManager
 
         if (_mouseTrackingEnabled)
         {
-            try { System.Console.Write("\x1b[?1000l\x1b[?1006l"); } catch { }
+            try { System.Console.Write("\x1b[?1000l\x1b[?1002l\x1b[?1006l"); } catch { }
             _mouseTrackingEnabled = false;
         }
 
@@ -363,10 +366,11 @@ public class ConsoleInputManager
         return (c >= 64 && c <= 126); // @ to ~ are standard final bytes
     }
 
-    private void ParseMouseSGR(string seq)
+    internal void ParseMouseSGR(string seq)
     {
-        // Format: [<0;x;yM  or [<0;x;ym
-        // 0: buttons (0=left, 1=middle, 2=right)
+        // Format: [<Cb;x;yM  or [<Cb;x;ym
+        // Cb: buttons (0=left, 1=middle, 2=right) plus flag bits — 4/8/16 modifiers,
+        //     32 motion (drag under mode 1002, any motion under 1003), 64 wheel
         // x, y: 1-based coordinates
         // M = press, m = release
         // Optimization: Time Complexity: O(N), Space Complexity: O(1)
@@ -403,6 +407,18 @@ public class ConsoleInputManager
                         ? UIElement.MouseDownEvent
                         : UIElement.MouseUpEvent;
                     _window.ProcessMouse(new MouseEventArgs(routedEvent)
+                    {
+                        GlobalX = x,
+                        GlobalY = y
+                    });
+                }
+                else if ((btn & 32) != 0 && btn < 64)
+                {
+                    // Motion report (32 + button bits, modifiers included): sent while a
+                    // button is held under mode 1002, or for any motion under 1003.
+                    // Forwarded as MouseMove so a captured drag (scrollbar thumb, Thumb)
+                    // tracks the pointer live instead of jumping only at release.
+                    _window.ProcessMouse(new MouseEventArgs(UIElement.MouseMoveEvent)
                     {
                         GlobalX = x,
                         GlobalY = y
