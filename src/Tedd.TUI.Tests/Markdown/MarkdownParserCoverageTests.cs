@@ -124,4 +124,29 @@ public class MarkdownParserCoverageTests
         Assert.NotNull(table);
         Assert.Equal(TuiColor.Blue, table.HeaderBackground);
     }
+
+    // When the cell color comes from the ambient TuiTheme's Table style rather than the
+    // markdown theme, the table must still read as one uniform surface: the grid-line and
+    // whole-table backgrounds follow the resolved header background instead of the theme's
+    // own (contrasting) GridLineBackground. Regression for markdown tables rendering blue
+    // dividers/separators on cyan cells under the TurboPascal theme.
+    [Fact]
+    public void MarkdownParser_Table_UnderAmbientTheme_GridLinesMatchCellBackground()
+    {
+        using var _ = ThemeManager.BeginScope(TuiThemes.TurboPascal);
+
+        var parser = new MarkdownParser(new MarkdownTheme());
+        var doc = parser.Parse("| A | B |\n|---|---|\n| 1 | 2 |");
+
+        var table = doc.GetVisualChild(0) as Table;
+        Assert.NotNull(table);
+
+        // The TurboPascal Table style sets HeaderBackground=cyan but GridLineBackground=blue;
+        // the parser must override the divider/fill backgrounds to the cell (header) color.
+        Assert.Equal(table.HeaderBackground, table.GridLineBackground);
+        Assert.Equal(table.HeaderBackground, table.Background);
+        // Divider glyphs use the header foreground so they stay visible on the cell field
+        // (the theme's GridLineForeground is cyan, which would vanish on the cyan cells).
+        Assert.Equal(table.HeaderForeground, table.GridLineForeground);
+    }
 }

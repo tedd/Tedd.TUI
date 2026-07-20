@@ -129,23 +129,25 @@ public class MarkdownParser
             if (_theme.Table.HeaderBackground.HasValue)
                 table.HeaderBackground = _theme.Table.HeaderBackground.Value;
 
-            // Grid lines (separators and vertical dividers) should use the same background as cells
-            // to create visual continuity and avoid black gaps in the table.
-            if (_theme.Table.CellBackground.HasValue)
-                table.GridLineBackground = _theme.Table.CellBackground.Value;
-            else if (_theme.Table.HeaderBackground.HasValue)
-                table.GridLineBackground = _theme.Table.HeaderBackground.Value;
-
-            // Set table background: applied during Render as a fill before all other painting.
-            // Grid lines use GridLineBackground; body cells use the markdown style background.
-            if (_theme.Table.CellBackground.HasValue)
-                table.Background = _theme.Table.CellBackground.Value;
-            else if (_theme.Table.HeaderBackground.HasValue)
-                table.Background = _theme.Table.HeaderBackground.Value;
+            // A markdown table is meant to read as one uniform surface. Cells fall back to the
+            // header background when the markdown theme sets no explicit cell background, and
+            // that header background itself may come from the ambient TuiTheme's Table style
+            // (e.g. TurboPascal paints headers cyan). Read the *resolved* value here and drive
+            // every part of the chrome from it, or the pieces diverge:
+            //   - the whole-table fill (Table.Background) covers any sub-cell gaps,
+            //   - the interior dividers and row separators (GridLineBackground) sit on the same
+            //     field instead of the theme's own GridLineBackground (TurboPascal's blue),
+            //   - the divider glyphs (GridLineForeground) use the header foreground so they stay
+            //     visible; the theme's GridLineForeground is tuned for its own background and can
+            //     collide with the cell color (TurboPascal's cyan-on-cyan would vanish).
+            TuiColor cellBackground = _theme.Table.CellBackground ?? table.HeaderBackground;
+            table.Background = cellBackground;
+            table.GridLineBackground = cellBackground;
+            table.GridLineForeground = table.HeaderForeground;
 
             var cellMarkdownStyle = new MarkdownStyle(
                 foreground: _theme.Table.CellForeground ?? _theme.Header4.Foreground ?? TuiColor.White,
-                background: _theme.Table.CellBackground ?? table.HeaderBackground);
+                background: cellBackground);
 
             // Define Columns
             if (tableBlock.Headers != null)
