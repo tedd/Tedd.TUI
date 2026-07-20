@@ -59,12 +59,11 @@ public class InputDialog : Dialog
         var message = new TextBlock
         {
             Text = Message ?? string.Empty,
-            TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(1, 0, 1, 0)
+            TextWrapping = TextWrapping.Wrap
         };
         message.SetBinding(TextBlock.TextProperty, new Binding("Message") { Source = this });
 
-        InputBox = new TextBox { Name = "InputBox", Text = Input, Margin = new Thickness(1, 0, 1, 0) };
+        InputBox = new TextBox { Name = "InputBox", Text = Input };
 
         var okButton = new Button { Name = "OkButton", Content = "OK", Margin = new Thickness(1, 0, 1, 0) };
         okButton.Click += (s, e) => Accept();

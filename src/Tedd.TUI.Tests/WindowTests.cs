@@ -293,10 +293,11 @@ public class WindowTests
         var win = new Window { Width = 20, Height = 5, Left = 10, Top = 5, Content = content };
         win.Show(host);
 
-        Assert.Equal(1, content.RenderSize.X);
-        Assert.Equal(1, content.RenderSize.Y);
-        Assert.Equal(18, content.RenderSize.Width);
-        Assert.Equal(3, content.RenderSize.Height);
+        // Content sits inside the frame line (1) plus the default 1-char padding.
+        Assert.Equal(2, content.RenderSize.X);
+        Assert.Equal(2, content.RenderSize.Y);
+        Assert.Equal(16, content.RenderSize.Width);
+        Assert.Equal(1, content.RenderSize.Height);
     }
 
     [Fact]

@@ -137,10 +137,10 @@ public class DialogBoxCoverageTests
 
         dialog.Measure(new Size(100, 100));
 
-        // content size 20 + 2 (border) = 22. Title "TestTitle" + 4 = 13. Max is 22.
-        Assert.Equal(22, dialog.DesiredSize.Width);
-        // content height 10 + 2 (border) = 12
-        Assert.Equal(12, dialog.DesiredSize.Height);
+        // content size 20 + 2 (border) + 2 (padding) = 24. Title "TestTitle" + 4 = 13. Max is 24.
+        Assert.Equal(24, dialog.DesiredSize.Width);
+        // content height 10 + 2 (border) + 2 (padding) = 14
+        Assert.Equal(14, dialog.DesiredSize.Height);
     }
 
     [Fact]
@@ -156,9 +156,9 @@ public class DialogBoxCoverageTests
 
         dialog.Measure(new Size(100, 100));
 
-        // content width 5 + 2 (border) = 7. Title "ThisIsAVeryLongTitle" + 4 = 24. Max is 24.
+        // content width 5 + 2 (border) + 2 (padding) = 9. Title "ThisIsAVeryLongTitle" + 4 = 24. Max is 24.
         Assert.Equal(24, dialog.DesiredSize.Width);
-        Assert.Equal(7, dialog.DesiredSize.Height);
+        Assert.Equal(9, dialog.DesiredSize.Height);
     }
 
     [Fact]
@@ -178,9 +178,10 @@ public class DialogBoxCoverageTests
         Assert.Equal(50, dialog.DesiredSize.Height);
 
         // Ensure content gets measured with correct available space
-        // With TestElement that has no intrinsic size, it accepts the constraint size minus borders
-        Assert.Equal(48, content.DesiredSize.Width);
-        Assert.Equal(48, content.DesiredSize.Height);
+        // With TestElement that has no intrinsic size, it accepts the constraint
+        // size minus border and default padding
+        Assert.Equal(46, content.DesiredSize.Width);
+        Assert.Equal(46, content.DesiredSize.Height);
     }
 
     [Fact]
@@ -196,11 +197,11 @@ public class DialogBoxCoverageTests
         dialog.Measure(new Size(100, 100));
         dialog.Arrange(new Rect(0, 0, 50, 30));
 
-        // Inside the border, X=1, Y=1, W=final.Width-2, H=final.Height-2
-        Assert.Equal(1, content.RenderSize.X);
-        Assert.Equal(1, content.RenderSize.Y);
-        Assert.Equal(48, content.RenderSize.Width);
-        Assert.Equal(28, content.RenderSize.Height);
+        // Inside the border plus default padding: X=Y=2, size reduced by 4 per axis
+        Assert.Equal(2, content.RenderSize.X);
+        Assert.Equal(2, content.RenderSize.Y);
+        Assert.Equal(46, content.RenderSize.Width);
+        Assert.Equal(26, content.RenderSize.Height);
     }
 
     [Theory]

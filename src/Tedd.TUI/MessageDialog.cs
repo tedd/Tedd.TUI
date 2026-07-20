@@ -93,8 +93,7 @@ public class MessageDialog : Dialog
         var message = new TextBlock
         {
             Text = Text ?? string.Empty,
-            TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(1, 0, 1, 0)
+            TextWrapping = TextWrapping.Wrap
         };
         message.SetBinding(TextBlock.TextProperty, new Binding("Text") { Source = this });
 

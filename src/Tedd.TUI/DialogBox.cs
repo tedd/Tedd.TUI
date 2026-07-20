@@ -91,18 +91,36 @@ public class DialogBox : UIElement, IModalOverlay
         set => SetValue(BoxStyleProperty, value);
     }
 
+    /// <summary>
+    /// Space between the dialog frame and its Content, in addition to the border
+    /// itself. Defaults to one character on every side so content never sits
+    /// flush against the frame.
+    /// </summary>
+    public static readonly DependencyProperty PaddingProperty =
+        DependencyProperty.Register("Padding", typeof(Thickness), typeof(DialogBox), new Thickness(1));
+
+    public Thickness Padding
+    {
+        get => (Thickness)GetValue(PaddingProperty);
+        set => SetValue(PaddingProperty, value);
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
         // If Width/Height explicitly set, use those; otherwise measure content
         int desiredWidth = Width > 0 ? Width : 40;
         int desiredHeight = Height > 0 ? Height : 10;
 
+        Thickness padding = Padding;
+        int insetW = 2 + padding.Left + padding.Right;
+        int insetH = 2 + padding.Top + padding.Bottom;
+
         if (Content != null)
         {
-            // Border takes 2 width (left + right), 3 height (top border + title + bottom border)
+            // Border takes 1 on each side, plus the configured padding
             Size contentAvailable = new Size(
-                Math.Max(0, desiredWidth - 2),
-                Math.Max(0, desiredHeight - 2) // 1 for top border, 1 for bottom border
+                Math.Max(0, desiredWidth - insetW),
+                Math.Max(0, desiredHeight - insetH)
             );
 
             Content.Measure(contentAvailable);
@@ -111,15 +129,14 @@ public class DialogBox : UIElement, IModalOverlay
             // If not explicit size, calculate from content
             if (Width <= 0)
             {
-                // Content width + border (2) + some padding for title
+                // Content width + border + padding, or at least the title
                 int titleWidth = (Title?.Length ?? 0) + 4; // [ Title ] padding
-                desiredWidth = Math.Max(contentSize.Width + 2, titleWidth);
+                desiredWidth = Math.Max(contentSize.Width + insetW, titleWidth);
             }
 
             if (Height <= 0)
             {
-                // Content height + 2 (top and bottom border)
-                desiredHeight = contentSize.Height + 2;
+                desiredHeight = contentSize.Height + insetH;
             }
         }
 
@@ -130,15 +147,13 @@ public class DialogBox : UIElement, IModalOverlay
     {
         if (Content != null)
         {
-            // Content area: inside the border (1 from each edge)
-            // Top: 1 row for border/title
-            // Bottom: 1 row for border
-            // Left/Right: 1 column each for border
+            // Content area: inside the border (1 from each edge) plus padding
+            Thickness padding = Padding;
             Content.Arrange(new Rect(
-                1,
-                1,
-                Math.Max(0, finalSize.Width - 2),
-                Math.Max(0, finalSize.Height - 2)
+                1 + padding.Left,
+                1 + padding.Top,
+                Math.Max(0, finalSize.Width - 2 - padding.Left - padding.Right),
+                Math.Max(0, finalSize.Height - 2 - padding.Top - padding.Bottom)
             ));
         }
     }

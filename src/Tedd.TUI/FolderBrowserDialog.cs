@@ -77,7 +77,7 @@ public class FolderBrowserDialog : Dialog
         buttonRow.Children.Add(selectButton);
         buttonRow.Children.Add(cancelButton);
 
-        var grid = new Grid { Margin = new Thickness(1, 0, 1, 0) };
+        var grid = new Grid();
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });

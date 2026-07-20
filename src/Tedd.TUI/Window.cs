@@ -96,6 +96,20 @@ public class Window : UIElement
     }
 
     /// <summary>
+    /// Space between the window frame and its Content, in addition to the border
+    /// itself. Defaults to one character on every side so content never sits
+    /// flush against the frame.
+    /// </summary>
+    public static readonly DependencyProperty PaddingProperty =
+        DependencyProperty.Register("Padding", typeof(Thickness), typeof(Window), new Thickness(1));
+
+    public Thickness Padding
+    {
+        get => (Thickness)GetValue(PaddingProperty);
+        set => SetValue(PaddingProperty, value);
+    }
+
+    /// <summary>
     /// When true (default) the window can be moved by dragging its title bar.
     /// </summary>
     public static readonly DependencyProperty CanMoveProperty =
@@ -244,11 +258,15 @@ public class Window : UIElement
         int desiredWidth = Width > 0 ? Width : 40;
         int desiredHeight = Height > 0 ? Height : 10;
 
+        Thickness padding = Padding;
+        int insetW = 2 + padding.Left + padding.Right;
+        int insetH = 2 + padding.Top + padding.Bottom;
+
         if (Content != null)
         {
             Size contentAvailable = new Size(
-                Math.Max(0, desiredWidth - 2),
-                Math.Max(0, desiredHeight - 2)
+                Math.Max(0, desiredWidth - insetW),
+                Math.Max(0, desiredHeight - insetH)
             );
 
             Content.Measure(contentAvailable);
@@ -257,12 +275,12 @@ public class Window : UIElement
             if (Width <= 0)
             {
                 int titleWidth = (Title?.Length ?? 0) + 4;
-                desiredWidth = Math.Max(contentSize.Width + 2, titleWidth);
+                desiredWidth = Math.Max(contentSize.Width + insetW, titleWidth);
             }
 
             if (Height <= 0)
             {
-                desiredHeight = contentSize.Height + 2;
+                desiredHeight = contentSize.Height + insetH;
             }
         }
 
@@ -273,11 +291,12 @@ public class Window : UIElement
 
     protected override void ArrangeOverride(Size finalSize)
     {
+        Thickness padding = Padding;
         Content?.Arrange(new Rect(
-            1,
-            1,
-            Math.Max(0, finalSize.Width - 2),
-            Math.Max(0, finalSize.Height - 2)
+            1 + padding.Left,
+            1 + padding.Top,
+            Math.Max(0, finalSize.Width - 2 - padding.Left - padding.Right),
+            Math.Max(0, finalSize.Height - 2 - padding.Top - padding.Bottom)
         ));
     }
 

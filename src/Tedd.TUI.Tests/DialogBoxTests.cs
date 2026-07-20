@@ -97,11 +97,13 @@ public class DialogBoxTests
         dialogContent.AddChild(ok);
         dialogContent.AddChild(new TextBlock { Text = "dialog surface" });
         dialogContent.AddChild(cancel);
+        // 11 rows leave a 7-row content viewport after the border and the default
+        // 1-char padding: two 3-row buttons plus the text line fit exactly.
         var dialog = new DialogBox
         {
             Title = "Confirm",
             Width = 18,
-            Height = 9,
+            Height = 11,
             Content = dialogContent
         };
         host.Window.PushOverlay(dialog);

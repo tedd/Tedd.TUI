@@ -150,7 +150,7 @@ public abstract class FileDialog : Dialog
         _filters = ParseFilter(Filter);
         if (FilterIndex < 0 || FilterIndex >= _filters.Count) FilterIndex = 0;
 
-        PathBox = new TextBox { Name = "PathBox", Margin = new Thickness(0, 0, 0, 0) };
+        PathBox = new TextBox { Name = "PathBox" };
 
         FileList = new ActivatableListBox { Name = "FileList", Margin = new Thickness(0, 1, 0, 1) };
         FileList.ItemActivated += (s, e) => ActivateEntry(FileList.SelectedItem as FileSystemEntry);
@@ -204,7 +204,7 @@ public abstract class FileDialog : Dialog
         bottomRow.Children.Add(OkButton);
         bottomRow.Children.Add(CancelButton);
 
-        var grid = new Grid { Margin = new Thickness(1, 0, 1, 0) };
+        var grid = new Grid();
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });

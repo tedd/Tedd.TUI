@@ -143,7 +143,7 @@ public class ColorPickerDialog : Dialog
     /// <summary>Rebuilds the dialog UI. Called automatically by <see cref="Show()"/>.</summary>
     protected virtual void BuildContent()
     {
-        var palette = new UniformGrid { Columns = 8, Margin = new Thickness(1, 0, 1, 0) };
+        var palette = new UniformGrid { Columns = 8 };
         foreach (var color in Palette)
         {
             var swatch = new ColorSwatch { Color = color, Margin = new Thickness(0, 0, 1, 0) };
@@ -158,7 +158,7 @@ public class ColorPickerDialog : Dialog
         var rgbRow = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Margin = new Thickness(1, 1, 1, 0)
+            Margin = new Thickness(0, 1, 0, 0)
         };
         rgbRow.Children.Add(new TextBlock { Text = "R:" });
         rgbRow.Children.Add(RedBox);
@@ -173,7 +173,7 @@ public class ColorPickerDialog : Dialog
         var hexRow = new StackPanel
         {
             Orientation = Orientation.Horizontal,
-            Margin = new Thickness(1, 1, 1, 0)
+            Margin = new Thickness(0, 1, 0, 0)
         };
         hexRow.Children.Add(new TextBlock { Text = "Hex: " });
         hexRow.Children.Add(HexBox);
