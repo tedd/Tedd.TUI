@@ -166,7 +166,7 @@ public class TreeViewTests
         panel.AddChild(new TextBlock { Text = "tree" });
         panel.AddChild(tree);
         panel.AddChild(new TextBlock { Text = "status surface" });
-        var host = new ControlTestHost(new Border { Child = panel }, 20, 8);
+        var host = new ControlTestHost(new Border { Child = panel, Padding = new Thickness(0) }, 20, 8);
 
         var childClick = host.Click(childA1, 7, 0);
 

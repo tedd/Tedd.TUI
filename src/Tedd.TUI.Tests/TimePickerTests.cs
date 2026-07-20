@@ -234,7 +234,7 @@ public class TimePickerTests
         pickers.AddChild(first);
         pickers.AddChild(new TextBlock { Text = "  " });
         pickers.AddChild(second);
-        var surface = new Border { Content = pickers };
+        var surface = new Border { Content = pickers, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 14, 3);
 
         host.Click(first, 4, 0);

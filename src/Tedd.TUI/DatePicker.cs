@@ -410,6 +410,12 @@ public class DatePicker : UIElement
     {
         public required DatePicker Owner { get; set; }
 
+        public DatePickerPopupBorder()
+        {
+            // Dropdown calendar is tight chrome: it sits directly inside the border line.
+            Padding = new Thickness(0);
+        }
+
         public override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);

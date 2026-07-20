@@ -153,7 +153,7 @@ namespace Tedd.TUI.Tests
             links.AddChild(new TextBlock { Text = " ] ... [ " });
             links.AddChild(second);
             links.AddChild(new TextBlock { Text = " ]" });
-            var surface = new Border { Child = links, BoxStyle = BoxStyle.Double };
+            var surface = new Border { Child = links, BoxStyle = BoxStyle.Double, Padding = new Thickness(0) };
             var host = new ControlTestHost(surface, 28, 3);
             var firstClicks = 0;
             var secondClicks = 0;

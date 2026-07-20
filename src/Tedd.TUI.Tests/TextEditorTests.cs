@@ -296,7 +296,7 @@ public class TextEditorTests
         editors.AddChild(first);
         editors.AddChild(new TextBlock { Text = "--------" });
         editors.AddChild(second);
-        var surface = new Border { Child = editors, BoxStyle = BoxStyle.Double };
+        var surface = new Border { Child = editors, BoxStyle = BoxStyle.Double, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 12, 8);
 
         var firstClick = host.Click(first, 2, 1);

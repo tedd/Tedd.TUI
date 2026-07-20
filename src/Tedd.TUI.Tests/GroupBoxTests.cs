@@ -22,7 +22,10 @@ public class GroupBoxTests
             Header = new TextBlock { Text = "Actions" },
             Content = row
         };
-        var host = new ControlTestHost(new Border { Child = group }, 28, 8);
+        // Outer host border is an incidental surface (no padding); the GroupBox's
+        // own frame contributes the default 1-char padding, so the host needs
+        // 3 (button) + 2 (group border) + 2 (group padding) + 2 (host border) rows.
+        var host = new ControlTestHost(new Border { Child = group, Padding = new Thickness(0) }, 28, 10);
         var firstClicks = 0;
         var secondClicks = 0;
         first.Click += (_, _) => firstClicks++;

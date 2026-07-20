@@ -24,7 +24,7 @@ public class GridTests
         Grid.SetColumn(second, 1);
         Grid.SetRow(second, 1);
 
-        var border = new Border { Child = grid, Width = 18, Height = 8 };
+        var border = new Border { Child = grid, Width = 18, Height = 8, Padding = new Thickness(0) };
         var surface = new StackPanel();
         surface.AddChild(new TextBlock { Text = "grid" });
         surface.AddChild(border);

@@ -354,7 +354,7 @@ public class DatePickerTests
         pickers.AddChild(first);
         pickers.AddChild(new TextBlock { Text = "  " });
         pickers.AddChild(second);
-        var surface = new Border { Content = pickers };
+        var surface = new Border { Content = pickers, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 28, 12);
 
         host.Click(first, 11, 0);

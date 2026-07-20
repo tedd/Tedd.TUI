@@ -19,7 +19,7 @@ public class DockPanelTests
         panel.AddChild(left);
         panel.AddChild(right);
         panel.AddChild(new TextBlock { Text = "gap" });
-        var border = new Border { Child = panel, Width = 22, Height = 5 };
+        var border = new Border { Child = panel, Width = 22, Height = 5, Padding = new Thickness(0) };
         var surface = new StackPanel();
         surface.AddChild(new TextBlock { Text = "toolbar" });
         surface.AddChild(border);

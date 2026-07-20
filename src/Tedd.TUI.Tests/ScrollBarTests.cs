@@ -245,7 +245,7 @@ namespace Tedd.TUI.Tests
                 Width = 1,
                 ViewportSize = 10
             };
-            var host = new ControlTestHost(new Border { Child = scrollBar }, 5, 14);
+            var host = new ControlTestHost(new Border { Child = scrollBar, Padding = new Thickness(0) }, 5, 14);
 
             // Thumb is at local Y=1 when Value=0; press its center.
             var thumb = scrollBar.PointToScreen(new Point(0, 1));

@@ -21,7 +21,7 @@ namespace Tedd.TUI.Tests
                 Width = 1,
                 ViewportSize = 1
             };
-            var host = new ControlTestHost(new Border { Child = scrollBar }, 5, 14);
+            var host = new ControlTestHost(new Border { Child = scrollBar, Padding = new Thickness(0) }, 5, 14);
             return (host, scrollBar);
         }
 

@@ -44,7 +44,7 @@ public class Expander : HeaderedContentControl
             stack.TemplatedParent = expander;
 
             // 1. Header (acts as the toggle button)
-            var headerContainer = new Border();
+            var headerContainer = new Border { Padding = new Thickness(0) };
             headerContainer.TemplatedParent = expander;
 
             var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };

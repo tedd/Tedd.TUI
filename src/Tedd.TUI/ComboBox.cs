@@ -313,5 +313,11 @@ public class ComboBox : Selector
     internal class ComboBoxPopupBorder : Border
     {
         public required ComboBox Owner { get; set; }
+
+        public ComboBoxPopupBorder()
+        {
+            // Dropdown lists are tight chrome: items sit directly inside the border line.
+            Padding = new Thickness(0);
+        }
     }
 }

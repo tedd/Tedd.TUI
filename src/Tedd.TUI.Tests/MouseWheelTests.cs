@@ -142,7 +142,7 @@ public class MouseWheelTests
         listBox.SelectedIndex = 0;
         // Border frame + 4 content rows so the ListBox is arranged at exactly Height=4
         // (a taller host would stretch it and show more items than the scroll math uses).
-        var host = new ControlTestHost(new Border { Child = listBox }, 14, 6);
+        var host = new ControlTestHost(new Border { Child = listBox, Padding = new Thickness(0) }, 14, 6);
 
         var text = VirtualBufferAssertions.GetText(host.Render());
         Assert.Contains("Item0", text);

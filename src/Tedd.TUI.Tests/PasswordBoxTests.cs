@@ -200,7 +200,7 @@ public class PasswordBoxTests
         fields.AddChild(first);
         fields.AddChild(new TextBlock { Text = "----------" });
         fields.AddChild(second);
-        var surface = new Border { Child = fields, BoxStyle = BoxStyle.Double };
+        var surface = new Border { Child = fields, BoxStyle = BoxStyle.Double, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 14, 6);
 
         var firstClick = host.Click(first, 2, 0);

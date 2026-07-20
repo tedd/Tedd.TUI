@@ -12,7 +12,8 @@ public class Button : ButtonBase
         Template = new ControlTemplate(parent =>
         {
             var btn = (Button)parent;
-            var border = new Border();
+            // Buttons are tight chrome: label sits directly inside the border line.
+            var border = new Border { Padding = new Thickness(0) };
             border.TemplatedParent = btn;
 
             // Bind visual properties to Button's "Effective" properties

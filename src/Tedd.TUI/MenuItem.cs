@@ -462,5 +462,11 @@ public class MenuItem : UIElement
     internal class MenuPopupBorder : Border
     {
         public required MenuItem Owner { get; set; }
+
+        public MenuPopupBorder()
+        {
+            // Menu popups are tight chrome: items sit directly inside the border line.
+            Padding = new Thickness(0);
+        }
     }
 }

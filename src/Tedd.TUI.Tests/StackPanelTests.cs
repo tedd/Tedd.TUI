@@ -118,9 +118,10 @@ public class StackPanelTests
 
         stack.Measure(new Size(40, 25));
 
-        // Content (2x1) + border (2x2) = 4x3, never the panel-supplied 25 rows.
-        Assert.Equal(3, border.DesiredSize.Height);
-        Assert.Equal(3, stack.DesiredSize.Height);
+        // Content (2x1) + border (2x2) + default padding (2x2) = 6x5,
+        // never the panel-supplied 25 rows.
+        Assert.Equal(5, border.DesiredSize.Height);
+        Assert.Equal(5, stack.DesiredSize.Height);
     }
 
     [Fact]

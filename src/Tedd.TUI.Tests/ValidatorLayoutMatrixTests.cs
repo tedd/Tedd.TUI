@@ -82,9 +82,10 @@ public class ValidatorLayoutMatrixTests
         Assert.Equal('\u2554', buffer.GetPixel(10, 0).Character); // Right Top-Left Double
         Assert.Equal('\u2557', buffer.GetPixel(19, 0).Character); // Right Top-Right Double
 
-        // Content of Left Border: TextBlock "A" at (1,1), "B" at (1,2)
-        Assert.Equal('A', buffer.GetPixel(1, 1).Character);
-        Assert.Equal('B', buffer.GetPixel(1, 2).Character);
+        // Content of Left Border: border line + default padding put
+        // TextBlock "A" at (2,2), "B" at (2,3)
+        Assert.Equal('A', buffer.GetPixel(2, 2).Character);
+        Assert.Equal('B', buffer.GetPixel(2, 3).Character);
 
         // Dynamic State Mutation: Resize to 30x10
         rootGrid.Measure(new Size(30, 10));

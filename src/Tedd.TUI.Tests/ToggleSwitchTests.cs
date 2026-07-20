@@ -195,7 +195,7 @@ public class ToggleSwitchTests
         switches.AddChild(first);
         switches.AddChild(new TextBlock { Text = "  " });
         switches.AddChild(second);
-        var surface = new Border { Content = switches };
+        var surface = new Border { Content = switches, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 22, 3);
 
         host.Click(first, 2, 0);

@@ -162,7 +162,7 @@ public class RepeatButtonTests
         buttons.AddChild(first);
         buttons.AddChild(new TextBlock { Text = "  " });
         buttons.AddChild(second);
-        var surface = new Border { Content = buttons };
+        var surface = new Border { Content = buttons, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 10, 5);
 
         host.Click(first, 1, 1);

@@ -195,7 +195,7 @@ public class NumericUpDownTests
         controls.AddChild(first);
         controls.AddChild(new TextBlock { Text = "  " });
         controls.AddChild(second);
-        var surface = new Border { Content = controls };
+        var surface = new Border { Content = controls, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 26, 3);
 
         host.Click(first, 1, 0);

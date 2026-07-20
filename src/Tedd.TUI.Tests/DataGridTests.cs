@@ -262,7 +262,8 @@ public class DataGridTests
             Child = grid,
             BoxStyle = BoxStyle.Double,
             Width = 22,
-            Height = 11
+            Height = 11,
+            Padding = new Thickness(0)
         };
         var nestedPanel = new StackPanel();
         nestedPanel.AddChild(new TextBlock { Text = "toolbar" });

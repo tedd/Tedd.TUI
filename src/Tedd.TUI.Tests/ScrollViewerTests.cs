@@ -182,7 +182,7 @@ public class ScrollViewerTests
         panel.AddChild(new TextBlock { Text = "scroll area" });
         panel.AddChild(scrollViewer);
         panel.AddChild(new TextBlock { Text = "status surface" });
-        var host = new ControlTestHost(new Border { Child = panel }, 16, 9);
+        var host = new ControlTestHost(new Border { Child = panel, Padding = new Thickness(0) }, 16, 9);
 
         var topClick = host.Click(top, 2, 1);
 

@@ -93,7 +93,7 @@ public class SliderTests
         controls.AddChild(new TextBlock { Text = "-----------" });
         controls.AddChild(new TextBlock { Text = "vertical" });
         controls.AddChild(verticalRow);
-        var surface = new Border { Child = controls, BoxStyle = BoxStyle.Double };
+        var surface = new Border { Child = controls, BoxStyle = BoxStyle.Double, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 15, 12);
 
         var horizontalClick = host.Click(horizontal, 7, 0);

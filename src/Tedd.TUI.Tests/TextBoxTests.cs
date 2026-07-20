@@ -83,7 +83,7 @@ public class TextBoxTests
         fields.AddChild(new TextBlock { Text = "--------" });
         fields.AddChild(second);
         fields.AddChild(new TextBlock { Text = "status" });
-        var surface = new Border { Child = fields, BoxStyle = BoxStyle.Double };
+        var surface = new Border { Child = fields, BoxStyle = BoxStyle.Double, Padding = new Thickness(0) };
         var host = new ControlTestHost(surface, 12, 7);
 
         var firstClick = host.Click(first, 2, 0);

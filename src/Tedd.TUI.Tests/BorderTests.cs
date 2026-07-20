@@ -17,11 +17,13 @@ public class BorderTests
         buttons.AddChild(new TextBlock { Text = ".." });
         buttons.AddChild(second);
 
-        var border = new Border { Child = buttons, Width = 14, Height = 5 };
+        // 16x7 leaves a 12x3 content viewport after the border line and the
+        // default 1-char padding, exactly fitting the 5+2+5 button row.
+        var border = new Border { Child = buttons, Width = 16, Height = 7 };
         var surface = new StackPanel();
         surface.AddChild(new TextBlock { Text = "outside" });
         surface.AddChild(border);
-        var host = new ControlTestHost(surface, 14, 6);
+        var host = new ControlTestHost(surface, 16, 8);
         int firstClicks = 0;
         int secondClicks = 0;
         first.Click += (_, _) => firstClicks++;
@@ -91,8 +93,9 @@ public class BorderTests
         border.Measure(new Size(20, 20));
         border.Arrange(new Rect(0, 0, 20, 20));
 
-        // viewport = 20 - 2 (border) = 18. With HScroll = Disabled, arrange must clamp to 18.
-        Assert.Equal(18, child.LastArrangeSize.Width);
+        // viewport = 20 - 2 (border) - 2 (default padding) = 16.
+        // With HScroll = Disabled, arrange must clamp to 16.
+        Assert.Equal(16, child.LastArrangeSize.Width);
     }
 
     [Fact]
@@ -163,12 +166,12 @@ public class BorderTests
         border.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
         border.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
-        // Border size 20x20. Border thickness 1 (implicit).
-        // Available for child: 20 - 2 = 18.
+        // Border size 20x20. Border thickness 1 (implicit) + default padding 1.
+        // Available for child: 20 - 2 - 2 = 16.
         border.Measure(new Size(20, 20));
 
-        Assert.Equal(18, child.LastMeasureSize.Width);
-        Assert.Equal(18, child.LastMeasureSize.Height);
+        Assert.Equal(16, child.LastMeasureSize.Width);
+        Assert.Equal(16, child.LastMeasureSize.Height);
     }
 
     [Fact]
@@ -180,11 +183,11 @@ public class BorderTests
         border.Child = child;
 
         // Enabled: VScroll=Visible, HScroll=Disabled.
-        // Expect: Width constrained to 18. Height infinite.
+        // Expect: Width constrained to 16 (border + default padding). Height infinite.
 
         border.Measure(new Size(20, 20));
 
-        Assert.Equal(18, child.LastMeasureSize.Width);
+        Assert.Equal(16, child.LastMeasureSize.Width);
         Assert.Equal(int.MaxValue, child.LastMeasureSize.Height);
     }
 
@@ -199,9 +202,9 @@ public class BorderTests
         border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
         border.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
 
-        // If standard ScrollViewer logic applied, width would be 20 - 2 (border) - 1 (vscroll) = 17?
-        // But Border ScrollBars are embedded in border.
-        // So width should be 20 - 2 = 18.
+        // If standard ScrollViewer logic applied, the vscroll would steal a column.
+        // But Border ScrollBars are embedded in the border line, so width is only
+        // reduced by border + padding: 20 - 2 - 2 = 16.
         // Height should be infinite (scrolling).
 
         border.Measure(new Size(20, 20));
@@ -212,14 +215,14 @@ public class BorderTests
         // Let's disable scrolling to check strict sizing logic with scrollbars VISIBLE but not infinite?
         // Can't really do that easily with ScrollViewer logic (Visibility=True -> Infinite).
         // But we can check that if HScroll is FALSE, and VScroll is TRUE:
-        // Width is 18 (not 17).
+        // Width is 16 (no extra column stolen by the scrollbar).
 
         border.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
         border.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
 
         border.Measure(new Size(20, 20));
 
-        Assert.Equal(18, child.LastMeasureSize.Width);
+        Assert.Equal(16, child.LastMeasureSize.Width);
     }
 
     [Fact]
@@ -234,12 +237,12 @@ public class BorderTests
 
         // Arrange logic:
         // Child arranged at (0, 0) relative to viewport.
-        // Viewport size: 18x18.
+        // Viewport size: 16x16 (border + default padding).
         // Child DesiredSize: 10x10.
-        // Arrange size: Max(Viewport, Desired) = 18x18.
+        // Arrange size: Max(Viewport, Desired) = 16x16.
 
-        Assert.Equal(18, child.LastArrangeSize.Width);
-        Assert.Equal(18, child.LastArrangeSize.Height);
+        Assert.Equal(16, child.LastArrangeSize.Width);
+        Assert.Equal(16, child.LastArrangeSize.Height);
     }
 
     [Fact]
@@ -311,10 +314,10 @@ public class BorderTests
         border.Measure(new Size(20, 20));
         border.Arrange(new Rect(0, 0, 20, 20));
 
-        // Expect child at (1, 1) relative to Border
+        // Expect child at (2, 2) relative to Border: 1 for the border line + 1 default padding.
         // This ensures absolute position calculations (traversing RenderSize) work correctly for nested elements.
-        Assert.Equal(1, child.RenderSize.X);
-        Assert.Equal(1, child.RenderSize.Y);
+        Assert.Equal(2, child.RenderSize.X);
+        Assert.Equal(2, child.RenderSize.Y);
     }
 
     // BoxStyle.None tests: zero thickness, no border drawing

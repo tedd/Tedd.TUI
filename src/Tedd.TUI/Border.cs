@@ -72,6 +72,21 @@ public class Border : ScrollViewer
         set => SetValue(BoxStyleProperty, value);
     }
 
+    /// <summary>
+    /// Space between the border line and Content, in addition to the border
+    /// thickness itself. Defaults to one character on every side so content never
+    /// sits flush against the frame. Ignored when <see cref="BoxStyle"/> is
+    /// <see cref="BoxStyle.None"/> (a borderless Border is a transparent passthrough).
+    /// </summary>
+    public static readonly DependencyProperty PaddingProperty =
+        DependencyProperty.Register("Padding", typeof(Thickness), typeof(Border), new Thickness(1));
+
+    public Thickness Padding
+    {
+        get => (Thickness)GetValue(PaddingProperty);
+        set => SetValue(PaddingProperty, value);
+    }
+
     public int VerticalScrollBarMarginTop
     {
         get;
@@ -186,14 +201,19 @@ public class Border : ScrollViewer
 
         // BoxStyle.None means no border characters and no border thickness:
         // the border becomes a transparent container (Title/StatusBar are skipped
-        // because there is no border line to host them).
+        // because there is no border line to host them, and Padding is ignored so
+        // the passthrough stays exact).
         bool noBorder = BoxStyle == BoxStyle.None;
-        int borderW = noBorder ? 0 : 2;
-        int borderH = noBorder ? 0 : 2;
+        Thickness padding = noBorder ? default : Padding;
+
+        // Content is inset by the border line plus padding; Title/StatusBar and the
+        // scrollbars sit ON the border line, so they only account for the corners.
+        int insetW = noBorder ? 0 : 2 + padding.Left + padding.Right;
+        int insetH = noBorder ? 0 : 2 + padding.Top + padding.Bottom;
 
         // Measure Title and StatusBar
         // They are constrained by Width - corners
-        Size decorationAvailable = new Size(Math.Max(0, availableSize.Width - borderW), 1);
+        Size decorationAvailable = new Size(Math.Max(0, availableSize.Width - 2), 1);
 
         if (!noBorder && Title != null)
         {
@@ -208,7 +228,7 @@ public class Border : ScrollViewer
         // Border scrollbars overlay the border line itself, so unlike ScrollViewer they
         // do not steal a row/column from the content area. Allow content to overflow in
         // any axis that is not Disabled so we can detect it for Auto resolution.
-        Size contentAvailable = new Size(Math.Max(0, availableSize.Width - borderW), Math.Max(0, availableSize.Height - borderH));
+        Size contentAvailable = new Size(Math.Max(0, availableSize.Width - insetW), Math.Max(0, availableSize.Height - insetH));
 
         if (VerticalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Height = int.MaxValue;
         if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Width = int.MaxValue;
@@ -220,8 +240,8 @@ public class Border : ScrollViewer
             contentSize = Content.DesiredSize;
         }
 
-        int viewportContentW = Math.Max(0, availableSize.Width - borderW);
-        int viewportContentH = Math.Max(0, availableSize.Height - borderH);
+        int viewportContentW = Math.Max(0, availableSize.Width - insetW);
+        int viewportContentH = Math.Max(0, availableSize.Height - insetH);
 
         // With no border there are no border lines to host scrollbars, so neither axis is
         // shown regardless of the property setting. This keeps the "border is a flat
@@ -243,32 +263,34 @@ public class Border : ScrollViewer
 
         if (showVertical)
         {
-            int viewport = Math.Max(1, availableSize.Height - borderH);
+            int viewport = Math.Max(1, viewportContentH);
             int extent = contentSize.Height;
             _verticalScrollBar.ViewportSize = viewport;
             _verticalScrollBar.Maximum = Math.Max(0, extent - viewport);
             _verticalScrollBar.Minimum = 0;
 
-            int vScrollHeight = Math.Max(0, availableSize.Height - borderH - VerticalScrollBarMarginTop - VerticalScrollBarMarginBottom);
+            // The track runs along the border line, so its length is border-relative
+            // and unaffected by Padding.
+            int vScrollHeight = Math.Max(0, availableSize.Height - 2 - VerticalScrollBarMarginTop - VerticalScrollBarMarginBottom);
             _verticalScrollBar.Measure(new Size(1, vScrollHeight));
         }
 
         if (showHorizontal)
         {
-            int viewport = Math.Max(1, availableSize.Width - borderW);
+            int viewport = Math.Max(1, viewportContentW);
             int extent = contentSize.Width;
             _horizontalScrollBar.ViewportSize = viewport;
             _horizontalScrollBar.Maximum = Math.Max(0, extent - viewport);
             _horizontalScrollBar.Minimum = 0;
 
-            int hScrollWidth = Math.Max(0, availableSize.Width - borderW - HorizontalScrollBarMarginLeft - HorizontalScrollBarMarginRight);
+            int hScrollWidth = Math.Max(0, availableSize.Width - 2 - HorizontalScrollBarMarginLeft - HorizontalScrollBarMarginRight);
             _horizontalScrollBar.Measure(new Size(hScrollWidth, 1));
         }
 
-        // Desired size is content size + border, bounded by available
+        // Desired size is content size + border + padding, bounded by available
         return new Size(
-            Math.Min(availableSize.Width, contentSize.Width + borderW),
-            Math.Min(availableSize.Height, contentSize.Height + borderH)
+            Math.Min(availableSize.Width, contentSize.Width + insetW),
+            Math.Min(availableSize.Height, contentSize.Height + insetH)
         );
     }
 
@@ -279,12 +301,13 @@ public class Border : ScrollViewer
 
         bool noBorder = BoxStyle == BoxStyle.None;
         int borderEdge = noBorder ? 0 : 1; // offset from border rect to content
+        Thickness padding = noBorder ? default : Padding;
 
-        // Arrange Content inside border
+        // Arrange Content inside border + padding
         if (Content != null)
         {
-            int viewportW = Math.Max(0, w - 2 * borderEdge);
-            int viewportH = Math.Max(0, h - 2 * borderEdge);
+            int viewportW = Math.Max(0, w - 2 * borderEdge - padding.Left - padding.Right);
+            int viewportH = Math.Max(0, h - 2 * borderEdge - padding.Top - padding.Bottom);
 
             // When an axis is Disabled we clamp the content's arrange rect to the viewport
             // so wrappable children (e.g. Paragraph) don't reflow against an oversized
@@ -296,7 +319,7 @@ public class Border : ScrollViewer
                 ? viewportH
                 : Math.Max(viewportH, Content.DesiredSize.Height);
 
-            Content.Arrange(new Rect(borderEdge, borderEdge, arrangeW, arrangeH));
+            Content.Arrange(new Rect(borderEdge + padding.Left, borderEdge + padding.Top, arrangeW, arrangeH));
         }
 
         // Arrange Title (skipped when there is no border to host it)
@@ -411,11 +434,17 @@ public class Border : ScrollViewer
         if (IsHorizontalScrollBarShown)
             _horizontalScrollBar.Render(buffer, x, y);
 
-        // Content (inside border)
+        // Content (inside border + padding)
         if (Content != null)
         {
-            // Clip to inside border area
-            buffer.PushClip(new Rect(x + 1, y + 1, w - 2, h - 2));
+            // Clip to the padded content area so scrolled content never bleeds
+            // into the padding gutter between the border line and the content.
+            Thickness padding = Padding;
+            buffer.PushClip(new Rect(
+                x + 1 + padding.Left,
+                y + 1 + padding.Top,
+                Math.Max(0, w - 2 - padding.Left - padding.Right),
+                Math.Max(0, h - 2 - padding.Top - padding.Bottom)));
 
             // Render content at absolute position - scrollOffset
             // (Content.RenderSize already includes the (1,1) offset from Arrange)
