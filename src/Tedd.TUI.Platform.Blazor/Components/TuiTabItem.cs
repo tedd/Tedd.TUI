@@ -11,7 +11,7 @@ public class TuiTabItem : ComponentBase, ITuiContainer, IDisposable
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string Header { get; set; } = "";
 
-    private Tedd.TUI.TabItem _tabItem = new Tedd.TUI.TabItem();
+    private TabItem _tabItem = new TabItem();
 
     protected override void OnInitialized()
     {

@@ -194,6 +194,21 @@ class Program
 
 ## Architecture
 
+### Namespace Organization
+
+Tedd.TUI organizes types into WPF-inspired namespaces for clarity and discoverability:
+
+- **`Tedd.TUI`** — Core framework: `UIElement`, `DependencyProperty`, `DependencyObject`, `Style`, `Trigger`, `RoutedEvent`, `Binding`, `DataTemplate`, `XamlLoader`, `ThemeManager`, `TuiTheme`, `TuiWindow`, `Window` (floating overlay), `Dialog` family, `Geometry` types, color and enum types.
+- **`Tedd.TUI.Controls`** — Interactive controls: `Border`, `Button`, `Calendar`, `Canvas`, `CheckBox`, `ComboBox`, `ContentControl`, `DataGrid`, `DatePicker`, `DockPanel`, `Expander`, `Grid`, `GridSplitter`, `GroupBox`, `ItemsControl`, `ListBox`, `MenuBar`, `MenuItem`, `NumericUpDown`, `PasswordBox`, `ProgressBar`, `RadioButton`, `ScrollBar`, `ScrollViewer`, `Separator`, `Slider`, `StackPanel`, `TabControl`, `TabItem`, `Table`, `TextBlock`, `TextBox`, `TextEditor`, `TimePicker`, `ToggleSwitch`, `TreeView`, `TreeViewItem`, `UniformGrid`, `WrapPanel`.
+- **`Tedd.TUI.Controls.Primitives`** — Base classes for interactive controls: `ButtonBase`, `RepeatButton`, `Thumb`, `Selector`, `ToggleButton`.
+- **`Tedd.TUI.Data`** — Data binding: `Binding` (resolves to `Tedd.TUI.Binding` via `global using`).
+- **`Tedd.TUI.Markup`** — XAML processing: `XamlLoader`, `MarkupExtensionParser`.
+- **`Tedd.TUI.Media`** — Rendering primitives: `VirtualBuffer`, `IRenderer`, `GraphicPlacement`, `RenderLayer`, `LayerCompositor`, `AnsiTrueColorRenderer`, `BoxDrawing`, `SixelEncoderCore`.
+- **`Tedd.TUI.Markdown`** — Rich text: `MarkdownView`, `FlowDocument`, `Paragraph`, `Hyperlink`, `Image`, `MarkdownTheme`, `RgbColorPalette`, renderers for images.
+- **`Tedd.TUI.CodeColoring`** — Syntax highlighting: `Grammar`, `Theme`, `Token`, `LanguageRegistry`, `PrismTokenizer`, regex utilities, and 76 bundled languages.
+
+Consumer projects automatically import the first five namespaces via a `GlobalUsings.cs` file in the core `Tedd.TUI` library, so no per-file `using` statements are needed unless you reference types from `Markdown`, `CodeColoring` (e.g., directly instantiating a grammar), or are querying control templates.
+
 ### Core System
 At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation for:
 - **Visual Tree:** A hierarchical structure of elements allowing for complex composition. Any `UIElement` can dynamically ascend the visual tree to resolve its root host via the `GetRoot()` API, enabling recursive topological queries.

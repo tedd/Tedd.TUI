@@ -22,6 +22,20 @@ public class Hyperlink : UIElement
         set => SetValue(UrlProperty, value);
     }
 
+    public static readonly DependencyProperty HoverForegroundProperty =
+        DependencyProperty.Register("HoverForeground", typeof(TuiColor), typeof(Hyperlink), TuiColor.Cyan);
+
+    /// <summary>
+    /// Foreground used while the mouse hovers the link and it is not focused. Terminals can't
+    /// render true underlines per-cell, so hover feedback is a color shift (default cyan)
+    /// rather than an underline.
+    /// </summary>
+    public TuiColor HoverForeground
+    {
+        get => (TuiColor)GetValue(HoverForegroundProperty);
+        set => SetValue(HoverForegroundProperty, value);
+    }
+
     public event EventHandler? Click;
 
     public Hyperlink()
@@ -53,7 +67,9 @@ public class Hyperlink : UIElement
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;
 
-        var fg = IsFocused ? TuiColor.Cyan : Foreground;
+        // Focus wins over hover so a keyboard user keeps the focus highlight even when the
+        // pointer happens to rest on the focused link.
+        var fg = IsFocused ? TuiColor.Cyan : IsMouseOver ? HoverForeground : Foreground;
         var bg = Background ?? buffer.GetPixel(x, y).Background;
 
         for (int i = 0; i < text.Length; i++)

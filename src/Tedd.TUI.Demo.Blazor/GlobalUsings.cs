@@ -1,5 +1,3 @@
-global using Xunit;
-
 // Tedd.TUI is organized into WPF-style namespaces; import them project-wide.
 global using Tedd.TUI.Controls;
 global using Tedd.TUI.Controls.Primitives;

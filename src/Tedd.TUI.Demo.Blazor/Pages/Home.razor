@@ -474,7 +474,7 @@
     private Tedd.TUI.Markdown.MarkdownView mdView = new Tedd.TUI.Markdown.MarkdownView();
 
     // DataGrid Data
-    private Tedd.TUI.DataGrid dataGrid = new Tedd.TUI.DataGrid
+    private DataGrid dataGrid = new DataGrid
     {
         Width = 60,
         Height = 10,
@@ -494,12 +494,12 @@
     }
 
     // Editor Data
-    private Tedd.TUI.TextEditor textEditor = new Tedd.TUI.TextEditor { Width = -1, Height = -1 };
+    private TextEditor textEditor = new TextEditor { Width = -1, Height = -1 };
 
     // Layout Data
-    private Tedd.TUI.Grid demoGrid = new Tedd.TUI.Grid { Width = 60, Height = 10 };
-    private Tedd.TUI.WrapPanel demoWrap = new Tedd.TUI.WrapPanel { Width = 50, Height = 10 };
-    private Tedd.TUI.GroupBox demoGroup = new Tedd.TUI.GroupBox { Header = "Settings", Width = 40, Height = 10 };
+    private Grid demoGrid = new Grid { Width = 60, Height = 10 };
+    private WrapPanel demoWrap = new WrapPanel { Width = 50, Height = 10 };
+    private GroupBox demoGroup = new GroupBox { Header = "Settings", Width = 40, Height = 10 };
 
     protected override void OnInitialized()
     {
@@ -579,37 +579,37 @@ public void Hello() {
         dataGrid.ItemsSource = people;
 
         // Init Layouts Data
-        demoGrid.RowDefinitions.Add(new Tedd.TUI.RowDefinition { Height = GridLength.Star });
-        demoGrid.RowDefinitions.Add(new Tedd.TUI.RowDefinition { Height = GridLength.Star });
-        demoGrid.ColumnDefinitions.Add(new Tedd.TUI.ColumnDefinition { Width = GridLength.Star });
-        demoGrid.ColumnDefinitions.Add(new Tedd.TUI.ColumnDefinition { Width = GridLength.Star });
-        demoGrid.ColumnDefinitions.Add(new Tedd.TUI.ColumnDefinition { Width = GridLength.Star });
+        demoGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
+        demoGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
+        demoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        demoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        demoGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
 
-        var gBtn1 = new Tedd.TUI.Button { Content = "0,0 Span 2" };
-        Tedd.TUI.Grid.SetRow(gBtn1, 0);
-        Tedd.TUI.Grid.SetColumn(gBtn1, 0);
-        Tedd.TUI.Grid.SetColumnSpan(gBtn1, 2);
+        var gBtn1 = new Button { Content = "0,0 Span 2" };
+        Grid.SetRow(gBtn1, 0);
+        Grid.SetColumn(gBtn1, 0);
+        Grid.SetColumnSpan(gBtn1, 2);
         demoGrid.AddChild(gBtn1);
 
-        var gBtn2 = new Tedd.TUI.Button { Content = "0,2" };
-        Tedd.TUI.Grid.SetRow(gBtn2, 0);
-        Tedd.TUI.Grid.SetColumn(gBtn2, 2);
+        var gBtn2 = new Button { Content = "0,2" };
+        Grid.SetRow(gBtn2, 0);
+        Grid.SetColumn(gBtn2, 2);
         demoGrid.AddChild(gBtn2);
 
-        var gBtn3 = new Tedd.TUI.Button { Content = "1,0 Span 3" };
-        Tedd.TUI.Grid.SetRow(gBtn3, 1);
-        Tedd.TUI.Grid.SetColumn(gBtn3, 0);
-        Tedd.TUI.Grid.SetColumnSpan(gBtn3, 3);
+        var gBtn3 = new Button { Content = "1,0 Span 3" };
+        Grid.SetRow(gBtn3, 1);
+        Grid.SetColumn(gBtn3, 0);
+        Grid.SetColumnSpan(gBtn3, 3);
         demoGrid.AddChild(gBtn3);
 
         for (int i = 0; i < 15; i++)
         {
-            demoWrap.AddChild(new Tedd.TUI.Button { Content = $"Btn {i}" });
+            demoWrap.AddChild(new Button { Content = $"Btn {i}" });
         }
 
-        var groupContent = new Tedd.TUI.StackPanel { Orientation = Orientation.Vertical };
-        groupContent.AddChild(new Tedd.TUI.CheckBox { Content = "Enable Feature A" });
-        groupContent.AddChild(new Tedd.TUI.CheckBox { Content = "Enable Feature B" });
+        var groupContent = new StackPanel { Orientation = Orientation.Vertical };
+        groupContent.AddChild(new CheckBox { Content = "Enable Feature A" });
+        groupContent.AddChild(new CheckBox { Content = "Enable Feature B" });
         demoGroup.Content = groupContent;
     }
 

@@ -1,5 +1,6 @@
 using System;
 using Tedd.TUI;
+using Tedd.TUI.Controls;
 
 class Program {
     static void Main() {
