@@ -102,6 +102,24 @@ public class MarkdownTheme
     // Code Syntax Highlighting Theme (for CodeDocument)
     public Tedd.TUI.CodeColoring.Theme CodeTheme { get; set; } = new Tedd.TUI.CodeColoring.Theme();
 
+    /// <summary>Border-line color for the frame drawn around fenced code blocks.</summary>
+    public TuiColor? CodeBlockBorder { get; set; } = ConsoleColor.DarkGray;
+
+    /// <summary>
+    /// Maximum number of code lines shown before a fenced code block caps its height and
+    /// reveals scrollbars. Blocks shorter than this shrink to fit.
+    /// </summary>
+    public int MaxVisibleCodeLines { get; set; } = 15;
+
+    /// <summary>Foreground of the hover "Copy" button on a code block.</summary>
+    public TuiColor? CodeBlockCopyForeground { get; set; } = ConsoleColor.Black;
+
+    /// <summary>Background of the hover "Copy" button on a code block.</summary>
+    public TuiColor? CodeBlockCopyBackground { get; set; } = ConsoleColor.Cyan;
+
+    /// <summary>Background of the code block copy button right after a successful copy.</summary>
+    public TuiColor? CodeBlockCopiedBackground { get; set; } = ConsoleColor.Green;
+
     /// <summary>
     /// Language identifier used for fenced code blocks that don't carry one (e.g. plain
     /// <c>```</c> fences from WordPress-exported markdown). When null or empty, those

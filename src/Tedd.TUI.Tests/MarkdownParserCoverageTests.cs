@@ -66,8 +66,12 @@ namespace Tedd.TUI.Tests
             var doc = parser.Parse("```csharp\ncode\n```\n~~~ \nmore code\n~~~");
 
             Assert.Equal(2, doc.Children.Count);
-            Assert.IsType<CodeDocument>(doc.Children[0]);
-            Assert.IsType<CodeDocument>(doc.Children[1]);
+            // Fenced code blocks are wrapped in a titled, scrollable frame whose content
+            // is the highlighted CodeDocument.
+            var block0 = Assert.IsType<MarkdownCodeBlock>(doc.Children[0]);
+            Assert.IsType<CodeDocument>(block0.Content);
+            var block1 = Assert.IsType<MarkdownCodeBlock>(doc.Children[1]);
+            Assert.IsType<CodeDocument>(block1.Content);
         }
 
         [Fact]
@@ -140,7 +144,8 @@ namespace Tedd.TUI.Tests
             var parser = new MarkdownParser(new MarkdownTheme());
             var doc = parser.Parse("``` foo ```"); // inline block
             Assert.Single(doc.Children);
-            var cd = Assert.IsType<CodeDocument>(doc.Children[0]);
+            var block = Assert.IsType<MarkdownCodeBlock>(doc.Children[0]);
+            Assert.IsType<CodeDocument>(block.Content);
         }
 
         [Fact]

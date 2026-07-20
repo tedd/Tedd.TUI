@@ -97,7 +97,11 @@ public class MarkdownParser
                 ? (_theme.DefaultCodeLanguage ?? "")
                 : code.Language;
             cd.SetCode(code.Code, effectiveLanguage);
-            return cd;
+
+            // Wrap the highlighted code in a titled, scrollable frame with a distinct
+            // background and a hover "Copy" button. The displayed title is the fence's
+            // own language tag (not the effective fallback) so untagged blocks stay bare.
+            return new MarkdownCodeBlock(code.Code, code.Language ?? string.Empty, cd, _theme);
         }
         else if (block is SpacerBlock)
         {
