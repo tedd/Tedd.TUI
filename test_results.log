@@ -1,0 +1,2 @@
+Timestamp,Component,Status,Message
+2026-07-19T18:15:20.1055526+02:00,RenderingBackend,Info,"Selected=sdl2; probe: IsWindowsTerminal=False, IsLegacyWindowsConsole=True, IsUnixTerminal=False, SupportsTrueColor=False, TERM=(null), COLORTERM=(null)"

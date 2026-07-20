@@ -12,12 +12,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="4.150.0" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="4.150.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Tedd.TUI\Tedd.TUI.csproj" />
     <ProjectReference Include="..\Tedd.TUI.Surface.Skia\Tedd.TUI.Surface.Skia.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.Maui.Controls" Version="10.0.80" />
   </ItemGroup>
 
 </Project>
