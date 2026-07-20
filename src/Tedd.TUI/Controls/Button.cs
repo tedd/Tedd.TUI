@@ -415,10 +415,14 @@ public class Button : ButtonBase
         int rightY = y + sy;
         int rightH = btnH;
 
-        // Bottom strip: starts sx columns right of the button left so it doesn't sit left of the button
+        // Bottom strip: starts sx columns right of the button left so it doesn't sit left of the button.
+        // Its column range [sx, sx+btnW-1] already reaches the corner under the right strip
+        // (btnW..sx+btnW-1) whenever sx <= btnW, so width is just btnW -- NOT btnW + sx, which
+        // would paint sx columns past the control's own reserved right edge (RenderSize.Width - 1)
+        // and bleed into whatever sits to the right of the button.
         int bottomX = x + sx;
         int bottomY = y + btnH;
-        int bottomW = btnW + sx; // include the corner under the right strip
+        int bottomW = btnW;
 
         if (castMode)
         {

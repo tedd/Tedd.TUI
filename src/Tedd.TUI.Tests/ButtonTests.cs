@@ -287,6 +287,57 @@ public class ButtonTests
         Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
     }
 
+    [Theory]
+    [InlineData(ButtonShadowStyle.Solid)]
+    [InlineData(ButtonShadowStyle.Medium)]
+    [InlineData(ButtonShadowStyle.Cast)]
+    [InlineData(ButtonShadowStyle.Translucent)]
+    public void Shadow_NeverPaintsOutsideControlsReservedBounds(ButtonShadowStyle style)
+    {
+        // Regression test: the bottom shadow strip used to be `btnW + sx` wide, which
+        // painted `sx` columns past the control's own reserved right edge
+        // (DesiredSize.Width - 1) -- bleeding into whatever sits to the right of the
+        // button. Every prior shadow test rendered into a buffer sized exactly to
+        // btn.DesiredSize, so VirtualBuffer/FillRect silently clipped the overflow at
+        // the buffer edge and the bug was never observed. Render into a buffer with
+        // margin on every side so out-of-bounds painting is actually visible.
+        var btn = new Button
+        {
+            Content = "OK",
+            ShadowStyle = style,
+            ShadowBackground = System.ConsoleColor.Blue
+        };
+        btn.Measure(new Size(100, 100));
+        btn.Arrange(new Rect(0, 0, btn.DesiredSize.Width, btn.DesiredSize.Height));
+
+        const int margin = 3;
+        var buffer = new VirtualBuffer(btn.DesiredSize.Width + margin, btn.DesiredSize.Height + margin);
+        buffer.Clear(System.ConsoleColor.Green);
+        btn.Render(buffer, 0, 0);
+
+        // Nothing beyond the control's own reserved width/height should have changed
+        // from the clear color -- shadow, cast and translucent modes all count as
+        // "changed" here since none of them should touch cells outside the button.
+        for (int y = 0; y < buffer.Height; y++)
+        {
+            for (int x = btn.DesiredSize.Width; x < buffer.Width; x++)
+            {
+                var cell = buffer.GetPixel(x, y);
+                Assert.True(cell.Character == ' ' && cell.Background == System.ConsoleColor.Green,
+                    $"Cell ({x},{y}) outside the control's reserved width was painted: '{cell.Character}' bg={cell.Background}");
+            }
+        }
+        for (int x = 0; x < buffer.Width; x++)
+        {
+            for (int y = btn.DesiredSize.Height; y < buffer.Height; y++)
+            {
+                var cell = buffer.GetPixel(x, y);
+                Assert.True(cell.Character == ' ' && cell.Background == System.ConsoleColor.Green,
+                    $"Cell ({x},{y}) outside the control's reserved height was painted: '{cell.Character}' bg={cell.Background}");
+            }
+        }
+    }
+
     [Fact]
     public void Shadow_Medium_UsesShadeCharacter()
     {
@@ -427,5 +478,127 @@ public class ButtonTests
         Assert.Equal('\u2518', buffer.GetPixel(3, 2).Character);
         Assert.Equal('O', buffer.GetPixel(1, 1).Character);
         Assert.Equal('K', buffer.GetPixel(2, 1).Character);
+    }
+
+    // Press "go in" click animation: while held down a shadowed button sinks onto its
+    // shadow -- it shifts right/down by the shadow extent and the shadow is suppressed.
+
+    private static bool HasBackground(VirtualBuffer buffer, TuiColor color)
+    {
+        for (int y = 0; y < buffer.Height; y++)
+            for (int x = 0; x < buffer.Width; x++)
+                if (buffer.GetPixel(x, y).Background.Equals(color))
+                    return true;
+        return false;
+    }
+
+    [Fact]
+    public void Pressed_ShadowedButton_SinksIntoShadowAndHidesShadow()
+    {
+        var btn = new Button
+        {
+            Content = "OK",
+            ShadowStyle = ButtonShadowStyle.Solid,
+            ShadowForeground = ConsoleColor.Magenta,
+            ShadowBackground = ConsoleColor.Blue,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top
+        };
+        var host = new ControlTestHost(btn, 8, 6);
+
+        // Resting: border at (0,0) and the drop shadow (blue) is painted.
+        var buffer = host.Render();
+        Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
+        Assert.True(HasBackground(buffer, TuiColor.Blue), "shadow should be visible at rest");
+
+        // Hold the button down: it sinks into the shadow (default extent 2 x 1).
+        host.MouseDown(1, 1);
+        Assert.True(btn.IsPressed);
+
+        buffer = host.Render();
+        // The whole button body moved to where its shadow used to fall.
+        Assert.Equal('\u250C', buffer.GetPixel(2, 1).Character);
+        // The resting top-left cell is now empty.
+        Assert.Equal(' ', buffer.GetPixel(0, 0).Character);
+        // The shadow is fully suppressed while the button is pressed.
+        Assert.False(HasBackground(buffer, TuiColor.Blue), "shadow must be hidden while pressed");
+
+        // Release: the button pops back out and the shadow returns.
+        host.MouseUp(1, 1);
+        Assert.False(btn.IsPressed);
+        buffer = host.Render();
+        Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
+        Assert.True(HasBackground(buffer, TuiColor.Blue), "shadow should return after release");
+    }
+
+    [Fact]
+    public void Pressed_ViaKeyboard_AlsoSinksIntoShadow()
+    {
+        var btn = new Button
+        {
+            Content = "OK",
+            ShadowStyle = ButtonShadowStyle.Solid,
+            ShadowBackground = ConsoleColor.Blue,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top
+        };
+        var host = new ControlTestHost(btn, 8, 6);
+        btn.Focus();
+
+        btn.OnKeyDown(new KeyEventArgs { Key = ConsoleKey.Enter });
+        Assert.True(btn.IsPressed);
+        var buffer = host.Render();
+        Assert.Equal('\u250C', buffer.GetPixel(2, 1).Character);
+        Assert.False(HasBackground(buffer, TuiColor.Blue), "shadow hidden while key held");
+
+        btn.OnKeyUp(new KeyEventArgs { Key = ConsoleKey.Enter });
+        Assert.False(btn.IsPressed);
+        buffer = host.Render();
+        Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
+        Assert.True(HasBackground(buffer, TuiColor.Blue));
+    }
+
+    [Fact]
+    public void Pressed_AnimatePressDisabled_KeepsButtonAndShadowInPlace()
+    {
+        var btn = new Button
+        {
+            Content = "OK",
+            ShadowStyle = ButtonShadowStyle.Solid,
+            ShadowBackground = ConsoleColor.Blue,
+            AnimatePress = false,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top
+        };
+        var host = new ControlTestHost(btn, 8, 6);
+
+        host.MouseDown(1, 1);
+        Assert.True(btn.IsPressed);
+
+        var buffer = host.Render();
+        // No sink: the border stays at the origin, content stays put ("\u2502OK\u2502" -> 'K' at
+        // (2,1) rather than the shifted border corner), and the shadow stays drawn.
+        Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
+        Assert.Equal('K', buffer.GetPixel(2, 1).Character);
+        Assert.True(HasBackground(buffer, TuiColor.Blue));
+    }
+
+    [Fact]
+    public void Pressed_ShadowlessButton_DoesNotShift()
+    {
+        // No shadow means nothing to sink into: pressing must not move the button.
+        var btn = new Button
+        {
+            Content = "OK",
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top
+        };
+        var host = new ControlTestHost(btn, 8, 6);
+
+        host.MouseDown(1, 1);
+        Assert.True(btn.IsPressed);
+
+        var buffer = host.Render();
+        Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
     }
 }

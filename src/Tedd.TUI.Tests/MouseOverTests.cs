@@ -330,4 +330,46 @@ public class MouseOverTests
         buffer = host.Render();
         Assert.Equal(TuiColor.White, buffer.GetPixel(0, 0).Foreground);
     }
+
+    [Fact]
+    public void Hyperlink_Hover_ChangesForegroundColorByDefault()
+    {
+        var link = new Tedd.TUI.Markdown.Hyperlink
+        {
+            Text = "Docs",
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top
+        };
+        var host = new ControlTestHost(link, 10, 2);
+
+        var buffer = host.Render();
+        Assert.Equal('D', buffer.GetPixel(0, 0).Character);
+        Assert.Equal(TuiColor.Blue, buffer.GetPixel(0, 0).Foreground); // resting link color
+
+        host.MouseMove(1, 0);
+        buffer = host.Render();
+        Assert.Equal('D', buffer.GetPixel(0, 0).Character);
+        Assert.Equal(TuiColor.Cyan, buffer.GetPixel(0, 0).Foreground); // hover highlight
+
+        host.MouseMove(9, 1);
+        buffer = host.Render();
+        Assert.Equal(TuiColor.Blue, buffer.GetPixel(0, 0).Foreground); // reverts on leave
+    }
+
+    [Fact]
+    public void Hyperlink_HoverForeground_IsOverridable()
+    {
+        var link = new Tedd.TUI.Markdown.Hyperlink
+        {
+            Text = "Docs",
+            HoverForeground = TuiColor.Magenta,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top
+        };
+        var host = new ControlTestHost(link, 10, 2);
+
+        host.MouseMove(1, 0);
+        var buffer = host.Render();
+        Assert.Equal(TuiColor.Magenta, buffer.GetPixel(0, 0).Foreground);
+    }
 }
