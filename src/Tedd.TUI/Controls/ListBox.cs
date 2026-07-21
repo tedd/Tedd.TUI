@@ -315,6 +315,26 @@ public class ListBox : Selector
             MoveCurrent(1, extend: shift);
             e.Handled = true;
         }
+        else if (e.Key == ConsoleKey.PageUp)
+        {
+            MoveCurrent(-PageStep, extend: shift, clampToEdge: true);
+            e.Handled = true;
+        }
+        else if (e.Key == ConsoleKey.PageDown)
+        {
+            MoveCurrent(PageStep, extend: shift, clampToEdge: true);
+            e.Handled = true;
+        }
+        else if (e.Key == ConsoleKey.Home)
+        {
+            MoveTo(0, extend: shift);
+            e.Handled = true;
+        }
+        else if (e.Key == ConsoleKey.End)
+        {
+            MoveTo(Items.Count - 1, extend: shift);
+            e.Handled = true;
+        }
         else if (ctrl && e.Key == ConsoleKey.A && multiSelect)
         {
             SelectAll();
@@ -334,21 +354,38 @@ public class ListBox : Selector
         }
     }
 
+    /// <summary>One page of movement: a full viewport, less a row of overlap for orientation.</summary>
+    private int PageStep => Math.Max(1, RenderSize.Height - 1);
+
     /// <summary>
     /// Moves the current item by <paramref name="delta"/> rows. With <paramref name="extend"/>
-    /// (Shift held) the selection grows from the anchor instead of being replaced.
+    /// (Shift held) the selection grows from the anchor instead of being replaced. A step that
+    /// runs off the end stops at the edge when <paramref name="clampToEdge"/> is set (paging)
+    /// and is ignored otherwise (single-row steps, which would otherwise wrap the intent).
     /// </summary>
-    private void MoveCurrent(int delta, bool extend)
+    private void MoveCurrent(int delta, bool extend, bool clampToEdge = false)
     {
         int next = CurrentIndex + delta;
-        if (next < 0 || next >= Items.Count) return;
+        if (next < 0 || next >= Items.Count)
+        {
+            if (!clampToEdge) return;
+            next = Math.Clamp(next, 0, Items.Count - 1);
+        }
+
+        MoveTo(next, extend);
+    }
+
+    /// <summary>Moves the current item to <paramref name="index"/>, extending the range if asked.</summary>
+    private void MoveTo(int index, bool extend)
+    {
+        if (index < 0 || index >= Items.Count) return;
 
         if (extend && SelectionMode != SelectionMode.Single)
-            ExtendSelectionTo(next);
+            ExtendSelectionTo(index);
         else
-            SelectSingle(next);
+            SelectSingle(index);
 
-        EnsureVisible(next);
+        EnsureVisible(index);
     }
 
     private void EnsureVisible(int index)
