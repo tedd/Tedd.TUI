@@ -40,6 +40,10 @@ public abstract class Selector : ItemsControl
     // Where a Shift-extended range starts: the item of the last plain click or toggle.
     private int _anchorIndex = -1;
 
+    // The keyboard cursor: the row the user is standing on. A Shift-extended range moves
+    // this end while _anchorIndex stays put, and it survives its row being deselected.
+    private int _currentIndex = -1;
+
     private INotifyCollectionChanged? _attachedSelectedItems;
 
     protected Selector()
@@ -91,6 +95,14 @@ public abstract class Selector : ItemsControl
     /// <summary>The indices of every selected item, ascending.</summary>
     public IReadOnlyList<int> SelectedIndices => _selectedIndices.ToArray();
 
+    /// <summary>
+    /// The item the user last acted on: the keyboard cursor and the anchor a Shift-extended
+    /// range grows from. It outlives the selection — deselecting the current item with
+    /// Control+click or Space leaves the cursor on that row, as list boxes elsewhere do.
+    /// </summary>
+    public int CurrentIndex =>
+        _currentIndex >= 0 && _currentIndex < Items.Count ? _currentIndex : SelectedIndex;
+
     public event EventHandler? SelectionChanged;
 
     /// <summary>Whether the item at <paramref name="index"/> is part of the selection.</summary>
@@ -110,6 +122,7 @@ public abstract class Selector : ItemsControl
     public void UnselectAll()
     {
         _anchorIndex = -1;
+        _currentIndex = -1;
         ApplySelection([], -1);
     }
 
@@ -152,6 +165,7 @@ public abstract class Selector : ItemsControl
     {
         if (index < 0 || index >= Items.Count) return;
         _anchorIndex = index;
+        _currentIndex = index;
         ApplySelection([index], index);
     }
 
@@ -168,6 +182,7 @@ public abstract class Selector : ItemsControl
         var next = new SortedSet<int>(_selectedIndices);
         if (!next.Remove(index)) next.Add(index);
         _anchorIndex = index;
+        _currentIndex = index;
         ApplySelection(next, index);
     }
 
@@ -193,6 +208,8 @@ public abstract class Selector : ItemsControl
         for (int i = Math.Min(anchor, index); i <= Math.Max(anchor, index); i++)
             next.Add(i);
 
+        // Only the moving end of the range advances; the anchor stays where the range began.
+        _currentIndex = index;
         ApplySelection(next, index);
     }
 
@@ -368,6 +385,7 @@ public abstract class Selector : ItemsControl
 
         int index = SelectedIndex;
         _anchorIndex = index;
+        _currentIndex = index;
 
         if (_selectedIndices.Count == 1 && _selectedIndices.Contains(index)) return;
         if (_selectedIndices.Count == 0 && index < 0) return;

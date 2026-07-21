@@ -190,7 +190,9 @@ public class ListBox : Selector
 
             if (itemIndex < Items.Count)
             {
-                bool isSelected = (itemIndex == SelectedIndex);
+                // Every selected row highlights, not just the primary one, so a
+                // multi-selection is visible as a block.
+                bool isSelected = IsIndexSelected(itemIndex);
                 var bg = Background ?? buffer.GetPixel(x, y + i).Background;
                 var fg = Foreground;
                 if (isSelected)
@@ -287,8 +289,10 @@ public class ListBox : Selector
 
         if (itemIndex >= 0 && itemIndex < Items.Count)
         {
-            SelectedIndex = itemIndex;
-            // SelectionChanged is raised by base.SelectedIndex setter
+            // Plain click selects, Shift+click extends the range from the last clicked
+            // item, Control+click toggles one — the standard list gestures. In
+            // SelectionMode.Single the modifiers are ignored and this is a plain select.
+            ApplySelectionGesture(itemIndex, e.Modifiers);
         }
         e.Handled = true;
     }
@@ -296,22 +300,31 @@ public class ListBox : Selector
     public override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+
+        bool shift = (e.Modifiers & ConsoleModifiers.Shift) != 0;
+        bool ctrl = (e.Modifiers & ConsoleModifiers.Control) != 0;
+        bool multiSelect = SelectionMode != SelectionMode.Single;
+
         if (e.Key == ConsoleKey.UpArrow)
         {
-            if (SelectedIndex > 0)
-            {
-                SelectedIndex--;
-                EnsureVisible(SelectedIndex);
-            }
+            MoveCurrent(-1, extend: shift);
             e.Handled = true;
         }
         else if (e.Key == ConsoleKey.DownArrow)
         {
-            if (SelectedIndex < Items.Count - 1)
-            {
-                SelectedIndex++;
-                EnsureVisible(SelectedIndex);
-            }
+            MoveCurrent(1, extend: shift);
+            e.Handled = true;
+        }
+        else if (ctrl && e.Key == ConsoleKey.A && multiSelect)
+        {
+            SelectAll();
+            e.Handled = true;
+        }
+        else if (e.Key == ConsoleKey.Spacebar && multiSelect)
+        {
+            // Space is the keyboard equivalent of a Control+click, acting on the row the
+            // cursor is on — which survives that row being deselected.
+            ToggleSelection(CurrentIndex);
             e.Handled = true;
         }
         else if (e.Key == ConsoleKey.Enter || e.Key == ConsoleKey.Spacebar)
@@ -319,6 +332,23 @@ public class ListBox : Selector
             OnSelectionChanged();
             e.Handled = true;
         }
+    }
+
+    /// <summary>
+    /// Moves the current item by <paramref name="delta"/> rows. With <paramref name="extend"/>
+    /// (Shift held) the selection grows from the anchor instead of being replaced.
+    /// </summary>
+    private void MoveCurrent(int delta, bool extend)
+    {
+        int next = CurrentIndex + delta;
+        if (next < 0 || next >= Items.Count) return;
+
+        if (extend && SelectionMode != SelectionMode.Single)
+            ExtendSelectionTo(next);
+        else
+            SelectSingle(next);
+
+        EnsureVisible(next);
     }
 
     private void EnsureVisible(int index)
