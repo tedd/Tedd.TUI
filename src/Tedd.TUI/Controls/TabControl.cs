@@ -175,9 +175,9 @@ public class TabControl : Selector
         }
     }
 
-    protected override void OnSelectionChanged()
+    protected override void OnSelectionChanged(SelectionChangedEventArgs e)
     {
-        base.OnSelectionChanged();
+        base.OnSelectionChanged(e);
 
         // Update IsSelected on TabItems
         for (int i = 0; i < Items.Count; i++)
