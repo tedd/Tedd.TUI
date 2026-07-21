@@ -61,7 +61,7 @@ public class AppController
 }
 ```
 
-![Rendered result](assets/hello.svg)
+![Rendered result](assets/hero.png)
 
 ---
 

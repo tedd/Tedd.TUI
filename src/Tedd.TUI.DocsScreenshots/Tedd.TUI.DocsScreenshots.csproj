@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tedd.TUI\Tedd.TUI.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Platform.Skia\Tedd.TUI.Platform.Skia.csproj" />
+    <ProjectReference Include="..\Tedd.TUI.Imaging\Tedd.TUI.Imaging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The SkiaSharp meta-package only carries Win32/macOS native assets; Linux needs
+         this explicitly so the generator can also run headless on Linux CI. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.150.1" />
+  </ItemGroup>
+
+</Project>

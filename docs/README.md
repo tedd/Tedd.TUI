@@ -5,7 +5,7 @@ You define a UI once — in XAML or in code — and host it on any supported sur
 host renders the exact same character-cell grid, so the application looks identical in a
 terminal, a browser, and a desktop window.
 
-![Tedd.TUI](assets/hello.svg)
+![Tedd.TUI](assets/hero.png)
 
 ## Start here
 
@@ -24,7 +24,7 @@ terminal just as on every GUI host:
   `MarkdownTheme`. Fenced code blocks are syntax-highlighted automatically and image
   references render inline.
 
-  ![MarkdownView rendering markdown in the terminal](assets/markdown.svg)
+  ![MarkdownView rendering markdown in the terminal](assets/markdown.png)
 
 - **Code highlighting** — `CodeDocument` tokenizes source with a PrismJS-style grammar
   engine (ported from [Prism.js](https://github.com/PrismJS/prism), MIT) and renders
@@ -37,7 +37,7 @@ terminal just as on every GUI host:
   Scala, Scheme, Smalltalk, Solidity, SQL, Swift, Tcl, TOML, TypeScript, URI, Verilog,
   VHDL, Visual Basic, WASM, XML/HTML, YAML and Zig.
 
-  ![CodeDocument syntax highlighting C# and JSON](assets/code.svg)
+  ![CodeDocument syntax highlighting C# and JSON](assets/code.png)
 
 - **Images** — the `Image` control puts real bitmaps into the cell grid: pixel-perfect
   Sixel (Windows Terminal 1.22+, VT340-style terminals), Kitty graphics and iTerm2
@@ -46,7 +46,7 @@ terminal just as on every GUI host:
   JPEG, GIF, WebP, …) comes from `Tedd.TUI.Imaging`; see the
   [console guide](platforms/console.md#inline-images).
 
-  ![Inline bitmap and half-block fallback rendering of the same photo](assets/images.svg)
+  ![Inline bitmap and half-block fallback rendering of the same photo](assets/images.png)
 
 ## Controls
 

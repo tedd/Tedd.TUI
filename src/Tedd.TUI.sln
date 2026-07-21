@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.Sdl2", "T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.Platform.Sdl2.Tests", "Tedd.TUI.Platform.Sdl2.Tests\Tedd.TUI.Platform.Sdl2.Tests.csproj", "{2F86D755-4107-461C-842B-C8650010EF49}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tedd.TUI.DocsScreenshots", "Tedd.TUI.DocsScreenshots\Tedd.TUI.DocsScreenshots.csproj", "{D81325EE-59A3-46B8-BE3C-9494B4E977AC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -321,6 +323,18 @@ Global
 		{2F86D755-4107-461C-842B-C8650010EF49}.Release|x64.Build.0 = Release|Any CPU
 		{2F86D755-4107-461C-842B-C8650010EF49}.Release|x86.ActiveCfg = Release|Any CPU
 		{2F86D755-4107-461C-842B-C8650010EF49}.Release|x86.Build.0 = Release|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Debug|x64.Build.0 = Debug|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Debug|x86.Build.0 = Debug|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Release|x64.ActiveCfg = Release|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Release|x64.Build.0 = Release|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Release|x86.ActiveCfg = Release|Any CPU
+		{D81325EE-59A3-46B8-BE3C-9494B4E977AC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

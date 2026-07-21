@@ -8,7 +8,7 @@
 
 Define the UI once — in XAML or in code — and host it anywhere: **terminal, Blazor, WPF, Avalonia, WinUI 3, .NET MAUI, native SDL2 windows and any bare SkiaSharp canvas** (headless PNG rendering included). Every host renders the identical character-cell grid.
 
-![Tedd.TUI](docs/assets/hello.svg)
+![Tedd.TUI](docs/assets/hero.png)
 
 📖 **[Documentation](docs/README.md)** · **[Getting started](docs/getting-started.md)** · **[XAML guide](docs/xaml.md)** · **[Website](https://tedd.github.io/Tedd.TUI/)**
 
