@@ -104,8 +104,12 @@ public class TuiSdl2HostTests
         host.SetContent(new TuiWindow { Content = button });
 
         using var _ = host.Skia.RenderToImage(20, 5); // arrange the tree so hit testing works
-        var (width, height) = host.Skia.SizeForCells(20, 5);
-        int x = (int)(width / 2), y = (int)(height / 2);
+
+        // Button sizes to its content and sits left-aligned (not stretched to fill the
+        // window), so it occupies only the first few columns — click inside cell (1, 1)
+        // rather than the grid's center, which now falls outside it.
+        var (cellWidth, cellHeight) = host.Skia.SizeForCells(1, 1);
+        int x = (int)(cellWidth * 1.5f), y = (int)(cellHeight * 1.5f);
 
         Assert.True(host.HandleEvent(MouseButton(SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN, x, y)));
         Assert.True(host.HandleEvent(MouseButton(SDL.SDL_EventType.SDL_MOUSEBUTTONUP, x, y)));

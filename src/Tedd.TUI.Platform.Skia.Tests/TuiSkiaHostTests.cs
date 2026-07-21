@@ -67,9 +67,15 @@ public class TuiSkiaHostTests
         host.SetContent(new TuiWindow { Content = button });
 
         using var _ = host.RenderToImage(20, 5); // arrange the tree so hit testing works
-        var (width, height) = host.SizeForCells(20, 5);
-        host.MouseDown(width / 2, height / 2);
-        host.MouseUp(width / 2, height / 2);
+
+        // Button sizes to its content and sits left-aligned (not stretched to fill the
+        // window), so it occupies only the first few columns — click inside cell (1, 1)
+        // rather than the grid's center, which now falls outside it.
+        var (cellWidth, cellHeight) = host.SizeForCells(1, 1);
+        float px = cellWidth * 1.5f;
+        float py = cellHeight * 1.5f;
+        host.MouseDown(px, py);
+        host.MouseUp(px, py);
 
         Assert.True(clicked);
     }
