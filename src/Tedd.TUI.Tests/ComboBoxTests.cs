@@ -404,4 +404,21 @@ public class ComboBoxTests
 
         Assert.Equal(template, popupListBox.ItemTemplate);
     }
+
+    [Fact]
+    public void SelectionMode_StaysSingle_BecauseAComboBoxShowsOneItem()
+    {
+        var cb = new ComboBox();
+        cb.Items.Add("A");
+        cb.Items.Add("B");
+        cb.Items.Add("C");
+
+        cb.SelectionMode = SelectionMode.Extended;
+
+        Assert.Equal(SelectionMode.Single, cb.SelectionMode);
+
+        cb.SelectSingle(0);
+        cb.ToggleSelection(2);
+        Assert.Equal(new[] { 2 }, cb.SelectedIndices);
+    }
 }

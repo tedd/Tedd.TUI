@@ -101,6 +101,23 @@ public class ComboBox : Selector
         _popupListBox = new ListBox();
     }
 
+    /// <summary>
+    /// A ComboBox shows one item in its collapsed state, so — as in WPF and MAUI — it is
+    /// always single-selection. The <see cref="Selector.SelectionMode"/> it inherits is
+    /// coerced back to <see cref="SelectionMode.Single"/> rather than half-working:
+    /// the dropdown closes on the first pick, so a range could never be built.
+    /// </summary>
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        if (dp == SelectionModeProperty && SelectionMode != SelectionMode.Single)
+        {
+            SetValue(SelectionModeProperty, SelectionMode.Single);
+            return;
+        }
+
+        base.OnPropertyChanged(dp);
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
         return new Size(Width > 0 ? Width : 15, 1);
