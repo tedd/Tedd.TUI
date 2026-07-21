@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## 2026
 
+- **2026-07-21** - Added: multi-selection for lists. `Selector` (and therefore `ListBox`) gains `SelectionMode` (`Single`, `Multiple`, `Extended`), a bindable `SelectedItems` collection, `SelectedIndices`, `CurrentIndex`, `SelectAll`/`UnselectAll`, and `SelectionChanged` args carrying `AddedItems`/`RemovedItems`. ListBox implements the standard gestures — click selects, Shift+click extends from the last clicked row, Control+click (or Alt+click) toggles — plus Shift+arrows, Control+A, Space to toggle, and Home/End/PageUp/PageDown navigation. Mouse events now carry `Modifiers` on every host that can report them; the SGR terminal parser previously dropped modified clicks entirely. `ComboBox` stays single-selection, as in WPF.
 - **2026-07-19** - Added: SDL2 host (`Tedd.TUI.Platform.Sdl2`). `TuiSdl2Host` opens a native SDL2 window in one call (`Run`) or attaches to an existing SDL2 render loop (`Attach`/`HandleEvent`/`RenderFrame`) — Windows/Linux/macOS, full keyboard/text/mouse input, HiDPI-aware.
 - **2026-07-19** - Added: standalone Skia host (`Tedd.TUI.Platform.Skia`). `TuiSkiaHost` renders a TUI onto any SkiaSharp `SKCanvas` or headless to `SKImage`/PNG — no GUI framework needed — with pixel-space mouse and keyboard/text input forwarding.
 - **2026-07-16** - Added: DataGrid control with AutoGenerateColumns and high-performance property getters.
