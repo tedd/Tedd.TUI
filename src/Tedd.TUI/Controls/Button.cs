@@ -368,6 +368,7 @@ public class Button : ButtonBase
         // the shadow used to be -- the classic DOS "button pushed in" effect.
         if (IsPressedIntoShadow)
         {
+            FillBorderlessInsetBackground(buffer, offsetX + sx, offsetY + sy);
             base.Render(buffer, offsetX + sx, offsetY + sy);
             return;
         }
@@ -381,7 +382,32 @@ public class Button : ButtonBase
             RenderShadow(buffer, x, y, btnW, btnH, sx, sy);
         }
 
+        FillBorderlessInsetBackground(buffer, offsetX, offsetY);
+
         base.Render(buffer, offsetX, offsetY);
+    }
+
+    // BoxStyle.None reserves BorderlessInsetX columns of side padding that TemplateRoot
+    // (Border) is deliberately arranged narrower than -- see ArrangeOverride -- so the
+    // label stays centered with exactly one padding column on each side regardless of
+    // content length. Border only paints its own arranged rect (never the full control),
+    // so without this fill those padding columns showed whatever was behind the button
+    // instead of the button's own face color. Since the shadow is sized to the control's
+    // full reserved width (including this padding), the unfilled columns previously made
+    // the shadow look like it overhung the visibly-painted face by more than ShadowOffsetX.
+    private void FillBorderlessInsetBackground(VirtualBuffer buffer, int offsetX, int offsetY)
+    {
+        if (BorderlessInsetX <= 0) return;
+
+        int sx = ShadowExtentX;
+        int sy = ShadowExtentY;
+        int w = Math.Max(0, RenderSize.Width - sx);
+        int h = Math.Max(0, RenderSize.Height - sy);
+        if (w <= 0 || h <= 0) return;
+
+        int x = RenderSize.X + offsetX;
+        int y = RenderSize.Y + offsetY;
+        buffer.FillRect(x, y, w, h, ' ', EffectiveForeground, EffectiveBackground ?? Background ?? TuiColor.Black);
     }
 
     private void RenderShadow(VirtualBuffer buffer, int x, int y, int btnW, int btnH, int sx, int sy)

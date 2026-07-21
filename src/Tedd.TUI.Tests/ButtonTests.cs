@@ -407,6 +407,36 @@ public class ButtonTests
     }
 
     [Fact]
+    public void BoxStyleNone_PaintsBackgroundAcrossSidePadding()
+    {
+        // Regression test: TemplateRoot (Border) is deliberately arranged narrower than
+        // the button's own reserved width for BoxStyle.None (see BorderlessInsetX) so the
+        // label stays centered with exactly one padding column each side. Border only
+        // paints its own arranged rect, so the padding columns used to show whatever was
+        // behind the button (the buffer's clear color) instead of the button's own
+        // background.
+        var btn = new Button
+        {
+            Content = "OK",
+            BoxStyle = BoxStyle.None,
+            Background = ConsoleColor.Yellow
+        };
+        btn.Measure(new Size(100, 100));
+        btn.Arrange(new Rect(0, 0, btn.DesiredSize.Width, btn.DesiredSize.Height));
+
+        var buffer = new VirtualBuffer(btn.DesiredSize.Width, btn.DesiredSize.Height);
+        buffer.Clear();
+        btn.Render(buffer, 0, 0);
+
+        // " OK " -- every cell across the full width, including the leading/trailing
+        // padding columns (x=0 and x=3), must carry the button's own background.
+        for (int x = 0; x < btn.DesiredSize.Width; x++)
+        {
+            Assert.Equal(ConsoleColor.Yellow, buffer.GetPixel(x, 0).Background);
+        }
+    }
+
+    [Fact]
     public void BoxStyleNone_WithShadow_ReservesShadowAndSidePadding()
     {
         var btn = new Button
@@ -458,6 +488,46 @@ public class ButtonTests
         Assert.Equal(ConsoleColor.Blue, buffer.GetPixel(2, 1).Background);
         // Bottom-left corner of bounding box (x=0,y=1) is NOT shadow.
         Assert.NotEqual(ConsoleColor.Blue, buffer.GetPixel(0, 1).Background);
+    }
+
+    [Fact]
+    public void BoxStyleNone_WithShadow_OverhangMatchesShadowOffsetExactly()
+    {
+        // Regression test: because the side-padding columns weren't painted with the
+        // button's own background (see BoxStyleNone_PaintsBackgroundAcrossSidePadding),
+        // the drop shadow -- sized to the control's full reserved width -- appeared to
+        // overhang the visibly-painted face by more than ShadowOffsetX. With the padding
+        // painted, the face spans the button's full DesiredSize.Width and the shadow's
+        // right edge sits exactly ShadowOffsetX past it.
+        var btn = new Button
+        {
+            Content = "Save",
+            BoxStyle = BoxStyle.None,
+            Background = ConsoleColor.Yellow,
+            ShadowStyle = ButtonShadowStyle.Solid,
+            ShadowBackground = ConsoleColor.Blue
+            // ShadowOffsetX = 2, ShadowOffsetY = 1 by default
+        };
+        btn.Measure(new Size(100, 100));
+        btn.Arrange(new Rect(0, 0, btn.DesiredSize.Width, btn.DesiredSize.Height));
+
+        var buffer = new VirtualBuffer(btn.DesiredSize.Width, btn.DesiredSize.Height);
+        buffer.Clear();
+        btn.Render(buffer, 0, 0);
+
+        // Face row: every column across the button's own reserved width (excluding the
+        // shadow columns) carries the button's own background -- no unpainted padding.
+        int faceWidth = btn.DesiredSize.Width - btn.ShadowOffsetX;
+        for (int x = 0; x < faceWidth; x++)
+        {
+            Assert.Equal(ConsoleColor.Yellow, buffer.GetPixel(x, 0).Background);
+        }
+
+        // Shadow row: nothing left of ShadowOffsetX, shadow fills exactly the rest.
+        for (int x = 0; x < btn.ShadowOffsetX; x++)
+            Assert.NotEqual(ConsoleColor.Blue, buffer.GetPixel(x, 1).Background);
+        for (int x = btn.ShadowOffsetX; x < btn.DesiredSize.Width; x++)
+            Assert.Equal(ConsoleColor.Blue, buffer.GetPixel(x, 1).Background);
     }
 
     [Fact]
