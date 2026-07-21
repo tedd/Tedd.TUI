@@ -601,4 +601,24 @@ public class ButtonTests
         var buffer = host.Render();
         Assert.Equal('\u250C', buffer.GetPixel(0, 0).Character);
     }
+
+    [Fact]
+    public void Default_HorizontalAlignment_IsLeft_SizesToContentInsteadOfStretching()
+    {
+        // Regression test: Button used to inherit UIElement's Stretch default, so a
+        // Button dropped into a vertical StackPanel (which arranges children at the
+        // panel's full width) silently stretched to fill it instead of sizing to its
+        // label. Buttons should size to content by default.
+        var btn = new Button { Content = "OK" };
+        Assert.Equal(HorizontalAlignment.Left, btn.HorizontalAlignment);
+
+        var panel = new StackPanel { Orientation = Orientation.Vertical };
+        panel.AddChild(btn);
+
+        panel.Measure(new Size(40, 10));
+        panel.Arrange(new Rect(0, 0, 40, 10));
+
+        Assert.Equal(btn.DesiredSize.Width, btn.RenderSize.Width);
+        Assert.True(btn.RenderSize.Width < 40);
+    }
 }

@@ -8,6 +8,11 @@ public class Button : ButtonBase
     {
         Focusable = true;
 
+        // Buttons size to their content by default; without this a Button dropped
+        // into a Stretch-oriented container (e.g. a vertical StackPanel) would
+        // inherit UIElement's Stretch default and fill the container's width.
+        HorizontalAlignment = HorizontalAlignment.Left;
+
         // Define default template
         Template = new ControlTemplate(parent =>
         {
