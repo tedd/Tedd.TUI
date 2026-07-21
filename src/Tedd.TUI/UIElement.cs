@@ -797,6 +797,13 @@ public class MouseEventArgs : RoutedEventArgs
     public int GlobalX { get; set; }
     public int GlobalY { get; set; }
 
+    /// <summary>
+    /// Keyboard modifiers held while the mouse event was generated. Drives the
+    /// standard list selection gestures (Shift = extend range, Control = toggle).
+    /// Hosts that cannot report modifiers for mouse input leave this at 0.
+    /// </summary>
+    public ConsoleModifiers Modifiers { get; set; }
+
     private double? _globalXF;
     private double? _globalYF;
 

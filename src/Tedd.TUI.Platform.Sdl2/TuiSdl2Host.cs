@@ -307,7 +307,7 @@ public sealed class TuiSdl2Host : IDisposable
                     return false;
                 {
                     var (px, py) = ScaleMouse(ev.button.x, ev.button.y);
-                    _skia.MouseDown(px, py);
+                    _skia.MouseDown(px, py, Sdl2KeyMapper.MapModifiers(SDL.SDL_GetModState()));
                 }
                 return true;
 
@@ -316,14 +316,14 @@ public sealed class TuiSdl2Host : IDisposable
                     return false;
                 {
                     var (px, py) = ScaleMouse(ev.button.x, ev.button.y);
-                    _skia.MouseUp(px, py);
+                    _skia.MouseUp(px, py, Sdl2KeyMapper.MapModifiers(SDL.SDL_GetModState()));
                 }
                 return true;
 
             case SDL.SDL_EventType.SDL_MOUSEMOTION:
                 {
                     var (px, py) = ScaleMouse(ev.motion.x, ev.motion.y);
-                    _skia.MouseMove(px, py);
+                    _skia.MouseMove(px, py, Sdl2KeyMapper.MapModifiers(SDL.SDL_GetModState()));
                 }
                 return true;
 

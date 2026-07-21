@@ -70,14 +70,14 @@ internal sealed class ControlTestHost
         return buffer;
     }
 
-    public MouseEventArgs MouseDown(int x, int y) =>
-        Mouse(UIElement.MouseDownEvent, x, y);
+    public MouseEventArgs MouseDown(int x, int y, ConsoleModifiers modifiers = 0) =>
+        Mouse(UIElement.MouseDownEvent, x, y, modifiers);
 
-    public MouseEventArgs MouseMove(int x, int y) =>
-        Mouse(UIElement.MouseMoveEvent, x, y);
+    public MouseEventArgs MouseMove(int x, int y, ConsoleModifiers modifiers = 0) =>
+        Mouse(UIElement.MouseMoveEvent, x, y, modifiers);
 
-    public MouseEventArgs MouseUp(int x, int y) =>
-        Mouse(UIElement.MouseUpEvent, x, y);
+    public MouseEventArgs MouseUp(int x, int y, ConsoleModifiers modifiers = 0) =>
+        Mouse(UIElement.MouseUpEvent, x, y, modifiers);
 
     /// <summary>Mouse down at a fractional cell position, as pixel-based hosts report it.</summary>
     public MouseEventArgs MouseDownF(double x, double y) =>
@@ -109,10 +109,10 @@ internal sealed class ControlTestHost
     /// Performs the complete primary-button click sequence used by the platform hosts.
     /// Coordinates are relative to the test window.
     /// </summary>
-    public (MouseEventArgs Down, MouseEventArgs Up) Click(int x, int y)
+    public (MouseEventArgs Down, MouseEventArgs Up) Click(int x, int y, ConsoleModifiers modifiers = 0)
     {
-        var down = MouseDown(x, y);
-        var up = MouseUp(x, y);
+        var down = MouseDown(x, y, modifiers);
+        var up = MouseUp(x, y, modifiers);
         return (down, up);
     }
 
@@ -121,20 +121,21 @@ internal sealed class ControlTestHost
     /// Converting through <see cref="UIElement.PointToScreen"/> makes this suitable for
     /// deeply nested elements, including content translated by one or more scroll viewers.
     /// </summary>
-    public (MouseEventArgs Down, MouseEventArgs Up) Click(UIElement element, int x, int y)
+    public (MouseEventArgs Down, MouseEventArgs Up) Click(UIElement element, int x, int y, ConsoleModifiers modifiers = 0)
     {
         ArgumentNullException.ThrowIfNull(element);
 
         var screenPoint = element.PointToScreen(new Point(x, y));
-        return Click(screenPoint.X, screenPoint.Y);
+        return Click(screenPoint.X, screenPoint.Y, modifiers);
     }
 
-    private MouseEventArgs Mouse(RoutedEvent routedEvent, int x, int y)
+    private MouseEventArgs Mouse(RoutedEvent routedEvent, int x, int y, ConsoleModifiers modifiers = 0)
     {
         var args = new MouseEventArgs(routedEvent)
         {
             GlobalX = x,
-            GlobalY = y
+            GlobalY = y,
+            Modifiers = modifiers
         };
 
         Window.ProcessMouse(args);

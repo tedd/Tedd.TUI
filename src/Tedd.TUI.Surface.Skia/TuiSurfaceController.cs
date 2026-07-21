@@ -154,24 +154,26 @@ public sealed class TuiSurfaceController
         _window?.ProcessKey(new KeyEventArgs { Key = key, KeyChar = keyChar, Modifiers = modifiers });
     }
 
-    public void MouseDown(int cellX, int cellY) => MouseDown(cellX + 0.5, cellY + 0.5);
+    public void MouseDown(int cellX, int cellY, ConsoleModifiers modifiers = 0) => MouseDown(cellX + 0.5, cellY + 0.5, modifiers);
 
-    public void MouseUp(int cellX, int cellY) => MouseUp(cellX + 0.5, cellY + 0.5);
+    public void MouseUp(int cellX, int cellY, ConsoleModifiers modifiers = 0) => MouseUp(cellX + 0.5, cellY + 0.5, modifiers);
 
-    public void MouseMove(int cellX, int cellY) => MouseMove(cellX + 0.5, cellY + 0.5);
+    public void MouseMove(int cellX, int cellY, ConsoleModifiers modifiers = 0) => MouseMove(cellX + 0.5, cellY + 0.5, modifiers);
 
     /// <summary>Cell coordinates may be fractional; hosts with pixel-precision input should
-    /// prefer these overloads so drags (e.g. scrollbar thumbs) get sub-cell resolution.</summary>
-    public void MouseDown(double cellX, double cellY) => SendMouse(cellX, cellY, UIElement.MouseDownEvent);
+    /// prefer these overloads so drags (e.g. scrollbar thumbs) get sub-cell resolution.
+    /// <paramref name="modifiers"/> carries the keyboard modifiers held at the time, which
+    /// list controls need for Shift/Control click selection gestures.</summary>
+    public void MouseDown(double cellX, double cellY, ConsoleModifiers modifiers = 0) => SendMouse(cellX, cellY, UIElement.MouseDownEvent, modifiers);
 
-    public void MouseUp(double cellX, double cellY) => SendMouse(cellX, cellY, UIElement.MouseUpEvent);
+    public void MouseUp(double cellX, double cellY, ConsoleModifiers modifiers = 0) => SendMouse(cellX, cellY, UIElement.MouseUpEvent, modifiers);
 
     /// <summary>
     /// Forwards a move only when the hovered cell changed, to avoid flooding the TUI.
     /// While an element holds mouse capture (a drag is in progress), every sub-cell
     /// change is forwarded instead so fine-grained drag tracking works.
     /// </summary>
-    public void MouseMove(double cellX, double cellY)
+    public void MouseMove(double cellX, double cellY, ConsoleModifiers modifiers = 0)
     {
         int cx = (int)Math.Floor(cellX);
         int cy = (int)Math.Floor(cellY);
@@ -186,24 +188,25 @@ public sealed class TuiSurfaceController
         _lastMouseCellY = cy;
         _lastMouseXF = cellX;
         _lastMouseYF = cellY;
-        SendMouse(cellX, cellY, UIElement.MouseMoveEvent);
+        SendMouse(cellX, cellY, UIElement.MouseMoveEvent, modifiers);
     }
 
-    private void SendMouse(double cellX, double cellY, RoutedEvent routedEvent)
+    private void SendMouse(double cellX, double cellY, RoutedEvent routedEvent, ConsoleModifiers modifiers)
     {
         _window?.ProcessMouse(new MouseEventArgs(routedEvent)
         {
             GlobalX = (int)Math.Floor(cellX),
             GlobalY = (int)Math.Floor(cellY),
             GlobalXF = cellX,
-            GlobalYF = cellY
+            GlobalYF = cellY,
+            Modifiers = modifiers
         });
     }
 
-    public void MouseWheel(int cellX, int cellY, int delta) => MouseWheel(cellX + 0.5, cellY + 0.5, delta);
+    public void MouseWheel(int cellX, int cellY, int delta, ConsoleModifiers modifiers = 0) => MouseWheel(cellX + 0.5, cellY + 0.5, delta, modifiers);
 
     /// <summary>Forwards wheel rotation (WPF-style ±120 per notch) at the given cell position.</summary>
-    public void MouseWheel(double cellX, double cellY, int delta)
+    public void MouseWheel(double cellX, double cellY, int delta, ConsoleModifiers modifiers = 0)
     {
         _window?.ProcessMouse(new MouseWheelEventArgs
         {
@@ -211,6 +214,7 @@ public sealed class TuiSurfaceController
             GlobalY = (int)Math.Floor(cellY),
             GlobalXF = cellX,
             GlobalYF = cellY,
+            Modifiers = modifiers,
             Delta = delta
         });
     }

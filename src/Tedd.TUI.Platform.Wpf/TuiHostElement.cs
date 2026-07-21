@@ -532,7 +532,8 @@ public class TuiHostElement : FrameworkElement
             GlobalX = (int)fx,
             GlobalY = (int)fy,
             GlobalXF = fx,
-            GlobalYF = fy
+            GlobalYF = fy,
+            Modifiers = WpfKeyMapper.MapModifiers(WpfKeyboard.Modifiers)
         });
     }
 
@@ -548,6 +549,7 @@ public class TuiHostElement : FrameworkElement
             GlobalY = (int)fy,
             GlobalXF = fx,
             GlobalYF = fy,
+            Modifiers = WpfKeyMapper.MapModifiers(WpfKeyboard.Modifiers),
             Delta = e.Delta // WPF already reports ±120 per notch
         });
         e.Handled = true;

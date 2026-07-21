@@ -255,7 +255,7 @@ public class TuiHostControl : AvControl
             return;
         e.Pointer.Capture(this);
         var (cx, cy) = ToCell(point.Position);
-        _controller.MouseDown(cx, cy);
+        _controller.MouseDown(cx, cy, AvaloniaKeyMapper.MapModifiers(e.KeyModifiers));
         e.Handled = true;
     }
 
@@ -266,7 +266,7 @@ public class TuiHostControl : AvControl
             return;
         e.Pointer.Capture(null);
         var (cx, cy) = ToCell(e.GetPosition(this));
-        _controller.MouseUp(cx, cy);
+        _controller.MouseUp(cx, cy, AvaloniaKeyMapper.MapModifiers(e.KeyModifiers));
         e.Handled = true;
     }
 
@@ -274,7 +274,7 @@ public class TuiHostControl : AvControl
     {
         base.OnPointerMoved(e);
         var (cx, cy) = ToCell(e.GetPosition(this));
-        _controller.MouseMove(cx, cy);
+        _controller.MouseMove(cx, cy, AvaloniaKeyMapper.MapModifiers(e.KeyModifiers));
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
@@ -286,7 +286,7 @@ public class TuiHostControl : AvControl
         if (delta == 0)
             return;
         var (cx, cy) = ToCell(e.GetPosition(this));
-        _controller.MouseWheel(cx, cy, delta);
+        _controller.MouseWheel(cx, cy, delta, AvaloniaKeyMapper.MapModifiers(e.KeyModifiers));
         e.Handled = true;
     }
 

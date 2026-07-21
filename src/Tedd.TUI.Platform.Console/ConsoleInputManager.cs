@@ -173,6 +173,10 @@ public class ConsoleInputManager
                 int x = record.MouseEvent.dwMousePosition.X;
                 int y = record.MouseEvent.dwMousePosition.Y;
 
+                // Mouse records carry the same control key state as key records, so
+                // Shift/Control-modified clicks (list range/toggle selection) are known.
+                var mouseMods = GetModifiers(record.MouseEvent.dwControlKeyState);
+
                 if ((record.MouseEvent.dwEventFlags & NativeMethods.MOUSE_WHEELED) != 0)
                 {
                     // Wheel rotation is the signed high word of dwButtonState
@@ -183,6 +187,7 @@ public class ConsoleInputManager
                     {
                         GlobalX = x,
                         GlobalY = y,
+                        Modifiers = mouseMods,
                         Delta = wheelDelta
                     });
                     continue;
@@ -198,7 +203,8 @@ public class ConsoleInputManager
                 _window.ProcessMouse(new MouseEventArgs(UIElement.MouseMoveEvent)
                 {
                     GlobalX = x,
-                    GlobalY = y
+                    GlobalY = y,
+                    Modifiers = mouseMods
                 });
 
                 if (leftDown && !wasLeftDown)
@@ -206,7 +212,8 @@ public class ConsoleInputManager
                     _window.ProcessMouse(new MouseEventArgs(UIElement.MouseDownEvent)
                     {
                         GlobalX = x,
-                        GlobalY = y
+                        GlobalY = y,
+                        Modifiers = mouseMods
                     });
                 }
 
@@ -215,7 +222,8 @@ public class ConsoleInputManager
                     _window.ProcessMouse(new MouseEventArgs(UIElement.MouseUpEvent)
                     {
                         GlobalX = x,
-                        GlobalY = y
+                        GlobalY = y,
+                        Modifiers = mouseMods
                     });
                 }
             }
@@ -240,6 +248,19 @@ public class ConsoleInputManager
         if ((dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0) mod |= ConsoleModifiers.Alt;
         if ((dwControlKeyState & SHIFT_PRESSED) != 0) mod |= ConsoleModifiers.Shift;
         if ((dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0) mod |= ConsoleModifiers.Control;
+        return mod;
+    }
+
+    /// <summary>
+    /// Extracts the modifier bits an SGR mouse report carries in its button field:
+    /// 4 = shift, 8 = alt/meta, 16 = control.
+    /// </summary>
+    private static ConsoleModifiers GetSgrModifiers(int btn)
+    {
+        ConsoleModifiers mod = 0;
+        if ((btn & 4) != 0) mod |= ConsoleModifiers.Shift;
+        if ((btn & 8) != 0) mod |= ConsoleModifiers.Alt;
+        if ((btn & 16) != 0) mod |= ConsoleModifiers.Control;
         return mod;
     }
 
@@ -400,6 +421,13 @@ public class ConsoleInputManager
                 y -= 1;
                 bool isDown = (lastChar == 'M');
 
+                // Modifier bits 4 (shift), 8 (alt/meta) and 16 (control) ride along in
+                // Cb; strip them off before matching the button so a Shift- or
+                // Control-click still reports as a left click (list range/toggle
+                // selection) instead of being dropped as an unknown button.
+                var mods = GetSgrModifiers(btn);
+                btn &= ~28;
+
                 // Simple Left Click logic
                 if (btn == 0)
                 {
@@ -409,7 +437,8 @@ public class ConsoleInputManager
                     _window.ProcessMouse(new MouseEventArgs(routedEvent)
                     {
                         GlobalX = x,
-                        GlobalY = y
+                        GlobalY = y,
+                        Modifiers = mods
                     });
                 }
                 else if ((btn & 32) != 0 && btn < 64)
@@ -421,7 +450,8 @@ public class ConsoleInputManager
                     _window.ProcessMouse(new MouseEventArgs(UIElement.MouseMoveEvent)
                     {
                         GlobalX = x,
-                        GlobalY = y
+                        GlobalY = y,
+                        Modifiers = mods
                     });
                 }
                 else if ((btn == 64 || btn == 65) && isDown)
@@ -432,6 +462,7 @@ public class ConsoleInputManager
                     {
                         GlobalX = x,
                         GlobalY = y,
+                        Modifiers = mods,
                         Delta = btn == 64 ? MouseWheelEventArgs.WheelNotch : -MouseWheelEventArgs.WheelNotch
                     });
                 }

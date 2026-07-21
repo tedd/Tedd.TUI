@@ -195,24 +195,24 @@ public sealed class TuiSkiaHost : IDisposable
     }
 
     /// <summary>Forwards a left-button press at a pixel position.</summary>
-    public void MouseDown(float pixelX, float pixelY)
+    public void MouseDown(float pixelX, float pixelY, ConsoleModifiers modifiers = 0)
     {
         var (cx, cy) = ToCell(pixelX, pixelY);
-        _controller.MouseDown(cx, cy);
+        _controller.MouseDown(cx, cy, modifiers);
     }
 
     /// <summary>Forwards a left-button release at a pixel position.</summary>
-    public void MouseUp(float pixelX, float pixelY)
+    public void MouseUp(float pixelX, float pixelY, ConsoleModifiers modifiers = 0)
     {
         var (cx, cy) = ToCell(pixelX, pixelY);
-        _controller.MouseUp(cx, cy);
+        _controller.MouseUp(cx, cy, modifiers);
     }
 
     /// <summary>Forwards a pointer move at a pixel position (gated to cell changes).</summary>
-    public void MouseMove(float pixelX, float pixelY)
+    public void MouseMove(float pixelX, float pixelY, ConsoleModifiers modifiers = 0)
     {
         var (cx, cy) = ToCell(pixelX, pixelY);
-        _controller.MouseMove(cx, cy);
+        _controller.MouseMove(cx, cy, modifiers);
     }
 
     /// <summary>Forwards a key event to the hosted window.</summary>
