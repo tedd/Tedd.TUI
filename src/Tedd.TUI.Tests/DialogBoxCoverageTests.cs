@@ -167,6 +167,9 @@ public class DialogBoxCoverageTests
         var dialog = new DialogBox();
         dialog.Width = 50;
         dialog.Height = 50;
+        // Disable auto-scroll for this test: it's checking that explicit dimensions
+        // clamp the content's available space, not the overflow/scrollbar behavior.
+        dialog.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
         var content = new TestElement();
         dialog.Content = content;
@@ -190,6 +193,10 @@ public class DialogBoxCoverageTests
         var dialog = new DialogBox();
         dialog.Width = 50;
         dialog.Height = 30;
+        // Disable auto-scroll: with it enabled, TestElement's pass-through
+        // MeasureOverride would report an unbounded (int.MaxValue) desired height
+        // and get arranged at that size instead of the clamped viewport.
+        dialog.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
 
         var content = new TestElement();
         dialog.Content = content;
@@ -395,5 +402,41 @@ public class DialogBoxCoverageTests
 
         Assert.False(dialog.Visibility);
         Assert.Null(window.Overlay);
+    }
+
+    [Fact]
+    public void VerticalScrollBarVisibility_DefaultsToAuto_ShownWhenContentOverflowsFixedHeight()
+    {
+        // Regression test: a DialogBox with an explicit Height too small for its
+        // content used to let the content render straight through the bottom
+        // border instead of being clipped or scrolled.
+        var dialog = new DialogBox { Width = 20, Height = 8 };
+        var content = new TestElement { Width = 10, Height = 30 };
+        dialog.Content = content;
+
+        dialog.Measure(new Size(100, 100));
+
+        Assert.True(dialog.IsVerticalScrollBarShown);
+        Assert.Equal(8, dialog.DesiredSize.Height); // still clamped to the explicit Height
+
+        dialog.Arrange(new Rect(0, 0, 20, 8));
+
+        var buffer = new VirtualBuffer(20, 8);
+        dialog.Render(buffer, 0, 0);
+
+        // The bottom border row must remain the border, not content bleeding through.
+        Assert.Equal(BoxDrawingChars.Get(BoxStyle.Double).BottomLeft, buffer.GetPixel(0, 7).Character);
+    }
+
+    [Fact]
+    public void VerticalScrollBarVisibility_ContentFits_NoScrollBarShown()
+    {
+        var dialog = new DialogBox { Width = 20, Height = 20 };
+        var content = new TestElement { Width = 10, Height = 5 };
+        dialog.Content = content;
+
+        dialog.Measure(new Size(100, 100));
+
+        Assert.False(dialog.IsVerticalScrollBarShown);
     }
 }

@@ -78,7 +78,10 @@ public class WindowPaddingTests
     public void DialogBox_Padding_Insets_Content()
     {
         var child = new MeasuringChild();
-        var dialog = new DialogBox { Width = 20, Height = 10, Content = child, Padding = new Thickness(2) };
+        // Disable auto-scroll: this test checks the padding-inset arithmetic fed to
+        // Content.Measure, not overflow/scrollbar behavior (which measures the
+        // scrollable axis unconstrained by design).
+        var dialog = new DialogBox { Width = 20, Height = 10, Content = child, Padding = new Thickness(2), VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
 
         dialog.Measure(new Size(50, 50));
         dialog.Arrange(new Rect(0, 0, 20, 10));

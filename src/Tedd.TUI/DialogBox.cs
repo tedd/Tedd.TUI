@@ -5,32 +5,15 @@ namespace Tedd.TUI;
 /// <summary>
 /// A modal dialog box control with a border, title bar, and content container.
 /// Can be shown/hidden using the Visibility property.
+///
+/// Extends <see cref="ScrollViewer"/> so that content taller (or wider) than the
+/// dialog's frame gets a scrollbar instead of silently overflowing past the border.
+/// By default the vertical scrollbar is <see cref="ScrollBarVisibility.Auto"/> (shown
+/// only when content overflows); the horizontal one is <see cref="ScrollBarVisibility.Disabled"/>,
+/// matching the common case of a dialog that is too short but sized to the right width.
 /// </summary>
-public class DialogBox : UIElement, IModalOverlay
+public class DialogBox : ScrollViewer, IModalOverlay
 {
-    /// <summary>
-    /// Gets or sets the content element displayed inside the dialog.
-    /// </summary>
-    public UIElement Content
-    {
-        get;
-        set
-        {
-            field = value;
-            if (field != null)
-            {
-                field.Parent = this;
-            }
-        }
-    }
-    public override int VisualChildrenCount => Content != null ? 1 : 0;
-
-    public override UIElement GetVisualChild(int index)
-    {
-        if (Content != null && index == 0) return Content;
-        throw new ArgumentOutOfRangeException(nameof(index));
-    }
-
     /// <summary>
     /// Title displayed in the dialog's title bar.
     /// </summary>
@@ -105,39 +88,118 @@ public class DialogBox : UIElement, IModalOverlay
         set => SetValue(PaddingProperty, value);
     }
 
+    public DialogBox()
+    {
+        VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+        HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+        UpdateScrollBarStyle();
+    }
+
+    private void UpdateScrollBarStyle()
+    {
+        var chars = BoxDrawingChars.Get(BoxStyle);
+        var borderColor = BorderColor;
+
+        // Scrollbars overlay the border line itself (like Border), so they don't
+        // steal a row/column of content space and read as part of the frame.
+        _verticalScrollBar.TrackChar = chars.Vertical;
+        _verticalScrollBar.Foreground = borderColor;
+        _verticalScrollBar.Background = null;
+
+        _horizontalScrollBar.TrackChar = chars.Horizontal;
+        _horizontalScrollBar.Foreground = borderColor;
+        _horizontalScrollBar.Background = null;
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
-        // If Width/Height explicitly set, use those; otherwise measure content
-        int desiredWidth = Width > 0 ? Width : 40;
-        int desiredHeight = Height > 0 ? Height : 10;
+        UpdateScrollBarStyle();
 
         Thickness padding = Padding;
         int insetW = 2 + padding.Left + padding.Right;
         int insetH = 2 + padding.Top + padding.Bottom;
 
+        // The frame this dialog is allowed to occupy in each axis: an explicit
+        // Width/Height when set, otherwise bounded by the available space so an
+        // auto-sized dialog grows with its content but never exceeds the screen.
+        int frameW = Width > 0 ? Width : availableSize.Width;
+        int frameH = Height > 0 ? Height : availableSize.Height;
+
+        int viewportContentW = Math.Max(0, frameW - insetW);
+        int viewportContentH = Math.Max(0, frameH - insetH);
+
+        Size contentAvailable = new Size(viewportContentW, viewportContentH);
+        if (VerticalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Height = int.MaxValue;
+        if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Width = int.MaxValue;
+
+        Size contentSize = new Size(0, 0);
         if (Content != null)
         {
-            // Border takes 1 on each side, plus the configured padding
-            Size contentAvailable = new Size(
-                Math.Max(0, desiredWidth - insetW),
-                Math.Max(0, desiredHeight - insetH)
-            );
-
             Content.Measure(contentAvailable);
-            Size contentSize = Content.DesiredSize;
+            contentSize = Content.DesiredSize;
+        }
 
-            // If not explicit size, calculate from content
-            if (Width <= 0)
-            {
-                // Content width + border + padding, or at least the title
-                int titleWidth = (Title?.Length ?? 0) + 4; // [ Title ] padding
-                desiredWidth = Math.Max(contentSize.Width + insetW, titleWidth);
-            }
+        bool showVertical = VerticalScrollBarVisibility switch
+        {
+            ScrollBarVisibility.Visible => true,
+            ScrollBarVisibility.Auto => contentSize.Height > viewportContentH,
+            _ => false
+        };
+        bool showHorizontal = HorizontalScrollBarVisibility switch
+        {
+            ScrollBarVisibility.Visible => true,
+            ScrollBarVisibility.Auto => contentSize.Width > viewportContentW,
+            _ => false
+        };
 
-            if (Height <= 0)
-            {
-                desiredHeight = contentSize.Height + insetH;
-            }
+        SetResolvedScrollBarVisibility(showVertical, showHorizontal);
+
+        if (showVertical)
+        {
+            int viewport = Math.Max(1, viewportContentH);
+            _verticalScrollBar.ViewportSize = viewport;
+            _verticalScrollBar.Maximum = Math.Max(0, contentSize.Height - viewport);
+            _verticalScrollBar.Minimum = 0;
+            _verticalScrollBar.Measure(new Size(1, Math.Max(0, frameH - 2)));
+        }
+
+        if (showHorizontal)
+        {
+            int viewport = Math.Max(1, viewportContentW);
+            _horizontalScrollBar.ViewportSize = viewport;
+            _horizontalScrollBar.Maximum = Math.Max(0, contentSize.Width - viewport);
+            _horizontalScrollBar.Minimum = 0;
+            _horizontalScrollBar.Measure(new Size(Math.Max(0, frameW - 2), 1));
+        }
+
+        int desiredWidth;
+        int desiredHeight;
+
+        if (Width > 0)
+        {
+            desiredWidth = Width;
+        }
+        else if (Content != null)
+        {
+            int titleWidth = (Title?.Length ?? 0) + 4; // [ Title ] padding
+            desiredWidth = Math.Max(Math.Min(contentSize.Width + insetW, availableSize.Width), titleWidth);
+        }
+        else
+        {
+            desiredWidth = 40;
+        }
+
+        if (Height > 0)
+        {
+            desiredHeight = Height;
+        }
+        else if (Content != null)
+        {
+            desiredHeight = Math.Min(contentSize.Height + insetH, availableSize.Height);
+        }
+        else
+        {
+            desiredHeight = 10;
         }
 
         return new Size(desiredWidth, desiredHeight);
@@ -145,16 +207,39 @@ public class DialogBox : UIElement, IModalOverlay
 
     protected override void ArrangeOverride(Size finalSize)
     {
+        int w = finalSize.Width;
+        int h = finalSize.Height;
+
+        Thickness padding = Padding;
+
         if (Content != null)
         {
-            // Content area: inside the border (1 from each edge) plus padding
-            Thickness padding = Padding;
-            Content.Arrange(new Rect(
-                1 + padding.Left,
-                1 + padding.Top,
-                Math.Max(0, finalSize.Width - 2 - padding.Left - padding.Right),
-                Math.Max(0, finalSize.Height - 2 - padding.Top - padding.Bottom)
-            ));
+            int viewportW = Math.Max(0, w - 2 - padding.Left - padding.Right);
+            int viewportH = Math.Max(0, h - 2 - padding.Top - padding.Bottom);
+
+            // When an axis is Disabled we clamp the content's arrange rect to the
+            // viewport; when scrollable, arrange it at its full natural size so it
+            // can be scrolled, and Render clips + offsets it into the viewport.
+            int arrangeW = (HorizontalScrollBarVisibility == ScrollBarVisibility.Disabled)
+                ? viewportW
+                : Math.Max(viewportW, Content.DesiredSize.Width);
+            int arrangeH = (VerticalScrollBarVisibility == ScrollBarVisibility.Disabled)
+                ? viewportH
+                : Math.Max(viewportH, Content.DesiredSize.Height);
+
+            Content.Arrange(new Rect(1 + padding.Left, 1 + padding.Top, arrangeW, arrangeH));
+        }
+
+        if (IsVerticalScrollBarShown)
+        {
+            int vHeight = Math.Max(0, h - 2);
+            _verticalScrollBar.Arrange(new Rect(w - 1, 1, 1, vHeight));
+        }
+
+        if (IsHorizontalScrollBarShown)
+        {
+            int hWidth = Math.Max(0, w - 2);
+            _horizontalScrollBar.Arrange(new Rect(1, h - 1, hWidth, 1));
         }
     }
 
@@ -234,10 +319,27 @@ public class DialogBox : UIElement, IModalOverlay
             buffer.SetPixel(x + w - 1, y + i, chars.Vertical, borderColor, bgColor);
         }
 
-        // Render content
+        // Scrollbars overlay the border lines -- only when resolved as shown in MeasureOverride.
+        if (IsVerticalScrollBarShown)
+            _verticalScrollBar.Render(buffer, x, y);
+
+        if (IsHorizontalScrollBarShown)
+            _horizontalScrollBar.Render(buffer, x, y);
+
+        // Render content, clipped to the padded content area and scrolled by the
+        // scrollbar offsets so overflowing content never bleeds past the frame.
         if (Content != null)
         {
-            Content.Render(buffer, x, y);
+            Thickness padding = Padding;
+            buffer.PushClip(new Rect(
+                x + 1 + padding.Left,
+                y + 1 + padding.Top,
+                Math.Max(0, w - 2 - padding.Left - padding.Right),
+                Math.Max(0, h - 2 - padding.Top - padding.Bottom)));
+
+            Content.Render(buffer, x - HorizontalOffset, y - VerticalOffset);
+
+            buffer.PopClip();
         }
     }
 
