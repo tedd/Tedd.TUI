@@ -307,7 +307,7 @@ public class FileDialogTests : IDisposable
     public void PresetFileName_PrefillsNameBox()
     {
         var host = CreateHost();
-        var dialog = new SaveFileDialog { InitialDirectory = _root, FileName = @"somewhere\preset.txt" };
+        var dialog = new SaveFileDialog { InitialDirectory = _root, FileName = Path.Combine("somewhere", "preset.txt") };
         dialog.ShowDialog(host);
 
         Assert.Equal("preset.txt", GetNameBox(dialog).Text);
@@ -330,5 +330,33 @@ public class FileDialogTests : IDisposable
         Assert.Equal(0, activated);
         list.OnMouseDown(new MouseEventArgs { X = 2, Y = 1 });
         Assert.Equal(1, activated);
+    }
+
+    [Theory]
+    [InlineData(null, 1)]
+    [InlineData("", 1)]
+    [InlineData("   ", 1)]
+    [InlineData("|", 1)]
+    [InlineData("a|b|c|d|e", 2)]
+    public void ParseFilter_BoundaryConditions(string? filter, int expectedCount)
+    {
+        var filters = FileDialog.ParseFilter(filter);
+        Assert.Equal(expectedCount, filters.Count);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("InvalidPathXYZ123")]
+    [InlineData("\0")]
+    public void NavigateTo_InvalidOrEmptyPath_IgnoresSilently(string path)
+    {
+        var dialog = new OpenFileDialog { InitialDirectory = _root };
+        // The dialog must be shown or CurrentDirectory initialized via Show logic,
+        // but since we are testing NavigateTo directly, CurrentDirectory is initially empty.
+        dialog.NavigateTo(path);
+
+        // Assert that CurrentDirectory remains completely untouched (empty string)
+        Assert.Equal(string.Empty, dialog.CurrentDirectory);
     }
 }
