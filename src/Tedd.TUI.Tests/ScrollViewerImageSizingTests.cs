@@ -166,8 +166,10 @@ public class ScrollViewerImageSizingTests
         border.Measure(new Size(70, 15));
         border.Arrange(new Rect(0, 0, 70, 15));
 
-        // Two border columns + Border's default one-cell padding on each side = 6 reserved.
-        Assert.True(img.RenderSize.Width <= 64,
-            $"image width {img.RenderSize.Width} exceeds the 64-cell interior");
+        // Border.MeasureOverride's insetW is 2 (border columns) + Padding.Left + Padding.Right;
+        // Padding defaults to Thickness(1), so 2 + 1 + 1 = 4 reserved, not the border-plus-padding
+        // total on each side -- 70 - 4 = 66.
+        Assert.True(img.RenderSize.Width <= 66,
+            $"image width {img.RenderSize.Width} exceeds the 66-cell interior");
     }
 }
