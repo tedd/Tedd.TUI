@@ -156,6 +156,18 @@ public class BlazorTuiApp : IDisposable
             {
                 Console.WriteLine($"TUI Loop Error: {ex}");
             }
+
+            // Always hand the thread back to the browser before the next frame.
+            //
+            // On WebAssembly this loop shares the single UI thread with the browser, and
+            // `await` on an already-completed task resumes *synchronously*. The semaphore
+            // is signalled by every invalidation, so a frame whose own rendering triggers
+            // another invalidation makes WaitAsync complete immediately, and the loop
+            // spins without the event loop ever running again: no input, no timers, no
+            // console output, no repaint — the tab appears hung rather than merely busy.
+            // Yielding through a timer guarantees a browser turn per frame, so a
+            // re-invalidating frame costs frame rate instead of freezing the page.
+            await Task.Delay(1).ConfigureAwait(false);
         }
     }
 
