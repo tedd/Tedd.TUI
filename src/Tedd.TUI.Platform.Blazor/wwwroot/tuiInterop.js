@@ -65,6 +65,11 @@ window.tuiInterop = {
 
         document.body.removeChild(div);
 
+        // Keep our own copy in sync so any caller that doesn't pass explicit metrics
+        // (e.g. listenForResize's fallback) uses the measured size, not the defaults.
+        this.charWidth = w;
+        this.charHeight = h;
+
         return { charWidth: w, charHeight: h };
     },
 
@@ -185,15 +190,22 @@ window.tuiInterop = {
         }
     },
 
-    listenForResize: function (dotnetHelper, canvasId) {
+    listenForResize: function (dotnetHelper, canvasId, cellWidth, cellHeight) {
+        // The caller passes the cell metrics the renderer actually draws with; only fall
+        // back to our own measurements when they are absent (older callers). Deriving the
+        // grid from a different cell size than the renderer uses makes the drawn surface
+        // disagree with the requested column/row count.
+        const cw = (cellWidth > 0) ? cellWidth : this.charWidth;
+        const chh = (cellHeight > 0) ? cellHeight : this.charHeight;
+
         const resizeHandler = () => {
             // We default to full window for now, as TUI is usually full screen.
             // Ideally we'd use the container size, but that requires the container to have explicit size.
             const w = window.innerWidth;
             const h = window.innerHeight;
 
-            const cols = Math.floor(w / this.charWidth);
-            const rows = Math.floor(h / this.charHeight);
+            const cols = Math.floor(w / cw);
+            const rows = Math.floor(h / chh);
 
             // Only notify if valid
             if (cols > 0 && rows > 0) {
@@ -233,13 +245,27 @@ window.tuiInterop = {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        const onMove = (e) => {
-            // We need coordinates relative to container
-            const rect = container.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+        // Coalesce mousemove to at most one .NET call per animation frame. Raw mouse
+        // events arrive at 60-120Hz; forwarding each one triggers a TUI re-render and
+        // the queue outruns the renderer, freezing the page during drags/selection.
+        // requestAnimationFrame also gives natural backpressure: while WASM hogs the
+        // main thread no frames are produced, so no further moves pile up.
+        let pendingMove = null;
+        let moveScheduled = false;
 
-            dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mousemove', x, y);
+        const onMove = (e) => {
+            pendingMove = { clientX: e.clientX, clientY: e.clientY };
+            if (moveScheduled) return;
+            moveScheduled = true;
+            requestAnimationFrame(() => {
+                moveScheduled = false;
+                if (!pendingMove || !this.globalMouseState) return;
+                const rect = container.getBoundingClientRect();
+                const x = pendingMove.clientX - rect.left;
+                const y = pendingMove.clientY - rect.top;
+                pendingMove = null;
+                dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mousemove', x, y);
+            });
         };
 
         const onUp = (e) => {

@@ -7,7 +7,7 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-<div id="@ContainerId" tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='OnMouseDownInternal' style="outline:none; display: inline-block;">
+<div id="@ContainerId" tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='OnMouseDownInternal' @onwheel="OnWheel" style="outline:none; display: inline-block;">
     @if (Mode == TuiRenderMode.Canvas)
     {
         <canvas id="@CanvasId"></canvas>
@@ -67,7 +67,14 @@
             await StartAppAsync();
             
             if (_objRef == null) _objRef = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("tuiInterop.listenForResize", _objRef, CanvasId);
+
+            // Hand JS the same cell metrics the renderer resolved. When JS guesses its own
+            // (its defaults) the grid it asks for doesn't match the grid we draw: too few
+            // columns leaves dead space, too many pushes the right-hand scrollbar column
+            // outside the viewport where it can't be seen or clicked.
+            int cellW = _app?.InputManager.CharWidth ?? 10;
+            int cellH = _app?.InputManager.CharHeight ?? 18;
+            await JS.InvokeVoidAsync("tuiInterop.listenForResize", _objRef, CanvasId, cellW, cellH);
         }
     }
 
@@ -98,7 +105,7 @@
             // If DOM mode, we need to trigger a re-render to pass the renderer reference to TuiDomGrid
             if (Mode == TuiRenderMode.Dom)
             {
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
         }
     }
@@ -120,7 +127,7 @@
             Width = cols;
             Height = rows;
             _app?.OnResize(cols, rows);
-            StateHasChanged();
+            _ = InvokeAsync(StateHasChanged);
         }
     }
 
@@ -128,6 +135,8 @@
 
     private void OnKeyDown(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, true);
     private void OnKeyUp(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, false);
+
+    private void OnWheel(WheelEventArgs e) => _app?.InputManager.QueueWheel(e);
     
     private void OnMouseDownInternal(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
     {

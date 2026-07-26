@@ -49,6 +49,54 @@ public class BlazorInputManager
         InputAvailable?.Invoke();
     }
 
+    /// <summary>
+    /// Queues a browser wheel event as a TUI <see cref="MouseWheelEventArgs"/> so
+    /// <see cref="ScrollViewer"/>/<see cref="Controls.Primitives.ScrollBar"/> under the
+    /// pointer scroll. Browser deltas are normalized to the WPF convention Tedd.TUI uses
+    /// everywhere else: ±<see cref="MouseWheelEventArgs.WheelNotch"/> (120) per physical
+    /// notch, positive when scrolling up/away from the user.
+    /// </summary>
+    public void QueueWheel(WheelEventArgs e)
+    {
+        // DeltaY is positive when scrolling down, opposite of the TUI/WPF sign convention.
+        int delta = -(int)Math.Round(NormalizeWheelDelta(e.DeltaY, e.DeltaMode));
+        if (delta == 0)
+            return;
+
+        double fx = e.OffsetX / CharWidth;
+        double fy = e.OffsetY / CharHeight;
+
+        _eventQueue.Enqueue(() =>
+        {
+            _window.ProcessMouse(new MouseWheelEventArgs(UIElement.MouseWheelEvent)
+            {
+                GlobalX = (int)fx,
+                GlobalY = (int)fy,
+                GlobalXF = fx,
+                GlobalYF = fy,
+                Modifiers = GetModifiers(e),
+                Delta = delta
+            });
+        });
+        InputAvailable?.Invoke();
+    }
+
+    /// <summary>
+    /// Converts a <c>WheelEvent</c> delta into TUI notch units. <c>deltaMode</c> varies by
+    /// browser and device — Chrome reports pixels, Firefox commonly reports lines — so each
+    /// mode is scaled by how much one notch means in that unit. Fractional results are
+    /// intentional: consumers accumulate them, so trackpads still scroll smoothly.
+    /// </summary>
+    internal static double NormalizeWheelDelta(double delta, long deltaMode) => deltaMode switch
+    {
+        // Lines: browsers send one notch as the system "lines per notch" setting (3 by default).
+        1 => delta / 3.0 * MouseWheelEventArgs.WheelNotch,
+        // Pages: one notch is a full page.
+        2 => delta * MouseWheelEventArgs.WheelNotch,
+        // Pixels: ~100 CSS px per notch is what Chrome/Edge emit.
+        _ => delta / 100.0 * MouseWheelEventArgs.WheelNotch
+    };
+
     public void QueueMouse(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, string type)
     {
         // Map pixel to cell
@@ -78,6 +126,15 @@ public class BlazorInputManager
     }
 
     private ConsoleModifiers GetModifiers(KeyboardEventArgs e)
+    {
+        ConsoleModifiers m = 0;
+        if (e.CtrlKey) m |= ConsoleModifiers.Control;
+        if (e.ShiftKey) m |= ConsoleModifiers.Shift;
+        if (e.AltKey) m |= ConsoleModifiers.Alt;
+        return m;
+    }
+
+    private static ConsoleModifiers GetModifiers(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
     {
         ConsoleModifiers m = 0;
         if (e.CtrlKey) m |= ConsoleModifiers.Control;
