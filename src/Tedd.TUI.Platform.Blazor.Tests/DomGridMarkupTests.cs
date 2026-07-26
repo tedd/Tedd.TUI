@@ -212,6 +212,51 @@ public class DomGridMarkupTests
     }
 
     [Fact]
+    public void Image_UnclippedPlacementIsASingleTag()
+    {
+        var g = new GraphicPlacement { CharX = 1, CharY = 2, CharWidth = 4, CharHeight = 3 };
+
+        string html = DomGridMarkup.ImageHtml(g, "data:image/png;base64,AA==", CharWidth, CharHeight);
+
+        Assert.StartsWith("<img", html);
+        Assert.DoesNotContain("tui-graphic-clip", html);
+        Assert.Contains("left:10px", html);
+        Assert.Contains("top:36px", html);
+    }
+
+    [Fact]
+    public void Image_ClippedPlacementIsCroppedNotSquashed()
+    {
+        // Six rows tall starting two rows above a viewport that begins at row 4: the top four
+        // rows are hidden and the bottom four show.
+        var g = new GraphicPlacement
+        {
+            CharX = 0,
+            CharY = 2,
+            CharWidth = 4,
+            CharHeight = 6,
+            IsClipped = true,
+            ClipCharX = 0,
+            ClipCharY = 4,
+            ClipCharWidth = 4,
+            ClipCharHeight = 4,
+        };
+
+        string html = DomGridMarkup.ImageHtml(g, "data:image/png;base64,AA==", CharWidth, CharHeight);
+
+        // A clipping box over the visible region only...
+        Assert.Contains("tui-graphic-clip", html);
+        Assert.Contains("top:72px", html);     // clip starts at row 4
+        Assert.Contains("height:72px", html);  // and is four rows tall
+        Assert.Contains("overflow:hidden", html);
+
+        // ...with the image at full height, offset back to where it really starts, so it is
+        // cropped rather than scaled down into the visible strip.
+        Assert.Contains("height:108px", html); // the whole six rows
+        Assert.Contains("top:-36px", html);    // two rows above the clip box
+    }
+
+    [Fact]
     public void Document_IsWellFormedWithoutPanes()
     {
         var buffer = new VirtualBuffer(4, 2);

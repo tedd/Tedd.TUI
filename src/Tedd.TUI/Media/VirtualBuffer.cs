@@ -105,6 +105,57 @@ public class VirtualBuffer
         Clear();
     }
 
+    // Intent: make the clip stack apply to bitmaps, not just to text cells.
+    // Why:
+    // - SetPixel and friends reject writes outside the clip, but graphics placements used to be
+    //   appended straight to the list, so an image inside a ScrollViewer was drawn at its
+    //   absolute position no matter where the viewport was. Scrolling one out of view left it
+    //   painted over whatever surrounded the viewport, scrollbars included.
+    // Constraints/Invariants:
+    // - The placement keeps its full rectangle; only ClipChar* narrows. A surface that ignores
+    //   the clip fields therefore behaves exactly as it did before, and one that honours them
+    //   crops rather than squashes, so the bitmap keeps its aspect ratio.
+    // - _currentClip is the whole buffer when nothing is pushed, so this also stops a placement
+    //   spilling past the surface edge.
+    // Failure modes:
+    // - A surface that reads ClipChar* without checking IsClipped would crop everything to
+    //   (0,0,0,0), since those fields are only populated when the clip actually cuts.
+    // Verification: src/Tedd.TUI.Tests/GraphicClippingTests.cs
+    /// <summary>
+    /// Adds a bitmap placement, clipped to the active clip rectangle. Placements entirely
+    /// outside it are dropped; partly visible ones are marked
+    /// <see cref="GraphicPlacement.IsClipped"/> with the visible region.
+    /// </summary>
+    /// <returns>True when the placement was added, false when it was invisible or the surface has no graphics channel.</returns>
+    public bool AddGraphic(GraphicPlacement placement)
+    {
+        var graphics = Graphics;
+        if (graphics == null) return false;
+        if (placement.CharWidth <= 0 || placement.CharHeight <= 0) return false;
+
+        int left = Math.Max(placement.CharX, _currentClip.X);
+        int top = Math.Max(placement.CharY, _currentClip.Y);
+        int right = Math.Min(placement.CharX + placement.CharWidth, _currentClip.X + _currentClip.Width);
+        int bottom = Math.Min(placement.CharY + placement.CharHeight, _currentClip.Y + _currentClip.Height);
+
+        if (right <= left || bottom <= top)
+            return false; // Entirely outside the viewport: nothing to draw.
+
+        if (left != placement.CharX || top != placement.CharY
+            || right != placement.CharX + placement.CharWidth
+            || bottom != placement.CharY + placement.CharHeight)
+        {
+            placement.IsClipped = true;
+            placement.ClipCharX = left;
+            placement.ClipCharY = top;
+            placement.ClipCharWidth = right - left;
+            placement.ClipCharHeight = bottom - top;
+        }
+
+        graphics.Add(placement);
+        return true;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushClip(Rect clip)
     {

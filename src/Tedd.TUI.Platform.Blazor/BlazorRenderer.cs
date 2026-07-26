@@ -157,6 +157,13 @@ public class BlazorRenderer : IRenderer, IRendererAsync, ICapabilityProvider
         public int H { get; set; }
         public string? Key { get; set; }
         public string? Src { get; set; }
+
+        /// <summary>
+        /// Visible region as [x, y, w, h] in cells when a clip cut the placement; null when the
+        /// whole image shows. X/Y/W/H stay the full rectangle so the bitmap is cropped by the
+        /// canvas clip rather than squashed into the visible part.
+        /// </summary>
+        public int[]? Clip { get; set; }
     }
 
     private readonly Dictionary<byte[], string> _dataUrlCache = new(ReferenceEqualityComparer.Instance);
@@ -178,6 +185,9 @@ public class BlazorRenderer : IRenderer, IRendererAsync, ICapabilityProvider
                 H = g.CharHeight,
                 Key = g.Source ?? (g.ImageData != null ? RuntimeHelpers.GetHashCode(g.ImageData).ToString() : null),
                 Src = BuildDataUrl(g),
+                Clip = g.IsClipped
+                    ? new[] { g.ClipCharX, g.ClipCharY, g.ClipCharWidth, g.ClipCharHeight }
+                    : null,
             };
         }
         return payload;

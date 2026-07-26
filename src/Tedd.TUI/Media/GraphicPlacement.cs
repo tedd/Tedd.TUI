@@ -57,4 +57,28 @@ public struct GraphicPlacement
     /// may use it as a stable cache key or directly as an &lt;img src=...&gt; for HTTP URLs.
     /// </summary>
     public string? Source;
+
+    /// <summary>
+    /// True when only part of the placement is visible and the surface must crop it to
+    /// <see cref="ClipCharX"/>..<see cref="ClipCharHeight"/>. False means draw it whole.
+    /// </summary>
+    /// <remarks>
+    /// <para>Set by <see cref="VirtualBuffer.AddGraphic"/> when the active clip cuts the
+    /// placement — a scrolled image partly outside its viewport being the usual case. The
+    /// <see cref="CharX"/>/<see cref="CharY"/>/<see cref="CharWidth"/>/<see cref="CharHeight"/>
+    /// rectangle still describes the <em>whole</em> image, so the bitmap keeps its size and
+    /// aspect ratio and the clip only decides how much of it shows.</para>
+    /// <para>Leaving these fields alone therefore reproduces the historical behaviour exactly:
+    /// a surface that ignores them draws the full placement as it always did.</para>
+    /// </remarks>
+    public bool IsClipped;
+
+    /// <summary>Left edge of the visible region, in cells. Meaningful only when <see cref="IsClipped"/>.</summary>
+    public int ClipCharX;
+    /// <summary>Top edge of the visible region, in cells. Meaningful only when <see cref="IsClipped"/>.</summary>
+    public int ClipCharY;
+    /// <summary>Width of the visible region, in cells. Meaningful only when <see cref="IsClipped"/>.</summary>
+    public int ClipCharWidth;
+    /// <summary>Height of the visible region, in cells. Meaningful only when <see cref="IsClipped"/>.</summary>
+    public int ClipCharHeight;
 }

@@ -137,11 +137,33 @@ public sealed class DomGridMarkup
         + "px; will-change: transform; transform: translate(" + (-pane.OffsetX * charWidth)
         + "px, " + (-pane.OffsetY * charHeight) + "px);";
 
-    /// <summary>An absolutely positioned bitmap placement, in cell coordinates of its own buffer.</summary>
-    public static string ImageHtml(GraphicPlacement g, string src, int charWidth, int charHeight) =>
-        "<img src=\"" + src + "\" alt=\"\" style=\"position:absolute; left:" + (g.CharX * charWidth)
-        + "px; top:" + (g.CharY * charHeight) + "px; width:" + (g.CharWidth * charWidth)
-        + "px; height:" + (g.CharHeight * charHeight) + "px; pointer-events:none; image-rendering:auto;\" />";
+    /// <summary>
+    /// An absolutely positioned bitmap placement, in cell coordinates of its own buffer.
+    /// </summary>
+    /// <remarks>
+    /// A placement the clip stack cut — an image scrolled partly out of its viewport — is wrapped
+    /// in an <c>overflow: hidden</c> box covering the visible region, with the image offset back
+    /// to its true position inside it. The image keeps its full size, so it is cropped rather
+    /// than squashed and its aspect ratio survives.
+    /// </remarks>
+    public static string ImageHtml(GraphicPlacement g, string src, int charWidth, int charHeight)
+    {
+        string image =
+            "<img src=\"" + src + "\" alt=\"\" style=\"position:absolute; left:"
+            + ((g.IsClipped ? g.CharX - g.ClipCharX : g.CharX) * charWidth)
+            + "px; top:" + ((g.IsClipped ? g.CharY - g.ClipCharY : g.CharY) * charHeight)
+            + "px; width:" + (g.CharWidth * charWidth)
+            + "px; height:" + (g.CharHeight * charHeight)
+            + "px; pointer-events:none; image-rendering:auto;\" />";
+
+        if (!g.IsClipped)
+            return image;
+
+        return "<div class=\"tui-graphic-clip\" style=\"position:absolute; left:" + (g.ClipCharX * charWidth)
+             + "px; top:" + (g.ClipCharY * charHeight) + "px; width:" + (g.ClipCharWidth * charWidth)
+             + "px; height:" + (g.ClipCharHeight * charHeight)
+             + "px; overflow:hidden; pointer-events:none;\">" + image + "</div>";
+    }
 
     /// <summary>
     /// Resolves a placement to an &lt;img&gt; source: a cached data URI for raw bytes, or the

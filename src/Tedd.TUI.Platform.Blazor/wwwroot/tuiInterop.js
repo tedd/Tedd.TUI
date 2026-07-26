@@ -129,6 +129,25 @@ window.tuiInterop = {
         if (!ctx) return;
 
         const cache = this.imageCache;
+
+        // Draws the placement at its full size, restricted to its visible region when a clip
+        // cut it. Cropping rather than shrinking is what keeps a partly-scrolled image the same
+        // size as the rest of it.
+        const draw = function (ctxRef, img, p, cww, chh) {
+            try {
+                if (p.clip) {
+                    ctxRef.save();
+                    ctxRef.beginPath();
+                    ctxRef.rect(p.clip[0] * cww, p.clip[1] * chh, p.clip[2] * cww, p.clip[3] * chh);
+                    ctxRef.clip();
+                    ctxRef.drawImage(img, p.x * cww, p.y * chh, p.w * cww, p.h * chh);
+                    ctxRef.restore();
+                } else {
+                    ctxRef.drawImage(img, p.x * cww, p.y * chh, p.w * cww, p.h * chh);
+                }
+            } catch (e) { /* canvas may have been resized, or be in a transient bad state */ }
+        };
+
         for (let i = 0; i < placements.length; i++) {
             const p = placements[i];
             const key = p.key || p.src;
@@ -139,24 +158,20 @@ window.tuiInterop = {
                 const img = new Image();
                 entry = { img: img, src: p.src, loaded: false };
                 cache[key] = entry;
-                img.onload = (function (entryRef, canvasId, ctxRef, px, py, pw, ph, cww, chh) {
+                img.onload = (function (entryRef, ctxRef, placement, cww, chh) {
                     return function () {
                         entryRef.loaded = true;
                         // Once the image decodes we draw it once at the placement we
                         // captured at request time. Subsequent frames that re-request
                         // the same image hit the cache and draw synchronously below.
-                        try {
-                            ctxRef.drawImage(entryRef.img, px * cww, py * chh, pw * cww, ph * chh);
-                        } catch (e) { /* canvas may have been resized */ }
+                        draw(ctxRef, entryRef.img, placement, cww, chh);
                     };
-                })(entry, canvasId, ctx, p.x, p.y, p.w, p.h, cw, ch);
+                })(entry, ctx, p, cw, ch);
                 img.src = p.src;
             }
 
             if (entry.loaded) {
-                try {
-                    ctx.drawImage(entry.img, p.x * cw, p.y * ch, p.w * cw, p.h * ch);
-                } catch (e) { /* ignore intermittent canvas state errors */ }
+                draw(ctx, entry.img, p, cw, ch);
             }
         }
     },

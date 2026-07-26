@@ -284,7 +284,9 @@ public class Image : UIElement
         // <img src="data:..."> (HTML DOM, Kitty PNG-mode, iTerm2) consume ImageData;
         // surfaces that need raw pixels (Sixel quantizer, Canvas pixel blitter) consume
         // the decoded RGBA buffer without re-running the codec.
-        buffer.Graphics!.Add(new GraphicPlacement
+        // AddGraphic rather than Graphics.Add: it applies the clip stack, so an image scrolled
+        // out of its viewport stops being drawn over whatever surrounds it.
+        buffer.AddGraphic(new GraphicPlacement
         {
             CharX = x,
             CharY = y,
