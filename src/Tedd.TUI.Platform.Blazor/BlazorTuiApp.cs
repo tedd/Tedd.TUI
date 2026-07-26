@@ -76,9 +76,9 @@ public class BlazorTuiApp : IDisposable
 
     private async Task LoopAsync()
     {
-        try
+        while (_running)
         {
-            while (_running)
+            try
             {
                 // Wait for signal with timeout (100ms) for safety/polling backup
                 // We use WaitAsync to yield the thread.
@@ -147,14 +147,15 @@ public class BlazorTuiApp : IDisposable
                     }
                 }
             }
-        }
-        catch (ObjectDisposedException)
-        {
-            // Allowed during shutdown
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"TUI Loop Error: {ex}");
+            catch (ObjectDisposedException)
+            {
+                // Allowed during shutdown
+                break;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"TUI Loop Error: {ex}");
+            }
         }
     }
 

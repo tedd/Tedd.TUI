@@ -9,20 +9,45 @@ namespace Tedd.TUI.Imaging;
 /// </summary>
 public static class TuiImaging
 {
+    private static MagickNetDecoder? _decoder;
+    private static bool _decoderFailed;
+    private static FileImageResolver? _fileResolver;
+    private static HttpImageResolver? _httpResolver;
+
     /// <summary>
     /// The shared <see cref="IImageDecoder"/> instance configured by <see cref="RegisterDefaults"/>.
+    /// Returns null if MagickNetDecoder fails to initialize (e.g. in unsupported WebAssembly environments).
     /// </summary>
-    public static MagickNetDecoder Decoder { get; } = new MagickNetDecoder();
+    public static MagickNetDecoder? Decoder
+    {
+        get
+        {
+            if (_decoderFailed) return null;
+            if (_decoder == null)
+            {
+                try
+                {
+                    _decoder = new MagickNetDecoder();
+                }
+                catch
+                {
+                    _decoderFailed = true;
+                    return null;
+                }
+            }
+            return _decoder;
+        }
+    }
 
     /// <summary>
     /// The shared <see cref="FileImageResolver"/> instance configured by <see cref="RegisterDefaults"/>.
     /// </summary>
-    public static FileImageResolver FileResolver { get; } = new FileImageResolver();
+    public static FileImageResolver FileResolver => _fileResolver ??= new FileImageResolver();
 
     /// <summary>
     /// The shared <see cref="HttpImageResolver"/> used to fetch <c>http</c>/<c>https</c> sources.
     /// </summary>
-    public static HttpImageResolver HttpResolver { get; } = new HttpImageResolver();
+    public static HttpImageResolver HttpResolver => _httpResolver ??= new HttpImageResolver();
 
     /// <summary>
     /// Installs <see cref="Decoder"/> and a composite of
