@@ -7,7 +7,12 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-<div id="@ContainerId" tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='OnMouseDownInternal' @onwheel="OnWheel" style="outline:none; display: inline-block;">
+@* onmousedown:preventDefault stops the browser starting a native text selection or drag over
+   the surface. That gesture belongs to the TUI: once the browser claims it, dragging a
+   scrollbar smears a selection across the grid instead, and the browser stops delivering the
+   moves the drag needs. Focus normally comes from the same default action, so startGlobalDrag
+   takes it explicitly. *@
+<div id="@ContainerId" tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='OnMouseDownInternal' @onmousedown:preventDefault="true" @onwheel="OnWheel" style="outline:none; display: inline-block; user-select: none;">
     @if (Mode == TuiRenderMode.Canvas)
     {
         <canvas id="@CanvasId"></canvas>
@@ -111,6 +116,11 @@
             int cellW = _app?.InputManager.CharWidth ?? 10;
             int cellH = _app?.InputManager.CharHeight ?? 18;
             await JS.InvokeVoidAsync("tuiInterop.listenForResize", _objRef, CanvasId, cellW, cellH);
+
+            // Bare mouse moves have no other route into the TUI -- the drag tracker only runs
+            // while a button is held -- so without this IsMouseOver never updates and nothing
+            // that reacts to hover works.
+            await JS.InvokeVoidAsync("tuiInterop.startHoverTracking", _objRef, ContainerId);
         }
     }
 
@@ -196,40 +206,36 @@
     
     private void OnMouseDownInternal(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
     {
-        // Start global tracking for drag
+        // Tracks the pointer on the document for the rest of the gesture, so a drag keeps
+        // working past the edge of the surface. It also takes focus, which this element no
+        // longer receives on its own now that the mousedown default action is suppressed.
         if (_objRef != null)
         {
-            // Fire and forget or sync?
-            // JS interop is async usually.
-            // But we process this event now.
             JS.InvokeVoidAsync("tuiInterop.startGlobalDrag", _objRef, ContainerId);
         }
         _app?.InputManager.QueueMouse(e, "mousedown");
     }
 
+    /// <summary>
+    /// Receives pointer events JavaScript tracks outside Blazor's own handlers: moves and the
+    /// release during a drag, and bare moves for hover.
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="x"/>/<paramref name="y"/> arrive already relative to the surface
+    /// container, which is what <c>QueueMouse</c> reads out of <c>OffsetX</c>/<c>OffsetY</c>.
+    /// </remarks>
     [JSInvokable]
-    public void OnGlobalMouse(string type, double x, double y)
+    public void OnGlobalMouse(string type, double x, double y, long button, bool ctrlKey, bool shiftKey, bool altKey)
     {
-        // Construct a MouseEventArgs manually
-        // Note: Blazor's MouseEventArgs has many fields. We populate essential ones.
-        // x and y are relative to container (thanks to JS logic).
         var args = new Microsoft.AspNetCore.Components.Web.MouseEventArgs
         {
-            Type = type, // Note: standard MouseEventArgs doesn't have Type field usually used this way, but our QueueMouse takes type string separately.
-            ClientX = x, // QueueMouse likely uses OffsetX/Y logic or ClientX/Y mapping.
-                         // TuiApp.InputManager probably expects ClientX/Y?
-                         // Actually Blazor's MouseEventArgs OffsetX/Y are relative to target.
-                         // ClientX/Y are relative to viewport.
-                         // Our JS calculated x/y relative to container.
-                         // If InputManager uses OffsetX, we should map x/y to it.
-                         // Let's assume InputManager logic.
-            // Wait, if InputManager uses ClientX/Y and subtracts Element rect?
-            // If we pass x/y as ClientX/Y, InputManager might subtract AGAIN if it thinks it's global?
-            // BUT: We passed relative X/Y from JS.
-            // If InputManager expects relative X/Y in OffsetX/Y:
+            Type = type,
             OffsetX = x,
             OffsetY = y,
-            Button = 0 // Assume Left
+            Button = button,
+            CtrlKey = ctrlKey,
+            ShiftKey = shiftKey,
+            AltKey = altKey,
         };
 
         _app?.InputManager.QueueMouse(args, type);
@@ -246,12 +252,15 @@
     
     public async ValueTask DisposeAsync()
     {
-        try 
+        try
         {
             await JS.InvokeVoidAsync("tuiInterop.disposeResizeListener", CanvasId);
+            // The hover listener holds this component's DotNetObjectReference; leaving it
+            // attached keeps a disposed component reachable from the DOM.
+            await JS.InvokeVoidAsync("tuiInterop.stopHoverTracking", ContainerId);
         }
         catch {}
-        
+
         _app?.Dispose();
         _objRef?.Dispose();
     }

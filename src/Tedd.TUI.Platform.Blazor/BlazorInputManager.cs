@@ -97,11 +97,24 @@ public class BlazorInputManager
         _ => delta / 100.0 * MouseWheelEventArgs.WheelNotch
     };
 
+    /// <summary>
+    /// Queues a browser mouse event as the matching TUI routed event, mapping pixels to cells.
+    /// </summary>
+    /// <remarks>
+    /// Fractional cell coordinates are carried alongside the integer ones: a browser reports
+    /// pixels, and <see cref="Controls.Primitives.ScrollBar"/> maps a drag through
+    /// <c>GlobalXF</c>/<c>GlobalYF</c> so the thumb tracks the pointer smoothly instead of
+    /// snapping a whole cell at a time. Without them those properties fall back to the centre
+    /// of the integer cell — all a terminal can report, but a needless loss here.
+    /// </remarks>
     public void QueueMouse(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, string type)
     {
-        // Map pixel to cell
-        int x = (int)(e.OffsetX / CharWidth);
-        int y = (int)(e.OffsetY / CharHeight);
+        // Map pixel to cell, keeping the sub-cell remainder.
+        double fx = e.OffsetX / CharWidth;
+        double fy = e.OffsetY / CharHeight;
+        int x = (int)Math.Floor(fx);
+        int y = (int)Math.Floor(fy);
+        var modifiers = GetModifiers(e);
 
         _eventQueue.Enqueue(() =>
         {
@@ -119,7 +132,10 @@ public class BlazorInputManager
             _window.ProcessMouse(new Tedd.TUI.MouseEventArgs(routedEvent)
             {
                 GlobalX = x,
-                GlobalY = y
+                GlobalY = y,
+                GlobalXF = fx,
+                GlobalYF = fy,
+                Modifiers = modifiers
             });
         });
         InputAvailable?.Invoke();

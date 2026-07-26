@@ -240,10 +240,17 @@ window.tuiInterop = {
     globalMouseState: null,
 
     startGlobalDrag: function (dotnetHelper, containerId) {
-        if (this.globalMouseState) return; // Already tracking
-
         const container = document.getElementById(containerId);
         if (!container) return;
+
+        // The surface suppresses the mousedown default action so the browser cannot start a
+        // native text selection or drag over the grid -- that gesture belongs to the TUI, and
+        // once the browser owns it, it stops delivering the moves a scrollbar drag needs.
+        // Suppressing the default also suppresses the focus it would have given us, so take
+        // focus explicitly or the surface stops receiving keys after the first click.
+        container.focus({ preventScroll: true });
+
+        if (this.globalMouseState) return; // Already tracking
 
         // Coalesce mousemove to at most one .NET call per animation frame. Raw mouse
         // events arrive at 60-120Hz; forwarding each one triggers a TUI re-render and
@@ -254,7 +261,8 @@ window.tuiInterop = {
         let moveScheduled = false;
 
         const onMove = (e) => {
-            pendingMove = { clientX: e.clientX, clientY: e.clientY };
+            pendingMove = { clientX: e.clientX, clientY: e.clientY,
+                            ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey };
             if (moveScheduled) return;
             moveScheduled = true;
             requestAnimationFrame(() => {
@@ -263,8 +271,10 @@ window.tuiInterop = {
                 const rect = container.getBoundingClientRect();
                 const x = pendingMove.clientX - rect.left;
                 const y = pendingMove.clientY - rect.top;
+                const m = pendingMove;
                 pendingMove = null;
-                dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mousemove', x, y);
+                dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mousemove', x, y,
+                    0, m.ctrlKey, m.shiftKey, m.altKey);
             });
         };
 
@@ -273,7 +283,8 @@ window.tuiInterop = {
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
-            dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mouseup', x, y);
+            dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mouseup', x, y,
+                e.button, e.ctrlKey, e.shiftKey, e.altKey);
             this.stopGlobalDrag();
         };
 
@@ -287,6 +298,71 @@ window.tuiInterop = {
             document.removeEventListener('mousemove', this.globalMouseState.move);
             document.removeEventListener('mouseup', this.globalMouseState.up);
             this.globalMouseState = null;
+        }
+    },
+
+    // Hover tracking. Without this the TUI only ever sees a mouse move while a button is held
+    // (startGlobalDrag is the only other source), so IsMouseOver never updates on a bare move:
+    // no hover highlights, no hover-revealed affordances, no link hover.
+    //
+    // Coalesced to one call per animation frame for the same reason drags are: raw moves arrive
+    // at 60-120Hz, and forwarding each one queues a TUI pass faster than they complete.
+    hoverStates: {},
+
+    startHoverTracking: function (dotnetHelper, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        // Keyed per container, like the resize listeners: two surfaces on one page must not
+        // evict each other's tracking.
+        this.stopHoverTracking(containerId);
+
+        let pending = null;
+        let scheduled = false;
+
+        const onMove = (e) => {
+            // A drag owns the pointer and already forwards its moves; delivering them twice
+            // would make hover fight whatever captured the mouse.
+            if (this.globalMouseState) return;
+
+            pending = { clientX: e.clientX, clientY: e.clientY,
+                        ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey };
+            if (scheduled) return;
+            scheduled = true;
+            requestAnimationFrame(() => {
+                scheduled = false;
+                if (!pending || !this.hoverStates[containerId]) return;
+                const rect = container.getBoundingClientRect();
+                const x = pending.clientX - rect.left;
+                const y = pending.clientY - rect.top;
+                const m = pending;
+                pending = null;
+                dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mousemove', x, y,
+                    0, m.ctrlKey, m.shiftKey, m.altKey);
+            });
+        };
+
+        const onLeave = () => {
+            if (this.globalMouseState) return;
+            pending = null;
+            // Park the pointer far outside the grid so the hit test misses and whatever was
+            // hovered gets its MouseLeave; otherwise a highlight stays lit after the pointer
+            // has left the surface entirely.
+            dotnetHelper.invokeMethodAsync('OnGlobalMouse', 'mousemove', -1e6, -1e6,
+                0, false, false, false);
+        };
+
+        this.hoverStates[containerId] = { container: container, move: onMove, leave: onLeave };
+        container.addEventListener('mousemove', onMove);
+        container.addEventListener('mouseleave', onLeave);
+    },
+
+    stopHoverTracking: function (containerId) {
+        const state = this.hoverStates[containerId];
+        if (state) {
+            state.container.removeEventListener('mousemove', state.move);
+            state.container.removeEventListener('mouseleave', state.leave);
+            delete this.hoverStates[containerId];
         }
     }
 };
