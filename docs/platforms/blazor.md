@@ -72,3 +72,61 @@ Wrappers exist for the common controls (`TuiButton`, `TuiTextBox`, `TuiListBox`,
 Keyboard and mouse events are captured on the surface `<div>` (it takes focus on click),
 translated to cell coordinates and queued into the TUI event loop. Browser resize
 callbacks recompute the cell grid and re-render.
+
+### Mouse wheel
+
+Wheel events are forwarded as `MouseWheelEventArgs`, so `ScrollViewer`, `ScrollBar`,
+`ListBox` and anything else that handles `OnMouseWheel` scroll under the pointer with no
+extra wiring:
+
+```razor
+<TuiView Width="100" Height="34" Mode="TuiRenderMode.Dom">
+    <TuiHost Component="@_scroller" />
+</TuiView>
+
+@code {
+    private readonly ScrollViewer _scroller = new()
+    {
+        VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+        Content = BuildLongContent()
+    };
+}
+```
+
+Browser `deltaY` values are normalized to the same convention every other host uses —
+±`MouseWheelEventArgs.WheelNotch` (120) per physical notch, positive when scrolling away
+from the user. Each `deltaMode` is scaled by what one notch means in that unit (Chrome
+reports pixels, Firefox commonly reports lines), and fractional results are preserved so
+trackpads accumulate into smooth scrolling instead of being truncated to zero. Set how far
+one notch scrolls with `ScrollViewer.WheelScrollLines` (default 3).
+
+### Character metrics must match the renderer
+
+The host measures real character metrics from the browser and derives the column/row count
+from them. If JavaScript and the renderer disagree about cell size, the grid that gets
+drawn is not the grid that was requested: too few columns leaves dead space on the right,
+and too many pushes the right-hand scrollbar column outside the viewport, where it can be
+neither seen nor clicked. `TuiView` therefore passes the renderer's resolved metrics into
+`tuiInterop.listenForResize`, and `measureDom` caches what it measured. If you call
+`listenForResize` yourself, pass the same cell size your renderer draws with:
+
+```js
+tuiInterop.listenForResize(dotNetRef, canvasId, cellWidth, cellHeight);
+```
+
+## DOM mode performance
+
+`TuiRenderMode.Dom` rebuilds a grid of styled `<span>` runs per frame, so cost scales with
+grid *area* — a large window plus interpreted (Debug) WASM is the worst case. Two things
+keep it in hand:
+
+- **Row-level caching.** `TuiDomGrid` hands Blazor the same markup string for a row whose
+  cells did not change, so the diff skips it and only genuinely changed rows are patched
+  into the DOM.
+- **Coalesced drag input.** Pointer moves during a drag are throttled to one call per
+  animation frame. Forwarding every raw mouse event (60–120 Hz) queues renders faster than
+  they complete, which pins the main thread; `requestAnimationFrame` also supplies natural
+  backpressure, since a busy main thread produces no frames.
+
+For very large grids prefer `TuiRenderMode.Canvas`, which paints in one call instead of
+building DOM nodes.
