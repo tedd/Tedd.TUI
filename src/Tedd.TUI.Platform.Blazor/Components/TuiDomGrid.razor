@@ -12,6 +12,7 @@
 <div class="tui-root-container" style="position: relative; width: @(Width * cw)px; height: @(Height * ch)px; background-color: black; user-select: none;">
     @if (Renderer?.Layers != null)
     {
+        int layerIndex = 0;
         @foreach (var layer in Renderer.Layers)
         {
             <div class="tui-layer" style="position: absolute; left: @(layer.X * cw)px; top: @(layer.Y * ch)px; z-index: @layer.ZIndex; font-family: 'Consolas', monospace; line-height: @(ch)px; font-size: 16px; white-space: pre; color: white; pointer-events: none;">
@@ -19,30 +20,7 @@
                     var buffer = layer.Buffer;
                     for (int y = 0; y < buffer.Height; y++)
                     {
-                        <div class="tui-row" style="height: @(ch)px;">
-                            @{
-                                int x = 0;
-                                while (x < buffer.Width)
-                                {
-                                    var startCell = buffer.GetPixel(x, y);
-                                    var fg = startCell.Foreground;
-                                    var bg = startCell.Background;
-                                    _sb.Clear();
-
-                                    while (x < buffer.Width)
-                                    {
-                                        var current = buffer.GetPixel(x, y);
-                                        if (current.Foreground != fg || current.Background != bg)
-                                            break;
-                                        
-                                        _sb.Append(current.Character);
-                                        x++;
-                                    }
-                                    
-                                    <span style="display:inline-block; height: @(ch)px; color: @ToHtmlColor(fg); background-color: @ToHtmlColor(bg);">@_sb.ToString()</span>
-                                }
-                            }
-                        </div>
+                        @((MarkupString)GetRowHtml(layerIndex, y, buffer, ch))
                     }
 
                     if (buffer.Graphics != null)
@@ -59,6 +37,7 @@
                     }
                 }
             </div>
+            layerIndex++;
         }
     }
 </div>
@@ -68,13 +47,13 @@
     [Parameter] public int Width { get; set; }
     [Parameter] public int Height { get; set; }
 
-    private VirtualBuffer? _buffer;
     private DomRenderer? _previousRenderer;
-    private StringBuilder _sb = new StringBuilder();
+    private readonly StringBuilder _sb = new StringBuilder();
 
-    protected override void OnInitialized()
-    {
-    }
+    // Per-(layer,row) markup cache. Handing Blazor the same string instance for an
+    // unchanged row lets its diff skip that row, so a frame only patches rows whose
+    // cells actually changed — a full-grid repaint is what makes large grids expensive.
+    private readonly Dictionary<long, string> _rowHtmlCache = new();
 
     protected override void OnParametersSet()
     {
@@ -90,7 +69,7 @@
             if (Renderer != null)
             {
                 Renderer.OnRender += OnRender;
-                
+
                 // Initial update if buffer exists
                 if (Renderer.CurrentBuffer != null)
                 {
@@ -102,14 +81,71 @@
 
     private void OnRender()
     {
-        _buffer = Renderer?.CurrentBuffer;
-        StateHasChanged();
+        _ = InvokeAsync(StateHasChanged);
     }
 
-    private string ToHtmlColor(TuiColor color)
+    private string GetRowHtml(int layerIndex, int y, VirtualBuffer buffer, int ch)
+    {
+        _sb.Clear();
+        _sb.Append("<div class=\"tui-row\" style=\"height: ").Append(ch).Append("px;\">");
+
+        int col = 0;
+        while (col < buffer.Width)
+        {
+            var startCell = buffer.GetPixel(col, y);
+            var fg = startCell.Foreground;
+            var bg = startCell.Background;
+
+            _sb.Append("<span style=\"display:inline-block; height: ").Append(ch)
+               .Append("px; color: ");
+            AppendHtmlColor(_sb, fg);
+            _sb.Append("; background-color: ");
+            AppendHtmlColor(_sb, bg);
+            _sb.Append(";\">");
+
+            while (col < buffer.Width)
+            {
+                var current = buffer.GetPixel(col, y);
+                if (current.Foreground != fg || current.Background != bg)
+                    break;
+
+                AppendHtmlEncoded(_sb, current.Character);
+                col++;
+            }
+
+            _sb.Append("</span>");
+        }
+
+        _sb.Append("</div>");
+
+        // Returning the previous frame's string instance for an unchanged row lets
+        // Blazor's diff skip it, so only rows that really changed are patched into
+        // the DOM. A full-grid repaint is what makes large grids expensive.
+        string html = _sb.ToString();
+        long key = ((long)layerIndex << 32) | (uint)y;
+        if (_rowHtmlCache.TryGetValue(key, out var previous) && previous == html)
+            return previous;
+
+        _rowHtmlCache[key] = html;
+        return html;
+    }
+
+    private static void AppendHtmlEncoded(StringBuilder sb, char c)
+    {
+        switch (c)
+        {
+            case '<': sb.Append("&lt;"); break;
+            case '>': sb.Append("&gt;"); break;
+            case '&': sb.Append("&amp;"); break;
+            default: sb.Append(c); break;
+        }
+    }
+
+    private static void AppendHtmlColor(StringBuilder sb, TuiColor color)
     {
         // Always emit rgba(...) so 24-bit color and alpha both survive the trip to CSS.
-        return $"rgba({color.R},{color.G},{color.B},{(color.A / 255.0).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)})";
+        sb.Append("rgba(").Append(color.R).Append(',').Append(color.G).Append(',').Append(color.B).Append(',')
+          .Append((color.A / 255.0).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)).Append(')');
     }
 
     // Keyed by the byte[] reference identity so the cache only invalidates when the
