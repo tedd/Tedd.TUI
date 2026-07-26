@@ -767,7 +767,7 @@ public class TuiWindow : UIElement
 
     private bool CanFocus(UIElement element)
     {
-        if (!element.Focusable) return false;
+        if (element == null || !element.Focusable) return false;
 
         // Descendants of a hidden or disabled container are not interactive even
         // when their own local flags remain true.
@@ -840,39 +840,46 @@ public class TuiWindow : UIElement
 
         public bool MoveNext()
         {
-            if (_stack.Count == 0) return false;
-
-            var (current, secondPass) = _stack.Pop();
-            _current = current;
-
-            if (!secondPass)
+            // Skip null entries: GetVisualChild implementations may hand back null
+            // for empty slots, and enumerating past one must not tear down focus
+            // navigation with a NullReferenceException.
+            while (_stack.Count > 0)
             {
-                if (current is TabControl tab)
-                {
-                    // Second yield for tab strip
-                    _stack.Push((current, true));
-                    // Content
-                    if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
-                    {
-                        var item = tab.Items[tab.SelectedIndex];
-                        // Need to check if item is TabItem or just UIElement content
-                        UIElement? content = null;
-                        if (item is TabItem ti) content = ti.Content as UIElement;
-                        else content = item as UIElement;
+                var (current, secondPass) = _stack.Pop();
+                if (current == null) continue;
+                _current = current;
 
-                        if (content != null) _stack.Push((content, false));
-                    }
-                }
-                else
+                if (!secondPass)
                 {
-                    // Normal children in reverse order
-                    for (int i = current.VisualChildrenCount - 1; i >= 0; i--)
+                    if (current is TabControl tab)
                     {
-                        _stack.Push((current.GetVisualChild(i), false));
+                        // Second yield for tab strip
+                        _stack.Push((current, true));
+                        // Content
+                        if (tab.SelectedIndex >= 0 && tab.SelectedIndex < tab.Items.Count)
+                        {
+                            var item = tab.Items[tab.SelectedIndex];
+                            // Need to check if item is TabItem or just UIElement content
+                            UIElement? content = null;
+                            if (item is TabItem ti) content = ti.Content as UIElement;
+                            else content = item as UIElement;
+
+                            if (content != null) _stack.Push((content, false));
+                        }
+                    }
+                    else
+                    {
+                        // Normal children in reverse order
+                        for (int i = current.VisualChildrenCount - 1; i >= 0; i--)
+                        {
+                            var child = current.GetVisualChild(i);
+                            if (child != null) _stack.Push((child, false));
+                        }
                     }
                 }
+                return true;
             }
-            return true;
+            return false;
         }
     }
 

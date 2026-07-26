@@ -7,6 +7,45 @@ namespace Tedd.TUI.Tests;
 
 public class TuiWindowCoverageTests
 {
+    /// <summary>
+    /// Container that exposes null visual-children slots, mimicking controls whose
+    /// GetVisualChild can hand back null for empty slots.
+    /// </summary>
+    private sealed class NullChildContainer : UIElement
+    {
+        public List<UIElement?> Children { get; } = new();
+        public override int VisualChildrenCount => Children.Count;
+        public override UIElement GetVisualChild(int index) => Children[index]!;
+        protected override Size MeasureOverride(Size availableSize) => new Size(0, 0);
+    }
+
+    [Fact]
+    public void MoveFocus_TabAcrossNullVisualChildren_DoesNotThrow()
+    {
+        var window = new TuiWindow();
+        var container = new NullChildContainer();
+        var first = new Button();
+        var second = new Button();
+        first.Parent = container;
+        second.Parent = container;
+        container.Children.Add(first);
+        container.Children.Add(null);
+        container.Children.Add(second);
+        window.Content = container;
+
+        // Initial focus walks the tree over the null slot.
+        window.EnsureInitialFocus();
+        Assert.True(first.IsFocused);
+
+        // Tab forward crosses the null slot.
+        window.ProcessKey(new KeyEventArgs(UIElement.KeyDownEvent, first) { Key = ConsoleKey.Tab });
+        Assert.True(second.IsFocused);
+
+        // Shift+Tab walks back across it.
+        window.ProcessKey(new KeyEventArgs(UIElement.KeyDownEvent, second) { Key = ConsoleKey.Tab, Modifiers = ConsoleModifiers.Shift });
+        Assert.True(first.IsFocused);
+    }
+
     [Fact]
     public void Overlay_PushRemoveClear_WorksCorrectly()
     {
