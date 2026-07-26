@@ -48,6 +48,13 @@ public class TuiXamlView : ComponentBase
     /// <summary>Render mode of the internal surface (standalone mode only).</summary>
     [Parameter] public TuiRenderMode Mode { get; set; } = TuiRenderMode.Canvas;
 
+    /// <summary>
+    /// Whether DOM-mode scroll regions pre-render their whole content (standalone mode only).
+    /// Forwarded to <see cref="TuiView.PrerenderScrollContent"/>; see that property for the
+    /// trade-off.
+    /// </summary>
+    [Parameter] public bool PrerenderScrollContent { get; set; } = true;
+
     /// <summary>The loaded root element (window content).</summary>
     public UIElement? Element { get; private set; }
 
@@ -94,6 +101,7 @@ public class TuiXamlView : ComponentBase
         builder.AddComponentParameter(2, nameof(TuiView.Height), Height);
         builder.AddComponentParameter(3, nameof(TuiView.Mode), Mode);
         builder.AddComponentParameter(4, nameof(TuiView.Window), Window);
+        builder.AddComponentParameter(5, nameof(TuiView.PrerenderScrollContent), PrerenderScrollContent);
         builder.CloseComponent();
     }
 }

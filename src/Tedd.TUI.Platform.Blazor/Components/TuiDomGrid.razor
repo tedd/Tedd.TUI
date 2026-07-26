@@ -4,40 +4,19 @@
 @using Tedd.TUI.Platform.Blazor
 @implements IDisposable
 
-@using System.Text
 @{
     var cw = Renderer?.CharWidth ?? 10;
     var ch = Renderer?.CharHeight ?? 18;
+    _markup.BeginFrame();
 }
-<div class="tui-root-container" style="position: relative; width: @(Width * cw)px; height: @(Height * ch)px; background-color: black; user-select: none;">
+<div class="tui-root-container" style="@DomGridMarkup.RootStyle(Width, Height, cw, ch)">
     @if (Renderer?.Layers != null)
     {
-        int layerIndex = 0;
-        @foreach (var layer in Renderer.Layers)
+        foreach (var layer in Renderer.Layers)
         {
-            <div class="tui-layer" style="position: absolute; left: @(layer.X * cw)px; top: @(layer.Y * ch)px; z-index: @layer.ZIndex; font-family: 'Consolas', monospace; line-height: @(ch)px; font-size: 16px; white-space: pre; color: white; pointer-events: none;">
-                @{
-                    var buffer = layer.Buffer;
-                    for (int y = 0; y < buffer.Height; y++)
-                    {
-                        @((MarkupString)GetRowHtml(layerIndex, y, buffer, ch))
-                    }
-
-                    if (buffer.Graphics != null)
-                    {
-                        foreach (var g in buffer.Graphics)
-                        {
-                            var src = GetImageSrc(g);
-                            if (!string.IsNullOrEmpty(src))
-                            {
-                                <img src="@src" alt=""
-                                     style="position:absolute; left:@(g.CharX * cw)px; top:@(g.CharY * ch)px; width:@(g.CharWidth * cw)px; height:@(g.CharHeight * ch)px; pointer-events:none; image-rendering:auto;" />
-                            }
-                        }
-                    }
-                }
+            <div class="tui-layer" style="@DomGridMarkup.LayerStyle(layer.X, layer.Y, layer.ZIndex, cw, ch)">
+                @BufferContent(layer.Buffer, cw, ch)
             </div>
-            layerIndex++;
         }
     }
 </div>
@@ -48,12 +27,68 @@
     [Parameter] public int Height { get; set; }
 
     private DomRenderer? _previousRenderer;
-    private readonly StringBuilder _sb = new StringBuilder();
 
-    // Per-(layer,row) markup cache. Handing Blazor the same string instance for an
-    // unchanged row lets its diff skip that row, so a frame only patches rows whose
-    // cells actually changed — a full-grid repaint is what makes large grids expensive.
-    private readonly Dictionary<long, string> _rowHtmlCache = new();
+    // All markup generation lives here so it can be unit-tested and reused by the prerender
+    // path. The instance is per-grid because it owns the row and image caches.
+    private readonly DomGridMarkup _markup = new();
+
+    /// <summary>
+    /// Emits one buffer: its rows, its bitmap placements, then any pre-rendered scroll panes,
+    /// recursing into each pane's content buffer.
+    /// </summary>
+    /// <remarks>
+    /// <para>Rows stay individual <c>MarkupString</c> nodes rather than one string per buffer.
+    /// Handing Blazor the same string instance for an unchanged row lets its diff skip that row,
+    /// so a frame only patches rows whose cells actually changed — a full-grid repaint is what
+    /// makes large grids expensive.</para>
+    /// <para>The pane wrappers are real elements, not markup strings, so their children nest
+    /// inside them. Everything is emitted inline in this one component, which is what makes the
+    /// scope counter deterministic: the traversal runs synchronously in a fixed order, so a given
+    /// structural position gets the same scope id every frame and its row cache keeps hitting.</para>
+    /// </remarks>
+    private RenderFragment BufferContent(VirtualBuffer buffer, int cw, int ch) => builder =>
+    {
+        int scope = _markup.NextScope();
+        int seq = 0;
+
+        for (int y = 0; y < buffer.Height; y++)
+        {
+            builder.AddContent(seq++, (MarkupString)_markup.GetRowHtml(scope, y, buffer, ch));
+        }
+
+        if (buffer.Graphics != null)
+        {
+            foreach (var g in buffer.Graphics)
+            {
+                var src = _markup.GetImageSrc(g);
+                if (!string.IsNullOrEmpty(src))
+                {
+                    builder.AddContent(seq++, (MarkupString)DomGridMarkup.ImageHtml(g, src, cw, ch));
+                }
+            }
+        }
+
+        if (buffer.ScrollPanes != null)
+        {
+            foreach (var pane in buffer.ScrollPanes)
+            {
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "class", "tui-scroll-pane");
+                builder.AddAttribute(seq++, "style", DomGridMarkup.PaneStyle(pane, cw, ch));
+
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "class", "tui-scroll-content");
+                builder.AddAttribute(seq++, "style", DomGridMarkup.PaneContentStyle(pane, cw, ch));
+
+                // AddContent invokes the fragment straight into this builder, so the traversal
+                // stays synchronous and in order -- which is what the scope counter relies on.
+                builder.AddContent(seq++, BufferContent(pane.Content, cw, ch));
+
+                builder.CloseElement();
+                builder.CloseElement();
+            }
+        }
+    };
 
     protected override void OnParametersSet()
     {
@@ -82,99 +117,6 @@
     private void OnRender()
     {
         _ = InvokeAsync(StateHasChanged);
-    }
-
-    private string GetRowHtml(int layerIndex, int y, VirtualBuffer buffer, int ch)
-    {
-        _sb.Clear();
-        _sb.Append("<div class=\"tui-row\" style=\"height: ").Append(ch).Append("px;\">");
-
-        int col = 0;
-        while (col < buffer.Width)
-        {
-            var startCell = buffer.GetPixel(col, y);
-            var fg = startCell.Foreground;
-            var bg = startCell.Background;
-
-            _sb.Append("<span style=\"display:inline-block; height: ").Append(ch)
-               .Append("px; color: ");
-            AppendHtmlColor(_sb, fg);
-            _sb.Append("; background-color: ");
-            AppendHtmlColor(_sb, bg);
-            _sb.Append(";\">");
-
-            while (col < buffer.Width)
-            {
-                var current = buffer.GetPixel(col, y);
-                if (current.Foreground != fg || current.Background != bg)
-                    break;
-
-                AppendHtmlEncoded(_sb, current.Character);
-                col++;
-            }
-
-            _sb.Append("</span>");
-        }
-
-        _sb.Append("</div>");
-
-        // Returning the previous frame's string instance for an unchanged row lets
-        // Blazor's diff skip it, so only rows that really changed are patched into
-        // the DOM. A full-grid repaint is what makes large grids expensive.
-        string html = _sb.ToString();
-        long key = ((long)layerIndex << 32) | (uint)y;
-        if (_rowHtmlCache.TryGetValue(key, out var previous) && previous == html)
-            return previous;
-
-        _rowHtmlCache[key] = html;
-        return html;
-    }
-
-    private static void AppendHtmlEncoded(StringBuilder sb, char c)
-    {
-        switch (c)
-        {
-            case '<': sb.Append("&lt;"); break;
-            case '>': sb.Append("&gt;"); break;
-            case '&': sb.Append("&amp;"); break;
-            default: sb.Append(c); break;
-        }
-    }
-
-    private static void AppendHtmlColor(StringBuilder sb, TuiColor color)
-    {
-        // Always emit rgba(...) so 24-bit color and alpha both survive the trip to CSS.
-        sb.Append("rgba(").Append(color.R).Append(',').Append(color.G).Append(',').Append(color.B).Append(',')
-          .Append((color.A / 255.0).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)).Append(')');
-    }
-
-    // Keyed by the byte[] reference identity so the cache only invalidates when the
-    // underlying image data changes. Base64 encoding is otherwise quadratic across frames.
-    private readonly Dictionary<byte[], string> _imageSrcCache = new(ReferenceEqualityComparer.Instance);
-
-    private string GetImageSrc(GraphicPlacement g)
-    {
-        if (g.ImageData != null && g.ImageData.Length > 0)
-        {
-            if (!_imageSrcCache.TryGetValue(g.ImageData, out var cached))
-            {
-                var media = string.IsNullOrEmpty(g.MediaType) ? "application/octet-stream" : g.MediaType;
-                cached = $"data:{media};base64,{Convert.ToBase64String(g.ImageData)}";
-                _imageSrcCache[g.ImageData] = cached;
-            }
-            return cached;
-        }
-
-        // No bytes resolved but a URL-style source: let the browser fetch it directly.
-        if (!string.IsNullOrEmpty(g.Source) &&
-            (g.Source.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-             || g.Source.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-             || g.Source.StartsWith("data:", StringComparison.OrdinalIgnoreCase)
-             || g.Source.StartsWith("/")))
-        {
-            return g.Source;
-        }
-        return string.Empty;
     }
 
     public void Dispose()

@@ -83,6 +83,16 @@ public class VirtualBuffer
     /// </summary>
     public IList<GraphicPlacement>? Graphics { get; set; }
 
+    /// <summary>
+    /// Optional pre-rendered scroll region channel. When non-null, the surface hosting this
+    /// buffer can position and clip sub-regions independently, so
+    /// <see cref="Tedd.TUI.Controls.ScrollViewer"/> and its derivatives render their content
+    /// at full extent into a <see cref="ScrollPane"/> appended here instead of clipping it to
+    /// the viewport. When null the surface is flat and controls take the ordinary
+    /// <see cref="PushClip"/> path — which is what every terminal and canvas host does.
+    /// </summary>
+    public IList<ScrollPane>? ScrollPanes { get; set; }
+
     private Stack<Rect> _clipStack = new Stack<Rect>();
     private Rect _currentClip;
     private bool _isClipped;

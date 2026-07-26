@@ -383,10 +383,13 @@ public class Border : ScrollViewer
         if (noBorder)
         {
             // No border lines, no decorations -- just render content directly.
-            if (Content != null)
+            // Scroll offsets are deliberately 0 here: BoxStyle.None draws no scrollbars, so
+            // the pane must mirror the clip path it replaces and pin content to the origin.
+            var bare = Content;
+            if (bare != null && !TryRenderContentAsScrollPane(buffer, bare, x, y, w, h, 0, 0))
             {
                 buffer.PushClip(new Rect(x, y, w, h));
-                Content.Render(buffer, x, y);
+                bare.Render(buffer, x, y);
                 buffer.PopClip();
             }
             return;
@@ -435,22 +438,26 @@ public class Border : ScrollViewer
             _horizontalScrollBar.Render(buffer, x, y);
 
         // Content (inside border + padding)
-        if (Content != null)
+        var content = Content;
+        if (content != null)
         {
-            // Clip to the padded content area so scrolled content never bleeds
-            // into the padding gutter between the border line and the content.
             Thickness padding = Padding;
-            buffer.PushClip(new Rect(
-                x + 1 + padding.Left,
-                y + 1 + padding.Top,
-                Math.Max(0, w - 2 - padding.Left - padding.Right),
-                Math.Max(0, h - 2 - padding.Top - padding.Bottom)));
+            int contentW = Math.Max(0, w - 2 - padding.Left - padding.Right);
+            int contentH = Math.Max(0, h - 2 - padding.Top - padding.Bottom);
 
-            // Render content at absolute position - scrollOffset
-            // (Content.RenderSize already includes the (1,1) offset from Arrange)
-            Content.Render(buffer, x - _horizontalScrollBar.Value, y - _verticalScrollBar.Value);
+            if (!TryRenderContentAsScrollPane(buffer, content, x, y, contentW, contentH,
+                                              _horizontalScrollBar.Value, _verticalScrollBar.Value))
+            {
+                // Clip to the padded content area so scrolled content never bleeds
+                // into the padding gutter between the border line and the content.
+                buffer.PushClip(new Rect(x + 1 + padding.Left, y + 1 + padding.Top, contentW, contentH));
 
-            buffer.PopClip();
+                // Render content at absolute position - scrollOffset
+                // (Content.RenderSize already includes the (1,1) offset from Arrange)
+                content.Render(buffer, x - _horizontalScrollBar.Value, y - _verticalScrollBar.Value);
+
+                buffer.PopClip();
+            }
         }
     }
 }

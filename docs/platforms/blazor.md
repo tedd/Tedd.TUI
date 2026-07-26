@@ -12,10 +12,84 @@ Both `TuiView` and `TuiXamlView` take a `Mode` parameter (`TuiRenderMode`):
 | Mode | Surface | Traits |
 |---|---|---|
 | `Canvas` (default) | `<canvas>` | Fastest; pixel-stable grid |
-| `Dom` | Styled DOM grid | Selectable text, DevTools-inspectable, bitmap graphics via positioned `<img>` |
+| `Dom` | Styled DOM grid | Whole scrolled content in the DOM (find-in-page, prerendering), DevTools-inspectable, bitmap graphics via positioned `<img>` |
 
 The surface measures real character metrics from the browser and reports them through
 `SurfaceCapabilities`, so image-aware controls size correctly.
+
+## Pre-rendered scroll regions (DOM mode)
+
+In DOM mode a scrollable region emits its **whole** content, not just the rows that fit. The
+viewport becomes an `overflow: hidden` box and the content sits inside it in a block that
+CSS translates by whole cells, so scrolling moves an already-built subtree instead of
+forcing a re-render:
+
+```html
+<div class="tui-scroll-pane"   style="… width: 700px; height: 72px; overflow: hidden;">
+  <div class="tui-scroll-content" style="… height: 3600px; transform: translate(0px, -126px);">
+    <div class="tui-row">…</div>   <!-- every row, not just the visible ones -->
+```
+
+Because the translate is a whole number of cells, it lands on exact row boundaries and
+reproduces the same line-by-line and page steps the TUI applies in text mode. The TUI
+remains the source of truth for the scroll offset — the browser paints, it does not scroll.
+
+What this buys you:
+
+- **Find-in-page and text extraction see everything**, not the current viewport.
+- **Scrolling is a transform**, not a round trip through the event loop and a DOM patch.
+- **Prerendered HTML carries the full content** (see below).
+
+It applies to `ScrollViewer` and `Border`, and so to everything built on them —
+`DialogBox`, `Table`, `TreeView`, `DataGrid`, `MarkdownCodeBlock`, and the `ComboBox` /
+`MenuItem` / `DatePicker` popups. `ListBox` and `TextEditor` scroll by re-slicing their own
+item list rather than by clipping, so they still emit only the visible rows.
+
+### Cost, and how to opt out
+
+It is on by default in DOM mode, and the cost is real: node count and render time scale with
+the **content extent** rather than the viewport area, and pre-rendering deliberately defeats
+the culling `Panel.Render` normally applies to off-screen children. A `ScrollViewer` over ten
+thousand unpaged rows becomes ten thousand row divs. Non-overflowing content is left alone —
+there is nothing to scroll, so it stays on the cheaper clip path.
+
+Turn it off for the whole surface:
+
+```razor
+<TuiView Width="100" Height="34" Mode="TuiRenderMode.Dom" PrerenderScrollContent="false" />
+```
+
+…or for one viewer, leaving the rest of the surface pre-rendered:
+
+```csharp
+ScrollViewer.SetPrerenderContent(_hugeLogViewer, false);
+```
+
+For very large tabular data, `Table.PageSize` (which realizes only the current page) is a
+better fit than either setting. Canvas mode ignores both — it has no sub-region to clip.
+
+## Prerendering
+
+`TuiView` renders one frame synchronously from `OnInitialized`, so statically rendered and
+prerendered output contains real markup rather than an empty container. That pass uses no JS
+interop — cell metrics fall back to the renderer's defaults, which affects pixel sizing only,
+never the text. The interactive loop then starts from `OnAfterRenderAsync` on the same
+renderer instance and takes over. As a side effect there is no longer a blank first paint in
+interactive WebAssembly.
+
+Razor-authored children register themselves during their own initialization, which is after
+the view first rendered, so `TuiView` refreshes the static frame when content is added and
+the loop has not started yet.
+
+`BlazorTuiApp.RenderStaticFrame(width, height)` is the same path if you drive the surface
+yourself, and `DomGridMarkup.RenderDocument(...)` turns the resulting layers into the HTML
+string a browser would receive — useful for tests and for rendering outside a component.
+
+One caveat worth stating plainly: the emitted HTML is colour-run `<span>`s inside
+`<div class="tui-row">`, hard-wrapped by TUI layout and split wherever colours change. The
+text is present and extractable, but it carries no headings, links or landmarks — it indexes
+as a wall of text. If search ranking is the goal, a parallel semantic block will serve you
+much better than a taller cell grid.
 
 ## XAML: `TuiXamlView`
 

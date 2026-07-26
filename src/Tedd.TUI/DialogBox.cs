@@ -328,18 +328,22 @@ public class DialogBox : ScrollViewer, IModalOverlay
 
         // Render content, clipped to the padded content area and scrolled by the
         // scrollbar offsets so overflowing content never bleeds past the frame.
-        if (Content != null)
+        var content = Content;
+        if (content != null)
         {
             Thickness padding = Padding;
-            buffer.PushClip(new Rect(
-                x + 1 + padding.Left,
-                y + 1 + padding.Top,
-                Math.Max(0, w - 2 - padding.Left - padding.Right),
-                Math.Max(0, h - 2 - padding.Top - padding.Bottom)));
+            int contentW = Math.Max(0, w - 2 - padding.Left - padding.Right);
+            int contentH = Math.Max(0, h - 2 - padding.Top - padding.Bottom);
 
-            Content.Render(buffer, x - HorizontalOffset, y - VerticalOffset);
+            if (!TryRenderContentAsScrollPane(buffer, content, x, y, contentW, contentH,
+                                              HorizontalOffset, VerticalOffset))
+            {
+                buffer.PushClip(new Rect(x + 1 + padding.Left, y + 1 + padding.Top, contentW, contentH));
 
-            buffer.PopClip();
+                content.Render(buffer, x - HorizontalOffset, y - VerticalOffset);
+
+                buffer.PopClip();
+            }
         }
     }
 

@@ -29,6 +29,21 @@
     [Parameter] public TuiWindow? Window { get; set; }
     [Parameter] public TuiRenderMode Mode { get; set; } = TuiRenderMode.Canvas;
 
+    /// <summary>
+    /// In <see cref="TuiRenderMode.Dom"/>, whether scrollable regions emit their whole content
+    /// into the DOM behind a clipped, CSS-translated box instead of only the visible rows.
+    /// Defaults to true; an individual viewer opts out via
+    /// <see cref="ScrollViewer.SetPrerenderContent"/>.
+    /// </summary>
+    /// <remarks>
+    /// Off-screen rows then survive into the document, so find-in-page, text extraction and
+    /// prerendered HTML see the whole content and scrolling becomes a transform rather than a
+    /// re-render. The cost is that node count scales with content extent rather than viewport
+    /// area — turn it off for viewers over very large content. Ignored in
+    /// <see cref="TuiRenderMode.Canvas"/>, which has no sub-region to clip.
+    /// </remarks>
+    [Parameter] public bool PrerenderScrollContent { get; set; } = true;
+
     public string CanvasId { get; } = "tui_c_" + Guid.NewGuid().ToString("N");
     public string ContainerId { get; } = "tui_v_" + Guid.NewGuid().ToString("N");
 
@@ -38,6 +53,7 @@
 
     private TuiRenderMode _currentMode;
     private bool _modeChanged;
+    private bool _appStarted;
 
     public TuiWindow? CurrentWindow => Window ?? _internalWindow;
 
@@ -48,6 +64,15 @@
             _internalWindow = new TuiWindow();
         }
         _currentMode = Mode;
+
+        // Prerender: OnAfterRender never runs during static rendering, so without a frame
+        // produced here the prerendered markup is an empty container and a crawler sees nothing.
+        // Canvas has nothing to emit server-side (it paints through JS), so only DOM takes this.
+        if (Mode == TuiRenderMode.Dom)
+        {
+            CreateApp();
+            _app?.RenderStaticFrame(Width, Height);
+        }
     }
 
     protected override void OnParametersSet()
@@ -57,15 +82,26 @@
             _currentMode = Mode;
             _modeChanged = true;
         }
+
+        if (_app != null)
+        {
+            _app.PrerenderScrollContent = Mode == TuiRenderMode.Dom && PrerenderScrollContent;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender || _modeChanged)
         {
-            _modeChanged = false;
+            if (_modeChanged)
+            {
+                // The surface changed underneath us: the old renderer targets the wrong element.
+                _modeChanged = false;
+                CreateApp();
+            }
+
             await StartAppAsync();
-            
+
             if (_objRef == null) _objRef = DotNetObjectReference.Create(this);
 
             // Hand JS the same cell metrics the renderer resolved. When JS guesses its own
@@ -78,35 +114,46 @@
         }
     }
 
-    private async Task StartAppAsync()
+    /// <summary>
+    /// Builds the renderer and app for the current <see cref="Mode"/>, replacing any existing
+    /// pair. Does not start the render loop — see <see cref="StartAppAsync"/>.
+    /// </summary>
+    private void CreateApp()
     {
-        // Stop existing
-        if (_app != null) 
+        if (_app != null)
         {
             _app.Dispose();
             _app = null;
+            _appStarted = false;
         }
 
         var win = CurrentWindow;
-        if (win != null)
-        {
-            if (Mode == TuiRenderMode.Canvas)
-            {
-                _renderer = new BlazorRenderer(JS, CanvasId);
-            }
-            else
-            {
-                _renderer = new DomRenderer(JS);
-            }
+        if (win == null) return;
 
-            _app = new BlazorTuiApp(win, _renderer);
-            await _app.StartAsync(Width, Height);
-            
-            // If DOM mode, we need to trigger a re-render to pass the renderer reference to TuiDomGrid
-            if (Mode == TuiRenderMode.Dom)
-            {
-                await InvokeAsync(StateHasChanged);
-            }
+        _renderer = Mode == TuiRenderMode.Canvas
+            ? new BlazorRenderer(JS, CanvasId)
+            : (IRendererAsync)new DomRenderer(JS);
+
+        _app = new BlazorTuiApp(win, _renderer)
+        {
+            PrerenderScrollContent = Mode == TuiRenderMode.Dom && PrerenderScrollContent,
+        };
+    }
+
+    private async Task StartAppAsync()
+    {
+        // DOM mode already built the pair in OnInitialized to prerender a frame; reuse it so the
+        // markup the browser hydrates is the markup that was prerendered.
+        if (_app == null) CreateApp();
+        if (_app == null) return;
+
+        await _app.StartAsync(Width, Height);
+        _appStarted = true;
+
+        // If DOM mode, we need to trigger a re-render to pass the renderer reference to TuiDomGrid
+        if (Mode == TuiRenderMode.Dom)
+        {
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -116,6 +163,15 @@
         if (win != null)
         {
             win.Content = child;
+
+            // Razor-authored children register from their own OnInitialized, which runs after
+            // this view first rendered — so the frame produced there saw an empty window. Redo it
+            // now that content exists; a prerender pass never reaches OnAfterRender and would
+            // otherwise emit a blank grid. Once the loop owns rendering this is redundant.
+            if (!_appStarted && Mode == TuiRenderMode.Dom)
+            {
+                _app?.RenderStaticFrame(Width, Height);
+            }
         }
     }
     

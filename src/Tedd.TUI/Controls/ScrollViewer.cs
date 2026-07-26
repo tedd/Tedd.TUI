@@ -85,6 +85,43 @@ public class ScrollViewer : UIElement
         set => SetValue(VerticalScrollBarVisibilityProperty, value);
     }
 
+    // Intent: let a surface receive the whole scrolled content instead of the visible slice.
+    // Why:
+    // - Surfaces that can clip a sub-region on their own (the Blazor DOM grid) can then scroll
+    //   without a re-render, and the off-screen text survives for find-in-page and crawlers.
+    // Constraints/Invariants:
+    // - Opting in is not enough on its own: the surface must also offer a
+    //   VirtualBuffer.ScrollPanes channel. Flat surfaces (terminal, canvas) never do, so this
+    //   property has no effect there and the ordinary clip path runs unchanged.
+    // Failure modes:
+    // - Pre-rendering defeats Panel.Render's clip cull, so DOM node count and render cost scale
+    //   with content extent rather than viewport area. Set false on viewers over huge content.
+    public static readonly DependencyProperty PrerenderContentProperty =
+        DependencyProperty.RegisterAttached("PrerenderContent", typeof(bool), typeof(ScrollViewer), true);
+
+    public static void SetPrerenderContent(UIElement element, bool value)
+    {
+        if (element == null) throw new ArgumentNullException(nameof(element));
+        element.SetValue(PrerenderContentProperty, value);
+    }
+
+    public static bool GetPrerenderContent(UIElement element)
+    {
+        if (element == null) throw new ArgumentNullException(nameof(element));
+        return (bool)element.GetValue(PrerenderContentProperty);
+    }
+
+    /// <summary>
+    /// Whether this viewer hands its full content to a surface that can pre-render scroll
+    /// regions (see <see cref="PrerenderContentProperty"/>). Defaults to true; surfaces that
+    /// don't support it ignore it entirely.
+    /// </summary>
+    public bool PrerenderContent
+    {
+        get => (bool)GetValue(PrerenderContentProperty);
+        set => SetValue(PrerenderContentProperty, value);
+    }
+
     /// <summary>
     /// True when the vertical scrollbar is currently shown. Resolved during the
     /// last <see cref="MeasureOverride"/>; consumers (e.g. <see cref="Table"/>)
@@ -350,7 +387,9 @@ public class ScrollViewer : UIElement
         int viewportW = Math.Max(0, RenderSize.Width - vScrollWidth);
         int viewportH = Math.Max(0, RenderSize.Height - hScrollHeight);
 
-        if (_content != null)
+        if (_content != null &&
+            !TryRenderContentAsScrollPane(buffer, _content, x, y, viewportW, viewportH,
+                                          _horizontalScrollBar.Value, _verticalScrollBar.Value))
         {
             buffer.PushClip(new Rect(x, y, viewportW, viewportH));
 
@@ -371,6 +410,66 @@ public class ScrollViewer : UIElement
         {
             _horizontalScrollBar.Render(buffer, x, y);
         }
+    }
+
+    // Intent: hand the whole scrolled content to surfaces that can clip a sub-region themselves.
+    // Why:
+    // - Such a surface (the Blazor DOM grid) can then scroll by translating an already-built
+    //   sub-tree, and the off-screen rows survive into its output for find-in-page and crawlers.
+    // Constraints/Invariants:
+    // - Every viewer in this hierarchy arranges Content at its own content inset -- 0 for
+    //   ScrollViewer, border+padding for Border/DialogBox -- and derives its clip rect from the
+    //   same inset. Reading the inset off Content.RenderSize therefore keeps the pane's viewport
+    //   and the clip path it replaces in agreement by construction.
+    // - The pane is seeded with the cell already at the viewport origin, because children that
+    //   render with a transparent background read what they sit on via GetPixel (see the
+    //   FillRect in Border.Render). A blank pane would change their colors.
+    // Failure modes:
+    // - Pre-rendering defeats Panel.Render's clip cull, so cost scales with content extent.
+    //   Non-overflowing content stays on the clip path, which is cheaper and pixel-identical.
+    /// <summary>
+    /// Renders <paramref name="content"/> at full extent into a <see cref="ScrollPane"/>
+    /// registered on <paramref name="buffer"/>, instead of clipping it to the viewport.
+    /// </summary>
+    /// <returns>
+    /// True when a pane was registered and the caller is done; false when the caller must
+    /// take its ordinary <see cref="VirtualBuffer.PushClip"/> path.
+    /// </returns>
+    protected bool TryRenderContentAsScrollPane(
+        VirtualBuffer buffer, UIElement content,
+        int x, int y, int viewportW, int viewportH,
+        int scrollOffsetX, int scrollOffsetY)
+    {
+        var panes = buffer.ScrollPanes;
+        if (panes == null || !PrerenderContent) return false;
+        if (viewportW <= 0 || viewportH <= 0) return false;
+
+        int extentW = content.RenderSize.Width;
+        int extentH = content.RenderSize.Height;
+        if (extentW <= 0 || extentH <= 0) return false;
+
+        // Content that already fits has nothing to scroll; the clip path produces identical
+        // output for less, so leave the common case alone.
+        if (extentW <= viewportW && extentH <= viewportH) return false;
+
+        var pane = new VirtualBuffer(extentW, extentH);
+        pane.Clear(buffer.GetPixel(x + content.RenderSize.X, y + content.RenderSize.Y).Background);
+        if (buffer.Graphics != null) pane.Graphics = new List<GraphicPlacement>();
+        pane.ScrollPanes = new List<ScrollPane>(); // lets nested viewers register inside this pane
+
+        // Cancel out the content's arranged inset so it lands at the pane's origin; the pane's
+        // viewport carries that inset instead.
+        content.Render(pane, -content.RenderSize.X, -content.RenderSize.Y);
+
+        panes.Add(new ScrollPane
+        {
+            Viewport = new Rect(x + content.RenderSize.X, y + content.RenderSize.Y, viewportW, viewportH),
+            Content = pane,
+            OffsetX = scrollOffsetX,
+            OffsetY = scrollOffsetY,
+        });
+
+        return true;
     }
 
     public override void OnMouseDown(MouseEventArgs e)
