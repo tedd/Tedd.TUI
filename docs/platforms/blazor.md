@@ -130,3 +130,18 @@ keep it in hand:
 
 For very large grids prefer `TuiRenderMode.Canvas`, which paints in one call instead of
 building DOM nodes.
+
+### The loop must yield to the browser
+
+On WebAssembly the TUI render loop shares the single UI thread with the browser, so it has
+to hand that thread back on every pass. `BlazorTuiApp` yields through a timer once per
+frame for exactly this reason.
+
+The trap is subtle and worth knowing if you write your own host on this pattern: the loop
+waits on a semaphore that each invalidation signals, and `await` on an **already-completed**
+task resumes *synchronously* rather than returning to the scheduler. A frame whose own
+rendering causes another invalidation therefore finds the wait already satisfied and
+continues immediately — forever, without the event loop ever running again. The symptom is
+not a slow page but a dead one: no input, no timers, no repaint, and no console output
+(which also means such a loop cannot be diagnosed by logging from inside it). With a yield
+in place the same situation merely costs frame rate.
