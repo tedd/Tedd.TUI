@@ -36,12 +36,20 @@ namespace Tedd.TUI.Tests
             return viewer;
         }
 
-        private static string RowText(VirtualBuffer buffer, int y)
+        /// <summary>
+        /// Reads a row as text. Pass <paramref name="width"/> to stop short of the reserved
+        /// scrollbar column, which shares these rows and would otherwise land in the string.
+        /// </summary>
+        private static string RowText(VirtualBuffer buffer, int y, int width = -1)
         {
-            var chars = new char[buffer.Width];
-            for (int x = 0; x < buffer.Width; x++) chars[x] = buffer.GetPixel(x, y).Character;
+            int w = width < 0 ? buffer.Width : Math.Min(width, buffer.Width);
+            var chars = new char[w];
+            for (int x = 0; x < w; x++) chars[x] = buffer.GetPixel(x, y).Character;
             return new string(chars).TrimEnd();
         }
+
+        /// <summary>Viewport width of the 8-cell test viewers, once the scrollbar column is reserved.</summary>
+        private const int ViewportW = 7;
 
         // The regression gate that matters most: every non-DOM host leaves ScrollPanes null, and
         // for those the render path must be exactly what it was before panes existed.
@@ -55,8 +63,8 @@ namespace Tedd.TUI.Tests
 
             Assert.Null(buffer.ScrollPanes);
             // Only the viewport rows were drawn; row 3 is the last visible one.
-            Assert.Equal("L0", RowText(buffer, 0));
-            Assert.Equal("L3", RowText(buffer, 3));
+            Assert.Equal("L0", RowText(buffer, 0, ViewportW));
+            Assert.Equal("L3", RowText(buffer, 3, ViewportW));
         }
 
         [Fact]
@@ -123,7 +131,7 @@ namespace Tedd.TUI.Tests
             viewer.Render(buffer, 0, 0);
 
             Assert.Empty(buffer.ScrollPanes!);
-            Assert.Equal("L0", RowText(buffer, 0));
+            Assert.Equal("L0", RowText(buffer, 0, ViewportW));
         }
 
         [Fact]
@@ -136,8 +144,8 @@ namespace Tedd.TUI.Tests
             viewer.Render(buffer, 0, 0);
 
             Assert.Empty(buffer.ScrollPanes!);
-            Assert.Equal("L0", RowText(buffer, 0));
-            Assert.Equal("L3", RowText(buffer, 3));
+            Assert.Equal("L0", RowText(buffer, 0, ViewportW));
+            Assert.Equal("L3", RowText(buffer, 3, ViewportW));
         }
 
         [Fact]
@@ -242,9 +250,11 @@ namespace Tedd.TUI.Tests
             border.Render(buffer, 0, 0);
 
             var pane = Assert.Single(buffer.ScrollPanes!);
-            Assert.Equal(8, pane.Content.Width);
-            // A blank pane would clear this to the default black instead.
-            Assert.Equal(TuiColor.Blue, pane.Content.GetPixel(7, 0).Background);
+            // 10 wide, less the two border columns and Border's default one-cell padding.
+            Assert.Equal(6, pane.Content.Width);
+            // Columns 3..5 are past the 3-cell labels, so they still show the seed. A blank
+            // pane would have cleared them to the default black instead.
+            Assert.Equal(TuiColor.Blue, pane.Content.GetPixel(5, 0).Background);
         }
     }
 }
