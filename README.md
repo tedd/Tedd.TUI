@@ -47,7 +47,7 @@ Define the UI once — in XAML or in code — and host it anywhere: **terminal, 
   - **Table:** Manual row management with sorting, pagination, and header customization. In `Table`, performance is optimized by caching the `TotalWidth` in the Table and a per-column `Offset` in `TableColumn` during `MeasureOverride`, reducing layout and rendering complexity from O(Rows * Columns) to O(Rows + Columns). Supports structural customization via properties such as `ShowBorder`, `ShowHeader`, `ShowVerticalLines`, `ShowHorizontalLines`, and `BorderStyle` (e.g., `BoxStyle.Heavy`, which requires exact Unicode matching for borders like `\u2533` TDown and `\u253B` TUp), while its columns are defined via `TableColumn` utilizing `GridLength` for widths.
   - **MarkdownView:** Renders Markdown content with theming support.
   - **CodeDocument:** Renders syntax-highlighted source code utilizing the internal CodeColoring engine and customizable themes.
-  - **Standard Controls:** `Button`, `RepeatButton`, `TextBox`, `PasswordBox`, `TextEditor`, `CheckBox`, `RadioButton`, `ToggleSwitch`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `GroupBox`, `TreeView`, `TreeViewItem`, `HeaderedItemsControl`, `Expander`, `DialogBox`, `UniformGrid`, `ScrollViewer`, `ScrollBar`, `Thumb`, `Slider`, `NumericUpDown`, `Calendar`, `DatePicker`, `TimePicker`, `GridSplitter`, `MenuBar`, `Separator`.
+  - **Standard Controls:** `Button`, `RepeatButton`, `TextBox`, `PasswordBox`, `TextEditor`, `CheckBox`, `RadioButton`, `ToggleSwitch`, `ProgressBar`, `TabControl`, `ListBox`, `ComboBox`, `GroupBox`, `TreeView`, `TreeViewItem`, `HeaderedItemsControl`, `Expander`, `DialogBox`, `UniformGrid`, `ScrollViewer`, `ScrollBar`, `Thumb`, `Slider`, `NumericUpDown`, `Calendar`, `DatePicker`, `TimePicker`, `GridSplitter`, `MenuBar`, `Separator`. `Control` defines `HorizontalContentAlignment` and `VerticalContentAlignment` dependency properties to achieve WPF parity, which are bound to the `HorizontalAlignment` and `VerticalAlignment` of internal `ContentPresenter` elements using `RelativeSource.TemplatedParent` within control templates.
   - **Button:** Supports retro-computing DOS-era control aesthetics via the `ShadowStyle` dependency property (utilizing the `ButtonShadowStyle` enumeration), alongside complimentary properties (`ShadowForeground`, `ShadowBackground`, `ShadowOffsetX`, `ShadowOffsetY`) that facilitate vintage visual depth while operating seamlessly within modern hierarchical binding contexts.
   - **ListBox:** Achieves WPF architectural isomorphism by utilizing a `ControlTemplate` wrapping an `ItemsPresenter` within a `ScrollViewer`, removing custom `MeasureOverride` and `Render` logic and deferring layout to standard XAML paradigms. The generated container, `ListBoxItem`, inherits from `ContentControl` and manages its visual state via the `IsSelected` dependency property and `Selected`/`Unselected` bubbling routed events.
   - **Slider:** Inherits from `UIElement` and exposes a bubbling `ValueChanged` routed event (`ValueChangedEvent`) that is raised from `OnPropertyChanged` when `ValueProperty` changes; the `Value` property setter performs clamping and change guarding without directly invoking the event, preserving WPF-style routed event semantics.
@@ -60,7 +60,7 @@ Define the UI once — in XAML or in code — and host it anywhere: **terminal, 
   - **GroupBox:** Subclasses `HeaderedContentControl` and leverages the `ControlTemplate` engine to map its `Header` and `Content` into a visual `Border`, establishing structural parity with standard WPF grouping conventions.
   - **PasswordBox:** Inherits from `Control` and employs a `ControlTemplate` housing a `TextBox` with `IsPassword = true`, bridging a crucial parity gap for secure input masking by intercepting `OnKeyDown` events to synchronize an exposed `Password` property.
 - **Data Binding:** Hierarchical `DataContext` inheritance with `INotifyPropertyChanged` support.
-- **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure.
+- **High Performance:** Designed with a "Zero-Allocation" rendering philosophy, utilizing `Span<char>`, `stackalloc`, and double-buffered `VirtualBuffer` diffing to minimize I/O and GC pressure. For example, string allocations during layout calculation (e.g., `TextBlock.WrapSingleLine`) are optimized by replacing `System.Text.StringBuilder` with `Span<char>` and `stackalloc char[maxWidth]`, utilizing `ReadOnlySpan<char>` slicing to eliminate GC overhead.
 - **Cross-Platform:** Decoupled rendering pipeline with hosts for the terminal (Windows/Linux/macOS), Blazor (Canvas or DOM), WPF (with XAML-designer live preview), Avalonia, WinUI 3, .NET MAUI, SDL2 (native window or your own render loop) and standalone Skia (any `SKCanvas`, headless PNG) — all painting the same `VirtualBuffer` cell grid.
 
 ## Getting Started
@@ -92,6 +92,8 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Tedd.TUI;
+using Tedd.TUI.Controls;
+using Tedd.TUI.Data;
 using Tedd.TUI.Platform.Console;
 
 namespace MyTuiApp;
@@ -207,11 +209,11 @@ Tedd.TUI organizes types into WPF-inspired namespaces for clarity and discoverab
 - **`Tedd.TUI.Markdown`** — Rich text: `MarkdownView`, `FlowDocument`, `Paragraph`, `Hyperlink`, `Image`, `MarkdownTheme`, `RgbColorPalette`, renderers for images.
 - **`Tedd.TUI.CodeColoring`** — Syntax highlighting: `Grammar`, `Theme`, `Token`, `LanguageRegistry`, `PrismTokenizer`, regex utilities, and 76 bundled languages.
 
-Consumer projects automatically import the first five namespaces via a `GlobalUsings.cs` file in the core `Tedd.TUI` library, so no per-file `using` statements are needed unless you reference types from `Markdown`, `CodeColoring` (e.g., directly instantiating a grammar), or are querying control templates.
+Consumer projects must explicitly declare `using` directives (e.g., `using Tedd.TUI.Controls;`, `using Tedd.TUI.Data;`) or define project-level global usings, as the internal `GlobalUsings.cs` file does not automatically propagate namespaces.
 
 ### Core System
 At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation for:
-- **Visual Tree:** A hierarchical structure of elements allowing for complex composition. Any `UIElement` can dynamically ascend the visual tree to resolve its root host via the `GetRoot()` API, enabling recursive topological queries.
+- **Visual Tree:** A hierarchical structure of elements allowing for complex composition. Any `UIElement` can dynamically ascend the visual tree to resolve its root host via the `GetRoot()` API, enabling recursive topological queries. Unlike standard WPF where they reside on `Control`, the `Foreground` and `Background` dependency properties are defined directly on `UIElement`, with `ForegroundProperty` configured to inherit (`isInherited: true`).
 - **Dependency Properties:** A property system that supports value inheritance, change notification, and memory conservation. `DependencyObject` implements `ClearValue` to deterministically remove local property overrides (allowing fallback to default or inherited values), while `SetValue(null)` explicitly stores a null value rather than deleting the entry, maintaining strict WPF isomorphism. Dependency Property value precedence within `DependencyObject.GetValue()` is resolved using discrete `_localValues` and `_triggerValues` dictionaries rather than a monolithic store: a local value assigned after a trigger becomes active overrides that trigger, otherwise an active trigger value overrides any pre-existing local value, followed by ordinary local values, inherited values, and finally default metadata. In other words, the effective order is post-trigger local override > trigger > local > inherited > default. Dependency Property accessors utilize C# expression-bodied members (`get => ...; set => ...;`) to minimize lexical boilerplate. Furthermore, API signatures deviate slightly from standard WPF: `DependencyProperty.Register` accepts default values directly rather than wrapped in a `PropertyMetadata` object.
 
 ### Data Binding
@@ -270,7 +272,7 @@ The `Tedd.TUI.Platform.Blazor` library provides wrappers for integrating TUI com
 
 ### Planned Future Enhancements (Hypotheses)
 The framework's current iteration achieves robust WPF structural parity. However, the following concepts remain hypotheses under investigation and are not yet functionally implemented:
-- **C# 14 `allows ref struct`:** Upgrading generic constraints to support `ref struct` types in fundamental inheritance hierarchies.
+- **C# 13 `allows ref struct`:** Upgrading generic constraints to support `ref struct` types in fundamental inheritance hierarchies.
 - **Speculative Performance Refactoring:** Additional elimination of `AsSpan()` allocations beyond the verified string search method upgrades.
 
 ## XAML Support
