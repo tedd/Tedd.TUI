@@ -307,7 +307,7 @@ public class FileDialogTests : IDisposable
     public void PresetFileName_PrefillsNameBox()
     {
         var host = CreateHost();
-        var dialog = new SaveFileDialog { InitialDirectory = _root, FileName = @"somewhere\preset.txt" };
+        var dialog = new SaveFileDialog { InitialDirectory = _root, FileName = Path.Combine("somewhere", "preset.txt") };
         dialog.ShowDialog(host);
 
         Assert.Equal("preset.txt", GetNameBox(dialog).Text);
