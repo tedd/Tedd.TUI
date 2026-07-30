@@ -92,6 +92,8 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Tedd.TUI;
+using Tedd.TUI.Controls;
+using Tedd.TUI.Data;
 using Tedd.TUI.Platform.Console;
 
 namespace MyTuiApp;
@@ -207,7 +209,7 @@ Tedd.TUI organizes types into WPF-inspired namespaces for clarity and discoverab
 - **`Tedd.TUI.Markdown`** — Rich text: `MarkdownView`, `FlowDocument`, `Paragraph`, `Hyperlink`, `Image`, `MarkdownTheme`, `RgbColorPalette`, renderers for images.
 - **`Tedd.TUI.CodeColoring`** — Syntax highlighting: `Grammar`, `Theme`, `Token`, `LanguageRegistry`, `PrismTokenizer`, regex utilities, and 76 bundled languages.
 
-Consumer projects automatically import the first five namespaces via a `GlobalUsings.cs` file in the core `Tedd.TUI` library, so no per-file `using` statements are needed unless you reference types from `Markdown`, `CodeColoring` (e.g., directly instantiating a grammar), or are querying control templates.
+Consumer projects must explicitly import required namespaces via per-file `using` directives (e.g., `using Tedd.TUI.Controls;`) or project-level global usings, as the internal `GlobalUsings.cs` file is scoped exclusively to the compilation of the `Tedd.TUI` core library itself.
 
 ### Core System
 At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation for:
@@ -293,6 +295,11 @@ via the WPF host's `TuiHostElement` — and shipped unchanged to the terminal, B
 
 **Loading XAML:**
 ```csharp
+using System.IO;
+using Tedd.TUI;
+using Tedd.TUI.Markup;
+using Tedd.TUI.Platform.Console;
+
 var controller = new MyController(); // Contains OnSubmit method
 var window = (TuiWindow)XamlLoader.Load(File.ReadAllText("demo.xaml"), controller);
 var app = new TuiApp(window);
@@ -301,6 +308,9 @@ app.Run();
 
 **Controller:**
 ```csharp
+using Tedd.TUI;
+using Tedd.TUI.Controls;
+
 class MyController
 {
     // Field name matches x:Name in XAML for injection

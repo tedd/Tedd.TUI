@@ -85,3 +85,8 @@
 **Observation:** The README.md exhibited documentation drift regarding the newly integrated `Separator` component. It lacked explicit articulation of this control, which inherits from `Control`, explicitly sets `Focusable = false`, and renders a horizontal line using the `\u2500` character to match the DOS-era styling, implementing standard XAML parity for menus and layouts.
 
 **Strategic Action:** Synchronized the README.md to articulate the `Separator` architecture under the 'Rich Control Suite' section. This ensures epistemological alignment with the current framework capabilities for menu and layout separators.
+## 2026-07-23 - Documentation Synchronization of Namespace Propagation and Example Validity
+
+**Observation:** The README.md exhibited documentation drift regarding namespace propagation. It falsely claimed that the `GlobalUsings.cs` file inside the `Tedd.TUI` library automatically imported core namespaces for consumer projects. In reality, `GlobalUsings.cs` only affects the internal compilation of the library itself, requiring consumers to explicitly provide their own `using` directives. Consequently, several code snippets in the documentation failed to compile under standard environments without explicit namespace resolution (e.g., `Tedd.TUI.Controls`, `Tedd.TUI.Data`, `Tedd.TUI.Markup`, and `System.IO`).
+
+**Strategic Action:** Synchronized the README.md to eliminate the neuro-bunk concerning automatic consumer namespace imports, articulating the explicit requirement for `using` directives. Updated all embedded code blocks (both the `MyTuiApp` programmatic example and the XAML loader examples) with the necessary using statements to guarantee deterministic, syntactically flawless compilation under .NET 10.0 standards.
