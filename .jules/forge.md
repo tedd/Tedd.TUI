@@ -142,3 +142,10 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+## 2026-03-09 - UIElement Visibility Enum Parity Integration
+**Observation:** Discovered a core architectural parity deficit where `UIElement.Visibility` was implemented as a boolean property (`true`/`false`) rather than utilizing the standard WPF `Visibility` enumeration. Consequently, there was no structural distinction between `Collapsed` (occupying no layout space) and `Hidden` (occupying space but visually skipped), violating standard XAML layout semantics and limiting deterministic layout control.
+**Strategic Action:**
+- Engineered the `Visibility` enum (`Visible`, `Hidden`, `Collapsed`).
+- Re-registered `VisibilityProperty` on `UIElement` with type `typeof(Visibility)` and default `Visibility.Visible`.
+- Modified layout logic in `UIElement.Measure` and `UIElement.Arrange` to explicitly skip `Visibility == Visibility.Collapsed`, assigning zero bounds.
+- Systematically updated all programmatic assertions (`!Visibility` to `Visibility != Visibility.Visible`), render/hit test skips, and property bindings across standard controls (e.g. `UniformGrid`, `Expander`, `ListBox`) and test suites, ensuring robust, exact WPF state representation across all components.

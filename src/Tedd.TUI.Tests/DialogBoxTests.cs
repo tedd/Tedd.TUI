@@ -33,7 +33,7 @@ public class DialogBoxTests
 
         dialog.Show();
         // Show() sets Visibility=true and centers it.
-        Assert.True(dialog.Visibility);
+        Assert.Equal(Visibility.Visible, dialog.Visibility);
 
         Assert.True(dialog.RenderSize.Width > 0);
         Assert.True(dialog.RenderSize.Height > 0);
@@ -51,7 +51,7 @@ public class DialogBoxTests
         dialog.Hide();
 
         Assert.Null(window.Overlay);
-        Assert.False(dialog.Visibility);
+        Assert.Equal(Visibility.Collapsed, dialog.Visibility);
     }
 
     [Fact]

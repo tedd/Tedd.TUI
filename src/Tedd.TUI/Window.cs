@@ -214,7 +214,7 @@ public class Window : UIElement
     /// </summary>
     public virtual void Show()
     {
-        Visibility = true;
+        Visibility = Visibility.Visible;
         if (GetRoot() is TuiWindow root)
         {
             ArrangeInHost(new Size(root.RenderSize.Width, root.RenderSize.Height));
@@ -229,7 +229,7 @@ public class Window : UIElement
     /// </summary>
     public virtual void Close()
     {
-        Visibility = false;
+        Visibility = Visibility.Collapsed;
         var root = GetRoot() as TuiWindow;
         root?.RemoveOverlay(this);
         Closed?.Invoke(this, EventArgs.Empty);
@@ -302,7 +302,7 @@ public class Window : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-        if (!Visibility) return;
+        if (Visibility != Visibility.Visible) return;
 
         int w = RenderSize.Width;
         int h = RenderSize.Height;

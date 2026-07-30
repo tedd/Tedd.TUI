@@ -30,7 +30,7 @@ public class DialogTests
         dialog.ShowDialog(host);
 
         Assert.Equal(dialog, host.Overlay);
-        Assert.True(dialog.Visibility);
+        Assert.Equal(Visibility.Visible, dialog.Visibility);
         Assert.Null(dialog.DialogResult);
     }
 
@@ -74,7 +74,7 @@ public class DialogTests
         // Focus lands on the button; Escape bubbles up to the dialog.
         host.ProcessKey(new KeyEventArgs(UIElement.KeyDownEvent, button) { Key = ConsoleKey.Escape });
 
-        Assert.False(dialog.Visibility);
+        Assert.Equal(Visibility.Collapsed, dialog.Visibility);
         Assert.False(dialog.DialogResult);
         Assert.Null(host.Overlay);
     }

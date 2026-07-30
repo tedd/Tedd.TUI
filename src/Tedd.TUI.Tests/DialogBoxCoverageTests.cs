@@ -238,7 +238,7 @@ public class DialogBoxCoverageTests
         var dialog = new DialogBox();
         dialog.Width = 10;
         dialog.Height = 10;
-        dialog.Visibility = false;
+        dialog.Visibility = Visibility.Collapsed;
 
         dialog.Measure(new Size(100, 100));
         dialog.Arrange(new Rect(0, 0, 10, 10));
@@ -315,11 +315,11 @@ public class DialogBoxCoverageTests
     public void Show_WithoutTuiWindow_SetsVisibilityOnly()
     {
         var dialog = new DialogBox();
-        dialog.Visibility = false;
+        dialog.Visibility = Visibility.Collapsed;
 
         dialog.Show();
 
-        Assert.True(dialog.Visibility);
+        Assert.Equal(Visibility.Visible, dialog.Visibility);
         // Ensure no exception is thrown when root is null
     }
 
@@ -344,7 +344,7 @@ public class DialogBoxCoverageTests
         dialog.Show();
 
         // Assert Centering: (100 - 40) / 2 = 30, (100 - 20) / 2 = 40
-        Assert.True(dialog.Visibility);
+        Assert.Equal(Visibility.Visible, dialog.Visibility);
         Assert.Equal(30, dialog.RenderSize.X);
         Assert.Equal(40, dialog.RenderSize.Y);
         Assert.Equal(40, dialog.RenderSize.Width);
@@ -379,11 +379,11 @@ public class DialogBoxCoverageTests
     public void Hide_WithoutTuiWindow_SetsVisibilityFalse()
     {
         var dialog = new DialogBox();
-        dialog.Visibility = true;
+        dialog.Visibility = Visibility.Visible;
 
         dialog.Hide();
 
-        Assert.False(dialog.Visibility);
+        Assert.Equal(Visibility.Collapsed, dialog.Visibility);
     }
 
     [Fact]
@@ -393,14 +393,14 @@ public class DialogBoxCoverageTests
         var dialog = new DialogBox();
 
         window.PushOverlay(dialog);
-        dialog.Visibility = true;
+        dialog.Visibility = Visibility.Visible;
 
         Assert.Equal(dialog, window.Overlay);
 
         // Act
         dialog.Hide();
 
-        Assert.False(dialog.Visibility);
+        Assert.Equal(Visibility.Collapsed, dialog.Visibility);
         Assert.Null(window.Overlay);
     }
 

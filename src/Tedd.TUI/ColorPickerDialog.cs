@@ -36,7 +36,7 @@ public class ColorSwatch : UIElement
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-        if (!Visibility) return;
+        if (Visibility != Visibility.Visible) return;
 
         int x = RenderSize.X + offsetX;
         int y = RenderSize.Y + offsetY;

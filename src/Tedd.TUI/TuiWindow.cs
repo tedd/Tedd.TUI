@@ -142,7 +142,7 @@ public class TuiWindow : UIElement
             for (int i = 0; i < _overlays.Count; i++)
             {
                 var overlay = _overlays[i];
-                if (overlay == null || !overlay.Visibility) continue;
+                if (overlay == null || overlay.Visibility != Visibility.Visible) continue;
 
                 var layer = layers[i];
                 layer.Buffer.Clear(TuiColor.Transparent);
@@ -518,7 +518,7 @@ public class TuiWindow : UIElement
         for (int i = _overlays.Count - 1; i >= 0; i--)
         {
             var overlay = _overlays[i];
-            if (overlay.Visibility)
+            if (overlay.Visibility == Visibility.Visible)
             {
                 var hit = InputHitTestRecursive(overlay, x, y);
                 if (hit != null)
@@ -544,7 +544,7 @@ public class TuiWindow : UIElement
 
     private HitTestResult InputHitTestRecursive(UIElement element, int x, int y)
     {
-        if (!element.Visibility || !element.IsEnabled) return null;
+        if (element.Visibility != Visibility.Visible || !element.IsEnabled) return null;
 
         // x and y are relative to element.Parent
 
@@ -709,7 +709,7 @@ public class TuiWindow : UIElement
         for (int i = _overlays.Count - 1; i >= 0; i--)
         {
             var overlay = _overlays[i];
-            if (overlay.Visibility)
+            if (overlay.Visibility == Visibility.Visible)
             {
                 rootForFocus = overlay;
                 break;
@@ -774,7 +774,7 @@ public class TuiWindow : UIElement
         UIElement? current = element;
         while (current != null)
         {
-            if (!current.IsEnabled || !current.Visibility)
+            if (!current.IsEnabled || current.Visibility != Visibility.Visible)
                 return false;
 
             current = current.Parent;

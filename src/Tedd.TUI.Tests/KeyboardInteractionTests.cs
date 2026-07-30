@@ -187,7 +187,7 @@ public class KeyboardInteractionTests
         var disabled = new CheckBox { Content = "Disabled" };
         var last = new CheckBox { Content = "Last" };
 
-        var hiddenContainer = new StackPanel { Visibility = false };
+        var hiddenContainer = new StackPanel { Visibility = Visibility.Collapsed };
         hiddenContainer.AddChild(hidden);
         var disabledContainer = new StackPanel { IsEnabled = false };
         disabledContainer.AddChild(disabled);
@@ -212,7 +212,7 @@ public class KeyboardInteractionTests
     {
         var hidden = new CheckBox { Content = "Hidden" };
         var visible = new CheckBox { Content = "Visible" };
-        var hiddenContainer = new StackPanel { Visibility = false };
+        var hiddenContainer = new StackPanel { Visibility = Visibility.Collapsed };
         hiddenContainer.AddChild(hidden);
 
         var panel = new StackPanel();

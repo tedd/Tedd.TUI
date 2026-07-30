@@ -129,11 +129,11 @@ public abstract class UIElement : DependencyObject
     }
 
     public static readonly DependencyProperty VisibilityProperty =
-        DependencyProperty.Register("Visibility", typeof(bool), typeof(UIElement), true);
+        DependencyProperty.Register("Visibility", typeof(Visibility), typeof(UIElement), Visibility.Visible);
 
-    public bool Visibility
+    public Visibility Visibility
     {
-        get => (bool)GetValue(VisibilityProperty);
+        get => (Visibility)GetValue(VisibilityProperty);
         set => SetValue(VisibilityProperty, value);
     }
 
@@ -334,7 +334,7 @@ public abstract class UIElement : DependencyObject
 
     public void Measure(Size availableSize)
     {
-        if (!Visibility)
+        if (Visibility == Visibility.Collapsed)
         {
             DesiredSize = new Size(0, 0);
             return;
@@ -375,7 +375,7 @@ public abstract class UIElement : DependencyObject
 
     public void Arrange(Rect finalRect)
     {
-        if (!Visibility) return;
+        if (Visibility == Visibility.Collapsed) return;
 
         Thickness margin = Margin;
         int marginWidth = margin.Left + margin.Right;
@@ -682,7 +682,7 @@ public abstract class UIElement : DependencyObject
 
     public bool Focus()
     {
-        if (IsEnabled && Visibility)
+        if (IsEnabled && Visibility == Visibility.Visible)
         {
             // Traverse up to Window/Root to set focus
             var root = GetRoot();

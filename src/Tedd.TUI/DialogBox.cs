@@ -245,7 +245,7 @@ public class DialogBox : ScrollViewer, IModalOverlay
 
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
-        if (!Visibility) return;
+        if (Visibility != Visibility.Visible) return;
 
         int w = RenderSize.Width;
         int h = RenderSize.Height;
@@ -352,7 +352,7 @@ public class DialogBox : ScrollViewer, IModalOverlay
     /// </summary>
     public void Show()
     {
-        Visibility = true;
+        Visibility = Visibility.Visible;
         var root = GetRoot() as TuiWindow;
         if (root != null)
         {
@@ -384,7 +384,7 @@ public class DialogBox : ScrollViewer, IModalOverlay
     /// </summary>
     public void Hide()
     {
-        Visibility = false;
+        Visibility = Visibility.Collapsed;
         var root = GetRoot() as TuiWindow;
         if (root != null)
         {

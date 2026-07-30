@@ -36,7 +36,7 @@ public class ListBox : Selector
         // Delegate to the internal scrollbar: shares its notch accumulator, clamping
         // and ValueChanged -> _scrollOffset sync. When there is nothing to scroll the
         // bar leaves the event unhandled so an outer scroll viewer can take it.
-        if (_scrollBar.Visibility)
+        if (_scrollBar.Visibility == Visibility.Visible)
             _scrollBar.OnMouseWheel(e);
     }
 
@@ -119,11 +119,11 @@ public class ListBox : Selector
             _scrollBar.Maximum = Math.Max(0, Items.Count - h);
             _scrollBar.ViewportSize = h;
             _scrollBar.Value = _scrollOffset;
-            _scrollBar.Visibility = true;
+            _scrollBar.Visibility = Visibility.Visible;
         }
         else
         {
-            _scrollBar.Visibility = false;
+            _scrollBar.Visibility = Visibility.Collapsed;
         }
 
         // 4. Calculate Width
@@ -156,7 +156,7 @@ public class ListBox : Selector
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        if (_scrollBar.Visibility)
+        if (_scrollBar.Visibility == Visibility.Visible)
         {
             _scrollBar.Arrange(new Rect(finalSize.Width - 1, 0, 1, finalSize.Height));
         }
@@ -171,7 +171,7 @@ public class ListBox : Selector
 
         // Draw items.
         // If ScrollBar visible, effective width is w - 1
-        int effectiveW = _scrollBar.Visibility ? w - 1 : w;
+        int effectiveW = _scrollBar.Visibility == Visibility.Visible ? w - 1 : w;
 
         // Ensure scroll offset is valid
         if (_scrollOffset > Items.Count - h) _scrollOffset = Math.Max(0, Items.Count - h);
@@ -243,7 +243,7 @@ public class ListBox : Selector
             }
         }
 
-        if (_scrollBar.Visibility)
+        if (_scrollBar.Visibility == Visibility.Visible)
         {
             _scrollBar.Render(buffer, x, y);
         }
@@ -260,7 +260,7 @@ public class ListBox : Selector
         Focus();
 
         // Check if ScrollBar hit
-        if (_scrollBar.Visibility && e.X >= RenderSize.Width - 1)
+        if (_scrollBar.Visibility == Visibility.Visible && e.X >= RenderSize.Width - 1)
         {
             // Pass to ScrollBar.
             // We need to pass local coordinates to ScrollBar.

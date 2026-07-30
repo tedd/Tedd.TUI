@@ -42,7 +42,7 @@ public class WindowTests
         win.Show(host);
 
         Assert.Equal(win, host.Overlay);
-        Assert.True(win.Visibility);
+        Assert.Equal(Visibility.Visible, win.Visibility);
         Assert.Equal((80 - 20) / 2, win.RenderSize.X);
         Assert.Equal((25 - 5) / 2, win.RenderSize.Y);
     }
@@ -217,7 +217,7 @@ public class WindowTests
         SendMouse(host, UIElement.MouseDownEvent, 10 + 20 - 3, 5);
 
         Assert.True(closed);
-        Assert.False(win.Visibility);
+        Assert.Equal(Visibility.Collapsed, win.Visibility);
         Assert.Null(host.Overlay);
     }
 
@@ -234,7 +234,7 @@ public class WindowTests
         SendMouse(host, UIElement.MouseUpEvent, 10 + 20 - 3, 5);
 
         Assert.False(closed);
-        Assert.True(win.Visibility);
+        Assert.Equal(Visibility.Visible, win.Visibility);
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public class WindowTests
         win.Close();
 
         Assert.Null(host.Overlay);
-        Assert.False(win.Visibility);
+        Assert.Equal(Visibility.Collapsed, win.Visibility);
     }
 
     [Fact]

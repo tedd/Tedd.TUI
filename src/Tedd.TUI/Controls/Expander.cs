@@ -89,7 +89,7 @@ public class Expander : HeaderedContentControl
             vAlignBinding.RelativeSource = RelativeSource.TemplatedParent;
             contentPresenter.SetBinding(UIElement.VerticalAlignmentProperty, vAlignBinding);
 
-            contentPresenter.Visibility = expander.IsExpanded;
+            contentPresenter.Visibility = expander.IsExpanded ? Visibility.Visible : Visibility.Collapsed;
 
             stack.Children.Add(contentPresenter);
 
@@ -133,7 +133,7 @@ public class Expander : HeaderedContentControl
             // Content
             if (rootStack.Children[1] is ContentPresenter contentPresenter)
             {
-                contentPresenter.Visibility = IsExpanded;
+                contentPresenter.Visibility = IsExpanded ? Visibility.Visible : Visibility.Collapsed;
             }
         }
     }
