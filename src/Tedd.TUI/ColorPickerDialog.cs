@@ -15,7 +15,7 @@ public class ColorSwatch : UIElement
 
     public TuiColor Color
     {
-        get => (TuiColor)GetValue(ColorProperty);
+        get => (TuiColor)(GetValue(ColorProperty) ?? TuiColor.White);
         set => SetValue(ColorProperty, value);
     }
 

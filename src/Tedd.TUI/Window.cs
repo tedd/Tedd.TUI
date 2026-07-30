@@ -43,7 +43,7 @@ public class Window : UIElement
 
     public string Title
     {
-        get => (string)GetValue(TitleProperty);
+        get => (string)(GetValue(TitleProperty) ?? string.Empty);
         set => SetValue(TitleProperty, value);
     }
 
@@ -55,7 +55,7 @@ public class Window : UIElement
 
     public TuiColor BorderColor
     {
-        get => (TuiColor)GetValue(BorderColorProperty);
+        get => (TuiColor)(GetValue(BorderColorProperty) ?? TuiColor.White);
         set => SetValue(BorderColorProperty, value);
     }
 
@@ -67,7 +67,7 @@ public class Window : UIElement
 
     public TuiColor TitleColor
     {
-        get => (TuiColor)GetValue(TitleColorProperty);
+        get => (TuiColor)(GetValue(TitleColorProperty) ?? TuiColor.Yellow);
         set => SetValue(TitleColorProperty, value);
     }
 
@@ -79,7 +79,7 @@ public class Window : UIElement
 
     public TuiColor BackgroundColor
     {
-        get => (TuiColor)GetValue(BackgroundColorProperty);
+        get => (TuiColor)(GetValue(BackgroundColorProperty) ?? TuiColor.Black);
         set => SetValue(BackgroundColorProperty, value);
     }
 
@@ -91,7 +91,7 @@ public class Window : UIElement
 
     public BoxStyle BoxStyle
     {
-        get => (BoxStyle)GetValue(BoxStyleProperty);
+        get => (BoxStyle)(GetValue(BoxStyleProperty) ?? BoxStyle.Double);
         set => SetValue(BoxStyleProperty, value);
     }
 
@@ -105,7 +105,7 @@ public class Window : UIElement
 
     public Thickness Padding
     {
-        get => (Thickness)GetValue(PaddingProperty);
+        get => (Thickness)(GetValue(PaddingProperty) ?? new Thickness(1));
         set => SetValue(PaddingProperty, value);
     }
 
@@ -117,7 +117,7 @@ public class Window : UIElement
 
     public bool CanMove
     {
-        get => (bool)GetValue(CanMoveProperty);
+        get => (bool)(GetValue(CanMoveProperty) ?? true);
         set => SetValue(CanMoveProperty, value);
     }
 
@@ -129,7 +129,7 @@ public class Window : UIElement
 
     public bool CanResize
     {
-        get => (bool)GetValue(CanResizeProperty);
+        get => (bool)(GetValue(CanResizeProperty) ?? true);
         set => SetValue(CanResizeProperty, value);
     }
 
@@ -141,7 +141,7 @@ public class Window : UIElement
 
     public bool ShowCloseButton
     {
-        get => (bool)GetValue(ShowCloseButtonProperty);
+        get => (bool)(GetValue(ShowCloseButtonProperty) ?? true);
         set => SetValue(ShowCloseButtonProperty, value);
     }
 
@@ -153,7 +153,7 @@ public class Window : UIElement
 
     public int MinWidth
     {
-        get => (int)GetValue(MinWidthProperty);
+        get => (int)(GetValue(MinWidthProperty) ?? 10);
         set => SetValue(MinWidthProperty, value);
     }
 
@@ -165,7 +165,7 @@ public class Window : UIElement
 
     public int MinHeight
     {
-        get => (int)GetValue(MinHeightProperty);
+        get => (int)(GetValue(MinHeightProperty) ?? 3);
         set => SetValue(MinHeightProperty, value);
     }
 
@@ -177,7 +177,7 @@ public class Window : UIElement
 
     public int Left
     {
-        get => (int)GetValue(LeftProperty);
+        get => (int)(GetValue(LeftProperty) ?? -1);
         set => SetValue(LeftProperty, value);
     }
 
@@ -189,7 +189,7 @@ public class Window : UIElement
 
     public int Top
     {
-        get => (int)GetValue(TopProperty);
+        get => (int)(GetValue(TopProperty) ?? -1);
         set => SetValue(TopProperty, value);
     }
 
