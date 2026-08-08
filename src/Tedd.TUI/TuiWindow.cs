@@ -565,13 +565,22 @@ public class TuiWindow : UIElement
                 var child = element.GetVisualChild(i);
 
                 // For a ScrollViewer, the Content child is rendered with a translation
-                // of (-HorizontalOffset, -VerticalOffset). Hit testing must apply the
-                // same translation when descending into Content so coordinates match
-                // what the user sees. Scrollbars / title / status bar are NOT translated.
+                // of (-HorizontalOffset, -VerticalOffset), clipped to the viewport.
+                // Hit testing must apply the same translation when descending into
+                // Content so coordinates match what the user sees, and skip Content
+                // entirely outside the viewport -- otherwise a click on the frame around
+                // it (border line, padding gutter, title bar) walks into whichever
+                // scrolled-away row the offset happens to put there.
+                // Scrollbars / title / status bar are NOT translated or clipped.
                 int childX = localX;
                 int childY = localY;
                 if (element is ScrollViewer sv && ReferenceEquals(child, sv.Content))
                 {
+                    var viewport = sv.GetContentViewport();
+                    if (localX < viewport.X || localX >= viewport.X + viewport.Width ||
+                        localY < viewport.Y || localY >= viewport.Y + viewport.Height)
+                        continue;
+
                     childX += sv.HorizontalOffset;
                     childY += sv.VerticalOffset;
                 }

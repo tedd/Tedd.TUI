@@ -252,6 +252,18 @@ public class DialogBox : ScrollViewer, IModalOverlay
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>Mirrors the clip rect in <see cref="Render"/>: inside the frame and padding.</remarks>
+    protected internal override Rect GetContentViewport()
+    {
+        Thickness padding = Padding;
+        return new Rect(
+            1 + padding.Left,
+            1 + padding.Top,
+            Math.Max(0, RenderSize.Width - 2 - padding.Left - padding.Right),
+            Math.Max(0, RenderSize.Height - 2 - padding.Top - padding.Bottom));
+    }
+
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
         if (!Visibility) return;

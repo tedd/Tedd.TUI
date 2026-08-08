@@ -399,6 +399,28 @@ public class ScrollViewer : UIElement
         }
     }
 
+    // Intent: keep hit testing inside the same window onto Content that rendering draws.
+    // Why:
+    // - Render clips Content to this rectangle. Without the matching test, a click on the
+    //   frame around it (a Border's line and padding gutter, a dialog's title bar) walks
+    //   into whichever row the scroll offset happens to put there -- content the user
+    //   cannot see, and in a scrolled dialog that is a different control every notch.
+    // Constraints/Invariants:
+    // - Coordinates are this element's own, so an override must agree with the rectangle
+    //   its Render passes to PushClip, inset and all.
+    /// <summary>
+    /// The rectangle, in this element's own coordinates, that <see cref="Content"/> is
+    /// clipped to. Hit testing descends into Content only for points inside it.
+    /// </summary>
+    protected internal virtual Rect GetContentViewport()
+    {
+        int vScrollWidth = _showVertical ? 1 : 0;
+        int hScrollHeight = _showHorizontal ? 1 : 0;
+        return new Rect(0, 0,
+            Math.Max(0, RenderSize.Width - vScrollWidth),
+            Math.Max(0, RenderSize.Height - hScrollHeight));
+    }
+
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
         int x = RenderSize.X + offsetX;

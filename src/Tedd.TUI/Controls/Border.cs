@@ -374,6 +374,24 @@ public class Border : ScrollViewer
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Mirrors the two clip rects in <see cref="Render"/>: the whole box when there is no
+    /// border, otherwise inside the border line and the padding gutter.
+    /// </remarks>
+    protected internal override Rect GetContentViewport()
+    {
+        if (BoxStyle == BoxStyle.None)
+            return new Rect(0, 0, RenderSize.Width, RenderSize.Height);
+
+        Thickness padding = Padding;
+        return new Rect(
+            1 + padding.Left,
+            1 + padding.Top,
+            Math.Max(0, RenderSize.Width - 2 - padding.Left - padding.Right),
+            Math.Max(0, RenderSize.Height - 2 - padding.Top - padding.Bottom));
+    }
+
     public override void Render(VirtualBuffer buffer, int offsetX, int offsetY)
     {
         int w = RenderSize.Width;
