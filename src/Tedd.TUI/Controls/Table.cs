@@ -414,6 +414,15 @@ public class Table : UIElement
         return new Size(availableSize.Width, verticalPadding + headerBlockHeight + _scrollViewer.DesiredSize.Height + footerHeight);
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// The body is a viewer: the table takes the offered height, spends it on the header,
+    /// footer and border, and hands the rest to the body, which scrolls its own overflow.
+    /// The width is taken as offered in the same way.
+    /// </remarks>
+    public override bool ScrollsOwnContent(Orientation orientation) =>
+        _scrollViewer.ScrollsOwnContent(orientation);
+
     protected override void ArrangeOverride(Size finalSize)
     {
         int padding = ShowBorder ? 1 : 0;

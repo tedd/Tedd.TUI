@@ -257,19 +257,22 @@ public class DataGridTests
     {
         var people = CreatePeople(6);
         var grid = CreateGrid(people, showHeader: true, showBorder: true);
+        // 12 = the border's two lines plus the grid's own 10 (border, header, 6 rows).
+        // A shorter frame is legitimate but makes the grid scroll its body, which moves
+        // the rows this test is about.
         var borderedGrid = new Border
         {
             Child = grid,
             BoxStyle = BoxStyle.Double,
             Width = 22,
-            Height = 11,
+            Height = 12,
             Padding = new Thickness(0)
         };
         var nestedPanel = new StackPanel();
         nestedPanel.AddChild(new TextBlock { Text = "toolbar" });
         nestedPanel.AddChild(new TextBlock { Text = "status" });
         nestedPanel.AddChild(borderedGrid);
-        var host = new ControlTestHost(nestedPanel, 22, 13);
+        var host = new ControlTestHost(nestedPanel, 22, 14);
 
         // Grid local row 4 is screen row 2 (panel offset) + 1 (Border) + 3 + 4.
         host.Click(grid, 1, 3 + 4);

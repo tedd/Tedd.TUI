@@ -153,6 +153,67 @@ public class NestedScrollingTests
     }
 
     [Fact]
+    public void ListBoxFillingDialog_TakesTheDialogViewportAndScrolls()
+    {
+        var list = new ListBox { Width = 20 };
+        for (int i = 0; i < 30; i++)
+            list.Items.Add($"Item{i}");
+
+        var dialog = new DialogBox { Title = "T", Width = 30, Height = 12, Content = list };
+        var host = ShowDialog(dialog);
+
+        Assert.Equal(8, list.RenderSize.Height);
+        Assert.False(dialog.IsVerticalScrollBarShown);
+
+        var text = VirtualBufferAssertions.GetText(host.Render());
+        Assert.Contains("Item0", text);
+        Assert.DoesNotContain("Item8", text);
+
+        var point = list.PointToScreen(new Point(2, 2));
+        host.MouseWheel(point.X, point.Y, -Notch);
+
+        Assert.Equal(0, dialog.VerticalOffset);
+        text = VirtualBufferAssertions.GetText(host.Render());
+        Assert.DoesNotContain("Item0", text);
+        Assert.Contains("Item3", text);
+    }
+
+    [Fact]
+    public void TreeViewFillingDialog_TakesTheDialogViewport()
+    {
+        var tree = new TreeView();
+        for (int i = 0; i < 30; i++)
+            tree.Items.Add(new TreeViewItem { Header = $"Node{i}" });
+
+        var dialog = new DialogBox { Title = "T", Width = 30, Height = 12, Content = tree };
+        ShowDialog(dialog);
+
+        Assert.Equal(8, tree.RenderSize.Height);
+        Assert.False(dialog.IsVerticalScrollBarShown);
+    }
+
+    [Fact]
+    public void DataGridFillingDialog_TakesTheDialogViewport()
+    {
+        var grid = new DataGrid { ShowHeader = true, ShowBorder = false, AutoGenerateColumns = false };
+        grid.Columns.Add(new DataGridColumn
+        {
+            Header = "Name",
+            BindingPath = "Name",
+            Width = new GridLength(10, GridUnitType.Pixel)
+        });
+        var rows = new List<object>();
+        for (int i = 0; i < 30; i++) rows.Add(new { Name = $"Row{i}" });
+        grid.ItemsSource = rows;
+
+        var dialog = new DialogBox { Title = "T", Width = 30, Height = 12, Content = grid };
+        ShowDialog(dialog);
+
+        Assert.Equal(8, grid.RenderSize.Height);
+        Assert.False(dialog.IsVerticalScrollBarShown);
+    }
+
+    [Fact]
     public void ViewerWithScrollingDisabled_StillPassesTheConstraintThrough()
     {
         // A viewer that cannot scroll vertically is not a vertical viewport: the dialog

@@ -322,6 +322,11 @@ public class TreeView : UIElement
         return _scrollViewer.DesiredSize;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>The tree is a thin shell over its viewer, so it scrolls wherever that does.</remarks>
+    public override bool ScrollsOwnContent(Orientation orientation) =>
+        _scrollViewer.ScrollsOwnContent(orientation);
+
     protected override void ArrangeOverride(Size finalSize)
     {
         _scrollViewer.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));

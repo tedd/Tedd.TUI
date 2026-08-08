@@ -93,6 +93,14 @@ public class ListBox : Selector
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Auto height clamps to the offered rows and the overflow goes to the list's own
+    /// scrollbar, so a list is a vertical viewport. It never scrolls horizontally.
+    /// </remarks>
+    public override bool ScrollsOwnContent(Orientation orientation) =>
+        orientation == Orientation.Vertical;
+
     protected override Size MeasureOverride(Size availableSize)
     {
         // 1. Calculate Height

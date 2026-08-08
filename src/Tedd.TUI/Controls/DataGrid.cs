@@ -438,6 +438,11 @@ public class DataGrid : ItemsControl
         return _table.DesiredSize;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>The grid is a thin shell over its table, so it scrolls wherever that does.</remarks>
+    public override bool ScrollsOwnContent(Orientation orientation) =>
+        _table.ScrollsOwnContent(orientation);
+
     protected override void ArrangeOverride(Size finalSize)
     {
         _table.Arrange(new Rect(0, 0, finalSize.Width, finalSize.Height));
