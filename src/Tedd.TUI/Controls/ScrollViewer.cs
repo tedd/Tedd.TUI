@@ -215,6 +215,17 @@ public class ScrollViewer : UIElement
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// A viewer scrolls its own content in every axis it has not had scrolling
+    /// <see cref="ScrollBarVisibility.Disabled"/> on: those axes clamp to the offered
+    /// extent, a Disabled one passes the constraint straight through to the content.
+    /// </remarks>
+    public override bool ScrollsOwnContent(Orientation orientation) =>
+        orientation == Orientation.Vertical
+            ? VerticalScrollBarVisibility != ScrollBarVisibility.Disabled
+            : HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled;
+
     protected override Size MeasureOverride(Size availableSize)
     {
         ResolveScrollBarsAndMeasureContent(availableSize, out int vScrollWidth, out int hScrollHeight, out Size contentSize);
@@ -320,6 +331,17 @@ public class ScrollViewer : UIElement
             contentAvailable.Height = int.MaxValue;
         if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled)
             contentAvailable.Width = int.MaxValue;
+
+        // Content that is a viewport in its own right has no natural extent to report, so
+        // it gets the real viewport instead: the frame we will occupy (an explicit
+        // Width/Height when set, since a stacking parent hands us infinity on its stack
+        // axis) less whatever our own scrollbars take. Handed infinity it would grow to
+        // its whole content and leave its own scrollbar dead at Maximum 0, with this
+        // viewer scrolling in its place.
+        if (_content.ScrollsOwnContent(Orientation.Vertical))
+            contentAvailable.Height = Math.Max(0, (Height > 0 ? Height : availableSize.Height) - hScrollHeight);
+        if (_content.ScrollsOwnContent(Orientation.Horizontal))
+            contentAvailable.Width = Math.Max(0, (Width > 0 ? Width : availableSize.Width) - vScrollWidth);
 
         _content.Measure(contentAvailable);
         return _content.DesiredSize;

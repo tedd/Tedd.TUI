@@ -233,6 +233,19 @@ public class Border : ScrollViewer
         if (VerticalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Height = int.MaxValue;
         if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Width = int.MaxValue;
 
+        // Content that is a viewport in its own right has no natural extent to report, so
+        // it gets the real content area instead: the frame we will occupy (an explicit
+        // Width/Height when set, since a stacking parent hands us infinity on its stack
+        // axis) less this border's inset. Handed infinity it would grow to its whole
+        // content, overflow the frame, and leave its own scrollbar dead at Maximum 0.
+        if (Content != null)
+        {
+            if (Content.ScrollsOwnContent(Orientation.Vertical))
+                contentAvailable.Height = Math.Max(0, (Height > 0 ? Height : availableSize.Height) - insetH);
+            if (Content.ScrollsOwnContent(Orientation.Horizontal))
+                contentAvailable.Width = Math.Max(0, (Width > 0 ? Width : availableSize.Width) - insetW);
+        }
+
         Size contentSize = new Size(0, 0);
         if (Content != null)
         {

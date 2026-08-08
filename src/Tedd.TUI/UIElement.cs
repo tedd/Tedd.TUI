@@ -373,6 +373,22 @@ public abstract class UIElement : DependencyObject
         return new Size(0, 0);
     }
 
+    // Intent: let a scrolling container recognise a child that is a viewport in its own right.
+    // Why:
+    // - Such a container measures its content with int.MaxValue to learn the content's natural
+    //   extent. A child that scrolls internally has no natural extent -- handed infinity it
+    //   reports its whole content, grows past the frame, and its own scrollbar goes dead
+    //   (Maximum == 0) while the outer container scrolls instead.
+    // Constraints/Invariants:
+    // - Returning true is a promise that the element clamps its desired size to whatever
+    //   extent it is given in that axis and scrolls the overflow itself. Containers rely on
+    //   that to hand it the real viewport instead of infinity.
+    /// <summary>
+    /// True when this element supplies its own viewport along <paramref name="orientation"/>:
+    /// it clamps to the extent it is given and scrolls the overflow internally.
+    /// </summary>
+    public virtual bool ScrollsOwnContent(Orientation orientation) => false;
+
     public void Arrange(Rect finalRect)
     {
         if (!Visibility) return;

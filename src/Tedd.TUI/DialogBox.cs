@@ -132,6 +132,15 @@ public class DialogBox : ScrollViewer, IModalOverlay
         if (VerticalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Height = int.MaxValue;
         if (HorizontalScrollBarVisibility != ScrollBarVisibility.Disabled) contentAvailable.Width = int.MaxValue;
 
+        // Content that is a viewport in its own right has no natural extent to report, so
+        // it keeps the frame's content area. Handed infinity it would grow past the frame
+        // and leave its own scrollbar dead at Maximum 0, with the dialog scrolling instead.
+        if (Content != null)
+        {
+            if (Content.ScrollsOwnContent(Orientation.Vertical)) contentAvailable.Height = viewportContentH;
+            if (Content.ScrollsOwnContent(Orientation.Horizontal)) contentAvailable.Width = viewportContentW;
+        }
+
         Size contentSize = new Size(0, 0);
         if (Content != null)
         {
