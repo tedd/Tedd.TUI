@@ -8,9 +8,22 @@ namespace Tedd.TUI.Tests;
 
 /// <summary>
 /// Covers mouse-drag text selection and Ctrl+C copy on <see cref="MarkdownView"/>.
+/// Shares the "ClipboardState" collection because <see cref="Clipboard"/> is static.
 /// </summary>
-public class MarkdownSelectionTests
+[Collection("ClipboardState")]
+public class MarkdownSelectionTests : IDisposable
 {
+    public MarkdownSelectionTests()
+    {
+        Clipboard.Provider = null;
+        Clipboard.SetText(string.Empty);
+    }
+
+    public void Dispose()
+    {
+        Clipboard.Provider = null;
+        Clipboard.SetText(string.Empty);
+    }
     private static MarkdownView Layout(string text, int w = 40, int h = 12)
     {
         var md = new MarkdownView { Text = text };

@@ -11,9 +11,22 @@ namespace Tedd.TUI.Tests;
 /// <summary>
 /// Covers the fenced-code-block container: language title, height cap, and the
 /// hover "Copy" button.
+/// Shares the "ClipboardState" collection because <see cref="Clipboard"/> is static.
 /// </summary>
-public class MarkdownCodeBlockTests
+[Collection("ClipboardState")]
+public class MarkdownCodeBlockTests : IDisposable
 {
+    public MarkdownCodeBlockTests()
+    {
+        Clipboard.Provider = null;
+        Clipboard.SetText(string.Empty);
+    }
+
+    public void Dispose()
+    {
+        Clipboard.Provider = null;
+        Clipboard.SetText(string.Empty);
+    }
     private static MarkdownCodeBlock ParseSingleBlock(string markdown, int w = 40, int h = 40)
     {
         var parser = new MarkdownParser(new MarkdownTheme());
