@@ -81,6 +81,32 @@ public class ContentControlTests
 
         Assert.Equal(template, cc.ContentTemplate);
     }
+
+    [Fact]
+    public void HasContent_IsInitiallyFalse()
+    {
+        var cc = new TestContentControl();
+        Assert.False(cc.HasContent);
+    }
+
+    [Fact]
+    public void SettingContent_UpdatesHasContent()
+    {
+        var cc = new TestContentControl();
+        cc.Content = "Hello";
+        Assert.True(cc.HasContent);
+    }
+
+    [Fact]
+    public void ClearingContent_UpdatesHasContent()
+    {
+        var cc = new TestContentControl();
+        cc.Content = "Hello";
+        Assert.True(cc.HasContent);
+
+        cc.Content = null;
+        Assert.False(cc.HasContent);
+    }
 }
 
 public class ControlTemplateTests
