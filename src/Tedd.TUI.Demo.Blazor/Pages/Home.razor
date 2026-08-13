@@ -65,6 +65,7 @@
                         <TuiTreeViewItem Header="Editor" @bind-IsSelected="isEditorSelected" />
                         <TuiTreeViewItem Header="ProgressBar" @bind-IsSelected="isProgressBarSelected" />
                         <TuiTreeViewItem Header="Layouts" @bind-IsSelected="isLayoutsSelected" />
+                        <TuiTreeViewItem Header="Inputs" @bind-IsSelected="isInputsSelected" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -269,6 +270,26 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 11: Inputs -->
+            <TuiTabItem Header="Inputs">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="NumericUpDown:" />
+                    <TuiHost Component="@demoNumeric" />
+
+                    <TuiLabel Text="ToggleSwitch:" />
+                    <TuiHost Component="@demoToggle" />
+
+                    <TuiLabel Text="TimePicker:" />
+                    <TuiHost Component="@demoTimePicker" />
+
+                    <TuiLabel Text="DatePicker:" />
+                    <TuiHost Component="@demoDatePicker" />
+
+                    <TuiLabel Text="Calendar:" />
+                    <TuiHost Component="@demoCalendar" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -276,6 +297,12 @@
 </TuiView>
 
 @code {
+    private NumericUpDown demoNumeric = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 42 };
+    private ToggleSwitch demoToggle = new ToggleSwitch { IsChecked = true, OnContent = "Enabled", OffContent = "Disabled" };
+    private TimePicker demoTimePicker = new TimePicker { SelectedTime = new TimeSpan(12, 30, 0), ShowSeconds = true };
+    private DatePicker demoDatePicker = new DatePicker { SelectedDate = DateTime.Now };
+    private Calendar demoCalendar = new Calendar { DisplayDate = DateTime.Now };
+
     private TuiWindow window = new TuiWindow();
     private TuiRenderMode currentMode = TuiRenderMode.Canvas;
     
@@ -307,6 +334,7 @@
     private bool isEditorSelected = false;
     private bool isProgressBarSelected = false;
     private bool isLayoutsSelected = false;
+    private bool isInputsSelected = false;
 
     private void UpdateNavTreeSelection()
     {
@@ -320,6 +348,7 @@
         isEditorSelected = _selectedTabIndex == 7;
         isProgressBarSelected = _selectedTabIndex == 8;
         isLayoutsSelected = _selectedTabIndex == 9;
+        isInputsSelected = _selectedTabIndex == 10;
         StateHasChanged();
     }
 
@@ -339,6 +368,7 @@
                 case "Editor": selectedTabIndex = 7; break;
                 case "ProgressBar": selectedTabIndex = 8; break;
                 case "Layouts": selectedTabIndex = 9; break;
+                case "Inputs": selectedTabIndex = 10; break;
             }
             StateHasChanged();
         }
