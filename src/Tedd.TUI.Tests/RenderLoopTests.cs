@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using Xunit;
 using Tedd.TUI;
+using Tedd.TUI.Markdown;
 
 namespace Tedd.TUI.Tests;
 
@@ -88,6 +89,46 @@ public class RenderLoopTests
         window.VisualChanged += (s, e) => invalidations++;
 
         RenderPass(window, buffer);
+        Assert.Equal(0, invalidations);
+    }
+
+    [Fact]
+    public void NestedAutoScrollbars_SteadyStateRenderPass_DoesNotInvalidate()
+    {
+        // The outer viewer measures once at the full width and again one column narrower
+        // after resolving its automatic vertical scrollbar. A wide fenced code block has
+        // its own automatic horizontal scrollbar, so both speculative measurements must
+        // not re-arm the render loop through intermediate scrollbar range changes.
+        string longLine = new('x', 80);
+        string markdown = "```text\n" + string.Join('\n', new[]
+        {
+            longLine, longLine, longLine, longLine,
+            longLine, longLine, longLine, longLine
+        }) + "\n```";
+
+        var markdownView = new MarkdownView { Text = markdown };
+        var document = Assert.IsType<FlowDocument>(markdownView.GetVisualChild(0));
+        var codeBlock = Assert.IsType<MarkdownCodeBlock>(document.Children[0]);
+        var outer = new ScrollViewer
+        {
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            Content = markdownView
+        };
+        var window = new TuiWindow { Content = outer };
+        var buffer = new VirtualBuffer(30, 6);
+
+        RenderPass(window, buffer);
+        RenderPass(window, buffer);
+
+        Assert.True(outer.IsVerticalScrollBarShown);
+        Assert.True(codeBlock.IsHorizontalScrollBarShown);
+        Assert.False(codeBlock.IsVerticalScrollBarShown);
+
+        int invalidations = 0;
+        window.VisualChanged += (s, e) => invalidations++;
+
+        RenderPass(window, buffer);
+
         Assert.Equal(0, invalidations);
     }
 

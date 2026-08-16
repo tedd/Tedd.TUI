@@ -234,9 +234,7 @@ public class ScrollViewer : UIElement
         {
             int viewport = Math.Max(1, availableSize.Height - hScrollHeight);
             int extent = contentSize.Height;
-            _verticalScrollBar.ViewportSize = viewport;
-            _verticalScrollBar.Maximum = Math.Max(0, extent - viewport);
-            _verticalScrollBar.Minimum = 0;
+            _verticalScrollBar.SetLayoutMetrics(0, Math.Max(0, extent - viewport), viewport);
             _verticalScrollBar.Measure(new Size(vScrollWidth, viewport));
         }
 
@@ -244,9 +242,7 @@ public class ScrollViewer : UIElement
         {
             int viewport = Math.Max(1, availableSize.Width - vScrollWidth);
             int extent = contentSize.Width;
-            _horizontalScrollBar.ViewportSize = viewport;
-            _horizontalScrollBar.Maximum = Math.Max(0, extent - viewport);
-            _horizontalScrollBar.Minimum = 0;
+            _horizontalScrollBar.SetLayoutMetrics(0, Math.Max(0, extent - viewport), viewport);
             _horizontalScrollBar.Measure(new Size(viewport, hScrollHeight));
         }
 
@@ -361,15 +357,19 @@ public class ScrollViewer : UIElement
             if (_showVertical)
             {
                 int extent = _content.DesiredSize.Height;
-                _verticalScrollBar.ViewportSize = Math.Max(1, viewportH);
-                _verticalScrollBar.Maximum = Math.Max(0, extent - viewportH);
+                _verticalScrollBar.SetLayoutMetrics(
+                    0,
+                    Math.Max(0, extent - viewportH),
+                    Math.Max(1, viewportH));
             }
 
             if (_showHorizontal)
             {
                 int extent = _content.DesiredSize.Width;
-                _horizontalScrollBar.ViewportSize = Math.Max(1, viewportW);
-                _horizontalScrollBar.Maximum = Math.Max(0, extent - viewportW);
+                _horizontalScrollBar.SetLayoutMetrics(
+                    0,
+                    Math.Max(0, extent - viewportW),
+                    Math.Max(1, viewportW));
             }
         }
 

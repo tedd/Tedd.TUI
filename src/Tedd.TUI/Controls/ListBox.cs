@@ -124,8 +124,7 @@ public class ListBox : Selector
         if (showScroll)
         {
             _scrollBar.Measure(new Size(1, h));
-            _scrollBar.Maximum = Math.Max(0, Items.Count - h);
-            _scrollBar.ViewportSize = h;
+            _scrollBar.SetLayoutMetrics(0, Math.Max(0, Items.Count - h), h);
             _scrollBar.Value = _scrollOffset;
             _scrollBar.Visibility = true;
         }

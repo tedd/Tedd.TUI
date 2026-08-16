@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## 2026
 
+- **2026-08-16** - Fixed: Blazor WebAssembly no longer remains at 100% CPU on long scrolling documents containing wide fenced code blocks. Nested automatic scrollbars could change a code block's horizontal range twice during every layout pass, and each intermediate value re-scheduled the next frame indefinitely. Layout-derived scrollbar metrics now render in the current frame without re-arming the loop; real scroll-offset changes continue to invalidate normally.
+
 - **2026-08-09** - Fixed: scrollable surfaces nested inside another scroll surface can now scroll, and clicks on scroll frames no longer reach clipped content.
 
 - **2026-07-26** - Fixed: images escaped the scroll viewport they lived in. The clip stack applied to text but not to bitmaps, so scrolling a markdown image out of view left it drawn past the top and bottom of the `ScrollViewer` and over the scrollbars. Placements now go through `VirtualBuffer.AddGraphic`, which drops one that is entirely outside the viewport and records the visible region for one that is partly showing, so surfaces crop it instead. The placement keeps its full rectangle, so the image is cropped rather than squashed. Both Blazor surfaces honour it; other hosts still draw partly-visible images whole but no longer draw ones scrolled entirely away.

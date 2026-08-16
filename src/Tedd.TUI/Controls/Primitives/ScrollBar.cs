@@ -13,6 +13,11 @@ namespace Tedd.TUI.Controls.Primitives;
 // - Verified manually in Demo app ("Scroll" tab).
 public class ScrollBar : UIElement
 {
+    private int _value;
+    private int _minimum;
+    private int _maximum = 100;
+    private int _viewportSize = 1;
+
     public ScrollBar()
     {
         // Default size?
@@ -20,13 +25,13 @@ public class ScrollBar : UIElement
 
     public int Value
     {
-        get;
+        get => _value;
         set
         {
             int newVal = Math.Clamp(value, Minimum, Maximum);
-            if (field != newVal)
+            if (_value != newVal)
             {
-                field = newVal;
+                _value = newVal;
                 ValueChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
@@ -35,36 +40,60 @@ public class ScrollBar : UIElement
 
     public int Minimum
     {
-        get;
+        get => _minimum;
         set
         {
-            if (field != value)
+            if (_minimum != value)
             {
-                field = value;
+                _minimum = value;
                 // Re-clamp value?
                 Value = Value; // will clamp
                 Invalidate();
             }
         }
-    } = 0;
+    }
 
     public int Maximum
     {
-        get;
+        get => _maximum;
         set
         {
-            if (field != value)
+            if (_maximum != value)
             {
-                field = value;
+                _maximum = value;
                 Value = Value; // will clamp
                 Invalidate();
             }
         }
-    } = 100;
+    }
 
     public int SmallChange { get; set; } = 1;
     public int LargeChange { get; set; } = 10;
-    public int ViewportSize { get; set; } = 1;
+    public int ViewportSize
+    {
+        get => _viewportSize;
+        set => _viewportSize = value;
+    }
+
+    /// <summary>
+    /// Updates range values derived by an in-progress layout pass without scheduling
+    /// another frame. The current frame renders the new metrics; speculative measurements
+    /// may otherwise alternate them and continuously re-arm an event-driven render loop.
+    /// A value forced into the new range still raises <see cref="ValueChanged"/>.
+    /// </summary>
+    internal void SetLayoutMetrics(int minimum, int maximum, int viewportSize)
+    {
+        int clampedValue = Math.Clamp(_value, minimum, maximum);
+        bool valueChanged = clampedValue != _value;
+
+        _minimum = minimum;
+        _maximum = maximum;
+        _viewportSize = viewportSize;
+        _value = clampedValue;
+
+        if (valueChanged)
+            ValueChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     public Orientation Orientation { get; set; } = Orientation.Vertical;
 

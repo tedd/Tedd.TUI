@@ -278,9 +278,7 @@ public class Border : ScrollViewer
         {
             int viewport = Math.Max(1, viewportContentH);
             int extent = contentSize.Height;
-            _verticalScrollBar.ViewportSize = viewport;
-            _verticalScrollBar.Maximum = Math.Max(0, extent - viewport);
-            _verticalScrollBar.Minimum = 0;
+            _verticalScrollBar.SetLayoutMetrics(0, Math.Max(0, extent - viewport), viewport);
 
             // The track runs along the border line, so its length is border-relative
             // and unaffected by Padding.
@@ -292,9 +290,7 @@ public class Border : ScrollViewer
         {
             int viewport = Math.Max(1, viewportContentW);
             int extent = contentSize.Width;
-            _horizontalScrollBar.ViewportSize = viewport;
-            _horizontalScrollBar.Maximum = Math.Max(0, extent - viewport);
-            _horizontalScrollBar.Minimum = 0;
+            _horizontalScrollBar.SetLayoutMetrics(0, Math.Max(0, extent - viewport), viewport);
 
             int hScrollWidth = Math.Max(0, availableSize.Width - 2 - HorizontalScrollBarMarginLeft - HorizontalScrollBarMarginRight);
             _horizontalScrollBar.Measure(new Size(hScrollWidth, 1));

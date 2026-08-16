@@ -166,18 +166,14 @@ public class DialogBox : ScrollViewer, IModalOverlay
         if (showVertical)
         {
             int viewport = Math.Max(1, viewportContentH);
-            _verticalScrollBar.ViewportSize = viewport;
-            _verticalScrollBar.Maximum = Math.Max(0, contentSize.Height - viewport);
-            _verticalScrollBar.Minimum = 0;
+            _verticalScrollBar.SetLayoutMetrics(0, Math.Max(0, contentSize.Height - viewport), viewport);
             _verticalScrollBar.Measure(new Size(1, Math.Max(0, frameH - 2)));
         }
 
         if (showHorizontal)
         {
             int viewport = Math.Max(1, viewportContentW);
-            _horizontalScrollBar.ViewportSize = viewport;
-            _horizontalScrollBar.Maximum = Math.Max(0, contentSize.Width - viewport);
-            _horizontalScrollBar.Minimum = 0;
+            _horizontalScrollBar.SetLayoutMetrics(0, Math.Max(0, contentSize.Width - viewport), viewport);
             _horizontalScrollBar.Measure(new Size(Math.Max(0, frameW - 2), 1));
         }
 

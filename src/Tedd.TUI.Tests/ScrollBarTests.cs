@@ -23,6 +23,32 @@ namespace Tedd.TUI.Tests
         }
 
         [Fact]
+        public void SetLayoutMetrics_ClampsValueAndNotifiesAfterAtomicUpdate()
+        {
+            var scrollBar = new ScrollBar
+            {
+                Minimum = 0,
+                Maximum = 100,
+                ViewportSize = 10,
+                Value = 80
+            };
+            int notifications = 0;
+
+            scrollBar.ValueChanged += (_, _) =>
+            {
+                notifications++;
+                Assert.Equal(5, scrollBar.Minimum);
+                Assert.Equal(40, scrollBar.Maximum);
+                Assert.Equal(20, scrollBar.ViewportSize);
+                Assert.Equal(40, scrollBar.Value);
+            };
+
+            scrollBar.SetLayoutMetrics(5, 40, 20);
+
+            Assert.Equal(1, notifications);
+        }
+
+        [Fact]
         public void TestRender_Vertical()
         {
             var scrollBar = new ScrollBar
