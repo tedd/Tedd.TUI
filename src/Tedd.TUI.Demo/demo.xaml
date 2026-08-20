@@ -70,6 +70,8 @@
                     <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
                     <TreeViewItem Header="Layouts" />
+                    <TreeViewItem Header="DateTime" />
+                    <TreeViewItem Header="Advanced" />
                 </TreeViewItem>
             </TreeView>
         </Expander>
@@ -277,6 +279,34 @@
                        </StackPanel>
                    </TabItem>
                </TabControl>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 11: DateTime -->
+       <TabItem Header="DateTime">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="Calendar Control:"/>
+               <Calendar />
+
+               <TextBlock Text="DatePicker Control:"/>
+               <DatePicker Width="15" />
+
+               <TextBlock Text="TimePicker Control:"/>
+               <TimePicker Width="15" />
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 12: Advanced -->
+       <TabItem Header="Advanced">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="NumericUpDown Control:"/>
+               <NumericUpDown Width="10" Minimum="0" Maximum="100" Value="42" />
+
+               <TextBlock Text="ToggleSwitch Control:"/>
+               <ToggleSwitch IsChecked="True" />
+
+               <Separator Width="20" />
+               <TextBlock Text="Below Separator" />
            </StackPanel>
        </TabItem>
 
