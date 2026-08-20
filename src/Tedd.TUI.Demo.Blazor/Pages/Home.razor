@@ -65,6 +65,8 @@
                         <TuiTreeViewItem Header="Editor" @bind-IsSelected="isEditorSelected" />
                         <TuiTreeViewItem Header="ProgressBar" @bind-IsSelected="isProgressBarSelected" />
                         <TuiTreeViewItem Header="Layouts" @bind-IsSelected="isLayoutsSelected" />
+                        <TuiTreeViewItem Header="DateTime" @bind-IsSelected="isDateTimeSelected" />
+                        <TuiTreeViewItem Header="Advanced" @bind-IsSelected="isAdvancedSelected" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -269,6 +271,34 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 11: DateTime -->
+            <TuiTabItem Header="DateTime">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Calendar Control:" />
+                    <TuiHost Component="@demoCalendar" />
+
+                    <TuiLabel Text="DatePicker Control:" />
+                    <TuiHost Component="@demoDatePicker" />
+
+                    <TuiLabel Text="TimePicker Control:" />
+                    <TuiHost Component="@demoTimePicker" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 12: Advanced -->
+            <TuiTabItem Header="Advanced">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="NumericUpDown Control:" />
+                    <TuiHost Component="@demoNumUpDown" />
+
+                    <TuiLabel Text="ToggleSwitch Control:" />
+                    <TuiHost Component="@demoToggleSwitch" />
+
+                    <TuiHost Component="@demoSeparator" />
+                    <TuiLabel Text="Below Separator" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -307,6 +337,8 @@
     private bool isEditorSelected = false;
     private bool isProgressBarSelected = false;
     private bool isLayoutsSelected = false;
+    private bool isDateTimeSelected = false;
+    private bool isAdvancedSelected = false;
 
     private void UpdateNavTreeSelection()
     {
@@ -320,6 +352,8 @@
         isEditorSelected = _selectedTabIndex == 7;
         isProgressBarSelected = _selectedTabIndex == 8;
         isLayoutsSelected = _selectedTabIndex == 9;
+        isDateTimeSelected = _selectedTabIndex == 10;
+        isAdvancedSelected = _selectedTabIndex == 11;
         StateHasChanged();
     }
 
@@ -339,6 +373,8 @@
                 case "Editor": selectedTabIndex = 7; break;
                 case "ProgressBar": selectedTabIndex = 8; break;
                 case "Layouts": selectedTabIndex = 9; break;
+                case "DateTime": selectedTabIndex = 10; break;
+                case "Advanced": selectedTabIndex = 11; break;
             }
             StateHasChanged();
         }
@@ -500,6 +536,14 @@
     private Grid demoGrid = new Grid { Width = 60, Height = 10 };
     private WrapPanel demoWrap = new WrapPanel { Width = 50, Height = 10 };
     private GroupBox demoGroup = new GroupBox { Header = "Settings", Width = 40, Height = 10 };
+
+    // Tab 11 and 12
+    private Calendar demoCalendar = new Calendar();
+    private DatePicker demoDatePicker = new DatePicker { Width = 15 };
+    private TimePicker demoTimePicker = new TimePicker { Width = 15 };
+    private NumericUpDown demoNumUpDown = new NumericUpDown { Width = 10, Minimum = 0, Maximum = 100, Value = 42 };
+    private ToggleSwitch demoToggleSwitch = new ToggleSwitch { IsChecked = true };
+    private Separator demoSeparator = new Separator { Width = 20 };
 
     protected override void OnInitialized()
     {
