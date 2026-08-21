@@ -216,4 +216,109 @@ public class TabControlTests
             ?.GetValue(host.Window) as UIElement;
         Assert.Equal(textBox, focused);
     }
+
+    [Fact]
+    public void TabControl_FindName_ReturnsElements()
+    {
+        var tabControl = new TabControl { Name = "MainTab" };
+        var innerElement = new TextBlock { Name = "InnerBlock" };
+        var tabItem = new TabItem { Name = "Tab1", Content = innerElement };
+        var directElement = new Button { Name = "DirectButton" };
+
+        tabControl.Items.Add(tabItem);
+        tabControl.Items.Add(directElement);
+
+        Assert.Equal(tabControl, tabControl.FindName("MainTab"));
+        Assert.Equal(innerElement, tabControl.FindName("InnerBlock"));
+        Assert.Equal(tabItem, tabControl.FindName("Tab1"));
+        Assert.Equal(directElement, tabControl.FindName("DirectButton"));
+        Assert.Null(tabControl.FindName("NonExistent"));
+    }
+
+    [Fact]
+    public void TabControl_ItemsCollectionChanged_ItemRemoved_ClearsParent()
+    {
+        var tabControl = new TabControl();
+        var tab1 = new TabItem();
+        tabControl.Items.Add(tab1);
+
+        Assert.Equal(tabControl, tab1.Parent);
+
+        tabControl.Items.Remove(tab1);
+
+        Assert.Null(tab1.Parent);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TabControl_Render_CustomColors(bool isFocused)
+    {
+        var tabControl = new TabControl
+        {
+            Width = 10,
+            Height = 10,
+            FocusedTabForeground = TuiColor.Blue,
+            FocusedTabBackground = TuiColor.Yellow,
+            SelectedTabForeground = TuiColor.Red,
+            SelectedTabBackground = TuiColor.Cyan,
+            TabForeground = TuiColor.Green,
+            TabBackground = TuiColor.Magenta,
+            StripLineForeground = TuiColor.DarkBlue,
+            StripLineBackground = TuiColor.DarkGray
+        };
+
+        tabControl.Items.Add(new TabItem { Header = "1" });
+        tabControl.Items.Add(new TabItem { Header = "2" });
+        tabControl.SelectedIndex = 0;
+
+        var window = new TuiWindow();
+        window.Content = tabControl;
+
+        if (isFocused) window.SetFocus(tabControl);
+
+        window.Measure(new Size(10, 10));
+        window.Arrange(new Rect(0, 0, 10, 10));
+
+        var buffer = new VirtualBuffer(10, 10);
+        tabControl.Render(buffer, 0, 0);
+
+        // Header 1 (Selected) at x=0 to 2: " 1 "
+        // TabControl determines Focus based on IsFocused. Focus() sets it if focusable.
+        // Wait, Focus() in a unit test without a host might not fully set IsFocused on the element.
+        // But let's assume it works because Focusable is true. Actually, if not in tree, IsFocused stays false.
+        // Let's force it via a mock tree or just expect the unselected color if it fails.
+        // Or better, let's fix the test to put it in a window so Focus() works.
+        var h1Fg = isFocused ? TuiColor.Blue : TuiColor.Red;
+        var h1Bg = isFocused ? TuiColor.Yellow : TuiColor.Cyan;
+        Assert.Equal(h1Fg, buffer.GetPixel(1, 0).Foreground);
+        Assert.Equal(h1Bg, buffer.GetPixel(1, 0).Background);
+
+        // Header 2 (Unselected) at x=4 to 6: " 2 "
+        Assert.Equal(TuiColor.Green, buffer.GetPixel(5, 0).Foreground);
+        Assert.Equal(TuiColor.Magenta, buffer.GetPixel(5, 0).Background);
+
+        // Strip Line at y=1
+        Assert.Equal(TuiColor.DarkBlue, buffer.GetPixel(0, 1).Foreground);
+        Assert.Equal(TuiColor.DarkGray, buffer.GetPixel(0, 1).Background);
+    }
+
+    [Fact]
+    public void TabControl_Render_DirectUIElementItem()
+    {
+        var tabControl = new TabControl { Width = 10, Height = 10 };
+        var textBlock = new TextBlock { Text = "Direct" };
+        tabControl.Items.Add(textBlock);
+
+        tabControl.Measure(new Size(10, 10));
+        tabControl.Arrange(new Rect(0, 0, 10, 10));
+
+        var buffer = new VirtualBuffer(10, 10);
+        tabControl.Render(buffer, 0, 0);
+
+        // Header generated from ToString() or similar
+        // Content should be arranged below strip line (y=2)
+        Assert.Equal('D', buffer.GetPixel(0, 2).Character);
+        Assert.Equal('i', buffer.GetPixel(1, 2).Character);
+    }
 }
