@@ -142,3 +142,8 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+## 2026-08-27 - [ContentControl/HeaderedContentControl] HasContent/HasHeader WPF Parity
+
+**Observation:** The core base types `ContentControl` and `HeaderedContentControl` lacked standard WPF dependency properties `HasContent` and `HasHeader` which indicate whether their respective content elements are non-null. This restricted parity when employing control templates and triggers that rely on structural presence verification.
+
+**Strategic Action:** Integrated `HasContent` into `ContentControl` and `HasHeader` into `HeaderedContentControl` as native `DependencyProperty` registrations. Bound automated internal `OnPropertyChanged` listeners to evaluate state dynamically, providing exact behavioral 1:1 mapping with the WPF visual state system constraints.
