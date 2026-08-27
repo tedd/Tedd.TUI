@@ -155,7 +155,7 @@ class Program
         var titleBlock = new TextBlock
         {
             Text = "Hello Tedd.TUI!",
-            Foreground = ConsoleColor.Cyan,
+            Foreground = TuiColor.Cyan,
             HorizontalAlignment = HorizontalAlignment.Center
         };
         stack.Children.Add(titleBlock); // UIElementCollection sets Parent automatically
@@ -163,7 +163,7 @@ class Program
         // Status TextBlock with Data Binding
         var statusBlock = new TextBlock
         {
-            Foreground = ConsoleColor.Green,
+            Foreground = TuiColor.Green,
             HorizontalAlignment = HorizontalAlignment.Center
         };
         // Bind Text property to ViewModel.Status
