@@ -150,7 +150,8 @@ class Program
         var nodeMarkdown = new TreeViewItem { Header = "Markdown" };
         var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
         var nodeEditor = new TreeViewItem { Header = "Editor" };
-        var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
+                var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
+        var nodeInputs = new TreeViewItem { Header = "Inputs" };
         var nodeLayouts = new TreeViewItem { Header = "Layouts" };
 
         rootNode.Items.Add(nodeForm);
@@ -161,7 +162,8 @@ class Program
         rootNode.Items.Add(nodeMarkdown);
         rootNode.Items.Add(nodeDataGrid);
         rootNode.Items.Add(nodeEditor);
-        rootNode.Items.Add(nodeProgressBar);
+                rootNode.Items.Add(nodeProgressBar);
+        rootNode.Items.Add(nodeInputs);
         rootNode.Items.Add(nodeLayouts);
 
         navTree.Items.Add(rootNode);
@@ -185,8 +187,9 @@ class Program
             else if (sel == nodeMarkdown) tabs.SelectedIndex = 5;
             else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
-            else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
-            else if (sel == nodeLayouts) tabs.SelectedIndex = 9;
+                        else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
+            else if (sel == nodeInputs) tabs.SelectedIndex = 9;
+            else if (sel == nodeLayouts) tabs.SelectedIndex = 10;
         };
 
         tabs.SelectionChanged += (s, e) =>
@@ -201,8 +204,9 @@ class Program
                 case 5: navTree.SelectedItem = nodeMarkdown; break;
                 case 6: navTree.SelectedItem = nodeDataGrid; break;
                 case 7: navTree.SelectedItem = nodeEditor; break;
-                case 8: navTree.SelectedItem = nodeProgressBar; break;
-                case 9: navTree.SelectedItem = nodeLayouts; break;
+                                case 8: navTree.SelectedItem = nodeProgressBar; break;
+                case 9: navTree.SelectedItem = nodeInputs; break;
+                case 10: navTree.SelectedItem = nodeLayouts; break;
             }
         };
 
@@ -595,7 +599,45 @@ public void Hello() {
         progressBarStack.AddChild(progressBarTabs);
         tabs.Items.Add(new TabItem { Header = "ProgressBar", Content = progressBarStack });
 
-        // --- Tab 10: Layouts ---
+                // --- Tab 10: Inputs ---
+        var inputsStack = new StackPanel { Orientation = Orientation.Vertical };
+        inputsStack.AddChild(new TextBlock { Text = "Input Controls:" });
+
+        var inputsTabs = new TabControl { Width = 70, Height = 15 };
+
+        // Toggle Mode
+        var toggleStack = new StackPanel { Orientation = Orientation.Vertical };
+        toggleStack.AddChild(new TextBlock { Text = "ToggleSwitch" });
+        toggleStack.AddChild(new ToggleSwitch { IsChecked = true, OnContent = "On", OffContent = "Off", Content = " Enable Feature" });
+        toggleStack.AddChild(new ToggleSwitch { IsChecked = false, OnContent = "Yes", OffContent = "No", Content = " Dark Mode" });
+        inputsTabs.Items.Add(new TabItem { Header = "Toggle", Content = toggleStack });
+
+        // Numeric Mode
+        var numericStack = new StackPanel { Orientation = Orientation.Vertical };
+        numericStack.AddChild(new TextBlock { Text = "NumericUpDown" });
+        numericStack.AddChild(new NumericUpDown { Value = 42, Minimum = 0, Maximum = 100, Increment = 1 });
+        numericStack.AddChild(new NumericUpDown { Value = 10, Minimum = -50, Maximum = 50, Increment = 5 });
+        inputsTabs.Items.Add(new TabItem { Header = "Numeric", Content = numericStack });
+
+        // DateTime Mode
+        var dateTimeStack = new StackPanel { Orientation = Orientation.Vertical };
+        dateTimeStack.AddChild(new TextBlock { Text = "DatePicker & TimePicker" });
+        dateTimeStack.AddChild(new TextBlock { Text = "Date:" });
+        dateTimeStack.AddChild(new DatePicker { SelectedDate = new DateTime(2025, 1, 1) });
+        dateTimeStack.AddChild(new TextBlock { Text = "Time:" });
+        dateTimeStack.AddChild(new TimePicker { SelectedTime = new TimeSpan(14, 30, 0), ShowSeconds = true });
+        inputsTabs.Items.Add(new TabItem { Header = "DateTime", Content = dateTimeStack });
+
+        // Calendar Mode
+        var calendarStack = new StackPanel { Orientation = Orientation.Vertical };
+        calendarStack.AddChild(new TextBlock { Text = "Calendar" });
+        calendarStack.AddChild(new Calendar { DisplayDate = new DateTime(2025, 1, 1), SelectedDate = new DateTime(2025, 1, 15) });
+        inputsTabs.Items.Add(new TabItem { Header = "Calendar", Content = calendarStack });
+
+        inputsStack.AddChild(inputsTabs);
+        tabs.Items.Add(new TabItem { Header = "Inputs", Content = inputsStack });
+
+        // --- Tab 11: Layouts ---
         var layoutsStack = new StackPanel { Orientation = Orientation.Vertical };
         layoutsStack.AddChild(new TextBlock { Text = "Layout Panels:" });
 

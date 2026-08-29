@@ -767,6 +767,9 @@ public static class XamlLoader
         if (targetType == typeof(double)) return double.Parse(value);
         if (targetType == typeof(bool)) return bool.Parse(value);
         if (targetType.IsEnum) return Enum.Parse(targetType, value);
+        if (targetType == typeof(TimeSpan)) return TimeSpan.Parse(value);
+        if (targetType == typeof(DateTime)) return DateTime.Parse(value);
+
 
         if (targetType == typeof(GridLength))
         {
