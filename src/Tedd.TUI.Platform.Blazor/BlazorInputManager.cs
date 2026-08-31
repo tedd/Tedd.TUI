@@ -9,6 +9,16 @@ public class BlazorInputManager
 {
     private readonly TuiWindow _window;
     private readonly ConcurrentQueue<Action> _eventQueue = new();
+    private readonly object _wheelGate = new();
+    private PendingWheel? _pendingWheel;
+
+    private sealed class PendingWheel
+    {
+        public int Delta;
+        public double X;
+        public double Y;
+        public ConsoleModifiers Modifiers;
+    }
 
     public event Action? InputAvailable;
 
@@ -31,6 +41,10 @@ public class BlazorInputManager
     public void QueueKey(KeyboardEventArgs e, bool isDown)
     {
         if (!isDown) return;
+
+        // Preserve ordering across different input kinds: a later wheel event must not be
+        // folded into movement that is queued ahead of this key.
+        SealPendingWheel();
 
         var key = MapKey(e.Key);
 
@@ -65,20 +79,74 @@ public class BlazorInputManager
 
         double fx = e.OffsetX / CharWidth;
         double fy = e.OffsetY / CharHeight;
+        var modifiers = GetModifiers(e);
+        bool signal = false;
 
-        _eventQueue.Enqueue(() =>
+        // A browser can deliver many wheel events while one expensive frame is pending.
+        // Keep one queue entry and fold all movement into it so opposite movement cancels and
+        // the UI applies the latest aggregate once instead of replaying stale gestures frame by
+        // frame. The JavaScript host also batches raw events per animation frame; this is the
+        // thread-safe final boundary before the TUI event queue.
+        lock (_wheelGate)
         {
-            _window.ProcessMouse(new MouseWheelEventArgs(UIElement.MouseWheelEvent)
+            if (_pendingWheel == null)
             {
-                GlobalX = (int)fx,
-                GlobalY = (int)fy,
-                GlobalXF = fx,
-                GlobalYF = fy,
-                Modifiers = GetModifiers(e),
-                Delta = delta
-            });
+                _pendingWheel = new PendingWheel();
+                PendingWheel batch = _pendingWheel;
+                _eventQueue.Enqueue(() => DispatchPendingWheel(batch));
+                signal = true;
+            }
+
+            _pendingWheel.Delta = (int)Math.Clamp(
+                (long)_pendingWheel.Delta + delta,
+                int.MinValue,
+                int.MaxValue);
+            _pendingWheel.X = fx;
+            _pendingWheel.Y = fy;
+            _pendingWheel.Modifiers = modifiers;
+        }
+
+        if (signal)
+            InputAvailable?.Invoke();
+    }
+
+    private void DispatchPendingWheel(PendingWheel batch)
+    {
+        int delta;
+        double x;
+        double y;
+        ConsoleModifiers modifiers;
+        lock (_wheelGate)
+        {
+            if (ReferenceEquals(_pendingWheel, batch))
+                _pendingWheel = null;
+
+            delta = batch.Delta;
+            x = batch.X;
+            y = batch.Y;
+            modifiers = batch.Modifiers;
+        }
+
+        if (delta == 0)
+            return;
+
+        _window.ProcessMouse(new MouseWheelEventArgs(UIElement.MouseWheelEvent)
+        {
+            GlobalX = (int)x,
+            GlobalY = (int)y,
+            GlobalXF = x,
+            GlobalYF = y,
+            Modifiers = modifiers,
+            Delta = delta
         });
-        InputAvailable?.Invoke();
+    }
+
+    private void SealPendingWheel()
+    {
+        lock (_wheelGate)
+        {
+            _pendingWheel = null;
+        }
     }
 
     /// <summary>
@@ -109,6 +177,9 @@ public class BlazorInputManager
     /// </remarks>
     public void QueueMouse(Microsoft.AspNetCore.Components.Web.MouseEventArgs e, string type)
     {
+        // Preserve the relative ordering of a wheel batch and a click/drag/hover event.
+        SealPendingWheel();
+
         // Map pixel to cell, keeping the sub-cell remainder.
         double fx = e.OffsetX / CharWidth;
         double fy = e.OffsetY / CharHeight;

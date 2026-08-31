@@ -379,5 +379,74 @@ window.tuiInterop = {
             state.container.removeEventListener('mouseleave', state.leave);
             delete this.hoverStates[containerId];
         }
+    },
+
+    // Wheel input needs the same browser-side backpressure as pointer moves. A large DOM-mode
+    // surface can take longer to diff than the interval between raw wheel events; forwarding
+    // each event individually makes old movement replay long after the user changes direction.
+    // Aggregate each delta mode until the next animation frame and send the latest pointer state.
+    wheelStates: {},
+
+    startWheelTracking: function (dotnetHelper, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        this.stopWheelTracking(containerId);
+
+        let pending = null;
+        let frameId = 0;
+
+        const flush = () => {
+            frameId = 0;
+            if (!pending || !this.wheelStates[containerId]) return;
+
+            const batch = pending;
+            pending = null;
+            const rect = container.getBoundingClientRect();
+            const x = batch.clientX - rect.left;
+            const y = batch.clientY - rect.top;
+
+            // Browsers use one deltaMode for a device/gesture. Retaining separate sums makes
+            // the batching correct even if a synthetic source mixes modes in one frame.
+            for (const mode of Object.keys(batch.deltas)) {
+                const delta = batch.deltas[mode];
+                if (delta !== 0) {
+                    dotnetHelper.invokeMethodAsync('OnGlobalWheel', delta, Number(mode), x, y,
+                        batch.ctrlKey, batch.shiftKey, batch.altKey);
+                }
+            }
+        };
+
+        const onWheel = (e) => {
+            e.preventDefault();
+
+            if (!pending) {
+                pending = { deltas: {}, clientX: e.clientX, clientY: e.clientY,
+                            ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey };
+            }
+
+            pending.deltas[e.deltaMode] = (pending.deltas[e.deltaMode] || 0) + e.deltaY;
+            pending.clientX = e.clientX;
+            pending.clientY = e.clientY;
+            pending.ctrlKey = e.ctrlKey;
+            pending.shiftKey = e.shiftKey;
+            pending.altKey = e.altKey;
+
+            if (!frameId)
+                frameId = requestAnimationFrame(flush);
+        };
+
+        this.wheelStates[containerId] = { container: container, wheel: onWheel,
+                                         cancel: () => { if (frameId) cancelAnimationFrame(frameId); } };
+        container.addEventListener('wheel', onWheel, { passive: false });
+    },
+
+    stopWheelTracking: function (containerId) {
+        const state = this.wheelStates[containerId];
+        if (state) {
+            state.cancel();
+            state.container.removeEventListener('wheel', state.wheel);
+            delete this.wheelStates[containerId];
+        }
     }
 };

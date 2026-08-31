@@ -22,6 +22,17 @@ public class DomGridMarkupTests
     }
 
     [Fact]
+    public void Layer_AdvancesTextByTheLogicalCellWidth()
+    {
+        string style = DomGridMarkup.LayerStyle(0, 0, 0, CharWidth, CharHeight);
+
+        // The browser's natural 1ch width can be fractional while layout and input use the
+        // rounded integer width. Correcting that difference prevents cumulative horizontal
+        // drift between a rendered control and its hit-test cell.
+        Assert.Contains("letter-spacing: calc(10px - 1ch)", style);
+    }
+
+    [Fact]
     public void Row_CoalescesCellsSharingColorsIntoOneSpan()
     {
         var markup = new DomGridMarkup();

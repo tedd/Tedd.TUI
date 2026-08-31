@@ -12,7 +12,7 @@
    scrollbar smears a selection across the grid instead, and the browser stops delivering the
    moves the drag needs. Focus normally comes from the same default action, so startGlobalDrag
    takes it explicitly. *@
-<div id="@ContainerId" tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='OnMouseDownInternal' @onmousedown:preventDefault="true" @onwheel="OnWheel" style="outline:none; display: inline-block; user-select: none;">
+<div id="@ContainerId" tabindex="0" @onkeydown="OnKeyDown" @onkeyup="OnKeyUp" @onmousedown='OnMouseDownInternal' @onmousedown:preventDefault="true" style="outline:none; display: inline-block; user-select: none;">
     @if (Mode == TuiRenderMode.Canvas)
     {
         <canvas id="@CanvasId"></canvas>
@@ -121,6 +121,11 @@
             // while a button is held -- so without this IsMouseOver never updates and nothing
             // that reacts to hover works.
             await JS.InvokeVoidAsync("tuiInterop.startHoverTracking", _objRef, ContainerId);
+
+            // Raw wheel events can arrive substantially faster than a large DOM frame can be
+            // diffed. Batch them in the browser before crossing into .NET so stale gestures do
+            // not form a frame-per-event replay queue.
+            await JS.InvokeVoidAsync("tuiInterop.startWheelTracking", _objRef, ContainerId);
         }
     }
 
@@ -202,8 +207,6 @@
     private void OnKeyDown(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, true);
     private void OnKeyUp(KeyboardEventArgs e) => _app?.InputManager.QueueKey(e, false);
 
-    private void OnWheel(WheelEventArgs e) => _app?.InputManager.QueueWheel(e);
-    
     private void OnMouseDownInternal(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
     {
         // Tracks the pointer on the document for the rest of the gesture, so a drag keeps
@@ -241,6 +244,26 @@
         _app?.InputManager.QueueMouse(args, type);
     }
 
+    /// <summary>
+    /// Receives one animation-frame batch of browser wheel movement, already expressed relative
+    /// to this surface. JavaScript aggregates raw events while the renderer is occupied.
+    /// </summary>
+    [JSInvokable]
+    public void OnGlobalWheel(double deltaY, long deltaMode, double x, double y,
+        bool ctrlKey, bool shiftKey, bool altKey)
+    {
+        _app?.InputManager.QueueWheel(new WheelEventArgs
+        {
+            DeltaY = deltaY,
+            DeltaMode = deltaMode,
+            OffsetX = x,
+            OffsetY = y,
+            CtrlKey = ctrlKey,
+            ShiftKey = shiftKey,
+            AltKey = altKey,
+        });
+    }
+
     public void Dispose()
     {
         _app?.Dispose();
@@ -258,6 +281,7 @@
             // The hover listener holds this component's DotNetObjectReference; leaving it
             // attached keeps a disposed component reachable from the DOM.
             await JS.InvokeVoidAsync("tuiInterop.stopHoverTracking", ContainerId);
+            await JS.InvokeVoidAsync("tuiInterop.stopWheelTracking", ContainerId);
         }
         catch {}
 

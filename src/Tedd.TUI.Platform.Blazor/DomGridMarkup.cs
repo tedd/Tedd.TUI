@@ -107,7 +107,11 @@ public sealed class DomGridMarkup
     public static string LayerStyle(int layerX, int layerY, int zIndex, int charWidth, int charHeight) =>
         "position: absolute; left: " + (layerX * charWidth) + "px; top: " + (layerY * charHeight)
         + "px; z-index: " + zIndex + "; font-family: 'Consolas', monospace; line-height: " + charHeight
-        + "px; font-size: 16px; white-space: pre; color: white; pointer-events: none;";
+        // DomRenderer rounds the measured glyph width to the integer cell width used by
+        // layout and input. Make every rendered character advance by that same width; without
+        // this correction the visual grid drifts left of its hit-test cells across each row.
+        + "px; font-size: 16px; letter-spacing: calc(" + charWidth
+        + "px - 1ch); white-space: pre; color: white; pointer-events: none;";
 
     /// <summary>
     /// Style for a pre-rendered scroll region's clipping box, placed at the viewport rect.

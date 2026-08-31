@@ -7,6 +7,76 @@ namespace Tedd.TUI.Platform.Blazor.Tests;
 public class BlazorInputManagerTests
 {
     [Fact]
+    public void QueueWheel_CoalescesPendingMovementIntoOneRoutedEvent()
+    {
+        var window = new TuiWindow { Content = new TextBlock { Text = "content" } };
+        window.Measure(new Size(10, 3));
+        window.Arrange(new Rect(0, 0, 10, 3));
+        var manager = new BlazorInputManager(window) { CharWidth = 1, CharHeight = 1 };
+        int events = 0;
+        int delta = 0;
+        int signals = 0;
+        window.AddHandler(UIElement.MouseWheelEvent, new RoutedEventHandler((_, e) =>
+        {
+            events++;
+            delta += ((MouseWheelEventArgs)e).Delta;
+        }), handledEventsToo: true);
+        manager.InputAvailable += () => signals++;
+
+        manager.QueueWheel(new WheelEventArgs { OffsetX = 1, OffsetY = 1, DeltaY = 100 });
+        manager.QueueWheel(new WheelEventArgs { OffsetX = 2, OffsetY = 1, DeltaY = 100 });
+        manager.QueueWheel(new WheelEventArgs { OffsetX = 3, OffsetY = 1, DeltaY = -50 });
+        manager.ProcessInput();
+
+        Assert.Equal(1, signals);
+        Assert.Equal(1, events);
+        Assert.Equal(-180, delta);
+    }
+
+    [Fact]
+    public void QueueWheel_OppositePendingMovementCancelsWithoutRoutingStaleEvents()
+    {
+        var window = new TuiWindow { Content = new TextBlock { Text = "content" } };
+        window.Measure(new Size(10, 3));
+        window.Arrange(new Rect(0, 0, 10, 3));
+        var manager = new BlazorInputManager(window) { CharWidth = 1, CharHeight = 1 };
+        int events = 0;
+        window.AddHandler(UIElement.MouseWheelEvent,
+            new RoutedEventHandler((_, _) => events++), handledEventsToo: true);
+
+        manager.QueueWheel(new WheelEventArgs { OffsetX = 1, OffsetY = 1, DeltaY = 100 });
+        manager.QueueWheel(new WheelEventArgs { OffsetX = 1, OffsetY = 1, DeltaY = -100 });
+        manager.ProcessInput();
+
+        Assert.Equal(0, events);
+    }
+
+    [Fact]
+    public void QueueWheel_DoesNotCoalesceAcrossAnotherInputKind()
+    {
+        var window = new TuiWindow { Content = new TextBlock { Text = "content" } };
+        window.Measure(new Size(10, 3));
+        window.Arrange(new Rect(0, 0, 10, 3));
+        var manager = new BlazorInputManager(window) { CharWidth = 1, CharHeight = 1 };
+        var order = new List<string>();
+        window.AddHandler(UIElement.MouseWheelEvent,
+            new RoutedEventHandler((_, _) => order.Add("wheel")), handledEventsToo: true);
+        window.AddHandler(UIElement.MouseMoveEvent,
+            new RoutedEventHandler((_, _) => order.Add("move")), handledEventsToo: true);
+
+        manager.QueueWheel(new WheelEventArgs { OffsetX = 1, OffsetY = 1, DeltaY = 100 });
+        manager.QueueMouse(new Microsoft.AspNetCore.Components.Web.MouseEventArgs
+        {
+            OffsetX = 1,
+            OffsetY = 1
+        }, "mousemove");
+        manager.QueueWheel(new WheelEventArgs { OffsetX = 1, OffsetY = 1, DeltaY = 100 });
+        manager.ProcessInput();
+
+        Assert.Equal(new[] { "wheel", "move", "wheel" }, order);
+    }
+
+    [Fact]
     public void QueueMouse_RoutesPreviewFocusPressAndClickThroughWindow()
     {
         var button = new Button { Content = "OK" };
@@ -156,4 +226,3 @@ public class BlazorInputManagerTests
         Assert.False(captured.HasFlag(ConsoleModifiers.Alt));
     }
 }
-
