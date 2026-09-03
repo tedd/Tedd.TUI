@@ -31,7 +31,7 @@ public sealed class ThemeChangedEventArgs : EventArgs
 /// </remarks>
 public static class ThemeManager
 {
-    private static readonly object _sync = new();
+    private static readonly System.Threading.Lock _sync = new();
     private static readonly List<WeakReference<TuiWindow>> _windows = new();
     private static TuiTheme _current = TuiThemes.Dark;
 

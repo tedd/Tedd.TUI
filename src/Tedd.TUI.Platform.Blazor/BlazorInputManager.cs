@@ -9,7 +9,7 @@ public class BlazorInputManager
 {
     private readonly TuiWindow _window;
     private readonly ConcurrentQueue<Action> _eventQueue = new();
-    private readonly object _wheelGate = new();
+    private readonly System.Threading.Lock _wheelGate = new();
     private PendingWheel? _pendingWheel;
 
     private sealed class PendingWheel
