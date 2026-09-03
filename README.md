@@ -143,32 +143,22 @@ class Program
         // 4. Initialize the application with the Console platform
         var app = new TuiApp(window);
 
-        // 5. Define the UI layout
-        var stack = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
         // Title TextBlock
         var titleBlock = new TextBlock
         {
             Text = "Hello Tedd.TUI!",
-            Foreground = ConsoleColor.Cyan,
+            Foreground = TuiColor.Cyan,
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        stack.Children.Add(titleBlock); // UIElementCollection sets Parent automatically
 
         // Status TextBlock with Data Binding
         var statusBlock = new TextBlock
         {
-            Foreground = ConsoleColor.Green,
+            Foreground = TuiColor.Green,
             HorizontalAlignment = HorizontalAlignment.Center
         };
         // Bind Text property to ViewModel.Status
         statusBlock.SetBinding(TextBlock.TextProperty, new Binding("Status"));
-        stack.Children.Add(statusBlock);
 
         // Button with Click Handler and DOS-era aesthetics
         var button = new Button
@@ -183,7 +173,20 @@ class Program
         {
             viewModel.OnButtonClick();
         };
-        stack.Children.Add(button);
+
+        // 5. Define the UI layout using C# collection initializers
+        var stack = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children =
+            {
+                titleBlock,
+                statusBlock,
+                button
+            }
+        };
 
         // 6. Set the window content
         window.Content = stack;
@@ -297,6 +300,7 @@ via the WPF host's `TuiHostElement` — and shipped unchanged to the terminal, B
 ```csharp
 using System.IO;
 using Tedd.TUI;
+using Tedd.TUI.Controls;
 using Tedd.TUI.Markup;
 using Tedd.TUI.Platform.Console;
 
