@@ -1,8 +1,7 @@
 using System;
 using System.Text;
-using System.Buffers;
 
-namespace Tedd.TUI.Media;
+namespace Tedd.TUI.Archive.Media;
 
 /// <summary>
 /// Shared DEC Sixel encoder used by both <c>Tedd.TUI.Platform.WindowsTerminal</c> and
@@ -29,89 +28,6 @@ namespace Tedd.TUI.Media;
 /// </remarks>
 public static class SixelEncoderCore
 {
-    private ref struct ValueStringBuilder
-    {
-        private char[]? _arrayToReturnToPool;
-        private Span<char> _chars;
-        private int _pos;
-
-        public ValueStringBuilder(int initialCapacity)
-        {
-            _arrayToReturnToPool = ArrayPool<char>.Shared.Rent(initialCapacity);
-            _chars = _arrayToReturnToPool;
-            _pos = 0;
-        }
-
-        public void Append(char c)
-        {
-            int pos = _pos;
-            if ((uint)pos < (uint)_chars.Length)
-            {
-                _chars[pos] = c;
-                _pos = pos + 1;
-            }
-            else
-            {
-                GrowAndAppend(c);
-            }
-        }
-
-        public void Append(string s)
-        {
-            if (s.Length == 0) return;
-            if (_pos > _chars.Length - s.Length)
-            {
-                Grow(s.Length);
-            }
-            s.AsSpan().CopyTo(_chars.Slice(_pos));
-            _pos += s.Length;
-        }
-
-        public void Append(int value)
-        {
-            // Simple fast path for integers
-            Span<char> dest = _chars.Slice(_pos);
-            if (value.TryFormat(dest, out int charsWritten))
-            {
-                _pos += charsWritten;
-            }
-            else
-            {
-                Append(value.ToString());
-            }
-        }
-
-        private void GrowAndAppend(char c)
-        {
-            Grow(1);
-            _chars[_pos++] = c;
-        }
-
-        private void Grow(int additionalCapacityBeyondPos)
-        {
-            int newCapacity = Math.Max(_chars.Length * 2, _pos + additionalCapacityBeyondPos);
-            char[] poolArray = ArrayPool<char>.Shared.Rent(newCapacity);
-            _chars.Slice(0, _pos).CopyTo(poolArray);
-            if (_arrayToReturnToPool != null)
-            {
-                ArrayPool<char>.Shared.Return(_arrayToReturnToPool);
-            }
-            _arrayToReturnToPool = poolArray;
-            _chars = _arrayToReturnToPool;
-        }
-
-        public override string ToString()
-        {
-            string s = _chars.Slice(0, _pos).ToString();
-            if (_arrayToReturnToPool != null)
-            {
-                ArrayPool<char>.Shared.Return(_arrayToReturnToPool);
-                _arrayToReturnToPool = null;
-            }
-            return s;
-        }
-    }
-
     /// <summary>
     /// Encodes <paramref name="placement"/> into the Sixel escape envelope. Prefers the
     /// decoded <see cref="GraphicPlacement.Pixels"/> buffer; falls back to a tiny
@@ -135,8 +51,6 @@ public static class SixelEncoderCore
     /// Encodes a raw RGBA buffer (row-major, 4 bytes per pixel) into a full DEC Sixel
     /// payload. Exposed so callers that don't have a <see cref="GraphicPlacement"/>
     /// handy (e.g. unit tests) can drive the encoder directly.
-    /// <para>Time Complexity: O(W * H) where W is width and H is height (due to pixel scanning and band emission).</para>
-    /// <para>Space Complexity: O(W * H) transient allocations for quantization mapping, plus a rented array from ArrayPool for output building.</para>
     /// </summary>
     public static string EncodePixels(byte[] pixels, int width, int height)
     {
@@ -158,11 +72,11 @@ public static class SixelEncoderCore
             quantized[p] = a < 16 ? TransparentIndex : Quantize(r, g, b);
         }
 
-        var sb = new ValueStringBuilder(width * height / 6 + 256);
+        var sb = new StringBuilder(width * height / 6 + 256);
         sb.Append("\x1bP0;1;0q"); // P2=1 → background pixels remain transparent.
 
         // Raster attributes: pan=1, pad=1 (square pixels), actual w / h.
-        sb.Append('"'); sb.Append(1); sb.Append(';'); sb.Append(1); sb.Append(';'); sb.Append(width); sb.Append(';'); sb.Append(height);
+        sb.Append('"').Append(1).Append(';').Append(1).Append(';').Append(width).Append(';').Append(height);
 
         // Palette definitions. We emit only the colors actually used so trivially-small
         // images stay compact and the terminal's palette table doesn't churn.
@@ -180,7 +94,7 @@ public static class SixelEncoderCore
             int sr = (r * 100 + 127) / 255;
             int sg = (g * 100 + 127) / 255;
             int sb_ = (b * 100 + 127) / 255;
-            sb.Append('#'); sb.Append(i); sb.Append(";2;"); sb.Append(sr); sb.Append(';'); sb.Append(sg); sb.Append(';'); sb.Append(sb_);
+            sb.Append('#').Append(i).Append(";2;").Append(sr).Append(';').Append(sg).Append(';').Append(sb_);
         }
 
         // Emit pixel data, six rows at a time.
@@ -216,8 +130,8 @@ public static class SixelEncoderCore
 
                 if (!colorTouchesBand) continue;
 
-                sb.Append('#'); sb.Append(color);
-                AppendBandRunLength(ref sb, bandBits, width);
+                sb.Append('#').Append(color);
+                AppendBandRunLength(sb, bandBits, width);
 
                 // Carriage-return so the next color writes from the same band origin.
                 sb.Append('$');
@@ -244,7 +158,7 @@ public static class SixelEncoderCore
     /// compression. Each byte is offset by <c>0x3F</c> ('?') so the result is always
     /// printable. Runs of 3+ identical bytes collapse to <c>!&lt;n&gt;&lt;byte&gt;</c>.
     /// </summary>
-    private static void AppendBandRunLength(ref ValueStringBuilder sb, byte[] bandBits, int width)
+    private static void AppendBandRunLength(StringBuilder sb, byte[] bandBits, int width)
     {
         int i = 0;
         while (i < width)
@@ -257,7 +171,7 @@ public static class SixelEncoderCore
 
             if (runLength >= 3)
             {
-                sb.Append('!'); sb.Append(runLength); sb.Append(glyph);
+                sb.Append('!').Append(runLength).Append(glyph);
             }
             else
             {
@@ -329,11 +243,11 @@ public static class SixelEncoderCore
     /// </summary>
     private static string EncodePlaceholder(int pxW, int pxH)
     {
-        var sb = new ValueStringBuilder(64 + pxW);
+        var sb = new StringBuilder(64 + pxW);
         sb.Append("\x1bP0;0;0q");
-        sb.Append('"'); sb.Append(1); sb.Append(';'); sb.Append(1); sb.Append(';'); sb.Append(pxW); sb.Append(';'); sb.Append(pxH);
+        sb.Append('"').Append(1).Append(';').Append(1).Append(';').Append(pxW).Append(';').Append(pxH);
         sb.Append("#0;2;0;0;0");
-        sb.Append('#'); sb.Append(0);
+        sb.Append('#').Append(0);
         for (int i = 0; i < pxW; i++) sb.Append('?');
         sb.Append("\x1b\\");
         return sb.ToString();
