@@ -321,4 +321,35 @@ public class TextEditorTests
         Assert.Equal($"Alpha{Environment.NewLine}BrXavo", first.Text);
         Assert.Equal($"GYamma{Environment.NewLine}Delta", second.Text);
     }
+
+    [Theory]
+    [InlineData("Pasted text", true)]
+    [InlineData("Another string", true)]
+    [InlineData("", true)]
+    public void PasteRequested_Handled_SuppressesPaste(string clipboardText, bool handledValue)
+    {
+        var editor = new TextEditor { Width = 20, Height = 10 };
+        bool eventFired = false;
+        editor.PasteRequested += (s, e) =>
+        {
+            eventFired = true;
+            e.Handled = handledValue;
+        };
+
+        Clipboard.SetText(clipboardText);
+
+        var keyEvent = new KeyEventArgs(UIElement.KeyDownEvent, editor) { Key = ConsoleKey.V, KeyChar = 'v', Modifiers = ConsoleModifiers.Control };
+        editor.OnKeyDown(keyEvent);
+
+        Assert.True(eventFired);
+        if (handledValue)
+        {
+            Assert.Empty(editor.Text);
+        }
+        else
+        {
+            Assert.Equal(clipboardText, editor.Text);
+        }
+        Assert.True(keyEvent.Handled);
+    }
 }
