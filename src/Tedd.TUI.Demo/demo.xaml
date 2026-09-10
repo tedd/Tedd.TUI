@@ -70,6 +70,7 @@
                     <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
                     <TreeViewItem Header="Layouts" />
+                    <TreeViewItem Header="Inputs" />
                 </TreeViewItem>
             </TreeView>
         </Expander>
@@ -277,6 +278,26 @@
                        </StackPanel>
                    </TabItem>
                </TabControl>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 11: Inputs -->
+       <TabItem Header="Inputs">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="NumericUpDown:"/>
+               <NumericUpDown Minimum="0" Maximum="100" Value="42"/>
+
+               <TextBlock Text="ToggleSwitch:"/>
+               <ToggleSwitch IsChecked="True" OnContent="Enabled" OffContent="Disabled"/>
+
+               <TextBlock Text="TimePicker:"/>
+               <TimePicker ShowSeconds="True"/>
+
+               <TextBlock Text="DatePicker:"/>
+               <DatePicker/>
+
+               <TextBlock Text="Calendar:"/>
+               <Calendar/>
            </StackPanel>
        </TabItem>
 

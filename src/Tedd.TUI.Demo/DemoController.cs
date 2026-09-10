@@ -73,6 +73,7 @@ public class DemoController
                         case "Editor": MainTabs.SelectedIndex = 7; break;
                         case "ProgressBar": MainTabs.SelectedIndex = 8; break;
                         case "Layouts": MainTabs.SelectedIndex = 9; break;
+                        case "Inputs": MainTabs.SelectedIndex = 10; break;
                     }
                 }
             };
@@ -93,6 +94,7 @@ public class DemoController
                         7 => "Editor",
                         8 => "ProgressBar",
                         9 => "Layouts",
+                        10 => "Inputs",
                         _ => null
                     };
                     if (targetHeader != null)
