@@ -17,15 +17,10 @@ public class XamlInputBindingTests
 {
     private class ViewModel : INotifyPropertyChanged
     {
-        private string _text = "";
-        private bool _flag;
-        private int _number;
-        private object? _selected;
-
-        public string Text { get => _text; set { if (_text != value) { _text = value; OnPropertyChanged(); } } }
-        public bool Flag { get => _flag; set { if (_flag != value) { _flag = value; OnPropertyChanged(); } } }
-        public int Number { get => _number; set { if (_number != value) { _number = value; OnPropertyChanged(); } } }
-        public object? Selected { get => _selected; set { if (_selected != value) { _selected = value; OnPropertyChanged(); } } }
+        public string Text { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = "";
+        public bool Flag { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } }
+        public int Number { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } }
+        public object? Selected { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } }
         public ObservableCollection<string> Options { get; } = new() { "Red", "Green", "Blue" };
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -278,8 +273,7 @@ public class XamlInputBindingTests
 
     private class CounterVm : INotifyPropertyChanged
     {
-        private int _count;
-        public int Count { get => _count; set { if (_count != value) { _count = value; OnPropertyChanged(); } } }
+        public int Count { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)

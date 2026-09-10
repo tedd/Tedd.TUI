@@ -15,8 +15,7 @@ public class XamlTemplateTests
 {
     private class Person : INotifyPropertyChanged
     {
-        private string _name = "";
-        public string Name { get => _name; set { if (_name != value) { _name = value; OnPropertyChanged(); } } }
+        public string Name { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = "";
 
         public override string ToString() => Name;
 
@@ -27,10 +26,8 @@ public class XamlTemplateTests
 
     private class ViewModel : INotifyPropertyChanged
     {
-        private Person? _selected;
-
         public ObservableCollection<Person> People { get; } = new();
-        public Person? Selected { get => _selected; set { if (_selected != value) { _selected = value; OnPropertyChanged(); } } }
+        public Person? Selected { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)

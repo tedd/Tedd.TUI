@@ -16,15 +16,10 @@ public class XamlBindingTests
 {
     private class ViewModel : INotifyPropertyChanged
     {
-        private string _title = "Initial";
-        private int _count;
-        private string? _optional;
-        private AddressVm _address = new();
-
-        public string Title { get => _title; set { if (_title != value) { _title = value; OnPropertyChanged(); } } }
-        public int Count { get => _count; set { if (_count != value) { _count = value; OnPropertyChanged(); } } }
-        public string? Optional { get => _optional; set { if (_optional != value) { _optional = value; OnPropertyChanged(); } } }
-        public AddressVm Address { get => _address; set { if (_address != value) { _address = value; OnPropertyChanged(); } } }
+        public string Title { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = "Initial";
+        public int Count { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } }
+        public string? Optional { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } }
+        public AddressVm Address { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = new();
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)
@@ -33,8 +28,7 @@ public class XamlBindingTests
 
     private class AddressVm : INotifyPropertyChanged
     {
-        private string _city = "Oslo";
-        public string City { get => _city; set { if (_city != value) { _city = value; OnPropertyChanged(); } } }
+        public string City { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = "Oslo";
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)

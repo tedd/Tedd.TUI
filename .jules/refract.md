@@ -51,3 +51,7 @@
 ## 2025-02-19 - C# 13 System.Threading.Lock Modernization
 **Observation:** The codebase contained legacy lock statements utilizing an arbitrary object (`object _gate`) for synchronization in `HttpImageResolver.cs`, an obsolete pattern that lacks explicit thread safety semantics compared to modern alternatives.
 **Strategic Action:** Transitioned the synchronization mechanism to use the C# 13 `System.Threading.Lock` type (`System.Threading.Lock _gate = new();`) to enforce deterministic thread safety and structural clarity.
+
+## 2025-02-28 - C# 14 Property Modernization
+**Observation:** The codebase contained numerous instances of manual backing fields (e.g., `private string _name;`) paired with properties that use `Set(ref _name, value)` or similar validation patterns, originating from pre-C# 14 paradigms.
+**Strategic Action:** Applied C# 14 field-backed properties (`field` keyword) to encapsulate validation logic and minimize boilerplate by eliminating the need for explicit private backing fields across view models and controls.

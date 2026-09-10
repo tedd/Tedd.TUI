@@ -9,27 +9,23 @@ public class DataBindingCoverageTests
 {
     public class TestViewModel : INotifyPropertyChanged
     {
-        private string _title = "Initial Title";
-        private int _count = 0;
-        private bool _isActive = false;
-
         public string Title
         {
-            get => _title;
-            set { _title = value; OnPropertyChanged(); }
-        }
+            get => field;
+            set { field = value; OnPropertyChanged(); }
+        } = "Initial Title";
 
         public int Count
         {
-            get => _count;
-            set { _count = value; OnPropertyChanged(); }
-        }
+            get => field;
+            set { field = value; OnPropertyChanged(); }
+        } = 0;
 
         public bool IsActive
         {
-            get => _isActive;
-            set { _isActive = value; OnPropertyChanged(); }
-        }
+            get => field;
+            set { field = value; OnPropertyChanged(); }
+        } = false;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
