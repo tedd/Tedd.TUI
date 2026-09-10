@@ -17,8 +17,7 @@ public class CustomControlXamlTests
 {
     private class ViewModel : INotifyPropertyChanged
     {
-        private string _badge = "New";
-        public string Badge { get => _badge; set { if (_badge != value) { _badge = value; OnPropertyChanged(); } } }
+        public string Badge { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = "New";
 
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? name = null)

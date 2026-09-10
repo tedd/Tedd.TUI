@@ -10,19 +10,7 @@ public class TextEditorTests
 {
     private class TestViewModel : INotifyPropertyChanged
     {
-        private string _textContent = "";
-        public string TextContent
-        {
-            get => _textContent;
-            set
-            {
-                if (_textContent != value)
-                {
-                    _textContent = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public string TextContent { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = "";
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
