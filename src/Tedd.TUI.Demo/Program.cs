@@ -152,6 +152,8 @@ class Program
         var nodeEditor = new TreeViewItem { Header = "Editor" };
         var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
         var nodeLayouts = new TreeViewItem { Header = "Layouts" };
+        var nodeDateTime = new TreeViewItem { Header = "DateTime" };
+        var nodeAdvanced = new TreeViewItem { Header = "Advanced" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -163,6 +165,8 @@ class Program
         rootNode.Items.Add(nodeEditor);
         rootNode.Items.Add(nodeProgressBar);
         rootNode.Items.Add(nodeLayouts);
+        rootNode.Items.Add(nodeDateTime);
+        rootNode.Items.Add(nodeAdvanced);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -187,6 +191,8 @@ class Program
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
             else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
             else if (sel == nodeLayouts) tabs.SelectedIndex = 9;
+            else if (sel == nodeDateTime) tabs.SelectedIndex = 10;
+            else if (sel == nodeAdvanced) tabs.SelectedIndex = 11;
         };
 
         tabs.SelectionChanged += (s, e) =>
@@ -203,6 +209,8 @@ class Program
                 case 7: navTree.SelectedItem = nodeEditor; break;
                 case 8: navTree.SelectedItem = nodeProgressBar; break;
                 case 9: navTree.SelectedItem = nodeLayouts; break;
+                case 10: navTree.SelectedItem = nodeDateTime; break;
+                case 11: navTree.SelectedItem = nodeAdvanced; break;
             }
         };
 
@@ -654,6 +662,26 @@ public void Hello() {
 
         layoutsStack.AddChild(layoutsTabs);
         tabs.Items.Add(new TabItem { Header = "Layouts", Content = layoutsStack });
+
+        // --- Tab 11: DateTime ---
+        var dateTimeStack = new StackPanel { Orientation = Orientation.Vertical };
+        dateTimeStack.AddChild(new TextBlock { Text = "Calendar Control:" });
+        dateTimeStack.AddChild(new Calendar());
+        dateTimeStack.AddChild(new TextBlock { Text = "DatePicker Control:" });
+        dateTimeStack.AddChild(new DatePicker { Width = 15 });
+        dateTimeStack.AddChild(new TextBlock { Text = "TimePicker Control:" });
+        dateTimeStack.AddChild(new TimePicker { Width = 15 });
+        tabs.Items.Add(new TabItem { Header = "DateTime", Content = dateTimeStack });
+
+        // --- Tab 12: Advanced ---
+        var advancedStack = new StackPanel { Orientation = Orientation.Vertical };
+        advancedStack.AddChild(new TextBlock { Text = "NumericUpDown Control:" });
+        advancedStack.AddChild(new NumericUpDown { Width = 10, Minimum = 0, Maximum = 100, Value = 42 });
+        advancedStack.AddChild(new TextBlock { Text = "ToggleSwitch Control:" });
+        advancedStack.AddChild(new ToggleSwitch { IsChecked = true });
+        advancedStack.AddChild(new Separator { Width = 20 });
+        advancedStack.AddChild(new TextBlock { Text = "Below Separator" });
+        tabs.Items.Add(new TabItem { Header = "Advanced", Content = advancedStack });
 
         // Run App
 
