@@ -284,23 +284,23 @@ public class DatePicker : UIElement
                 }
                 break;
             case DateSegment.Month:
-            {
-                int month = date.Month + direction;
-                if (month > 12) month = 1;
-                if (month < 1) month = 12;
-                int day = Math.Min(date.Day, DateTime.DaysInMonth(date.Year, month));
-                SelectedDate = new DateTime(date.Year, month, day);
-                break;
-            }
+                {
+                    int month = date.Month + direction;
+                    if (month > 12) month = 1;
+                    if (month < 1) month = 12;
+                    int day = Math.Min(date.Day, DateTime.DaysInMonth(date.Year, month));
+                    SelectedDate = new DateTime(date.Year, month, day);
+                    break;
+                }
             case DateSegment.Day:
-            {
-                int daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
-                int day = date.Day + direction;
-                if (day > daysInMonth) day = 1;
-                if (day < 1) day = daysInMonth;
-                SelectedDate = new DateTime(date.Year, date.Month, day);
-                break;
-            }
+                {
+                    int daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
+                    int day = date.Day + direction;
+                    if (day > daysInMonth) day = 1;
+                    if (day < 1) day = daysInMonth;
+                    SelectedDate = new DateTime(date.Year, date.Month, day);
+                    break;
+                }
         }
     }
 
