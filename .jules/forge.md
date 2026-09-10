@@ -142,3 +142,10 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+## 2026-09-10 - Selector SelectionChanged Event Routing Parity
+**Observation:** Discovered a parity deficit where `SelectionChanged` on `Selector` and `Table` was implemented as a standard CLR event (using `EventHandler` and `EventHandler<SelectionChangedEventArgs>`). In WPF, `SelectionChanged` is a standard bubbling `RoutedEvent`, which is necessary for declarative event interception by parent containers (like `TuiWindow` or `Grid`) without requiring explicit code-behind subscriptions directly on the control.
+**Strategic Action:**
+- Registered `SelectionChangedEvent` as a `RoutedEvent` with `RoutingStrategy.Bubble` on `Selector` and `Table`.
+- Re-implemented the `SelectionChanged` CLR event to utilize `AddHandler` and `RemoveHandler` over `SelectionChangedEvent`.
+- Derived `SelectionChangedEventArgs` from `RoutedEventArgs` instead of `EventArgs`.
+- Updated dispatch logic to use `RaiseEvent` rather than direct delegate invocation, ensuring standard XAML structural compliance.
