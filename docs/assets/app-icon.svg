@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tedd.TUI">
+  <rect width="64" height="64" rx="6" fill="#10262c"/>
+  <path d="M10 12h44v40H10z" fill="none" stroke="#55d2c7" stroke-width="3"/>
+  <path d="m19 23 8 8-8 8M31 40h14" fill="none" stroke="#f1f8f7" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>
