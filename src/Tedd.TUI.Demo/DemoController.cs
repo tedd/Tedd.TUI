@@ -17,7 +17,8 @@ public class DemoController
     public TextBlock VolumeLabel;
     public CheckBox TermsCheck;
     public ComboBox CountryCombo;
-    public ListBox SimpleList;
+    public ListBox SingleList;
+    public ListBox MultiList;
     public Table DemoTable;
     public ScrollBar HScroll;
     public ScrollBar VScroll;
@@ -115,13 +116,18 @@ public class DemoController
             CountryCombo.Items.Add("UK");
             CountryCombo.Items.Add("Germany");
             CountryCombo.Items.Add("France");
+            CountryCombo.Items.Add("Spain");
             CountryCombo.SelectedItem = "USA";
         }
 
-        // Init Simple List
-        if (SimpleList != null)
+        // Init Lists
+        if (SingleList != null)
         {
-            for (int i = 1; i <= 20; i++) SimpleList.Items.Add($"Item {i}");
+            for (int i = 1; i <= 20; i++) SingleList.Items.Add($"Item {i}");
+        }
+        if (MultiList != null)
+        {
+            for (int i = 1; i <= 20; i++) MultiList.Items.Add($"Item {i}");
         }
 
         // Init Table
