@@ -81,6 +81,39 @@ public class ContentControlTests
 
         Assert.Equal(template, cc.ContentTemplate);
     }
+
+    [Fact]
+    public void ContentControl_HasContent_UpdatesWhenContentChanges()
+    {
+        var cc = new TestContentControl();
+        Assert.False(cc.HasContent);
+
+        cc.Content = "Test";
+        Assert.True(cc.HasContent);
+
+        cc.Content = null;
+        Assert.False(cc.HasContent);
+    }
+}
+
+public class HeaderedContentControlTests
+{
+    private class TestHeaderedContentControl : HeaderedContentControl
+    {
+    }
+
+    [Fact]
+    public void HeaderedContentControl_HasHeader_UpdatesWhenHeaderChanges()
+    {
+        var hcc = new TestHeaderedContentControl();
+        Assert.False(hcc.HasHeader);
+
+        hcc.Header = "Header";
+        Assert.True(hcc.HasHeader);
+
+        hcc.Header = null;
+        Assert.False(hcc.HasHeader);
+    }
 }
 
 public class ControlTemplateTests
