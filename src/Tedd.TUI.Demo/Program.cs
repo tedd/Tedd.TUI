@@ -248,6 +248,7 @@ class Program
         countryCombo.Items.Add("UK");
         countryCombo.Items.Add("Germany");
         countryCombo.Items.Add("France");
+        countryCombo.Items.Add("Spain");
         countryCombo.SelectedItem = "USA";
         formStack.AddChild(countryCombo);
 
@@ -311,15 +312,29 @@ class Program
 
         tabs.Items.Add(new TabItem { Header = "Form", Content = formStack });
 
-        // --- Tab 2: Lists & Progress ---
+        // --- Tab 2: Lists ---
         var listStack = new StackPanel { Orientation = Orientation.Vertical };
+        listStack.AddChild(new TextBlock { Text = "ListBox Permutations:" });
 
-        listStack.AddChild(new TextBlock { Text = "Items:" });
-        // listBox already created
-        var listBoxList = new ListBox { Width = 40, Height = 10 };
-        for (int i = 1; i <= 20; i++) listBoxList.Items.Add($"Item {i}");
-        listStack.AddChild(listBoxList);
+        var listTabs = new TabControl { Width = 70, Height = 15 };
 
+        // Single Selection
+        var singleStack = new StackPanel { Orientation = Orientation.Vertical };
+        singleStack.AddChild(new TextBlock { Text = "Single Selection Mode" });
+        var singleList = new ListBox { Width = 40, Height = 10, SelectionMode = SelectionMode.Single };
+        for (int i = 1; i <= 20; i++) singleList.Items.Add($"Item {i}");
+        singleStack.AddChild(singleList);
+        listTabs.Items.Add(new TabItem { Header = "Single", Content = singleStack });
+
+        // Multi Selection
+        var multiStack = new StackPanel { Orientation = Orientation.Vertical };
+        multiStack.AddChild(new TextBlock { Text = "Multiple Selection Mode (Ctrl/Shift+Click, Space to toggle)" });
+        var multiList = new ListBox { Width = 40, Height = 10, SelectionMode = SelectionMode.Multiple };
+        for (int i = 1; i <= 20; i++) multiList.Items.Add($"Item {i}");
+        multiStack.AddChild(multiList);
+        listTabs.Items.Add(new TabItem { Header = "Multi", Content = multiStack });
+
+        listStack.AddChild(listTabs);
         tabs.Items.Add(new TabItem { Header = "Lists", Content = listStack });
 
         // --- Tab 3: Table ---

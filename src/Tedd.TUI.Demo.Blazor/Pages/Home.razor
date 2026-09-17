@@ -113,9 +113,21 @@
             <!-- Tab 2: Lists -->
             <TuiTabItem Header="Lists">
                 <TuiStackPanel Orientation="Orientation.Vertical">
-                    <TuiLabel Text="Items:" />
-                    <!-- Generating static items for demo -->
-                    <TuiListBox Width="40" Height="10" Items="@listItems" />
+                    <TuiLabel Text="ListBox Permutations:" />
+                    <TuiTabControl Width="70" Height="15">
+                        <TuiTabItem Header="Single">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="Single Selection Mode" />
+                                <TuiListBox Width="40" Height="10" SelectionMode="SelectionMode.Single" Items="@listItems" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="Multi">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="Multiple Selection Mode (Ctrl/Shift+Click, Space to toggle)" />
+                                <TuiListBox Width="40" Height="10" SelectionMode="SelectionMode.Multiple" Items="@listItems" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                    </TuiTabControl>
                 </TuiStackPanel>
             </TuiTabItem>
 

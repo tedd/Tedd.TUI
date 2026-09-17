@@ -114,8 +114,21 @@
        <!-- Tab 2: Lists -->
        <TabItem Header="Lists">
            <StackPanel Orientation="Vertical">
-              <TextBlock Text="Items:"/>
-              <ListBox Name="SimpleList" Width="40" Height="10"/>
+              <TextBlock Text="ListBox Permutations:"/>
+              <TabControl Width="70" Height="15">
+                  <TabItem Header="Single">
+                      <StackPanel Orientation="Vertical">
+                          <TextBlock Text="Single Selection Mode"/>
+                          <ListBox Name="SingleList" Width="40" Height="10" SelectionMode="Single"/>
+                      </StackPanel>
+                  </TabItem>
+                  <TabItem Header="Multi">
+                      <StackPanel Orientation="Vertical">
+                          <TextBlock Text="Multiple Selection Mode (Ctrl/Shift+Click, Space to toggle)"/>
+                          <ListBox Name="MultiList" Width="40" Height="10" SelectionMode="Multiple"/>
+                      </StackPanel>
+                  </TabItem>
+              </TabControl>
            </StackPanel>
        </TabItem>
 
