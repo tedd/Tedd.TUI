@@ -1,11 +1,13 @@
 using System;
 
-namespace Tedd.TUI.Controls;
+using Tedd.TUI.Controls;
 
-public class WrapPanel : Panel
+namespace Tedd.TUI.Archive.Controls;
+
+public class WrapPanelLegacy : Panel
 {
     public static readonly DependencyProperty OrientationProperty =
-        DependencyProperty.Register("Orientation", typeof(Orientation), typeof(WrapPanel), Orientation.Horizontal);
+        DependencyProperty.Register("Orientation", typeof(Orientation), typeof(WrapPanelLegacy), Orientation.Horizontal);
 
     public Orientation Orientation
     {
@@ -19,11 +21,7 @@ public class WrapPanel : Panel
         int currentLineSizeX = 0;
         int currentLineSizeY = 0;
 
-
-        // Optimization: Span-based iteration over UIElementCollection to elide IEnumerator allocation.
-        // Time Complexity: O(n) where n is the number of visual children.
-        // Space Complexity: O(1) memory allocations (0 bytes allocated per layout pass).
-        foreach (ref readonly var child in Children.AsSpan())
+        foreach (var child in Children)
         {
             child.Measure(availableSize);
             Size desired = child.DesiredSize;
@@ -91,7 +89,7 @@ public class WrapPanel : Panel
         int currentLineSizeX = 0;
         int currentLineSizeY = 0;
 
-        foreach (ref readonly var child in Children.AsSpan())
+        foreach (var child in Children)
         {
             Size desired = child.DesiredSize;
 
