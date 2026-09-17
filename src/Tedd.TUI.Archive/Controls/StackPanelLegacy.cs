@@ -2,18 +2,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace Tedd.TUI.Controls;
+using Tedd.TUI.Controls;
 
-public enum Orientation
-{
-    Horizontal,
-    Vertical
-}
+namespace Tedd.TUI.Archive.Controls;
 
-public class StackPanel : Panel
+public class StackPanelLegacy : Panel
 {
     public static readonly DependencyProperty OrientationProperty =
-        DependencyProperty.Register("Orientation", typeof(Orientation), typeof(StackPanel), Orientation.Vertical);
+        DependencyProperty.Register("Orientation", typeof(Orientation), typeof(StackPanelLegacy), Orientation.Vertical);
 
     public Orientation Orientation
     {
@@ -34,11 +30,7 @@ public class StackPanel : Panel
             ? new Size(availableSize.Width, int.MaxValue)
             : new Size(int.MaxValue, availableSize.Height);
 
-
-        // Optimization: Span-based iteration over UIElementCollection to elide IEnumerator allocation.
-        // Time Complexity: O(n) where n is the number of visual children.
-        // Space Complexity: O(1) memory allocations (0 bytes allocated per layout pass).
-        foreach (ref readonly var child in Children.AsSpan())
+        foreach (var child in Children)
         {
             child.Measure(childAvailable);
             Size childSize = child.DesiredSize;
@@ -62,7 +54,7 @@ public class StackPanel : Panel
     {
         int offset = 0;
 
-        foreach (ref readonly var child in Children.AsSpan())
+        foreach (var child in Children)
         {
             if (Orientation == Orientation.Vertical)
             {

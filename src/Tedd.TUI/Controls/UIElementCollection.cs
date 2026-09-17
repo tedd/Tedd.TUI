@@ -5,6 +5,8 @@ namespace Tedd.TUI.Controls;
 
 public class UIElementCollection : Collection<UIElement>
 {
+    public System.ReadOnlySpan<UIElement> AsSpan() => System.Runtime.InteropServices.CollectionsMarshal.AsSpan((System.Collections.Generic.List<UIElement>)Items);
+
     private readonly UIElement _owner;
 
     public UIElementCollection(UIElement owner)

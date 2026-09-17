@@ -1,11 +1,13 @@
 using System;
 
-namespace Tedd.TUI.Controls;
+using Tedd.TUI.Controls;
 
-public class Canvas : Panel
+namespace Tedd.TUI.Archive.Controls;
+
+public class CanvasLegacy : Panel
 {
     public static readonly DependencyProperty LeftProperty =
-        DependencyProperty.RegisterAttached("Left", typeof(int), typeof(Canvas), 0);
+        DependencyProperty.RegisterAttached("Left", typeof(int), typeof(CanvasLegacy), 0);
 
     public static void SetLeft(UIElement element, int value)
     {
@@ -20,7 +22,7 @@ public class Canvas : Panel
     }
 
     public static readonly DependencyProperty TopProperty =
-        DependencyProperty.RegisterAttached("Top", typeof(int), typeof(Canvas), 0);
+        DependencyProperty.RegisterAttached("Top", typeof(int), typeof(CanvasLegacy), 0);
 
     public static void SetTop(UIElement element, int value)
     {
@@ -36,11 +38,7 @@ public class Canvas : Panel
 
     protected override Size MeasureOverride(Size availableSize)
     {
-
-        // Optimization: Span-based iteration over UIElementCollection to elide IEnumerator allocation.
-        // Time Complexity: O(n) where n is the number of visual children.
-        // Space Complexity: O(1) memory allocations (0 bytes allocated per layout pass).
-        foreach (ref readonly var child in Children.AsSpan())
+        foreach (var child in Children)
         {
             // Canvas gives children infinite space to measure themselves
             child.Measure(new Size(int.MaxValue, int.MaxValue));
@@ -53,7 +51,7 @@ public class Canvas : Panel
 
     protected override void ArrangeOverride(Size finalSize)
     {
-        foreach (ref readonly var child in Children.AsSpan())
+        foreach (var child in Children)
         {
             int left = GetLeft(child);
             int top = GetTop(child);
