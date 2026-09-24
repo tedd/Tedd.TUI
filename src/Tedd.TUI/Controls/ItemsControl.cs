@@ -47,6 +47,15 @@ public abstract class ItemsControl : Control
         set => SetValue(ItemTemplateProperty, value);
     }
 
+    public static readonly DependencyProperty HasItemsProperty =
+        DependencyProperty.Register("HasItems", typeof(bool), typeof(ItemsControl), false);
+
+    public bool HasItems
+    {
+        get => (bool)(GetValue(HasItemsProperty) ?? false);
+        protected set => SetValue(HasItemsProperty, value);
+    }
+
     private IEnumerable? _currentItemsSource;
     private Dictionary<Type, PropertyInfo?> _displayMemberCache = [];
     private System.Threading.Lock _displayMemberCacheLock = new();
@@ -219,6 +228,7 @@ public abstract class ItemsControl : Control
 
     protected virtual void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        HasItems = Items.Count > 0;
         if (!_isUpdating)
         {
             if (ItemsPresenter != null)
