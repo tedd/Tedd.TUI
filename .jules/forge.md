@@ -142,3 +142,7 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+
+## 2024-05-24 - Label Integration and Content State Propagation
+**Observation:** The TUI environment lacked parity with WPF regarding the `Label` control and native content presence propagation (`HasContent`/`HasHeader` dependency properties). The `ContentControl` class lacked native state flags that facilitate declarative trigger bindings based on content presence.
+**Strategic Action:** Implemented the `Label` standard control mapped to `ContentControl`, introducing the WPF-equivalent `Target` dependency property to establish mnemonic/focus redirect patterns. Explicitly added `HasContent` to `ContentControl` and `HasHeader` to `HeaderedContentControl` to optimize data bindings and visually conform to contemporary UI idioms.
