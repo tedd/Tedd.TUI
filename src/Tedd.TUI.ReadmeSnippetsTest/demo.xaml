@@ -1,0 +1,6 @@
+<TuiWindow>
+  <StackPanel Orientation="Vertical">
+    <TextBlock Text="Hello from XAML!" Foreground="Cyan"/>
+    <Button Name="SubmitButton" Content="Click Me" Click="OnSubmit"/>
+  </StackPanel>
+</TuiWindow>
