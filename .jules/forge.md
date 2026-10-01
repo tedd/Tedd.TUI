@@ -142,3 +142,7 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+
+## 2024-05-14 - UIElement Visibility Parity Integration
+**Observation:** The TUI framework previously used a simple `bool` for `UIElement.Visibility`. This deviated from WPF, which uses a three-state `Visibility` enum (`Visible`, `Hidden`, `Collapsed`), breaking isomorphism and preventing correct declarative XAML mappings for layout vs. visual hiding.
+**Strategic Action:** Migrated `UIElement.Visibility` to use the standard WPF `Visibility` enum. Updated `Measure` and `Arrange` to correctly bypass layout allocation only when `Visibility == Visibility.Collapsed`, while `Visibility.Hidden` allocates space but is skipped during `Render` and hit testing.
