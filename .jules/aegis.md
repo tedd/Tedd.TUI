@@ -226,3 +226,7 @@ Developed parameterized testing for both components.
 ## 2026-07-23 - FileDialog Coverage Expansion
 **Observation:** Coverage reports indicated untested branches in `FileDialog.ParseFilter` regarding empty/null parameters and malformed format strings, as well as unverified boundary conditions in `FileDialog.NavigateTo` when presented with invalid paths or empty strings. The `PresetFileName_PrefillsNameBox` test was also vulnerable to cross-platform execution failures due to hardcoded directory separators (`\`).
 **Strategic Action:** Transitioned hardcoded string paths to use `Path.Combine` to guarantee execution parity across operating systems. Introduced parameterized `[Theory]` suites (`ParseFilter_BoundaryConditions` and `NavigateTo_InvalidOrEmptyPath_IgnoresSilently`) leveraging diverse `[InlineData]` vectors to deterministically verify that invalid structural parameters are caught safely without raising exceptions or destabilizing the dialog state.
+
+## 2024-10-01 - MenuItem Coverage Expansion
+**Observation:** The `NavigateSibling` method inside `MenuItem` was completely untested. It specifically expects the parent to be a `StackPanel` (which `MenuBar` inherits from) to find siblings and navigate focus using keyboard arrows.
+**Strategic Action:** Implemented targeted parameterized unit tests in `MenuItemTests.cs` using `[Theory]` and `[InlineData]` to cover horizontal/vertical navigation of top-level MenuItems within a `MenuBar` and nested MenuItems within drop-down submenus.
