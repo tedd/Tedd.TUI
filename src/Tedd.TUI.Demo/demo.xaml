@@ -70,6 +70,7 @@
                     <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
                     <TreeViewItem Header="Layouts" />
+                    <TreeViewItem Header="Pickers" />
                 </TreeViewItem>
             </TreeView>
         </Expander>
@@ -274,6 +275,40 @@
                                    <CheckBox Content="Enable Feature B"/>
                                </StackPanel>
                            </GroupBox>
+                       </StackPanel>
+                   </TabItem>
+               </TabControl>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 11: Pickers -->
+       <TabItem Header="Pickers">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="Picker Controls:"/>
+               <TabControl Width="70" Height="15">
+                   <TabItem Header="Date/Time">
+                       <StackPanel Orientation="Vertical">
+                           <StackPanel Orientation="Horizontal">
+                               <StackPanel Orientation="Vertical">
+                                   <TextBlock Text="Date Picker:" />
+                                   <DatePicker Width="15" />
+                                   <TextBlock Text="Time Picker:" />
+                                   <TimePicker Width="15" />
+                               </StackPanel>
+                               <TextBlock Text="   " />
+                               <StackPanel Orientation="Vertical">
+                                   <TextBlock Text="Calendar:" />
+                                   <Calendar />
+                               </StackPanel>
+                           </StackPanel>
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="Numeric/Toggle">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="Numeric Up/Down:" />
+                           <NumericUpDown Minimum="0" Maximum="100" Value="42" Increment="1" />
+                           <TextBlock Text="Toggle Switch:" />
+                           <ToggleSwitch IsChecked="True" OnContent="Enabled" OffContent="Disabled" />
                        </StackPanel>
                    </TabItem>
                </TabControl>

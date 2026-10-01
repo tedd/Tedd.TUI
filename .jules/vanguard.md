@@ -33,3 +33,7 @@
 **Observation:** The programmatic implementation (`Tedd.TUI.Demo/Program.cs` and `Tedd.TUI.Demo/DemoController.cs`) lacked the dynamic dataset and pagination logic present in the Blazor equivalents (`Programmatic.razor` and `Home.razor`). The absence of parity restricted exhaustive testing of the `Table` control's dataset boundary capabilities in terminal environments.
 
 **Strategic Action:** Aligned the programmatic implementations by deploying a unified 25-item dataset loop. Configured `TotalRows`, `PageSize`, and bounded the `PageChanged` delegate event identically across all vectors. This enforces absolute cross-platform parity and guarantees consistent data loading patterns in both XAML and raw C# execution pathways.
+
+## 2023-10-27 - Pickers and Toggles Synchronization
+**Observation:** Native picker and toggle controls (`Calendar`, `DatePicker`, `TimePicker`, `NumericUpDown`, `ToggleSwitch`) lack coverage in the demonstration application across all platform deployments, decreasing the demonstrability of the underlying control framework.
+**Strategic Action:** Introduce a bifurcated "Pickers" navigation node with a nested multi-tabbed interface containing `Date/Time` and `Numeric/Toggle` tabs, mapping these controls correctly across all deployment targets (Console Programmatic, Console XAML, Blazor Programmatic, Blazor Razor) to achieve absolute visual and functional parity.
