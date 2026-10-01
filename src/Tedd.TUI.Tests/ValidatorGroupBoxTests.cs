@@ -115,7 +115,8 @@ public class ValidatorGroupBoxTests
         var groupBox = new GroupBox { BoxStyle = BoxStyle.Single, Header = "Neg" };
         stack.Children.Add(groupBox);
 
-        var ex = Record.Exception(() => {
+        var ex = Record.Exception(() =>
+        {
             stack.Measure(new Size(-10, -10));
             stack.Arrange(new Rect(0, 0, -10, -10));
         });
@@ -123,7 +124,8 @@ public class ValidatorGroupBoxTests
         Assert.Null(ex); // Layout should not crash on negative dimensions
 
         var buffer = new VirtualBuffer(10, 10);
-        var ex2 = Record.Exception(() => {
+        var ex2 = Record.Exception(() =>
+        {
             stack.Render(buffer, 0, 0);
         });
 

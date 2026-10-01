@@ -10,3 +10,4 @@ coverage.json
 coverage.cobertura.xml
 BenchmarkDotNet.Artifacts/
 benchmark_results.txt
+coveragereport_html/

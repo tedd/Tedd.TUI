@@ -79,4 +79,42 @@ public class MenuItemTests
         // Focus should be back on "Open" item (Level 1 item)
         Assert.True(openItem.IsFocused);
     }
+
+    [Theory]
+    [InlineData(ConsoleKey.RightArrow, 0, 1, true)]
+    [InlineData(ConsoleKey.LeftArrow, 1, 0, true)]
+    [InlineData(ConsoleKey.LeftArrow, 0, 0, true)] // Boundary (first item)
+    [InlineData(ConsoleKey.RightArrow, 2, 2, true)] // Boundary (last item)
+    [InlineData(ConsoleKey.DownArrow, 0, 1, false)]
+    [InlineData(ConsoleKey.UpArrow, 1, 0, false)]
+    [InlineData(ConsoleKey.UpArrow, 0, 0, false)] // Boundary (first item)
+    [InlineData(ConsoleKey.DownArrow, 2, 2, false)] // Boundary (last item)
+    public void TestMenuItemNavigationSibling(ConsoleKey key, int initialFocusIndex, int expectedFocusIndex, bool isMenuBar)
+    {
+        var window = new TuiWindow();
+        window.Measure(new Size(80, 25));
+        window.Arrange(new Rect(0, 0, 80, 25));
+
+        StackPanel panel = isMenuBar ? new MenuBar() : new StackPanel();
+        window.Content = panel;
+
+        var item1 = new MenuItem { Header = new TextBlock { Text = "Item1" } };
+        var item2 = new MenuItem { Header = new TextBlock { Text = "Item2" } };
+        var item3 = new MenuItem { Header = new TextBlock { Text = "Item3" } };
+
+        panel.AddChild(item1);
+        panel.AddChild(item2);
+        panel.AddChild(item3);
+
+        var items = new[] { item1, item2, item3 };
+
+        // Ensure proper parent mapping inside MenuBar/StackPanel
+        window.SetFocus(items[initialFocusIndex]);
+        Assert.True(items[initialFocusIndex].IsFocused);
+
+        var keyEvent = new KeyEventArgs { Key = key };
+        items[initialFocusIndex].OnKeyDown(keyEvent);
+
+        Assert.True(items[expectedFocusIndex].IsFocused);
+    }
 }
