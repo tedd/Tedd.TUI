@@ -48,7 +48,7 @@ public class UniformGrid : Panel
         for (int i = 0; i < VisualChildrenCount; i++)
         {
             UIElement? child = GetVisualChild(i);
-            if (child != null && child.Visibility)
+            if (child != null && child.Visibility != Visibility.Collapsed)
             {
                 child.Measure(childAvailableSize);
                 if (child.DesiredSize.Width > maxChildWidth)
@@ -80,7 +80,7 @@ public class UniformGrid : Panel
         for (int i = 0; i < VisualChildrenCount; i++)
         {
             UIElement? child = GetVisualChild(i);
-            if (child != null && child.Visibility)
+            if (child != null && child.Visibility != Visibility.Collapsed)
             {
                 child.Arrange(new Rect(col * childWidth, row * childHeight, childWidth, childHeight));
 
@@ -100,7 +100,7 @@ public class UniformGrid : Panel
         for (int i = 0; i < VisualChildrenCount; i++)
         {
             UIElement? child = GetVisualChild(i);
-            if (child != null && child.Visibility)
+            if (child != null && child.Visibility != Visibility.Collapsed)
             {
                 nonCollapsedCount++;
             }

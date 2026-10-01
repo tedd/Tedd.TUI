@@ -173,7 +173,7 @@ public abstract class Panel : UIElement
                 childX < clip.X + clip.Width && childX + childW > clip.X &&
                 childY < clip.Y + clip.Height && childY + childH > clip.Y;
 
-            if (overlapsClip)
+            if (overlapsClip && child.Visibility == Visibility.Visible)
             {
                 child.Render(buffer, x, y);
             }

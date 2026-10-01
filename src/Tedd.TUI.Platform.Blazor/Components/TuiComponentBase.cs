@@ -42,7 +42,7 @@ public abstract class TuiComponentBase : ComponentBase, ITuiContainer, IDisposab
         Element.HorizontalAlignment = HorizontalAlignment;
         Element.VerticalAlignment = VerticalAlignment;
         Element.Background = Background;
-        Element.Visibility = Visible;
+        Element.Visibility = Visible ? Visibility.Visible : Visibility.Collapsed;
         if (Dock.HasValue) DockPanel.SetDock(Element, Dock.Value);
     }
 
