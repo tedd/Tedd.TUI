@@ -142,3 +142,9 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+
+## 2023-10-24 - Label Control Integration
+
+**Observation:** The TUI environment lacked the `Label` component found in the standard WPF input controls library. In WPF, `Label` primarily functions as a `ContentControl` that supports a `Target` dependency property to facilitate mnemonic focus redirection.
+
+**Strategic Action:** Implemented the `Label` control extending `ContentControl` within `Tedd.TUI.Controls` namespace. The `Target` dependency property of type `UIElement` was successfully established, mirroring WPF parity. This architectural integration resolves the structural deficit and enables future programmatic mnemonic access key handling across the logical tree.
