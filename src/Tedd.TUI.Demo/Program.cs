@@ -152,6 +152,7 @@ class Program
         var nodeEditor = new TreeViewItem { Header = "Editor" };
         var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
         var nodeLayouts = new TreeViewItem { Header = "Layouts" };
+        var nodePickers = new TreeViewItem { Header = "Pickers" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -163,6 +164,7 @@ class Program
         rootNode.Items.Add(nodeEditor);
         rootNode.Items.Add(nodeProgressBar);
         rootNode.Items.Add(nodeLayouts);
+        rootNode.Items.Add(nodePickers);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -187,6 +189,7 @@ class Program
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
             else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
             else if (sel == nodeLayouts) tabs.SelectedIndex = 9;
+            else if (sel == nodePickers) tabs.SelectedIndex = 10;
         };
 
         tabs.SelectionChanged += (s, e) =>
@@ -203,6 +206,7 @@ class Program
                 case 7: navTree.SelectedItem = nodeEditor; break;
                 case 8: navTree.SelectedItem = nodeProgressBar; break;
                 case 9: navTree.SelectedItem = nodeLayouts; break;
+                case 10: navTree.SelectedItem = nodePickers; break;
             }
         };
 
@@ -654,6 +658,44 @@ public void Hello() {
 
         layoutsStack.AddChild(layoutsTabs);
         tabs.Items.Add(new TabItem { Header = "Layouts", Content = layoutsStack });
+
+        // --- Tab 11: Pickers ---
+        var pickersStack = new StackPanel { Orientation = Orientation.Vertical };
+        pickersStack.AddChild(new TextBlock { Text = "Picker Controls:" });
+
+        var pickersTabs = new TabControl { Width = 70, Height = 15 };
+
+        // Date/Time Tab
+        var dateTimeStack = new StackPanel { Orientation = Orientation.Vertical };
+        var dateTimeHStack = new StackPanel { Orientation = Orientation.Horizontal };
+
+        var dtPickersStack = new StackPanel { Orientation = Orientation.Vertical };
+        dtPickersStack.AddChild(new TextBlock { Text = "Date Picker:" });
+        dtPickersStack.AddChild(new DatePicker { Width = 15 });
+        dtPickersStack.AddChild(new TextBlock { Text = "Time Picker:" });
+        dtPickersStack.AddChild(new TimePicker { Width = 15 });
+
+        dateTimeHStack.AddChild(dtPickersStack);
+        dateTimeHStack.AddChild(new TextBlock { Text = "   " });
+
+        var calStack = new StackPanel { Orientation = Orientation.Vertical };
+        calStack.AddChild(new TextBlock { Text = "Calendar:" });
+        calStack.AddChild(new Calendar());
+
+        dateTimeHStack.AddChild(calStack);
+        dateTimeStack.AddChild(dateTimeHStack);
+        pickersTabs.Items.Add(new TabItem { Header = "Date/Time", Content = dateTimeStack });
+
+        // Numeric/Toggle Tab
+        var numToggleStack = new StackPanel { Orientation = Orientation.Vertical };
+        numToggleStack.AddChild(new TextBlock { Text = "Numeric Up/Down:" });
+        numToggleStack.AddChild(new NumericUpDown { Minimum = 0, Maximum = 100, Value = 42, Increment = 1 });
+        numToggleStack.AddChild(new TextBlock { Text = "Toggle Switch:" });
+        numToggleStack.AddChild(new ToggleSwitch { IsChecked = true, OnContent = "Enabled", OffContent = "Disabled" });
+        pickersTabs.Items.Add(new TabItem { Header = "Numeric/Toggle", Content = numToggleStack });
+
+        pickersStack.AddChild(pickersTabs);
+        tabs.Items.Add(new TabItem { Header = "Pickers", Content = pickersStack });
 
         // Run App
 

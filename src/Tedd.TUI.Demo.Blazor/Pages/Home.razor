@@ -65,6 +65,7 @@
                         <TuiTreeViewItem Header="Editor" @bind-IsSelected="isEditorSelected" />
                         <TuiTreeViewItem Header="ProgressBar" @bind-IsSelected="isProgressBarSelected" />
                         <TuiTreeViewItem Header="Layouts" @bind-IsSelected="isLayoutsSelected" />
+                        <TuiTreeViewItem Header="Pickers" @bind-IsSelected="isPickersSelected" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -269,6 +270,40 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 11: Pickers -->
+            <TuiTabItem Header="Pickers">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Picker Controls:" />
+                    <TuiTabControl Width="70" Height="15">
+                        <TuiTabItem Header="Date/Time">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiStackPanel Orientation="Orientation.Horizontal">
+                                    <TuiStackPanel Orientation="Orientation.Vertical">
+                                        <TuiLabel Text="Date Picker:" />
+                                        <TuiHost Component="@datePicker" />
+                                        <TuiLabel Text="Time Picker:" />
+                                        <TuiHost Component="@timePicker" />
+                                    </TuiStackPanel>
+                                    <TuiLabel Text="   " />
+                                    <TuiStackPanel Orientation="Orientation.Vertical">
+                                        <TuiLabel Text="Calendar:" />
+                                        <TuiHost Component="@calendar" />
+                                    </TuiStackPanel>
+                                </TuiStackPanel>
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="Numeric/Toggle">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="Numeric Up/Down:" />
+                                <TuiHost Component="@numericUpDown" />
+                                <TuiLabel Text="Toggle Switch:" />
+                                <TuiHost Component="@toggleSwitch" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                    </TuiTabControl>
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -307,6 +342,7 @@
     private bool isEditorSelected = false;
     private bool isProgressBarSelected = false;
     private bool isLayoutsSelected = false;
+    private bool isPickersSelected = false;
 
     private void UpdateNavTreeSelection()
     {
@@ -320,6 +356,7 @@
         isEditorSelected = _selectedTabIndex == 7;
         isProgressBarSelected = _selectedTabIndex == 8;
         isLayoutsSelected = _selectedTabIndex == 9;
+        isPickersSelected = _selectedTabIndex == 10;
         StateHasChanged();
     }
 
@@ -339,6 +376,7 @@
                 case "Editor": selectedTabIndex = 7; break;
                 case "ProgressBar": selectedTabIndex = 8; break;
                 case "Layouts": selectedTabIndex = 9; break;
+                case "Pickers": selectedTabIndex = 10; break;
             }
             StateHasChanged();
         }
@@ -500,6 +538,13 @@
     private Grid demoGrid = new Grid { Width = 60, Height = 10 };
     private WrapPanel demoWrap = new WrapPanel { Width = 50, Height = 10 };
     private GroupBox demoGroup = new GroupBox { Header = "Settings", Width = 40, Height = 10 };
+
+    // Picker Data
+    private DatePicker datePicker = new DatePicker { Width = 15 };
+    private TimePicker timePicker = new TimePicker { Width = 15 };
+    private Calendar calendar = new Calendar();
+    private NumericUpDown numericUpDown = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 42, Increment = 1 };
+    private ToggleSwitch toggleSwitch = new ToggleSwitch { IsChecked = true, OnContent = "Enabled", OffContent = "Disabled" };
 
     protected override void OnInitialized()
     {
