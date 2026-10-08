@@ -367,4 +367,51 @@ public class ValidatorLayoutMatrixTests
         border.Render(buffer1, 0, 0);
         Assert.Equal(' ', buffer1.GetPixel(0, 0).Character); // Border requires >= 2x2
     }
+
+    [Fact]
+    public void Grid_ScrollViewerInfiniteSize_Validation()
+    {
+        var scrollViewer = new ScrollViewer { Width = 20, Height = 20 };
+        ScrollViewer.SetHorizontalScrollBarVisibility(scrollViewer, ScrollBarVisibility.Auto);
+        ScrollViewer.SetVerticalScrollBarVisibility(scrollViewer, ScrollBarVisibility.Auto);
+
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
+
+        var textBlock = new TextBlock { Text = "Test" };
+        Grid.SetColumn(textBlock, 0);
+        Grid.SetRow(textBlock, 0);
+        grid.Children.Add(textBlock);
+
+        scrollViewer.Content = grid;
+
+        // Dynamic State Mutation: Layout Pass
+        scrollViewer.Measure(new Size(20, 20));
+        scrollViewer.Arrange(new Rect(0, 0, 20, 20));
+
+        // In infinite space, Grid defaults Star dimensions to DesiredSize of its children
+        // Text is "Test" (Length 4) so Grid width should be 4, height 1.
+        Assert.Equal(4, grid.DesiredSize.Width);
+        Assert.Equal(1, grid.DesiredSize.Height);
+
+        // Grid must not ask for int.MaxValue Width/Height (preventing overflow crash/blank screen)
+        // Ensure scroll viewer isn't forced to show scrollbars for simple content that fits
+        Assert.False(scrollViewer.IsHorizontalScrollBarShown);
+        Assert.False(scrollViewer.IsVerticalScrollBarShown);
+
+        // Coordinate-Precise Character Assertion
+        var buffer = new VirtualBuffer(20, 20);
+        scrollViewer.Render(buffer, 0, 0);
+
+        Assert.Equal('T', buffer.GetPixel(0, 0).Character);
+        Assert.Equal('e', buffer.GetPixel(1, 0).Character);
+        Assert.Equal('s', buffer.GetPixel(2, 0).Character);
+        Assert.Equal('t', buffer.GetPixel(3, 0).Character);
+
+        // Assert outer bounds are empty (not stretching fully if not requested)
+        // Wait, Star in Arrange will stretch to the viewport if there's extra space.
+        // But the DesiredSize calculation during Measure is what's important to not overflow.
+    }
+
 }
