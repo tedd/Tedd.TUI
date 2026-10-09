@@ -8,19 +8,7 @@ namespace Tedd.TUI.Tests;
 
 public class TestViewModel : INotifyPropertyChanged
 {
-    private string _testProperty;
-    public string TestProperty
-    {
-        get => _testProperty;
-        set
-        {
-            if (_testProperty != value)
-            {
-                _testProperty = value;
-                OnPropertyChanged();
-            }
-        }
-    }
+    public string TestProperty { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

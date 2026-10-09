@@ -33,19 +33,14 @@ public class BindingEngineTests
 
     private class PersonVm : ObservableObject
     {
-        private string _name = "";
-        private int _age;
-        private AddressVm? _address;
-
-        public string Name { get => _name; set => Set(ref _name, value); }
-        public int Age { get => _age; set => Set(ref _age, value); }
-        public AddressVm? Address { get => _address; set => Set(ref _address, value); }
+        public string Name { get => field; set => Set(ref field, value); } = "";
+        public int Age { get => field; set => Set(ref field, value); }
+        public AddressVm? Address { get => field; set => Set(ref field, value); }
     }
 
     private class AddressVm : ObservableObject
     {
-        private string _city = "";
-        public string City { get => _city; set => Set(ref _city, value); }
+        public string City { get => field; set => Set(ref field, value); } = "";
     }
 
     // --- ElementName ---
@@ -238,8 +233,7 @@ public class BindingEngineTests
 
     private class NullableHolder : ObservableObject
     {
-        private string? _value;
-        public string? Value { get => _value; set => Set(ref _value, value); }
+        public string? Value { get => field; set => Set(ref field, value); }
     }
 
     // --- BindsTwoWayByDefault ---
@@ -296,8 +290,7 @@ public class BindingEngineTests
 
     private class FlagVm : ObservableObject
     {
-        private bool _flag;
-        public bool Flag { get => _flag; set => Set(ref _flag, value); }
+        public bool Flag { get => field; set => Set(ref field, value); }
     }
 
     [Fact]
@@ -380,10 +373,8 @@ public class BindingEngineTests
 
     private class SelectionVm : ObservableObject
     {
-        private int _index = -1;
-        private object? _item;
-        public int Index { get => _index; set => Set(ref _index, value); }
-        public object? Item { get => _item; set => Set(ref _item, value); }
+        public int Index { get => field; set => Set(ref field, value); } = -1;
+        public object? Item { get => field; set => Set(ref field, value); }
     }
 
     // --- Mode semantics ---
@@ -449,8 +440,7 @@ public class BindingEngineTests
 
     private class DoubleVm : ObservableObject
     {
-        private double _number;
-        public double Number { get => _number; set => Set(ref _number, value); }
+        public double Number { get => field; set => Set(ref field, value); }
     }
 
     [Fact]
@@ -467,8 +457,7 @@ public class BindingEngineTests
 
     private class NullableIntVm : ObservableObject
     {
-        private int? _number;
-        public int? Number { get => _number; set => Set(ref _number, value); }
+        public int? Number { get => field; set => Set(ref field, value); }
     }
 
     [Fact]
@@ -483,8 +472,7 @@ public class BindingEngineTests
 
     private class EnumSourceVm : ObservableObject
     {
-        private string _orientationName = "";
-        public string OrientationName { get => _orientationName; set => Set(ref _orientationName, value); }
+        public string OrientationName { get => field; set => Set(ref field, value); } = "";
     }
 
     // --- Lifecycle ---

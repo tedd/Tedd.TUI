@@ -11,46 +11,7 @@ public class TestViewModel : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
-
-    private string _text = "Bound Text";
-    public string Text
-    {
-        get => _text;
-        set
-        {
-            if (_text != value)
-            {
-                _text = value;
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    private bool _isChecked = false;
-    public bool IsChecked
-    {
-        get => _isChecked;
-        set
-        {
-            if (_isChecked != value)
-            {
-                _isChecked = value;
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    private int _value = 0;
-    public int Value
-    {
-        get => _value;
-        set
-        {
-            if (_value != value)
-            {
-                _value = value;
-                OnPropertyChanged();
-            }
-        }
-    }
+    public string Text { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = "Bound Text";
+    public bool IsChecked { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = false;
+    public int Value { get => field; set { if (field != value) { field = value; OnPropertyChanged(); } } } = 0;
 }
