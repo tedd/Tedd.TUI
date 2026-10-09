@@ -103,7 +103,13 @@ public abstract class Selector : ItemsControl
     public int CurrentIndex =>
         _currentIndex >= 0 && _currentIndex < Items.Count ? _currentIndex : SelectedIndex;
 
-    public event EventHandler? SelectionChanged;
+    public static readonly RoutedEvent SelectionChangedEvent = RoutedEvent.Register("SelectionChanged", RoutingStrategy.Bubble, typeof(SelectionChangedEventHandler), typeof(Selector));
+
+    public event SelectionChangedEventHandler SelectionChanged
+    {
+        add { AddHandler(SelectionChangedEvent, value); }
+        remove { RemoveHandler(SelectionChangedEvent, value); }
+    }
 
     /// <summary>Whether the item at <paramref name="index"/> is part of the selection.</summary>
     public bool IsIndexSelected(int index) => _selectedIndices.Contains(index);
@@ -252,7 +258,7 @@ public abstract class Selector : ItemsControl
         SetPrimarySelection(primary);
 
         if (added.Count > 0 || removed.Count > 0 || primaryChanged)
-            OnSelectionChanged(new SelectionChangedEventArgs(added, removed));
+            OnSelectionChanged(new SelectionChangedEventArgs(SelectionChangedEvent, added, removed));
     }
 
     /// <summary>Writes SelectedIndex/SelectedItem without re-entering the selection-set logic.</summary>
@@ -401,11 +407,11 @@ public abstract class Selector : ItemsControl
         AdoptSelectedItemsCollection();
     }
 
-    protected void OnSelectionChanged() => OnSelectionChanged(SelectionChangedEventArgs.Empty);
+    protected void OnSelectionChanged() => OnSelectionChanged(new SelectionChangedEventArgs(SelectionChangedEvent, Array.Empty<object?>(), Array.Empty<object?>()));
 
     protected virtual void OnSelectionChanged(SelectionChangedEventArgs e)
     {
-        SelectionChanged?.Invoke(this, e);
+        RaiseEvent(e);
         Invalidate();
     }
 
@@ -449,7 +455,7 @@ public abstract class Selector : ItemsControl
                 }
                 RemapSelectedIndices();
                 // Notify that selection is lost
-                SelectionChanged?.Invoke(this, SelectionChangedEventArgs.Empty);
+                RaiseEvent(new SelectionChangedEventArgs(SelectionChangedEvent, Array.Empty<object?>(), Array.Empty<object?>()));
                 Invalidate();
             }
         }
@@ -468,7 +474,7 @@ public abstract class Selector : ItemsControl
                     _syncingSelection = false;
                 }
                 RemapSelectedIndices();
-                SelectionChanged?.Invoke(this, SelectionChangedEventArgs.Empty);
+                RaiseEvent(new SelectionChangedEventArgs(SelectionChangedEvent, Array.Empty<object?>(), Array.Empty<object?>()));
                 Invalidate();
             }
             else

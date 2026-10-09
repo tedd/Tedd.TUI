@@ -210,12 +210,18 @@ public class Table : UIElement
             if (field != value)
             {
                 field = value;
-                SelectionChanged?.Invoke(this, EventArgs.Empty);
+                RaiseEvent(new SelectionChangedEventArgs(SelectionChangedEvent, Array.Empty<object?>(), Array.Empty<object?>()));
                 Invalidate();
             }
         }
     } = -1;
-    public event EventHandler SelectionChanged;
+    public static readonly RoutedEvent SelectionChangedEvent = RoutedEvent.Register("SelectionChanged", RoutingStrategy.Bubble, typeof(SelectionChangedEventHandler), typeof(Table));
+
+    public event SelectionChangedEventHandler SelectionChanged
+    {
+        add { AddHandler(SelectionChangedEvent, value); }
+        remove { RemoveHandler(SelectionChangedEvent, value); }
+    }
 
     public Table()
     {
@@ -843,7 +849,7 @@ public class Table : UIElement
                         if (rowIdx >= 0)
                         {
                             SelectedIndex = rowIdx;
-                            SelectionChanged?.Invoke(this, EventArgs.Empty);
+                            RaiseEvent(new SelectionChangedEventArgs(SelectionChangedEvent, Array.Empty<object?>(), Array.Empty<object?>()));
                         }
                     }
                     break;

@@ -4,22 +4,17 @@ using System.Collections.Generic;
 
 namespace Tedd.TUI.Controls;
 
+public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs e);
+
 /// <summary>
-/// Reports which items joined and left a selection. Derives from <see cref="EventArgs"/> so
-/// the existing <c>EventHandler</c>-shaped <c>SelectionChanged</c> subscriptions keep working;
+/// Reports which items joined and left a selection. Derives from <see cref="RoutedEventArgs"/> so
+/// the existing <c>SelectionChangedEventHandler</c>-shaped <c>SelectionChanged</c> subscriptions keep working;
 /// handlers that care about the delta cast the argument to this type.
 /// </summary>
-public class SelectionChangedEventArgs : EventArgs
+public class SelectionChangedEventArgs : RoutedEventArgs
 {
-    /// <summary>An empty delta, for notifications that only re-state the current selection.</summary>
-    public static new readonly SelectionChangedEventArgs Empty = new();
-
-    public SelectionChangedEventArgs()
-        : this(Array.Empty<object?>(), Array.Empty<object?>())
-    {
-    }
-
-    public SelectionChangedEventArgs(IReadOnlyList<object?> addedItems, IReadOnlyList<object?> removedItems)
+    public SelectionChangedEventArgs(RoutedEvent routedEvent, IReadOnlyList<object?> addedItems, IReadOnlyList<object?> removedItems)
+        : base(routedEvent)
     {
         AddedItems = addedItems ?? Array.Empty<object?>();
         RemovedItems = removedItems ?? Array.Empty<object?>();
@@ -30,4 +25,16 @@ public class SelectionChangedEventArgs : EventArgs
 
     /// <summary>Items that stopped being selected.</summary>
     public IReadOnlyList<object?> RemovedItems { get; }
+
+    protected override void InvokeEventHandler(Delegate genericHandler, object target)
+    {
+        if (genericHandler is SelectionChangedEventHandler handler)
+        {
+            handler(target, this);
+        }
+        else
+        {
+            base.InvokeEventHandler(genericHandler, target);
+        }
+    }
 }
