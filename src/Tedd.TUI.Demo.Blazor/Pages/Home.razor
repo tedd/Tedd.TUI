@@ -52,7 +52,7 @@
         <!-- Bifurcated Architecture -->
         <TuiDockPanel LastChildFill="true">
             <!-- Navigation Pane (Left) -->
-            <TuiExpander Dock="Dock.Left" Header="Navigation" IsExpanded="true">
+            <TuiExpander Dock="Dock.Left" Header="Navigation" IsExpanded="true" Width="20">
                 <TuiTreeView SelectedItemChanged="OnNavSelected">
                     <TuiTreeViewItem Header="Controls" IsExpanded="true">
                         <TuiTreeViewItem Header="Form" @bind-IsSelected="isFormSelected" />
@@ -65,6 +65,7 @@
                         <TuiTreeViewItem Header="Editor" @bind-IsSelected="isEditorSelected" />
                         <TuiTreeViewItem Header="ProgressBar" @bind-IsSelected="isProgressBarSelected" />
                         <TuiTreeViewItem Header="Layouts" @bind-IsSelected="isLayoutsSelected" />
+                        <TuiTreeViewItem Header="Pickers" @bind-IsSelected="isPickersSelected" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -269,6 +270,45 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 11: Pickers -->
+            <TuiTabItem Header="Pickers">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Advanced Pickers &amp; Inputs:" />
+                    <TuiTabControl Width="70" Height="15">
+                        <TuiTabItem Header="ToggleSwitch">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="ToggleSwitch Control" />
+                                <TuiHost Component="@demoToggle" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="NumericUpDown">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="NumericUpDown Control" />
+                                <TuiHost Component="@demoNumeric" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="DatePicker">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="DatePicker Control" />
+                                <TuiHost Component="@demoDate" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="TimePicker">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="TimePicker Control" />
+                                <TuiHost Component="@demoTime" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                        <TuiTabItem Header="Calendar">
+                            <TuiStackPanel Orientation="Orientation.Vertical">
+                                <TuiLabel Text="Calendar Control" />
+                                <TuiHost Component="@demoCalendar" />
+                            </TuiStackPanel>
+                        </TuiTabItem>
+                    </TuiTabControl>
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -307,6 +347,7 @@
     private bool isEditorSelected = false;
     private bool isProgressBarSelected = false;
     private bool isLayoutsSelected = false;
+    private bool isPickersSelected = false;
 
     private void UpdateNavTreeSelection()
     {
@@ -320,6 +361,7 @@
         isEditorSelected = _selectedTabIndex == 7;
         isProgressBarSelected = _selectedTabIndex == 8;
         isLayoutsSelected = _selectedTabIndex == 9;
+        isPickersSelected = _selectedTabIndex == 10;
         StateHasChanged();
     }
 
@@ -339,6 +381,7 @@
                 case "Editor": selectedTabIndex = 7; break;
                 case "ProgressBar": selectedTabIndex = 8; break;
                 case "Layouts": selectedTabIndex = 9; break;
+                case "Pickers": selectedTabIndex = 10; break;
             }
             StateHasChanged();
         }
@@ -500,6 +543,13 @@
     private Grid demoGrid = new Grid { Width = 60, Height = 10 };
     private WrapPanel demoWrap = new WrapPanel { Width = 50, Height = 10 };
     private GroupBox demoGroup = new GroupBox { Header = "Settings", Width = 40, Height = 10 };
+
+    // Picker Data
+    private ToggleSwitch demoToggle = new ToggleSwitch { IsChecked = true, Width = 15 };
+    private NumericUpDown demoNumeric = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 42, Width = 20 };
+    private DatePicker demoDate = new DatePicker { Width = 25 };
+    private TimePicker demoTime = new TimePicker { Width = 20 };
+    private Calendar demoCalendar = new Calendar { Width = 30, Height = 10 };
 
     protected override void OnInitialized()
     {

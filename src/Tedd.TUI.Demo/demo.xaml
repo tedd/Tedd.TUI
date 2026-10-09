@@ -70,6 +70,7 @@
                     <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
                     <TreeViewItem Header="Layouts" />
+                    <TreeViewItem Header="Pickers" />
                 </TreeViewItem>
             </TreeView>
         </Expander>
@@ -274,6 +275,45 @@
                                    <CheckBox Content="Enable Feature B"/>
                                </StackPanel>
                            </GroupBox>
+                       </StackPanel>
+                   </TabItem>
+               </TabControl>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 11: Pickers -->
+       <TabItem Header="Pickers">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="Advanced Pickers &amp; Inputs:"/>
+               <TabControl Width="70" Height="15">
+                   <TabItem Header="ToggleSwitch">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="ToggleSwitch Control"/>
+                           <ToggleSwitch IsChecked="True" Width="15" />
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="NumericUpDown">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="NumericUpDown Control"/>
+                           <NumericUpDown Minimum="0" Maximum="100" Value="42" Width="20" />
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="DatePicker">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="DatePicker Control"/>
+                           <DatePicker Width="25" />
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="TimePicker">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="TimePicker Control"/>
+                           <TimePicker Width="20" />
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="Calendar">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="Calendar Control"/>
+                           <Calendar Width="30" Height="10" />
                        </StackPanel>
                    </TabItem>
                </TabControl>
