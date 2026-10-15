@@ -142,3 +142,7 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+
+## 2024-11-20 - WPF Parity: Foundational Properties and Label Control
+**Observation:** Discovered absence of declarative dependency properties (`HasContent`, `HasHeader`, `HasItems`) mapping to WPF `ContentControl`, `HeaderedContentControl`, and `ItemsControl` types. Discovered missing WPF `Label` control paradigm required to construct mnemonic UI elements mapping explicitly to structural layouts.
+**Strategic Action:** Engineered explicit property mapping across `ContentControl` (`HasContent`), `HeaderedContentControl` (`HasHeader`), and `ItemsControl` (`HasItems`). Introduced `Label` control inheriting from `ContentControl` implementing standard `Target` property for mnemonic propagation and layout determinism, achieving 1:1 behavioral alignment with WPF specifications.
