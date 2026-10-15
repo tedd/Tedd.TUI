@@ -37,7 +37,7 @@ public interface IClipboard
 /// </remarks>
 public static class Clipboard
 {
-    private static readonly object _sync = new();
+    private static readonly System.Threading.Lock _sync = new();
     private static IClipboard? _provider;
     private static string _buffer = string.Empty;
 
