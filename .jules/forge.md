@@ -142,3 +142,6 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+## 2026-10-15 - Content Control Properties
+**Observation:** Identified structural deficit in standard content controls missing presence boolean flags natively found in WPF/Avalonia paradigms. Controls were relying on nullable checks or hardcoded getters (e.g. `TreeViewItem.HasItems`).
+**Strategic Action:** Added DependencyProperties for `HasContent`, `HasHeader`, and `HasItems` in the base classes (`ContentControl`, `HeaderedContentControl`, `ItemsControl`). This exposes native binding support for declarative templates and correctly couples UI logic to property updates via overriding `OnPropertyChanged` and collection changed events.

@@ -38,6 +38,15 @@ public abstract class ItemsControl : Control
         set => SetValue(ItemsPanelProperty, value);
     }
 
+    public static readonly DependencyProperty HasItemsProperty =
+        DependencyProperty.Register("HasItems", typeof(bool), typeof(ItemsControl), false);
+
+    public bool HasItems
+    {
+        get => (bool)(GetValue(HasItemsProperty) ?? false);
+        protected set => SetValue(HasItemsProperty, value);
+    }
+
     public static readonly DependencyProperty ItemTemplateProperty =
         DependencyProperty.Register("ItemTemplate", typeof(DataTemplate), typeof(ItemsControl), null);
 
@@ -121,6 +130,7 @@ public abstract class ItemsControl : Control
         {
             _isUpdating = false;
         }
+        HasItems = _items.Count > 0;
         // Force full refresh
         Invalidate();
     }
@@ -219,6 +229,7 @@ public abstract class ItemsControl : Control
 
     protected virtual void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        HasItems = _items.Count > 0;
         if (!_isUpdating)
         {
             if (ItemsPresenter != null)
