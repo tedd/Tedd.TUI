@@ -22,6 +22,24 @@ public class ContentControl : Control
         set => SetValue(ContentTemplateProperty, value);
     }
 
+    public static readonly DependencyProperty HasContentProperty =
+        DependencyProperty.Register("HasContent", typeof(bool), typeof(ContentControl), false);
+
+    public bool HasContent
+    {
+        get => (bool)(GetValue(HasContentProperty) ?? false);
+        protected set => SetValue(HasContentProperty, value);
+    }
+
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        base.OnPropertyChanged(dp);
+        if (dp == ContentProperty)
+        {
+            HasContent = Content != null;
+        }
+    }
+
     public ContentControl()
     {
         // Default template creates a ContentPresenter and binds it
