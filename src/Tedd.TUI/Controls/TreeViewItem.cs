@@ -8,7 +8,7 @@ namespace Tedd.TUI.Controls;
 
 public class TreeViewItem : HeaderedItemsControl
 {
-    public bool HasItems => Items.Count > 0;
+
 
     public bool IsExpanded
     {
