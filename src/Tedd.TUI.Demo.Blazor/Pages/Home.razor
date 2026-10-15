@@ -95,6 +95,9 @@
                         <TuiRadioButton Content="Other" GroupName="Gender" @bind-IsChecked="isOther" />
                     </TuiStackPanel>
 
+                    <TuiLabel Text="Notifications:" />
+                    <TuiToggleSwitch @bind-IsChecked="notificationsEnabled" OnContent="@("Enabled")" OffContent="@("Disabled")" />
+
                     <TuiLabel Text="Country:" />
                     <TuiComboBox Width="20" Items="@countries" @bind-SelectedItem="selectedCountry" />
 
@@ -370,6 +373,7 @@
     private bool isMale = true;
     private bool isFemale = false; 
     private bool isOther = false;
+    private bool? notificationsEnabled = true;
     private List<string> countries = new() { "USA", "Canada", "UK", "Germany", "France", "Spain" };
     private string? selectedCountry = "USA";
 

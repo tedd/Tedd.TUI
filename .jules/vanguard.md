@@ -33,3 +33,6 @@
 **Observation:** The programmatic implementation (`Tedd.TUI.Demo/Program.cs` and `Tedd.TUI.Demo/DemoController.cs`) lacked the dynamic dataset and pagination logic present in the Blazor equivalents (`Programmatic.razor` and `Home.razor`). The absence of parity restricted exhaustive testing of the `Table` control's dataset boundary capabilities in terminal environments.
 
 **Strategic Action:** Aligned the programmatic implementations by deploying a unified 25-item dataset loop. Configured `TotalRows`, `PageSize`, and bounded the `PageChanged` delegate event identically across all vectors. This enforces absolute cross-platform parity and guarantees consistent data loading patterns in both XAML and raw C# execution pathways.
+## 2024-10-15 - Form Parity: ToggleSwitch Integration
+**Observation:** The `ToggleSwitch` control lacked representation across all demonstration implementations, and the Blazor implementation did not have a corresponding `TuiToggleSwitch` component to maintain declarative equivalence.
+**Strategic Action:** Developed `TuiToggleSwitch` for `Tedd.TUI.Platform.Blazor`, inheriting from `TuiComponentBase` and wiring `IsChecked` with bidirectional bindings. Updated both declarative (`demo.xaml`, `Home.razor`) and programmatic (`Program.cs`, `Programmatic.razor`) demonstration matrices to include `ToggleSwitch` bound to a notifications state.

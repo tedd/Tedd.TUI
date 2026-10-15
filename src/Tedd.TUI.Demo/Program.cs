@@ -240,6 +240,10 @@ class Program
         radioGroup.AddChild(new RadioButton { Content = "Other", GroupName = "Gender" });
         formStack.AddChild(radioGroup);
 
+        formStack.AddChild(new TextBlock { Text = "Notifications:" });
+        var notificationsToggle = new ToggleSwitch { IsChecked = true, OnContent = "Enabled", OffContent = "Disabled" };
+        formStack.AddChild(notificationsToggle);
+
         // ComboBox
         formStack.AddChild(new TextBlock { Text = "Country:" });
         var countryCombo = new ComboBox { Width = 20 };

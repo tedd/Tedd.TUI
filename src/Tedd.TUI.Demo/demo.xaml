@@ -100,6 +100,9 @@
                 <RadioButton Content="Other" GroupName="Gender"/>
              </StackPanel>
 
+             <TextBlock Text="Notifications:"/>
+             <ToggleSwitch IsChecked="True" OnContent="Enabled" OffContent="Disabled"/>
+
              <TextBlock Text="Country:"/>
              <ComboBox Name="CountryCombo" Width="20"/>
 
