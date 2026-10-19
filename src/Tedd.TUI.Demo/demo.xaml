@@ -67,8 +67,9 @@
                     <TreeViewItem Header="Code" />
                     <TreeViewItem Header="Markdown" />
                     <TreeViewItem Header="DataGrid" />
-                    <TreeViewItem Header="Editor" />
+                                        <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
+                    <TreeViewItem Header="Inputs" />
                     <TreeViewItem Header="Layouts" />
                 </TreeViewItem>
             </TreeView>
@@ -219,7 +220,45 @@
            </StackPanel>
        </TabItem>
 
-       <!-- Tab 10: Layouts -->
+              <!-- Tab 10: Inputs -->
+       <TabItem Header="Inputs">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="Input Controls:"/>
+               <TabControl Width="70" Height="15">
+                   <TabItem Header="Toggle">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="ToggleSwitch"/>
+                           <ToggleSwitch IsChecked="True" OnContent="On" OffContent="Off" Content=" Enable Feature"/>
+                           <ToggleSwitch IsChecked="False" OnContent="Yes" OffContent="No" Content=" Dark Mode"/>
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="Numeric">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="NumericUpDown"/>
+                           <NumericUpDown Value="42" Minimum="0" Maximum="100" Increment="1"/>
+                           <NumericUpDown Value="10" Minimum="-50" Maximum="50" Increment="5"/>
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="DateTime">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="DatePicker &amp; TimePicker"/>
+                           <TextBlock Text="Date:"/>
+                           <DatePicker SelectedDate="2025-01-01"/>
+                           <TextBlock Text="Time:"/>
+                           <TimePicker SelectedTime="14:30:00" ShowSeconds="True"/>
+                       </StackPanel>
+                   </TabItem>
+                   <TabItem Header="Calendar">
+                       <StackPanel Orientation="Vertical">
+                           <TextBlock Text="Calendar"/>
+                           <Calendar DisplayDate="2025-01-01" SelectedDate="2025-01-15"/>
+                       </StackPanel>
+                   </TabItem>
+               </TabControl>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 11: Layouts -->
        <TabItem Header="Layouts">
            <StackPanel Orientation="Vertical">
                <TextBlock Text="Layout Panels:"/>

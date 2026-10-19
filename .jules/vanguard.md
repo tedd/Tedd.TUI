@@ -33,3 +33,7 @@
 **Observation:** The programmatic implementation (`Tedd.TUI.Demo/Program.cs` and `Tedd.TUI.Demo/DemoController.cs`) lacked the dynamic dataset and pagination logic present in the Blazor equivalents (`Programmatic.razor` and `Home.razor`). The absence of parity restricted exhaustive testing of the `Table` control's dataset boundary capabilities in terminal environments.
 
 **Strategic Action:** Aligned the programmatic implementations by deploying a unified 25-item dataset loop. Configured `TotalRows`, `PageSize`, and bounded the `PageChanged` delegate event identically across all vectors. This enforces absolute cross-platform parity and guarantees consistent data loading patterns in both XAML and raw C# execution pathways.
+
+## 2024-08-06 - Inputs Demonstration Integration
+**Observation:** The codebase contains various input controls (`ToggleSwitch`, `NumericUpDown`, `DatePicker`, `TimePicker`, `Calendar`) that are absent from the bifurcated demonstration architecture across the `Tedd.TUI.Demo` and `Tedd.TUI.Demo.Blazor` applications, creating a discrepancy in the functional coverage of component exploration.
+**Strategic Action:** Implement an "Inputs" section in the collapsible navigation menu and corresponding tab matrix. This section will contain a nested tab environment to isolate test permutations for "Toggle", "Numeric", "DateTime", and "Calendar" components, ensuring exact structural mapping between programmatic and declarative configurations on both TUI and Blazor deployments.
