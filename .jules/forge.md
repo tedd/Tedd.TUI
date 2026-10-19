@@ -142,3 +142,6 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+## 2026-08-20 - ContentControl Parity Integration
+**Observation:** In WPF, ContentControl and HeaderedContentControl expose HasContent and HasHeader dependency properties, respectively, which automatically update when content/header is set. These properties are crucial for declarative template triggers (e.g., hiding a header section if no header is present) but are currently absent in the Tedd.TUI framework.
+**Strategic Action:** Implement HasContent dependency property in ContentControl and HasHeader dependency property in HeaderedContentControl. Override OnPropertyChanged to automatically evaluate and assign these properties based on the null state of Content and Header.
