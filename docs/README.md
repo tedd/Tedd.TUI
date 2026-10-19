@@ -54,8 +54,8 @@ Border, Button, Canvas, CheckBox, CodeDocument, ComboBox, ContentControl, DataGr
 DialogBox, DockPanel, Expander, Grid, GridSplitter, GroupBox, Image, ItemsControl,
 ListBox, MarkdownView, MenuBar, MenuItem, PasswordBox, ProgressBar, RadioButton,
 ScrollBar, ScrollViewer, Separator, Slider, StackPanel, TabControl, TabItem, Table,
-TextBlock, TextBox, TextEditor, ToggleButton, TreeView, TreeViewItem, TuiWindow,
-UniformGrid, WrapPanel — plus WPF-style data binding, routed events, control templates
+TextBlock, TextBox, TextEditor, Thumb, ToggleButton, ToggleSwitch, TreeView, TreeViewItem,
+TuiWindow, UniformGrid, WrapPanel — plus WPF-style data binding, routed events, control templates
 and triggers.
 
 ## Platform hosts
@@ -76,6 +76,11 @@ and triggers.
 Supporting packages: `Tedd.TUI` (core), `Tedd.TUI.Surface.Skia` (shared Skia cell painter
 used by the Skia/Avalonia/WinUI/MAUI hosts), `Tedd.TUI.Imaging` (bitmap decoding for image-aware
 controls).
+
+### Planned Future Enhancements (Hypotheses)
+The framework's current iteration achieves robust WPF structural parity. However, the following concepts remain hypotheses under investigation and are not yet functionally implemented:
+- **C# 14 `allows ref struct`:** Upgrading generic constraints to support `ref struct` types in fundamental inheritance hierarchies.
+- **Speculative Performance Refactoring:** Additional elimination of `AsSpan()` allocations beyond the verified string search method upgrades.
 
 ## How the pieces fit
 
