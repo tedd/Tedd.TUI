@@ -439,35 +439,35 @@ public static class XamlLoader
                 return;
 
             case "TemplateBinding":
-            {
-                var binding = new Binding(ext.Positional ?? throw new InvalidOperationException("TemplateBinding requires a property name."))
                 {
-                    RelativeSource = RelativeSource.TemplatedParent,
-                    Mode = BindingMode.OneWay
-                };
-                SetBindingOnProperty(instance, propertyName, binding);
-                return;
-            }
+                    var binding = new Binding(ext.Positional ?? throw new InvalidOperationException("TemplateBinding requires a property name."))
+                    {
+                        RelativeSource = RelativeSource.TemplatedParent,
+                        Mode = BindingMode.OneWay
+                    };
+                    SetBindingOnProperty(instance, propertyName, binding);
+                    return;
+                }
 
             case "Null":
-            {
-                var prop = instance.GetType().GetProperty(propertyName);
-                if (prop == null || !prop.CanWrite)
-                    throw new InvalidOperationException($"Cannot assign {{x:Null}}: no writable property '{propertyName}' on {instance.GetType().Name}.");
-                prop.SetValue(instance, null);
-                return;
-            }
+                {
+                    var prop = instance.GetType().GetProperty(propertyName);
+                    if (prop == null || !prop.CanWrite)
+                        throw new InvalidOperationException($"Cannot assign {{x:Null}}: no writable property '{propertyName}' on {instance.GetType().Name}.");
+                    prop.SetValue(instance, null);
+                    return;
+                }
 
             case "StaticResource":
-            {
-                object resource = ResolveControllerResource(controller, ext.Positional ?? "")
-                    ?? throw new InvalidOperationException($"StaticResource '{ext.Positional}' was not found on the controller.");
-                var prop = instance.GetType().GetProperty(propertyName);
-                if (prop == null || !prop.CanWrite)
-                    throw new InvalidOperationException($"Cannot assign StaticResource: no writable property '{propertyName}' on {instance.GetType().Name}.");
-                prop.SetValue(instance, resource);
-                return;
-            }
+                {
+                    object resource = ResolveControllerResource(controller, ext.Positional ?? "")
+                        ?? throw new InvalidOperationException($"StaticResource '{ext.Positional}' was not found on the controller.");
+                    var prop = instance.GetType().GetProperty(propertyName);
+                    if (prop == null || !prop.CanWrite)
+                        throw new InvalidOperationException($"Cannot assign StaticResource: no writable property '{propertyName}' on {instance.GetType().Name}.");
+                    prop.SetValue(instance, resource);
+                    return;
+                }
 
             default:
                 throw new InvalidOperationException($"Unsupported markup extension '{ext.Name}'.");

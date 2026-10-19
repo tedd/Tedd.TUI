@@ -125,7 +125,7 @@ public readonly struct TuiColor : IEquatable<TuiColor>
 
         if (s.Length > 4 && (s[0] == 'r' || s[0] == 'R'))
         {
-            return ParseFunctional(text);
+            return ParseFunctional(text.AsSpan());
         }
 
         if (Enum.TryParse<ConsoleColor>(text, ignoreCase: true, out var cc))
@@ -134,50 +134,57 @@ public readonly struct TuiColor : IEquatable<TuiColor>
         throw new FormatException($"Unrecognized color string '{text}'.");
     }
 
-    private static TuiColor ParseFunctional(string text)
+    /// <summary>
+    /// Parses rgb() or rgba() colors.
+    /// Time Complexity: O(N) where N is the length of the string.
+    /// Space Complexity: O(1) by utilizing ReadOnlySpan slicing and stackalloc arrays.
+    /// </summary>
+    private static TuiColor ParseFunctional(ReadOnlySpan<char> text)
     {
         int open = text.IndexOf('(');
         int close = text.IndexOf(')');
         if (open < 0 || close < 0 || close <= open)
-            throw new FormatException($"Malformed color '{text}'.");
+            throw new FormatException($"Malformed color '{text.ToString()}'.");
 
-        bool hasAlpha = text.AsSpan(0, open).Trim().Equals("rgba", StringComparison.OrdinalIgnoreCase);
-        var inside = text.Substring(open + 1, close - open - 1);
-        var parts = inside.Split(',');
+        bool hasAlpha = text.Slice(0, open).Trim().Equals("rgba", StringComparison.OrdinalIgnoreCase);
+        var inside = text.Slice(open + 1, close - open - 1);
 
-        if (hasAlpha && parts.Length != 4)
-            throw new FormatException($"rgba() requires 4 components: '{text}'.");
-        if (!hasAlpha && parts.Length != 3)
-            throw new FormatException($"rgb() requires 3 components: '{text}'.");
+        Span<Range> parts = stackalloc Range[5];
+        int count = inside.Split(parts, ',');
 
-        byte r = ParseColorComponent(parts[0]);
-        byte g = ParseColorComponent(parts[1]);
-        byte b = ParseColorComponent(parts[2]);
-        byte a = hasAlpha ? ParseAlphaComponent(parts[3]) : (byte)255;
+        if (hasAlpha && count != 4)
+            throw new FormatException($"rgba() requires 4 components: '{text.ToString()}'.");
+        if (!hasAlpha && count != 3)
+            throw new FormatException($"rgb() requires 3 components: '{text.ToString()}'.");
+
+        byte r = ParseColorComponent(inside[parts[0]]);
+        byte g = ParseColorComponent(inside[parts[1]]);
+        byte b = ParseColorComponent(inside[parts[2]]);
+        byte a = hasAlpha ? ParseAlphaComponent(inside[parts[3]]) : (byte)255;
         return new TuiColor(r, g, b, a);
     }
 
-    private static byte ParseColorComponent(string component)
+    private static byte ParseColorComponent(ReadOnlySpan<char> component)
     {
         var trimmed = component.Trim();
         if (byte.TryParse(trimmed, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var v))
             return v;
-        throw new FormatException($"Invalid color component '{component}'.");
+        throw new FormatException($"Invalid color component '{component.ToString()}'.");
     }
 
-    private static byte ParseAlphaComponent(string component)
+    private static byte ParseAlphaComponent(ReadOnlySpan<char> component)
     {
         var trimmed = component.Trim();
         if (trimmed.IndexOf('.') >= 0)
         {
             if (double.TryParse(trimmed, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d))
                 return (byte)Math.Clamp((int)Math.Round(d * 255.0), 0, 255);
-            throw new FormatException($"Invalid alpha '{component}'.");
+            throw new FormatException($"Invalid alpha '{component.ToString()}'.");
         }
 
         if (byte.TryParse(trimmed, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var b))
             return b;
-        throw new FormatException($"Invalid alpha '{component}'.");
+        throw new FormatException($"Invalid alpha '{component.ToString()}'.");
     }
 
     private static byte ParseHexNibble(char c)
