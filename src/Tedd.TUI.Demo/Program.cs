@@ -152,6 +152,7 @@ class Program
         var nodeEditor = new TreeViewItem { Header = "Editor" };
         var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
         var nodeLayouts = new TreeViewItem { Header = "Layouts" };
+        var nodeInputs = new TreeViewItem { Header = "Inputs" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -163,6 +164,7 @@ class Program
         rootNode.Items.Add(nodeEditor);
         rootNode.Items.Add(nodeProgressBar);
         rootNode.Items.Add(nodeLayouts);
+        rootNode.Items.Add(nodeInputs);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -187,6 +189,7 @@ class Program
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
             else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
             else if (sel == nodeLayouts) tabs.SelectedIndex = 9;
+            else if (sel == nodeInputs) tabs.SelectedIndex = 10;
         };
 
         tabs.SelectionChanged += (s, e) =>
@@ -203,6 +206,7 @@ class Program
                 case 7: navTree.SelectedItem = nodeEditor; break;
                 case 8: navTree.SelectedItem = nodeProgressBar; break;
                 case 9: navTree.SelectedItem = nodeLayouts; break;
+                case 10: navTree.SelectedItem = nodeInputs; break;
             }
         };
 
@@ -654,6 +658,21 @@ public void Hello() {
 
         layoutsStack.AddChild(layoutsTabs);
         tabs.Items.Add(new TabItem { Header = "Layouts", Content = layoutsStack });
+
+        // --- Tab 11: Inputs ---
+        var inputsStack = new StackPanel { Orientation = Orientation.Vertical };
+        inputsStack.AddChild(new TextBlock { Text = "NumericUpDown:" });
+        inputsStack.AddChild(new NumericUpDown { Minimum = 0, Maximum = 100, Value = 42 });
+        inputsStack.AddChild(new TextBlock { Text = "ToggleSwitch:" });
+        inputsStack.AddChild(new ToggleSwitch { IsChecked = true, OnContent = "Enabled", OffContent = "Disabled" });
+        inputsStack.AddChild(new TextBlock { Text = "TimePicker:" });
+        inputsStack.AddChild(new TimePicker { SelectedTime = new TimeSpan(12, 30, 0), ShowSeconds = true });
+        inputsStack.AddChild(new TextBlock { Text = "DatePicker:" });
+        inputsStack.AddChild(new DatePicker { SelectedDate = DateTime.Now });
+        inputsStack.AddChild(new TextBlock { Text = "Calendar:" });
+        inputsStack.AddChild(new Calendar { DisplayDate = DateTime.Now });
+
+        tabs.Items.Add(new TabItem { Header = "Inputs", Content = inputsStack });
 
         // Run App
 
