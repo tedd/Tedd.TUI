@@ -143,14 +143,6 @@ class Program
         // 4. Initialize the application with the Console platform
         var app = new TuiApp(window);
 
-        // 5. Define the UI layout
-        var stack = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
         // Title TextBlock
         var titleBlock = new TextBlock
         {
@@ -158,7 +150,6 @@ class Program
             Foreground = ConsoleColor.Cyan,
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        stack.Children.Add(titleBlock); // UIElementCollection sets Parent automatically
 
         // Status TextBlock with Data Binding
         var statusBlock = new TextBlock
@@ -168,7 +159,6 @@ class Program
         };
         // Bind Text property to ViewModel.Status
         statusBlock.SetBinding(TextBlock.TextProperty, new Binding("Status"));
-        stack.Children.Add(statusBlock);
 
         // Button with Click Handler and DOS-era aesthetics
         var button = new Button
@@ -183,7 +173,15 @@ class Program
         {
             viewModel.OnButtonClick();
         };
-        stack.Children.Add(button);
+
+        // 5. Define the UI layout utilizing C# collection initializers
+        var stack = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Children = { titleBlock, statusBlock, button } // UIElementCollection sets Parent automatically
+        };
 
         // 6. Set the window content
         window.Content = stack;
@@ -218,7 +216,7 @@ At the heart of Tedd.TUI is the `UIElement` class, which provides the foundation
 
 ### Data Binding
 Tedd.TUI implements a hierarchical data binding infrastructure analogous to WPF, systematically driven by the `DataContext` inherited dependency property. This established framework capability mitigates the need for speculative manual state synchronization.
-- **DataContext Inheritance:** The `DataContext` property is an explicitly defined inherited dependency property. The `DependencyObject` base architecture resolves inherited values by recursively querying `InheritanceParent` (which maps to `Parent` in `UIElement`). Assigning a `DataContext` at the visual root (e.g., `TuiWindow`) makes the data model available to descendant elements that have not set a local `DataContext`. Propagation is implemented in `UIElement.OnPropertyChanged` for inherited dependency properties by enumerating `GetVisualChild` and calling `OnPropertyChanged(dp)` on children that do not have a local value, which in turn updates bindings.
+- **DataContext Inheritance:** The `DataContext` property is an explicitly defined inherited dependency property. The `DependencyObject` base architecture resolves inherited values by recursively querying `InheritanceParent` (which maps to `Parent` in `UIElement`) across the visual tree. Assigning a `DataContext` at the visual root (e.g., `TuiWindow`) makes the data model available to descendant elements that have not set a local `DataContext`. Propagation is implemented in `UIElement.OnPropertyChanged` for inherited dependency properties by enumerating `GetVisualChild` and calling `OnPropertyChanged(dp)` on children that do not have a local value, which in turn updates bindings. Explicitly setting a local `DataContext` value on child controls (e.g., within `OnDataContextChanged` overrides or container setters) incorrectly overrides and breaks this WPF-isomorphic inheritance mechanism until cleared via `ClearValue`.
 - **INotifyPropertyChanged:** Models must implement `System.ComponentModel.INotifyPropertyChanged`. The internal `BindingExpression` autonomously hooks and unhooks to `PropertyChanged` events upon `DataContext` mutations, re-evaluating reflection paths when property names match or signify wholesale updates.
 - **Binding Resolutions:** The `SetBinding` method establishes a dynamic link between a target dependency property and a source property. While bindings default to resolving against the ambient `DataContext`, the framework exposes robust `RelativeSource` topologies:
   - `Self`: Targets the `UIElement` itself.
@@ -246,7 +244,7 @@ Input handling is orchestrated by a deterministic Routed Event architecture mana
 - **Custom Event Routing:** Custom routed event arguments (such as `DragEventArgs`) can expose strongly typed delegate aliases (e.g., `DragStartedEventHandler`) for consumer ergonomics, but the runtime dispatch path on `UIElement` invokes handlers by casting to `RoutedEventHandler` when possible and otherwise falling back to `Delegate.DynamicInvoke`. There is no requirement for custom `RoutedEventArgs` types to override `InvokeEventHandler`; the framework does not depend on that virtual for handler invocation.
 - **Standard Input Events:** Primitive interactions (`KeyDown`, `KeyUp`, `MouseDown`, `MouseUp`, `GotFocus`, `LostFocus`) are registered via `RoutedEvent.Register`. The core supports comprehensive `RoutingStrategy` execution topologies: `Tunnel` (down from root to leaf), `Bubble` (up from leaf to root), and `Direct` (local invocation isolated to the source).
 - **Control State Events:** Interactive toggle controls (`CheckBox`, `RadioButton`) implement `Checked` and `Unchecked` bubbling routed events, dispatching dynamically from their `OnPropertyChanged` overrides when `IsCheckedProperty` mutates, guaranteeing robust parent container interception. `RadioButton` explicitly performs global synchronous group updates prior to dispatching `Checked` to enforce uniform topological flow.
-- **Execution Phases:** WPF-style two-phase input dispatch (tunneling `Preview*` followed by the paired bubbling event) is implemented by input dispatchers such as `TuiWindow.ProcessKey` (and the console mouse input manager): they raise the corresponding `Preview*` tunneled routed event first and, if it is not handled, then raise the paired bubbling event. Each individual routed event is delivered via `UIElement.RaiseEvent`, which builds the route by walking `Parent` references into an `ArrayPool<UIElement>` buffer (O(h) space where h is tree depth, typically avoiding per-call GC allocations after pool warm-up) and then invokes handlers according to the event’s `RoutingStrategy` (Tunnel: root → source, Bubble: source → root, Direct: source only). When `Handled` is true, traversal continues but instance handlers are skipped unless registered with `handledEventsToo = true`.
+- **Execution Phases:** WPF-style two-phase input dispatch (tunneling `Preview*` followed by the paired bubbling event) is implemented by input dispatchers such as `TuiWindow.ProcessKey` (and the console mouse input manager): they raise the corresponding `Preview*` tunneled routed event first and, if it is not handled, then raise the paired bubbling event. Each individual routed event is delivered via `UIElement.RaiseEvent`, which builds the route traversing the visual tree by walking `Parent` references into an `ArrayPool<UIElement>` buffer (O(h) space where h is tree depth, typically avoiding per-call GC allocations after pool warm-up) and then invokes handlers according to the event’s `RoutingStrategy` (Tunnel: root → source, Bubble: source → root, Direct: source only). Setting `e.Handled = true` does **not** terminate the tunnel or bubble traversal loops. It simply prevents subsequent event handlers from executing unless they were specifically registered with the `handledEventsToo = true` flag (e.g. via `AddHandler`), adhering to standard WPF behavior.
 - **Coordinate Resolution:** During mouse event dispatch, `UIElement.InvokeHandler` intercepts the `RoutedEventArgs` payload. It dynamically translates absolute global screen coordinates (`GlobalX`, `GlobalY`) into the local `RenderSize` space of the invoking element (updating the `X` and `Y` properties) utilizing `PointFromScreen` prior to emitting the class handler invocation.
 - **Class vs. Instance Handlers:** The `InvokeHandler` routine systematically prioritizes overridden virtual methods (e.g., `OnKeyDown`, `OnMouseDown`), which act as implicit class handlers. Subsequentially, it dynamically invokes explicitly bound delegates from the `_eventHandlers` dictionary, effectively decoupling core layout response logic from external subscriber callbacks.
 - **High-Level Abstractions:** Semantic control events (e.g., `Button.ClickEvent`) seamlessly integrate into the identical bubbling routing topology, ensuring uniform event interception and traversal behavior across component boundaries.
