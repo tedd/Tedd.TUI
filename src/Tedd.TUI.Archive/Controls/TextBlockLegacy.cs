@@ -5,6 +5,24 @@ namespace Tedd.TUI.Archive.Controls;
 
 public class TextBlockLegacy
 {
+    public static List<string> WrapText(string text, int maxWidth)
+    {
+        var result = new List<string>();
+        if (maxWidth <= 0)
+        {
+            result.Add(string.Empty);
+            return result;
+        }
+
+        // Split on explicit newlines first so they always force a break.
+        foreach (var rawLine in text.Replace("\r\n", "\n").Split('\n'))
+        {
+            WrapSingleLine(rawLine, maxWidth, result);
+        }
+        if (result.Count == 0) result.Add(string.Empty);
+        return result;
+    }
+
     // Keeping a stripped down version of WrapSingleLine for benchmarking.
     public static void WrapSingleLine(string line, int maxWidth, List<string> output)
     {
