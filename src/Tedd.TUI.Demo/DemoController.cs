@@ -92,7 +92,8 @@ public class DemoController
                         6 => "DataGrid",
                         7 => "Editor",
                         8 => "ProgressBar",
-                        9 => "Layouts",
+                        9 => "ToggleSwitch",
+                        10 => "Layouts",
                         _ => null
                     };
                     if (targetHeader != null)
