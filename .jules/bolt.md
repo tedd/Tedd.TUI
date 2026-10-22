@@ -27,6 +27,11 @@
 ## 2024-03-24 - ConsoleInputManager VT Mouse Parsing Optimization
 **Observation:** Inefficient Virtual Terminal (VT) mouse escape sequence parsing in `ConsoleInputManager.ParseMouseSGR` caused 216 Bytes of allocations per mouse input via multiple `Substring` and `Split(';')` calls. Execution time was ~155ns.
 **Strategic Action:** Substituted `string.Substring` and `string.Split` with `ReadOnlySpan<char>` slicing and `IndexOf` to eliminate intermediate array and string allocations. Optimization successfully reduced execution time to ~49ns (a 68% decrease) and memory allocations from 216B to 0B.
+
 ## 2024-06-04 - TextBlock Wrapping Optimization
 **Observation:** In `TextBlock.WrapSingleLine`, the algorithm used `System.Text.StringBuilder` to accumulate the current line. While `StringBuilder.Append` does not allocate a new string per append, the main allocation costs stem from `StringBuilder`'s internal buffer growth and the final `.ToString()` call (plus Substring allocations in hard-break paths). Furthermore, it created a new `StringBuilder` for every line wrapped, regardless of text size.
 **Strategic Action:** Substituted `StringBuilder` with a stack-allocated `Span<char>` (falling back to `ArrayPool<char>` for massive lines) to manage the working buffer, combined with slicing the input `string` using `ReadOnlySpan<char>`. This eliminated intermediate array allocations, reducing memory allocation by ~40-80% while improving execution latency across edge cases.
+
+## 2024-06-06 - TextBlock WrapText String.Split Allocation Optimization
+**Observation:** In `TextBlock.WrapText`, splitting explicit newlines relied on `.Replace("\r\n", "\n").Split('\n')` which incurs unnecessary string allocation and `O(n)` array creation on each call. This results in heavy GC overhead, especially when TextBlock content changes frequently or wraps often.
+**Strategic Action:** Refactored `TextBlock.WrapText` to use `AsSpan().EnumerateLines()` which performs lazy string enumeration directly over the `ReadOnlySpan<char>`, eliminating string intermediate allocations and array creation. Required manual handling for trailing empty lines to maintain exact parity with `string.Split()` behavior. Improved memory allocations per WrapText call effectively reducing GC pressure for heavy text blocks.

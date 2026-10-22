@@ -114,7 +114,7 @@ public class TextBlock : UIElement
     /// than <paramref name="maxWidth"/> are hard-broken. Preserves explicit line breaks in
     /// the source string (\n or \r\n).
     /// </summary>
-    private static List<string> WrapText(string text, int maxWidth)
+    internal static List<string> WrapText(string text, int maxWidth)
     {
         var result = new List<string>();
         if (maxWidth <= 0)
@@ -123,11 +123,21 @@ public class TextBlock : UIElement
             return result;
         }
 
+        // Optimization: Span slicing replaces String.Split array allocations O(1) allocation instead of O(n)
         // Split on explicit newlines first so they always force a break.
-        foreach (var rawLine in text.Replace("\r\n", "\n").Split('\n'))
+        ReadOnlySpan<char> span = text.AsSpan();
+        foreach (var rawLine in span.EnumerateLines())
         {
-            WrapSingleLine(rawLine, maxWidth, result);
+            WrapSingleLine(rawLine.ToString(), maxWidth, result);
         }
+
+        // EnumerateLines swallows trailing newlines, so we must add an empty line explicitly
+        // if the text ends with \n to match string.Split(..., StringSplitOptions.None)
+        if (span.Length > 0 && span[^1] == '\n')
+        {
+            WrapSingleLine(string.Empty, maxWidth, result);
+        }
+
         if (result.Count == 0) result.Add(string.Empty);
         return result;
     }

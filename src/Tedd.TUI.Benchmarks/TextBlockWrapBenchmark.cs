@@ -57,5 +57,29 @@ namespace Tedd.TUI.Benchmarks
             var output = new List<string>();
             TextBlock.WrapSingleLine(EdgeCaseText, MaxWidth, output);
         }
+
+        [Benchmark]
+        public void LegacyWrapTextShort()
+        {
+            TextBlockLegacy.WrapText(ShortText, MaxWidth);
+        }
+
+        [Benchmark]
+        public void OptimizedWrapTextShort()
+        {
+            TextBlock.WrapText(ShortText, MaxWidth);
+        }
+
+        [Benchmark]
+        public void LegacyWrapTextLong()
+        {
+            TextBlockLegacy.WrapText(LongText, MaxWidth);
+        }
+
+        [Benchmark]
+        public void OptimizedWrapTextLong()
+        {
+            TextBlock.WrapText(LongText, MaxWidth);
+        }
     }
 }
