@@ -11,6 +11,15 @@ public abstract class ItemsControl : Control
     private readonly ItemCollection _items = [];
     public ItemCollection Items => _items;
 
+    public static readonly DependencyProperty HasItemsProperty =
+        DependencyProperty.Register("HasItems", typeof(bool), typeof(ItemsControl), false);
+
+    public bool HasItems
+    {
+        get => (bool)(GetValue(HasItemsProperty) ?? false);
+        protected set => SetValue(HasItemsProperty, value);
+    }
+
     public static readonly DependencyProperty ItemsSourceProperty =
         DependencyProperty.Register("ItemsSource", typeof(IEnumerable), typeof(ItemsControl), null);
 
@@ -121,6 +130,7 @@ public abstract class ItemsControl : Control
         {
             _isUpdating = false;
         }
+        HasItems = _items.Count > 0;
         // Force full refresh
         Invalidate();
     }
@@ -221,6 +231,7 @@ public abstract class ItemsControl : Control
     {
         if (!_isUpdating)
         {
+            HasItems = _items.Count > 0;
             if (ItemsPresenter != null)
             {
                 ItemsPresenter.PopulatePanel(this);
