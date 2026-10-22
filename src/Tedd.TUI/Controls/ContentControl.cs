@@ -13,6 +13,15 @@ public class ContentControl : Control
         set => SetValue(ContentProperty, value);
     }
 
+    public static readonly DependencyProperty HasContentProperty =
+        DependencyProperty.Register("HasContent", typeof(bool), typeof(ContentControl), false);
+
+    public bool HasContent
+    {
+        get => (bool)(GetValue(HasContentProperty) ?? false);
+        protected set => SetValue(HasContentProperty, value);
+    }
+
     public static readonly DependencyProperty ContentTemplateProperty =
         DependencyProperty.Register("ContentTemplate", typeof(DataTemplate), typeof(ContentControl), null);
 
@@ -52,5 +61,14 @@ public class ContentControl : Control
 
             return cp;
         });
+    }
+
+    protected override void OnPropertyChanged(DependencyProperty dp)
+    {
+        base.OnPropertyChanged(dp);
+        if (dp == ContentProperty)
+        {
+            HasContent = Content != null;
+        }
     }
 }

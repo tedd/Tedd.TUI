@@ -142,3 +142,11 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+
+## 2026-03-09 - Data Binding State Properties Parity Integration
+**Observation:** Discovered a structural parity deficit where key UI state properties inherent to WPF data binding triggers (`HasContent` on `ContentControl`, `HasHeader` on `HeaderedContentControl`, and `HasItems` on `ItemsControl`) were either entirely absent, implemented as plain CLR properties, or incorrectly tied to derived classes (e.g. `TreeViewItem`). This hindered declarative visual states for component templates testing for the presence of bounded data.
+**Strategic Action:**
+- Registered `HasContentProperty` (bool) on `ContentControl` dynamically evaluated within `OnPropertyChanged` on `ContentProperty` mutations.
+- Registered `HasHeaderProperty` (bool) on `HeaderedContentControl` dynamically evaluated within `OnPropertyChanged` on `HeaderProperty` mutations.
+- Registered `HasItemsProperty` (bool) on `ItemsControl` dynamically evaluated on source collection mutations (`OnItemsSourceChanged` and `OnItemsCollectionChanged`).
+- Systematically removed explicit local `HasItems` accessors on derived children like `TreeViewItem` to ensure architectural inheritance purity and correct `DependencyProperty` value resolution across the UI ecosystem.
