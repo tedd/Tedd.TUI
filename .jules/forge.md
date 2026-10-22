@@ -142,3 +142,11 @@
 - Systematically removed `OnDataContextChanged` overrides in `Border`, `DialogBox`, `Table`, `TuiWindow`, and `Grid`.
 - Removed explicit `DataContext` local value setters when assigning child elements (e.g., `PushOverlay` in `TuiWindow.cs`, `Content` setter in `DialogBox.cs`).
 - Delegated context propagation fully to `UIElement.OnPropertyChanged` which naturally handles `IsInherited` property traversal, matching the exact WPF hierarchical structure and eliminating false-positive `HasLocalValue` states on visual children.
+
+## 2024-10-22 - Label Target Mnemonic Parity Integration
+**Observation:** The core TUI framework lacks a `Label` control, which in WPF inherits from `ContentControl` and provides the `Target` dependency property to redirect focus (typically via mnemonics/access keys). While the framework had components like `TextBlock` and `TuiLabel` (in Blazor demo), it lacked a structural WPF `Label` parity implementation.
+**Strategic Action:**
+- Created `Label.cs` inheriting from `ContentControl`.
+- Registered the `TargetProperty` dependency property of type `UIElement`.
+- Set default `Focusable = false` since labels typically shouldn't receive focus, aligning with WPF defaults.
+- This provides structural parity for standard XAML label declarations and focus redirection infrastructure.
