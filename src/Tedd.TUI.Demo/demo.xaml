@@ -69,6 +69,7 @@
                     <TreeViewItem Header="DataGrid" />
                     <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
+                    <TreeViewItem Header="ToggleSwitch" />
                     <TreeViewItem Header="Layouts" />
                 </TreeViewItem>
             </TreeView>
@@ -219,7 +220,23 @@
            </StackPanel>
        </TabItem>
 
-       <!-- Tab 10: Layouts -->
+       <!-- Tab 10: ToggleSwitch -->
+       <TabItem Header="ToggleSwitch">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="ToggleSwitch Control:"/>
+               <StackPanel Orientation="Horizontal">
+                   <ToggleSwitch IsChecked="False" OnContent="Enabled" OffContent="Disabled" Content="Wi-Fi" />
+               </StackPanel>
+               <StackPanel Orientation="Horizontal">
+                   <ToggleSwitch IsChecked="True" OnContent="On" OffContent="Off" Content="Bluetooth" />
+               </StackPanel>
+               <StackPanel Orientation="Horizontal">
+                   <ToggleSwitch IsChecked="False" OnContent="Visible" OffContent="Hidden" Content="Show Hidden Files" />
+               </StackPanel>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 11: Layouts -->
        <TabItem Header="Layouts">
            <StackPanel Orientation="Vertical">
                <TextBlock Text="Layout Panels:"/>

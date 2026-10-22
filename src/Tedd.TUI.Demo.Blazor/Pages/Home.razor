@@ -64,6 +64,7 @@
                         <TuiTreeViewItem Header="DataGrid" @bind-IsSelected="isDataGridSelected" />
                         <TuiTreeViewItem Header="Editor" @bind-IsSelected="isEditorSelected" />
                         <TuiTreeViewItem Header="ProgressBar" @bind-IsSelected="isProgressBarSelected" />
+                        <TuiTreeViewItem Header="ToggleSwitch" @bind-IsSelected="isToggleSwitchSelected" />
                         <TuiTreeViewItem Header="Layouts" @bind-IsSelected="isLayoutsSelected" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
@@ -242,7 +243,23 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
-            <!-- Tab 10: Layouts -->
+            <!-- Tab 10: ToggleSwitch -->
+            <TuiTabItem Header="ToggleSwitch">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="ToggleSwitch Control:" />
+                    <TuiStackPanel Orientation="Orientation.Horizontal">
+                        <TuiToggleSwitch IsChecked="false" OnContent="@("Enabled")" OffContent="@("Disabled")" Content="Wi-Fi" />
+                    </TuiStackPanel>
+                    <TuiStackPanel Orientation="Orientation.Horizontal">
+                        <TuiToggleSwitch IsChecked="true" OnContent="@("On")" OffContent="@("Off")" Content="Bluetooth" />
+                    </TuiStackPanel>
+                    <TuiStackPanel Orientation="Orientation.Horizontal">
+                        <TuiToggleSwitch IsChecked="false" OnContent="@("Visible")" OffContent="@("Hidden")" Content="Show Hidden Files" />
+                    </TuiStackPanel>
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 11: Layouts -->
             <TuiTabItem Header="Layouts">
                 <TuiStackPanel Orientation="Orientation.Vertical">
                     <TuiLabel Text="Layout Panels:" />
@@ -306,6 +323,7 @@
     private bool isDataGridSelected = false;
     private bool isEditorSelected = false;
     private bool isProgressBarSelected = false;
+    private bool isToggleSwitchSelected = false;
     private bool isLayoutsSelected = false;
 
     private void UpdateNavTreeSelection()
@@ -319,7 +337,8 @@
         isDataGridSelected = _selectedTabIndex == 6;
         isEditorSelected = _selectedTabIndex == 7;
         isProgressBarSelected = _selectedTabIndex == 8;
-        isLayoutsSelected = _selectedTabIndex == 9;
+        isToggleSwitchSelected = _selectedTabIndex == 9;
+        isLayoutsSelected = _selectedTabIndex == 10;
         StateHasChanged();
     }
 
@@ -338,7 +357,8 @@
                 case "DataGrid": selectedTabIndex = 6; break;
                 case "Editor": selectedTabIndex = 7; break;
                 case "ProgressBar": selectedTabIndex = 8; break;
-                case "Layouts": selectedTabIndex = 9; break;
+                case "ToggleSwitch": selectedTabIndex = 9; break;
+                case "Layouts": selectedTabIndex = 10; break;
             }
             StateHasChanged();
         }

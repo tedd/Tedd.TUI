@@ -151,6 +151,7 @@ class Program
         var nodeDataGrid = new TreeViewItem { Header = "DataGrid" };
         var nodeEditor = new TreeViewItem { Header = "Editor" };
         var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
+        var nodeToggleSwitch = new TreeViewItem { Header = "ToggleSwitch" };
         var nodeLayouts = new TreeViewItem { Header = "Layouts" };
 
         rootNode.Items.Add(nodeForm);
@@ -162,6 +163,7 @@ class Program
         rootNode.Items.Add(nodeDataGrid);
         rootNode.Items.Add(nodeEditor);
         rootNode.Items.Add(nodeProgressBar);
+        rootNode.Items.Add(nodeToggleSwitch);
         rootNode.Items.Add(nodeLayouts);
 
         navTree.Items.Add(rootNode);
@@ -186,7 +188,8 @@ class Program
             else if (sel == nodeDataGrid) tabs.SelectedIndex = 6;
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
             else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
-            else if (sel == nodeLayouts) tabs.SelectedIndex = 9;
+            else if (sel == nodeToggleSwitch) tabs.SelectedIndex = 9;
+            else if (sel == nodeLayouts) tabs.SelectedIndex = 10;
         };
 
         tabs.SelectionChanged += (s, e) =>
@@ -202,7 +205,8 @@ class Program
                 case 6: navTree.SelectedItem = nodeDataGrid; break;
                 case 7: navTree.SelectedItem = nodeEditor; break;
                 case 8: navTree.SelectedItem = nodeProgressBar; break;
-                case 9: navTree.SelectedItem = nodeLayouts; break;
+                case 9: navTree.SelectedItem = nodeToggleSwitch; break;
+                case 10: navTree.SelectedItem = nodeLayouts; break;
             }
         };
 
@@ -595,7 +599,25 @@ public void Hello() {
         progressBarStack.AddChild(progressBarTabs);
         tabs.Items.Add(new TabItem { Header = "ProgressBar", Content = progressBarStack });
 
-        // --- Tab 10: Layouts ---
+        // --- Tab 10: ToggleSwitch ---
+        var toggleSwitchStack = new StackPanel { Orientation = Orientation.Vertical };
+        toggleSwitchStack.AddChild(new TextBlock { Text = "ToggleSwitch Control:" });
+
+        var ts1Stack = new StackPanel { Orientation = Orientation.Horizontal };
+        ts1Stack.AddChild(new ToggleSwitch { IsChecked = false, OnContent = "Enabled", OffContent = "Disabled", Content = "Wi-Fi" });
+        toggleSwitchStack.AddChild(ts1Stack);
+
+        var ts2Stack = new StackPanel { Orientation = Orientation.Horizontal };
+        ts2Stack.AddChild(new ToggleSwitch { IsChecked = true, OnContent = "On", OffContent = "Off", Content = "Bluetooth" });
+        toggleSwitchStack.AddChild(ts2Stack);
+
+        var ts3Stack = new StackPanel { Orientation = Orientation.Horizontal };
+        ts3Stack.AddChild(new ToggleSwitch { IsChecked = false, OnContent = "Visible", OffContent = "Hidden", Content = "Show Hidden Files" });
+        toggleSwitchStack.AddChild(ts3Stack);
+
+        tabs.Items.Add(new TabItem { Header = "ToggleSwitch", Content = toggleSwitchStack });
+
+        // --- Tab 11: Layouts ---
         var layoutsStack = new StackPanel { Orientation = Orientation.Vertical };
         layoutsStack.AddChild(new TextBlock { Text = "Layout Panels:" });
 
