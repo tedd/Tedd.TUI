@@ -102,6 +102,12 @@
         var nodeEditor = new TreeViewItem { Header = "Editor" };
         var nodeProgressBar = new TreeViewItem { Header = "ProgressBar" };
         var nodeLayouts = new TreeViewItem { Header = "Layouts" };
+        var nodeCalendar = new TreeViewItem { Header = "Calendar" };
+        var nodeDatePicker = new TreeViewItem { Header = "DatePicker" };
+        var nodeTimePicker = new TreeViewItem { Header = "TimePicker" };
+        var nodeNumericUpDown = new TreeViewItem { Header = "NumericUpDown" };
+        var nodeToggleSwitch = new TreeViewItem { Header = "ToggleSwitch" };
+        var nodeGridSplitter = new TreeViewItem { Header = "GridSplitter" };
 
         rootNode.Items.Add(nodeForm);
         rootNode.Items.Add(nodeLists);
@@ -113,6 +119,12 @@
         rootNode.Items.Add(nodeEditor);
         rootNode.Items.Add(nodeProgressBar);
         rootNode.Items.Add(nodeLayouts);
+        rootNode.Items.Add(nodeCalendar);
+        rootNode.Items.Add(nodeDatePicker);
+        rootNode.Items.Add(nodeTimePicker);
+        rootNode.Items.Add(nodeNumericUpDown);
+        rootNode.Items.Add(nodeToggleSwitch);
+        rootNode.Items.Add(nodeGridSplitter);
 
         navTree.Items.Add(rootNode);
         navExpander.Content = navTree;
@@ -136,6 +148,12 @@
             else if (sel == nodeEditor) tabs.SelectedIndex = 7;
             else if (sel == nodeProgressBar) tabs.SelectedIndex = 8;
             else if (sel == nodeLayouts) tabs.SelectedIndex = 9;
+            else if (sel == nodeCalendar) tabs.SelectedIndex = 10;
+            else if (sel == nodeDatePicker) tabs.SelectedIndex = 11;
+            else if (sel == nodeTimePicker) tabs.SelectedIndex = 12;
+            else if (sel == nodeNumericUpDown) tabs.SelectedIndex = 13;
+            else if (sel == nodeToggleSwitch) tabs.SelectedIndex = 14;
+            else if (sel == nodeGridSplitter) tabs.SelectedIndex = 15;
             StateHasChanged();
         };
 
@@ -153,6 +171,12 @@
                 case 7: navTree.SelectedItem = nodeEditor; break;
                 case 8: navTree.SelectedItem = nodeProgressBar; break;
                 case 9: navTree.SelectedItem = nodeLayouts; break;
+                case 10: navTree.SelectedItem = nodeCalendar; break;
+                case 11: navTree.SelectedItem = nodeDatePicker; break;
+                case 12: navTree.SelectedItem = nodeTimePicker; break;
+                case 13: navTree.SelectedItem = nodeNumericUpDown; break;
+                case 14: navTree.SelectedItem = nodeToggleSwitch; break;
+                case 15: navTree.SelectedItem = nodeGridSplitter; break;
             }
             // StateHasChanged(); // navTree.SelectionChanged already triggers a render
         };
@@ -609,6 +633,60 @@ public void Hello() {
 
         layoutsStack.AddChild(layoutsTabs);
         tabs.Items.Add(new TabItem { Header = "Layouts", Content = layoutsStack });
+
+        // --- Tab 11: Calendar ---
+        var calendarStack = new StackPanel { Orientation = Orientation.Vertical };
+        calendarStack.AddChild(new TextBlock { Text = "Calendar Control:" });
+        calendarStack.AddChild(new Calendar());
+        tabs.Items.Add(new TabItem { Header = "Calendar", Content = calendarStack });
+
+        // --- Tab 12: DatePicker ---
+        var datePickerStack = new StackPanel { Orientation = Orientation.Vertical };
+        datePickerStack.AddChild(new TextBlock { Text = "DatePicker Control:" });
+        datePickerStack.AddChild(new DatePicker { Width = 20 });
+        tabs.Items.Add(new TabItem { Header = "DatePicker", Content = datePickerStack });
+
+        // --- Tab 13: TimePicker ---
+        var timePickerStack = new StackPanel { Orientation = Orientation.Vertical };
+        timePickerStack.AddChild(new TextBlock { Text = "TimePicker Control:" });
+        timePickerStack.AddChild(new TimePicker { Width = 15 });
+        tabs.Items.Add(new TabItem { Header = "TimePicker", Content = timePickerStack });
+
+        // --- Tab 14: NumericUpDown ---
+        var numericUpDownStack = new StackPanel { Orientation = Orientation.Vertical };
+        numericUpDownStack.AddChild(new TextBlock { Text = "NumericUpDown Control:" });
+        numericUpDownStack.AddChild(new NumericUpDown { Minimum = 0, Maximum = 100, Value = 50, Width = 15 });
+        tabs.Items.Add(new TabItem { Header = "NumericUpDown", Content = numericUpDownStack });
+
+        // --- Tab 15: ToggleSwitch ---
+        var toggleSwitchStack = new StackPanel { Orientation = Orientation.Vertical };
+        toggleSwitchStack.AddChild(new TextBlock { Text = "ToggleSwitch Control:" });
+        toggleSwitchStack.AddChild(new ToggleSwitch { OnContent = "On", OffContent = "Off", IsChecked = true });
+        tabs.Items.Add(new TabItem { Header = "ToggleSwitch", Content = toggleSwitchStack });
+
+        // --- Tab 16: GridSplitter ---
+        var gridSplitterStack = new StackPanel { Orientation = Orientation.Vertical };
+        gridSplitterStack.AddChild(new TextBlock { Text = "GridSplitter Control:" });
+
+        var splitterGrid = new Grid { Width = 60, Height = 10 };
+        splitterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        splitterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        splitterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+
+        var leftBtn = new Button { Content = "Left", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+        Grid.SetColumn(leftBtn, 0);
+        splitterGrid.AddChild(leftBtn);
+
+        var gridSplitter = new GridSplitter { Width = 1, ResizeDirection = GridResizeDirection.Columns, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Stretch };
+        Grid.SetColumn(gridSplitter, 1);
+        splitterGrid.AddChild(gridSplitter);
+
+        var rightBtn = new Button { Content = "Right", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+        Grid.SetColumn(rightBtn, 2);
+        splitterGrid.AddChild(rightBtn);
+
+        gridSplitterStack.AddChild(splitterGrid);
+        tabs.Items.Add(new TabItem { Header = "GridSplitter", Content = gridSplitterStack });
     }
 
     public class Person

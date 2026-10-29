@@ -70,6 +70,12 @@
                     <TreeViewItem Header="Editor" />
                     <TreeViewItem Header="ProgressBar" />
                     <TreeViewItem Header="Layouts" />
+                    <TreeViewItem Header="Calendar" />
+                    <TreeViewItem Header="DatePicker" />
+                    <TreeViewItem Header="TimePicker" />
+                    <TreeViewItem Header="NumericUpDown" />
+                    <TreeViewItem Header="ToggleSwitch" />
+                    <TreeViewItem Header="GridSplitter" />
                 </TreeViewItem>
             </TreeView>
         </Expander>
@@ -277,6 +283,63 @@
                        </StackPanel>
                    </TabItem>
                </TabControl>
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 11: Calendar -->
+       <TabItem Header="Calendar">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="Calendar Control:"/>
+               <Calendar />
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 12: DatePicker -->
+       <TabItem Header="DatePicker">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="DatePicker Control:"/>
+               <DatePicker Width="20" />
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 13: TimePicker -->
+       <TabItem Header="TimePicker">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="TimePicker Control:"/>
+               <TimePicker Width="15" />
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 14: NumericUpDown -->
+       <TabItem Header="NumericUpDown">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="NumericUpDown Control:"/>
+               <NumericUpDown Minimum="0" Maximum="100" Value="50" Width="15" />
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 15: ToggleSwitch -->
+       <TabItem Header="ToggleSwitch">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="ToggleSwitch Control:"/>
+               <ToggleSwitch OnContent="On" OffContent="Off" IsChecked="True" />
+           </StackPanel>
+       </TabItem>
+
+       <!-- Tab 16: GridSplitter -->
+       <TabItem Header="GridSplitter">
+           <StackPanel Orientation="Vertical">
+               <TextBlock Text="GridSplitter Control:"/>
+               <Grid Width="60" Height="10">
+                   <Grid.ColumnDefinitions>
+                       <ColumnDefinition Width="*"/>
+                       <ColumnDefinition Width="Auto"/>
+                       <ColumnDefinition Width="*"/>
+                   </Grid.ColumnDefinitions>
+                   <Button Grid.Column="0" Content="Left" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                   <GridSplitter Grid.Column="1" Width="1" ResizeDirection="Columns" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+                   <Button Grid.Column="2" Content="Right" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+               </Grid>
            </StackPanel>
        </TabItem>
 
