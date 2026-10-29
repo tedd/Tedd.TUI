@@ -8,7 +8,7 @@ namespace Tedd.TUI.Tests
         [Fact]
         public void Button_Defaults()
         {
-            var btn = new Button();
+            var btn = new Tedd.TUI.Controls.Button();
             Assert.Equal(ConsoleColor.White, btn.Foreground);
             Assert.Equal(ConsoleColor.Gray, btn.BorderColor);
             Assert.Equal(ConsoleColor.Yellow, btn.FocusedForeground);
@@ -18,7 +18,7 @@ namespace Tedd.TUI.Tests
         [Fact]
         public void Button_SetProperties()
         {
-            var btn = new Button();
+            var btn = new Tedd.TUI.Controls.Button();
             btn.Foreground = ConsoleColor.Red;
             btn.BorderColor = ConsoleColor.Blue;
             btn.FocusedForeground = ConsoleColor.Green;
@@ -33,7 +33,7 @@ namespace Tedd.TUI.Tests
         [Fact]
         public void CheckBox_Defaults()
         {
-            var cb = new CheckBox();
+            var cb = new Tedd.TUI.Controls.CheckBox();
             Assert.Equal(ConsoleColor.White, cb.Foreground);
             Assert.Equal(ConsoleColor.Yellow, cb.FocusedForeground);
             Assert.Equal(ConsoleColor.Green, cb.CheckColor);
@@ -45,7 +45,7 @@ namespace Tedd.TUI.Tests
         [Fact]
         public void CheckBox_SetProperties()
         {
-            var cb = new CheckBox();
+            var cb = new Tedd.TUI.Controls.CheckBox();
             cb.Foreground = ConsoleColor.Red;
             cb.CheckColor = ConsoleColor.Blue;
             cb.CheckedChar = 'X';
@@ -58,7 +58,7 @@ namespace Tedd.TUI.Tests
         [Fact]
         public void RadioButton_Defaults()
         {
-            var rb = new RadioButton();
+            var rb = new Tedd.TUI.Controls.RadioButton();
             Assert.Equal(ConsoleColor.White, rb.Foreground);
             Assert.Equal(ConsoleColor.Yellow, rb.FocusedForeground);
             Assert.Equal(ConsoleColor.Green, rb.CheckColor);
@@ -70,7 +70,7 @@ namespace Tedd.TUI.Tests
         [Fact]
         public void ComboBox_Defaults()
         {
-            var cb = new ComboBox();
+            var cb = new Tedd.TUI.Controls.ComboBox();
             Assert.Equal(ConsoleColor.White, cb.Foreground);
             Assert.Equal(ConsoleColor.Yellow, cb.FocusedForeground);
             Assert.Equal(ConsoleColor.DarkGray, cb.FocusedTextBackgroundColor);
@@ -85,12 +85,70 @@ namespace Tedd.TUI.Tests
         [Fact]
         public void ListBox_Defaults()
         {
-            var lb = new ListBox();
+            var lb = new Tedd.TUI.Controls.ListBox();
             Assert.Equal(ConsoleColor.Gray, lb.Foreground);
             Assert.Equal(ConsoleColor.Black, lb.SelectionForeground);
             Assert.Equal(ConsoleColor.White, lb.SelectionBackground);
             Assert.Equal(ConsoleColor.White, lb.FocusedSelectionForeground);
             Assert.Equal(ConsoleColor.Blue, lb.FocusedSelectionBackground);
+        }
+
+        [Fact]
+        public void ContentControl_HasContent_UpdatesCorrectly()
+        {
+            var cc = new Tedd.TUI.Controls.ContentControl();
+            Assert.False(cc.HasContent);
+
+            cc.Content = "Test";
+            Assert.True(cc.HasContent);
+
+            cc.Content = null;
+            Assert.False(cc.HasContent);
+        }
+
+        [Fact]
+        public void HeaderedContentControl_HasHeader_UpdatesCorrectly()
+        {
+            var hcc = new Tedd.TUI.Controls.HeaderedContentControl();
+            Assert.False(hcc.HasHeader);
+
+            hcc.Header = "Header";
+            Assert.True(hcc.HasHeader);
+
+            hcc.Header = null;
+            Assert.False(hcc.HasHeader);
+        }
+
+        [Fact]
+        public void ItemsControl_HasItems_UpdatesCorrectly()
+        {
+            var ic = new Tedd.TUI.Controls.ListBox(); // ListBox inherits ItemsControl
+            Assert.False(ic.HasItems);
+
+            ic.Items.Add("Item 1");
+            Assert.True(ic.HasItems);
+
+            ic.Items.Clear();
+            Assert.False(ic.HasItems);
+
+            ic.ItemsSource = new[] { "A", "B" };
+            Assert.True(ic.HasItems);
+
+            ic.ItemsSource = null;
+            Assert.False(ic.HasItems);
+        }
+
+        [Fact]
+        public void HeaderedItemsControl_HasHeader_UpdatesCorrectly()
+        {
+            var hic = new Tedd.TUI.Controls.TreeViewItem(); // TreeViewItem inherits HeaderedItemsControl
+            Assert.False(hic.HasHeader);
+
+            hic.Header = "Header";
+            Assert.True(hic.HasHeader);
+
+            hic.Header = null;
+            Assert.False(hic.HasHeader);
         }
     }
 }
