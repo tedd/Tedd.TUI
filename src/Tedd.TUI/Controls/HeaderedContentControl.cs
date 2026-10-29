@@ -22,10 +22,21 @@ public class HeaderedContentControl : ContentControl
         set => SetValue(HeaderTemplateProperty, value);
     }
 
+    public static readonly DependencyProperty HasHeaderProperty =
+        DependencyProperty.Register("HasHeader", typeof(bool), typeof(HeaderedContentControl), false);
+
+    public bool HasHeader
+    {
+        get => (bool)(GetValue(HasHeaderProperty) ?? false);
+        protected set => SetValue(HasHeaderProperty, value);
+    }
+
     protected override void OnPropertyChanged(DependencyProperty dp)
     {
         base.OnPropertyChanged(dp);
-        // Logic to update header visual if we had a default template handling it.
-        // For now, HeaderedContentControl is a base class.
+        if (dp == HeaderProperty)
+        {
+            HasHeader = Header != null;
+        }
     }
 }

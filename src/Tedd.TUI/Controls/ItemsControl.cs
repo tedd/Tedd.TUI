@@ -47,6 +47,15 @@ public abstract class ItemsControl : Control
         set => SetValue(ItemTemplateProperty, value);
     }
 
+    public static readonly DependencyProperty HasItemsProperty =
+        DependencyProperty.Register("HasItems", typeof(bool), typeof(ItemsControl), false);
+
+    public bool HasItems
+    {
+        get => (bool)(GetValue(HasItemsProperty) ?? false);
+        protected set => SetValue(HasItemsProperty, value);
+    }
+
     private IEnumerable? _currentItemsSource;
     private Dictionary<Type, PropertyInfo?> _displayMemberCache = [];
     private System.Threading.Lock _displayMemberCacheLock = new();
@@ -121,8 +130,14 @@ public abstract class ItemsControl : Control
         {
             _isUpdating = false;
         }
+        UpdateHasItems();
         // Force full refresh
         Invalidate();
+    }
+
+    private void UpdateHasItems()
+    {
+        HasItems = _items.Count > 0;
     }
 
     private void OnSourceCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -212,6 +227,7 @@ public abstract class ItemsControl : Control
                 }
                 break;
         }
+        UpdateHasItems();
     }
 
     internal Panel? ItemsPanelRoot { get; set; }
@@ -221,6 +237,7 @@ public abstract class ItemsControl : Control
     {
         if (!_isUpdating)
         {
+            UpdateHasItems();
             if (ItemsPresenter != null)
             {
                 ItemsPresenter.PopulatePanel(this);
