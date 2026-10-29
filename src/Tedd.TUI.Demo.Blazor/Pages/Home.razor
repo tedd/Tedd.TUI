@@ -65,6 +65,12 @@
                         <TuiTreeViewItem Header="Editor" @bind-IsSelected="isEditorSelected" />
                         <TuiTreeViewItem Header="ProgressBar" @bind-IsSelected="isProgressBarSelected" />
                         <TuiTreeViewItem Header="Layouts" @bind-IsSelected="isLayoutsSelected" />
+                        <TuiTreeViewItem Header="Calendar" @bind-IsSelected="isCalendarSelected" />
+                        <TuiTreeViewItem Header="DatePicker" @bind-IsSelected="isDatePickerSelected" />
+                        <TuiTreeViewItem Header="TimePicker" @bind-IsSelected="isTimePickerSelected" />
+                        <TuiTreeViewItem Header="NumericUpDown" @bind-IsSelected="isNumericUpDownSelected" />
+                        <TuiTreeViewItem Header="ToggleSwitch" @bind-IsSelected="isToggleSwitchSelected" />
+                        <TuiTreeViewItem Header="GridSplitter" @bind-IsSelected="isGridSplitterSelected" />
                     </TuiTreeViewItem>
                 </TuiTreeView>
             </TuiExpander>
@@ -269,6 +275,54 @@
                 </TuiStackPanel>
             </TuiTabItem>
 
+            <!-- Tab 11: Calendar -->
+            <TuiTabItem Header="Calendar">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="Calendar Control:" />
+                    <TuiHost Component="@demoCalendar" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 12: DatePicker -->
+            <TuiTabItem Header="DatePicker">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="DatePicker Control:" />
+                    <TuiHost Component="@demoDatePicker" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 13: TimePicker -->
+            <TuiTabItem Header="TimePicker">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="TimePicker Control:" />
+                    <TuiHost Component="@demoTimePicker" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 14: NumericUpDown -->
+            <TuiTabItem Header="NumericUpDown">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="NumericUpDown Control:" />
+                    <TuiHost Component="@demoNumericUpDown" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 15: ToggleSwitch -->
+            <TuiTabItem Header="ToggleSwitch">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="ToggleSwitch Control:" />
+                    <TuiHost Component="@demoToggleSwitch" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
+            <!-- Tab 16: GridSplitter -->
+            <TuiTabItem Header="GridSplitter">
+                <TuiStackPanel Orientation="Orientation.Vertical">
+                    <TuiLabel Text="GridSplitter Control:" />
+                    <TuiHost Component="@demoGridSplitterGrid" />
+                </TuiStackPanel>
+            </TuiTabItem>
+
         </TuiTabControl>
         </TuiDockPanel>
 
@@ -307,6 +361,12 @@
     private bool isEditorSelected = false;
     private bool isProgressBarSelected = false;
     private bool isLayoutsSelected = false;
+    private bool isCalendarSelected = false;
+    private bool isDatePickerSelected = false;
+    private bool isTimePickerSelected = false;
+    private bool isNumericUpDownSelected = false;
+    private bool isToggleSwitchSelected = false;
+    private bool isGridSplitterSelected = false;
 
     private void UpdateNavTreeSelection()
     {
@@ -320,6 +380,12 @@
         isEditorSelected = _selectedTabIndex == 7;
         isProgressBarSelected = _selectedTabIndex == 8;
         isLayoutsSelected = _selectedTabIndex == 9;
+        isCalendarSelected = _selectedTabIndex == 10;
+        isDatePickerSelected = _selectedTabIndex == 11;
+        isTimePickerSelected = _selectedTabIndex == 12;
+        isNumericUpDownSelected = _selectedTabIndex == 13;
+        isToggleSwitchSelected = _selectedTabIndex == 14;
+        isGridSplitterSelected = _selectedTabIndex == 15;
         StateHasChanged();
     }
 
@@ -339,6 +405,12 @@
                 case "Editor": selectedTabIndex = 7; break;
                 case "ProgressBar": selectedTabIndex = 8; break;
                 case "Layouts": selectedTabIndex = 9; break;
+                case "Calendar": selectedTabIndex = 10; break;
+                case "DatePicker": selectedTabIndex = 11; break;
+                case "TimePicker": selectedTabIndex = 12; break;
+                case "NumericUpDown": selectedTabIndex = 13; break;
+                case "ToggleSwitch": selectedTabIndex = 14; break;
+                case "GridSplitter": selectedTabIndex = 15; break;
             }
             StateHasChanged();
         }
@@ -501,6 +573,14 @@
     private WrapPanel demoWrap = new WrapPanel { Width = 50, Height = 10 };
     private GroupBox demoGroup = new GroupBox { Header = "Settings", Width = 40, Height = 10 };
 
+    // Missing components mapped
+    private Calendar demoCalendar = new Calendar();
+    private DatePicker demoDatePicker = new DatePicker { Width = 20 };
+    private TimePicker demoTimePicker = new TimePicker { Width = 15 };
+    private NumericUpDown demoNumericUpDown = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 50, Width = 15 };
+    private ToggleSwitch demoToggleSwitch = new ToggleSwitch { OnContent = "On", OffContent = "Off", IsChecked = true };
+    private Grid demoGridSplitterGrid = new Grid { Width = 60, Height = 10 };
+
     protected override void OnInitialized()
     {
         // Populate Data
@@ -611,6 +691,23 @@ public void Hello() {
         groupContent.AddChild(new CheckBox { Content = "Enable Feature A" });
         groupContent.AddChild(new CheckBox { Content = "Enable Feature B" });
         demoGroup.Content = groupContent;
+
+        // Init GridSplitter Demo Data
+        demoGridSplitterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        demoGridSplitterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        demoGridSplitterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+
+        var leftBtn = new Button { Content = "Left", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+        Grid.SetColumn(leftBtn, 0);
+        demoGridSplitterGrid.AddChild(leftBtn);
+
+        var gridSplitter = new GridSplitter { Width = 1, ResizeDirection = GridResizeDirection.Columns, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Stretch };
+        Grid.SetColumn(gridSplitter, 1);
+        demoGridSplitterGrid.AddChild(gridSplitter);
+
+        var rightBtn = new Button { Content = "Right", HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+        Grid.SetColumn(rightBtn, 2);
+        demoGridSplitterGrid.AddChild(rightBtn);
     }
 
     private void OnPageChanged()

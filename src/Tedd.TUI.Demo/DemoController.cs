@@ -73,6 +73,12 @@ public class DemoController
                         case "Editor": MainTabs.SelectedIndex = 7; break;
                         case "ProgressBar": MainTabs.SelectedIndex = 8; break;
                         case "Layouts": MainTabs.SelectedIndex = 9; break;
+                        case "Calendar": MainTabs.SelectedIndex = 10; break;
+                        case "DatePicker": MainTabs.SelectedIndex = 11; break;
+                        case "TimePicker": MainTabs.SelectedIndex = 12; break;
+                        case "NumericUpDown": MainTabs.SelectedIndex = 13; break;
+                        case "ToggleSwitch": MainTabs.SelectedIndex = 14; break;
+                        case "GridSplitter": MainTabs.SelectedIndex = 15; break;
                     }
                 }
             };
@@ -93,6 +99,12 @@ public class DemoController
                         7 => "Editor",
                         8 => "ProgressBar",
                         9 => "Layouts",
+                        10 => "Calendar",
+                        11 => "DatePicker",
+                        12 => "TimePicker",
+                        13 => "NumericUpDown",
+                        14 => "ToggleSwitch",
+                        15 => "GridSplitter",
                         _ => null
                     };
                     if (targetHeader != null)

@@ -33,3 +33,7 @@
 **Observation:** The programmatic implementation (`Tedd.TUI.Demo/Program.cs` and `Tedd.TUI.Demo/DemoController.cs`) lacked the dynamic dataset and pagination logic present in the Blazor equivalents (`Programmatic.razor` and `Home.razor`). The absence of parity restricted exhaustive testing of the `Table` control's dataset boundary capabilities in terminal environments.
 
 **Strategic Action:** Aligned the programmatic implementations by deploying a unified 25-item dataset loop. Configured `TotalRows`, `PageSize`, and bounded the `PageChanged` delegate event identically across all vectors. This enforces absolute cross-platform parity and guarantees consistent data loading patterns in both XAML and raw C# execution pathways.
+
+## 2024-10-29 - Layout Parity Optimization
+**Observation:** Programmatic, XAML, and Razor demonstration applications are missing comprehensive tabs for `DatePicker`, `TimePicker`, `Calendar`, `NumericUpDown`, `ToggleSwitch`, and `GridSplitter`. The applications have 10 tabs currently. To ensure absolute parity and optimize demonstration surface area for exhaustive component exploration, these controls need to be added to the bifurcated architecture across all 4 vector deployments.
+**Strategic Action:** Introduce missing UI controls into the left navigation matrix and corresponding right-hand display tabs. The newly added controls will include DatePicker, TimePicker, Calendar, NumericUpDown, ToggleSwitch, and GridSplitter, ensuring 1:1 functional mappings in TUI XAML/Programmatic and Blazor Razor/Programmatic environments.
