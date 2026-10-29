@@ -86,7 +86,8 @@ public class Grid : Panel
             if (colSpan == 1)
             {
                 var col = colsSpan[colIdx];
-                if (col.Width.GridUnitType == GridUnitType.Auto)
+                bool treatAsAuto = col.Width.GridUnitType == GridUnitType.Auto || (col.Width.GridUnitType == GridUnitType.Star && availableSize.Width == int.MaxValue);
+                if (treatAsAuto)
                 {
                     // Measure with infinite width to get desired width
                     child.Measure(new Size(int.MaxValue, availableSize.Height));
@@ -98,7 +99,8 @@ public class Grid : Panel
         // Apply Min/Max constraints for Auto/Pixel
         foreach (ref var c in colsSpan)
         {
-            if (c.Width.GridUnitType != GridUnitType.Star)
+            bool isStar = c.Width.GridUnitType == GridUnitType.Star && availableSize.Width != int.MaxValue;
+            if (!isStar)
             {
                 c.ActualWidth = Math.Max(c.MinWidth, Math.Min(c.MaxWidth, c.ActualWidth));
             }
@@ -114,10 +116,13 @@ public class Grid : Panel
 
         // Optimization: Replaced LINQ Where().Sum() with manual loop.
         double totalStarsX = 0;
-        foreach (ref var c in colsSpan)
+        if (availableSize.Width != int.MaxValue)
         {
-            if (c.Width.GridUnitType == GridUnitType.Star)
-                totalStarsX += c.Width.Value;
+            foreach (ref var c in colsSpan)
+            {
+                if (c.Width.GridUnitType == GridUnitType.Star)
+                    totalStarsX += c.Width.Value;
+            }
         }
 
         if (totalStarsX > 0)
@@ -157,7 +162,8 @@ public class Grid : Panel
             if (rowSpan == 1)
             {
                 var row = rowsSpan[rowIdx];
-                if (row.Height.GridUnitType == GridUnitType.Auto)
+                bool treatAsAuto = row.Height.GridUnitType == GridUnitType.Auto || (row.Height.GridUnitType == GridUnitType.Star && availableSize.Height == int.MaxValue);
+                if (treatAsAuto)
                 {
                     // Determine constrained width for this child
                     int colIdx = Math.Min(GetColumn(child), colsSpan.Length - 1);
@@ -175,7 +181,8 @@ public class Grid : Panel
         // Apply Min/Max
         foreach (ref var r in rowsSpan)
         {
-            if (r.Height.GridUnitType != GridUnitType.Star)
+            bool isStar = r.Height.GridUnitType == GridUnitType.Star && availableSize.Height != int.MaxValue;
+            if (!isStar)
             {
                 r.ActualHeight = Math.Max(r.MinHeight, Math.Min(r.MaxHeight, r.ActualHeight));
             }
@@ -190,10 +197,13 @@ public class Grid : Panel
 
         // Optimization: Replaced LINQ Where().Sum() with manual loop.
         double totalStarsY = 0;
-        foreach (ref var r in rowsSpan)
+        if (availableSize.Height != int.MaxValue)
         {
-            if (r.Height.GridUnitType == GridUnitType.Star)
-                totalStarsY += r.Height.Value;
+            foreach (ref var r in rowsSpan)
+            {
+                if (r.Height.GridUnitType == GridUnitType.Star)
+                    totalStarsY += r.Height.Value;
+            }
         }
 
         if (totalStarsY > 0)

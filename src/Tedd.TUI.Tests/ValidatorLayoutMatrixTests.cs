@@ -367,4 +367,48 @@ public class ValidatorLayoutMatrixTests
         border.Render(buffer1, 0, 0);
         Assert.Equal(' ', buffer1.GetPixel(0, 0).Character); // Border requires >= 2x2
     }
+    [Fact]
+    public void Grid_MeasureOverride_ScrollViewerInfiniteConstraints_StarTreatedAsAuto_AndRendering()
+    {
+        // 🔍 Audit: Scenario Extraction
+        // Verify that Grid treats Star proportionally as Auto when measured against infinite constraints inside ScrollViewer,
+        // preventing int.MaxValue overflow anomalies.
+
+        // ⚙️ Design: Matrix Formulation
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+        var textBlock = new TextBlock { Text = "Test", Foreground = TuiColor.Cyan };
+        Grid.SetColumn(textBlock, 0);
+        Grid.SetRow(textBlock, 0);
+        grid.Children.Add(textBlock);
+
+        var scrollViewer = new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            Content = grid
+        };
+
+        // 🏗️ Construct: Assertive Implementation & ✅ Validate: Dimensional Mutation
+        // Measure against infinite constraints (as ScrollViewer does for Auto scrollbars)
+        grid.Measure(new Size(int.MaxValue, int.MaxValue));
+        Assert.Equal(4, grid.DesiredSize.Width);
+        Assert.Equal(1, grid.DesiredSize.Height);
+
+        // Measure ScrollViewer itself to ensure the logic flows through correctly
+        scrollViewer.Measure(new Size(100, 100));
+        Assert.Equal(4, grid.DesiredSize.Width);
+        Assert.Equal(1, grid.DesiredSize.Height);
+
+        scrollViewer.Arrange(new Rect(0, 0, 100, 100));
+        var buffer = new VirtualBuffer(100, 100);
+        scrollViewer.Render(buffer, 0, 0);
+
+        Assert.Equal('T', buffer.GetPixel(0, 0).Character);
+        Assert.Equal('e', buffer.GetPixel(1, 0).Character);
+        Assert.Equal('s', buffer.GetPixel(2, 0).Character);
+        Assert.Equal('t', buffer.GetPixel(3, 0).Character);
+    }
 }
